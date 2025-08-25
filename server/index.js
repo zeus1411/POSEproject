@@ -1,31 +1,39 @@
+import 'dotenv/config';
 import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import mongoose from 'mongoose';
+import authRoutes from './routes/authRoutes.js';
+import errorHandlerMiddleware from './middlewares/error.js';
 
-const URI = 'mongodb+srv://admin:h3ok1lpwGW8JvMFD@cluster0.2pey3b2.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
+const app = express();
+const port = process.env.PORT || 3000;
+const MONGODB_URL = process.env.MONGODB_URI;
 
-const app = express()
-const port = process.env.port || 3000;
+// Middleware
+app.use(bodyParser.json({ limit: '10mb' }));
+app.use(bodyParser.urlencoded({ extended: true, limit: '30mb' }));
+app.use(cors());
 
-app.use(bodyParser.json({limit:'10mb'}));
-app.use(bodyParser.urlencoded({extended: true, limit:'30mb'}));
-app.use('/', cors());
+// Routes
+app.use('/api/v1/auth', authRoutes);
 
-mongoose.connect(URI, {useNewUrlParser: true, useUnifiedTopology: true})
-    .then(()=>{
-        console.log('Connected to DB');
-        app.listen(port, ()=>{
-            console.log(`Server is listening on port ${port}`)
-        })
-    }).catch(err => {
-        console.log('err',err)
+// Xử lý lỗi
+app.use(errorHandlerMiddleware);
+
+// Kết nối MongoDB và khởi động server
+mongoose
+    .connect(MONGODB_URL, {
+        useNewUrlParser: true,
+        useUnifiedTopology: true,
     })
-
-// app.get('/', (req, res) => {
-//   res.send('Hello World!')
-// })
-
-// app.listen(port, () => {
-//   console.log(`Server is listening on port ${port}`)
-// })
+    .then(() => {
+        console.log('Đã kết nối tới MongoDB');
+        app.listen(port, () => {
+            console.log(`Server đang chạy trên cổng ${port}`);
+        });
+    })
+    .catch((err) => {
+        console.error('Lỗi kết nối MongoDB:', err);
+        process.exit(1);
+    });
