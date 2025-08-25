@@ -1,0 +1,5 @@
+.env
+MONGODB
+
+# Node modules
+node_modules
