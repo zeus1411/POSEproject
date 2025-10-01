@@ -4,6 +4,7 @@ import bodyParser from 'body-parser';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import authRoutes from './routes/authRoutes.js';
+import productRoutes from './routes/productRoutes.js';
 import errorHandlerMiddleware from './middlewares/error.js';
 
 const app = express();
@@ -17,6 +18,7 @@ app.use(cors());
 
 // Routes
 app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/products', productRoutes);
 
 // Xử lý lỗi
 app.use(errorHandlerMiddleware);
