@@ -1,5 +1,5 @@
-const mongoose = require('mongoose');
-const slugify = require('slugify');
+import mongoose from 'mongoose';
+import slugify from 'slugify';
 
 const productSchema = new mongoose.Schema({
   name: {
@@ -327,4 +327,6 @@ productSchema.statics.searchProducts = function(searchTerm, options = {}) {
     .select('-__v');
 };
 
-module.exports = mongoose.model('Product', productSchema);
+const Product = mongoose.model('Product', productSchema);
+
+export default Product;

@@ -6,6 +6,7 @@ import mongoose from 'mongoose';
 import authRoutes from './routes/authRoutes.js';
 import productRoutes from './routes/productRoutes.js';
 import errorHandlerMiddleware from './middlewares/error.js';
+import cookieParser from 'cookie-parser';
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -16,7 +17,7 @@ const DB_NAME = process.env.DATABASE_NAME;
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '30mb' }));
 app.use(cors());
-
+app.use(cookieParser(process.env.JWT_SECRET));
 // Routes
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/products', productRoutes);
@@ -34,7 +35,7 @@ mongoose
     .then(() => {
         console.log('Đã kết nối tới MongoDB');
         app.listen(port, () => {
-            console.log(`Server đang chạy trên cổng ${port}`);
+            console.log(`🚀 Server đang chạy tại http://localhost:${port}`);
         });
     })
     .catch((err) => {

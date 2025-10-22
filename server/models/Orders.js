@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const orderItemSchema = new mongoose.Schema({
   productId: {
@@ -379,4 +379,6 @@ orderSchema.statics.getRevenueByDate = function(startDate, endDate) {
   ]);
 };
 
-module.exports = mongoose.model('Order', orderSchema);
+const Order = mongoose.model('Order', orderSchema);
+
+export default Order;
