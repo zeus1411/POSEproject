@@ -1,24 +1,32 @@
-import User from '../models/Users.js';
+// controllers/authController.js
 import { StatusCodes } from 'http-status-codes';
-import { BadRequestError, UnauthenticatedError } from '../config/errorsMessage.js';
+import User from '../models/Users.js';
+import { 
+    BadRequestError, 
+    UnauthenticatedError 
+} from '../utils/errorHandler.js';
+import { 
+    attachCookiesToResponse,
+    createTokenUser
+} from '../utils/jwt.js';
 
 const register = async (req, res) => {
-    const { username, email, password } = req.body;
+    const { email, password, username } = req.body;
 
-    if (!username || !email || !password) {
-        throw new BadRequestError('Please provide username, email and password');
+    const emailAlreadyExists = await User.findOne({ email });
+    if (emailAlreadyExists) {
+        throw new BadRequestError('Email already exists');
     }
 
     const user = await User.create({ ...req.body });
-    const token = user.createJWT();
+    
+    const { token, tokenUser } = attachCookiesToResponse(res, user);
     
     res.status(StatusCodes.CREATED).json({ 
-        user: { 
-            username: user.username,
-            email: user.email,
-            role: user.role 
-        }, 
-        token 
+        success: true,
+        user: tokenUser,
+        token: token,  // Include the token in the response
+        message: 'User registered successfully'
     });
 };
 
@@ -29,7 +37,7 @@ const login = async (req, res) => {
         throw new BadRequestError('Please provide email and password');
     }
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).select('+password');
     if (!user) {
         throw new UnauthenticatedError('Invalid credentials');
     }
@@ -39,15 +47,38 @@ const login = async (req, res) => {
         throw new UnauthenticatedError('Invalid credentials');
     }
 
-    const token = user.createJWT();
+    const { token, tokenUser } = attachCookiesToResponse(res, user);
+    
     res.status(StatusCodes.OK).json({ 
-        user: { 
-            username: user.username,
-            email: user.email,
-            role: user.role 
-        }, 
-        token 
+        success: true,
+        user: tokenUser,
+        token: token,  // Include the token in the response
+        message: 'Login successful'
     });
 };
 
-export { register, login };
+const logout = async (req, res) => {
+    res.cookie('token', 'logout', {
+        httpOnly: true,
+        expires: new Date(Date.now())
+    });
+    res.status(StatusCodes.OK).json({ 
+        success: true,
+        message: 'User logged out!'
+    });
+};
+
+const getCurrentUser = async (req, res) => {
+    const user = await User.findOne({ _id: req.user.userId }).select('-password');
+    res.status(StatusCodes.OK).json({ 
+        success: true,
+        user: createTokenUser(user)
+    });
+};
+
+export { 
+    register, 
+    login, 
+    logout, 
+    getCurrentUser 
+};

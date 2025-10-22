@@ -1,5 +1,5 @@
-const mongoose = require('mongoose');
-const slugify = require('slugify');
+import mongoose from 'mongoose';
+import slugify from 'slugify';
 
 const categorySchema = new mongoose.Schema({
   name: {
@@ -175,4 +175,6 @@ categorySchema.statics.getFeaturedCategories = function() {
   .lean();
 };
 
-module.exports = mongoose.model('Category', categorySchema);
+const Category = mongoose.model('Category', categorySchema);
+
+export default Category;

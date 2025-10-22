@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const reviewSchema = new mongoose.Schema({
   productId: {
@@ -286,4 +286,6 @@ reviewSchema.statics.canUserReview = async function(userId, productId) {
   };
 };
 
-module.exports = mongoose.model('Review', reviewSchema);
+const Review = mongoose.model('Review', reviewSchema);
+
+export default Review;
