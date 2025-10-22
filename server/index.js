@@ -4,11 +4,13 @@ import bodyParser from 'body-parser';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import authRoutes from './routes/authRoutes.js';
+import productRoutes from './routes/productRoutes.js';
 import errorHandlerMiddleware from './middlewares/error.js';
 
 const app = express();
 const port = process.env.PORT || 3000;
 const MONGODB_URL = process.env.MONGODB_URI;
+const DB_NAME = process.env.DATABASE_NAME;
 
 // Middleware
 app.use(bodyParser.json({ limit: '10mb' }));
@@ -17,6 +19,7 @@ app.use(cors());
 
 // Routes
 app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/products', productRoutes);
 
 // Xử lý lỗi
 app.use(errorHandlerMiddleware);
@@ -26,6 +29,7 @@ mongoose
     .connect(MONGODB_URL, {
         useNewUrlParser: true,
         useUnifiedTopology: true,
+        dbName: DB_NAME,
     })
     .then(() => {
         console.log('Đã kết nối tới MongoDB');
