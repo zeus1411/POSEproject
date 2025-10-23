@@ -9,14 +9,17 @@ import errorHandlerMiddleware from './middlewares/error.js';
 import cookieParser from 'cookie-parser';
 
 const app = express();
-const port = process.env.PORT;
+const port = process.env.PORT || 5000;
 const MONGODB_URL = process.env.MONGODB_URI;
 const DB_NAME = process.env.DATABASE_NAME;
 
 // Middleware
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '30mb' }));
-app.use(cors());
+app.use(cors({
+  origin: 'http://localhost:5173',
+  credentials: true
+}));
 app.use(cookieParser(process.env.JWT_SECRET));
 // Routes
 app.use('/api/v1/auth', authRoutes);
