@@ -1,26 +1,24 @@
 import express from 'express';
 import {
-    createProduct,
-    getProducts,
-    getProductById,
-    updateProduct,
-    deleteProduct,
-    searchProducts
+  createProduct,
+  getProducts,
+  getProductById,
+  updateProduct,
+  deleteProduct,
+  searchProducts
 } from '../controllers/productController.js';
+import { authenticateUser, authorizeRoles } from '../middlewares/auth.js';
 
 const router = express.Router();
 
-// Create product
-router.post('/', createProduct);
-// Get all products
+// Public (user, guest): xem danh sách, chi tiết, tìm kiếm
 router.get('/', getProducts);
-// Search products (must be before "/:id")
 router.get('/search', searchProducts);
-// Get product by id
 router.get('/:id', getProductById);
-// Update product
-router.put('/:id', updateProduct);
-// Delete product
-router.delete('/:id', deleteProduct);
+
+// Admin-only: CRUD
+router.post('/', authenticateUser, authorizeRoles('admin'), createProduct);
+router.put('/:id', authenticateUser, authorizeRoles('admin'), updateProduct);
+router.delete('/:id', authenticateUser, authorizeRoles('admin'), deleteProduct);
 
 export default router;

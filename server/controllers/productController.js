@@ -1,9 +1,15 @@
 import Product from '../models/Product.js';
+import mongoose from 'mongoose';
 
 // Create a new product
 export const createProduct = async (req, res, next) => {
     try {
-        const product = new Product(req.body);
+        // sellerId is required in schema -> get from token (admin created)
+        const payload = {
+            ...req.body,
+            sellerId: req.user?.userId, // already authenticated + authorized as admin
+        };
+        const product = new Product(payload);
         const savedProduct = await product.save();
         res.status(201).json(savedProduct);
     } catch (error) {
@@ -14,7 +20,14 @@ export const createProduct = async (req, res, next) => {
 // Get all products
 export const getProducts = async (req, res, next) => {
     try {
-        const products = await Product.find();
+        const isAdmin = req.user?.role === 'admin';
+        const includeInactive = req.query.includeInactive === 'true';
+        const filter = {};
+        if (!isAdmin || !includeInactive) {
+            filter.status = 'ACTIVE';
+        }
+        const products = await Product.find(filter)
+            .sort({ createdAt: -1 });
         res.status(200).json(products);
     } catch (error) {
         next(error);
@@ -24,10 +37,22 @@ export const getProducts = async (req, res, next) => {
 // Get product by ID
 export const getProductById = async (req, res, next) => {
     try {
-        const product = await Product.findById(req.params.id);
+        const { id } = req.params;
+        const isValidId = mongoose.Types.ObjectId.isValid(id);
+        if (!isValidId) {
+            return res.status(400).json({ message: 'ID không hợp lệ' });
+        }
+        const isAdmin = req.user?.role === 'admin';
+        const product = await Product.findById(id);
         if (!product) {
             return res.status(404).json({ message: 'Product not found' });
         }
+        // User can only view ACTIVE products
+        if (!isAdmin && product.status !== 'ACTIVE') {
+            return res.status(404).json({ message: 'Product not found' });
+        }
+        // Lazy update viewCount - don't block the response
+        Product.findByIdAndUpdate(id, { $inc: { viewCount: 1 } }).catch(() => { });
         res.status(200).json(product);
     } catch (error) {
         next(error);
@@ -37,13 +62,19 @@ export const getProductById = async (req, res, next) => {
 // Update product by ID
 export const updateProduct = async (req, res, next) => {
     try {
+        const { id } = req.params;
+        const isValidId = mongoose.Types.ObjectId.isValid(id);
+        if (!isValidId) {
+            return res.status(400).json({ message: 'ID không hợp lệ' });
+        }
+
         const updatedProduct = await Product.findByIdAndUpdate(
-            req.params.id,
+            id,
             req.body,
             { new: true, runValidators: true }
         );
         if (!updatedProduct) {
-            return res.status(404).json({ message: 'Product not found' });
+            return res.status(404).json({ message: 'Không tìm thấy sản phẩm' });
         }
         res.status(200).json(updatedProduct);
     } catch (error) {
@@ -54,11 +85,17 @@ export const updateProduct = async (req, res, next) => {
 // Delete product by ID
 export const deleteProduct = async (req, res, next) => {
     try {
-        const deletedProduct = await Product.findByIdAndDelete(req.params.id);
-        if (!deletedProduct) {
-            return res.status(404).json({ message: 'Product not found' });
+        const { id } = req.params;
+        const isValidId = mongoose.Types.ObjectId.isValid(id);
+        if (!isValidId) {
+            return res.status(400).json({ message: 'ID không hợp lệ' });
         }
-        res.status(200).json({ message: 'Product deleted successfully' });
+
+        const deletedProduct = await Product.findByIdAndDelete(id);
+        if (!deletedProduct) {
+            return res.status(404).json({ message: 'Không tìm thấy sản phẩm' });
+        }
+        res.status(200).json({ message: 'Xóa sản phẩm thành công' });
     } catch (error) {
         next(error);
     }
@@ -87,13 +124,19 @@ export const searchProducts = async (req, res, next) => {
         }
 
         const filter = {};
+        const isAdmin = req.user?.role === 'admin';
+        const includeInactive = req.query.includeInactive === 'true';
+        if (!isAdmin || !includeInactive) {
+            filter.status = 'ACTIVE';
+        }
 
         // Keyword search on name/description (case/diacritic insensitive via collation)
         if (q) {
             const keyword = q.trim();
             filter.$or = [
                 { name: { $regex: keyword, $options: 'i' } },
-                { description: { $regex: keyword, $options: 'i' } }
+                { description: { $regex: keyword, $options: 'i' } },
+                { tags: { $in: [new RegExp(keyword, 'i')] } }
             ];
         }
 
@@ -161,7 +204,6 @@ export const searchProducts = async (req, res, next) => {
             }
         });
     } catch (error) {
-        // Database connectivity or other errors
-        return res.status(503).json({ message: 'Tạm thời không thể tìm kiếm, vui lòng thử lại sau' });
+        return next(error);
     }
 };
