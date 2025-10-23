@@ -1,6 +1,6 @@
 // controllers/authController.js
 import { StatusCodes } from 'http-status-codes';
-import User from '../models/Users.js';
+import User from '../models/User.js';
 import { 
     BadRequestError, 
     UnauthenticatedError 
