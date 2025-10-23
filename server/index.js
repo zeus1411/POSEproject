@@ -9,7 +9,7 @@ import errorHandlerMiddleware from './middlewares/error.js';
 import cookieParser from 'cookie-parser';
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT;
 const MONGODB_URL = process.env.MONGODB_URI;
 const DB_NAME = process.env.DATABASE_NAME;
 
