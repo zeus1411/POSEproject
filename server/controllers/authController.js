@@ -25,7 +25,6 @@ const register = async (req, res) => {
     res.status(StatusCodes.CREATED).json({ 
         success: true,
         user: tokenUser,
-        token: token,  // Include the token in the response
         message: 'User registered successfully'
     });
 };
@@ -52,7 +51,6 @@ const login = async (req, res) => {
     res.status(StatusCodes.OK).json({ 
         success: true,
         user: tokenUser,
-        token: token,  // Include the token in the response
         message: 'Login successful'
     });
 };

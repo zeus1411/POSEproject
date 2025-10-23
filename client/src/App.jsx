@@ -1,53 +1,38 @@
-// e:/POSE project/client/src/App.jsx
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext';
-import ProtectedRoute from './components/common/ProtectedRoute';
-import Login from './pages/common/Login';
-import Register from './pages/common/Register';
-import Home from './pages/common/Home';
+import { Provider } from 'react-redux';
+import store from './redux/store';
 import Layout from './components/Layout';
 import Reports from './pages/admin/Reports';
 import Promotions from './pages/admin/Promotions';
 import Products from './pages/admin/Products';
-import MyOrders from './pages/user/MyOrders';
-import Shop from './pages/common/Shop';
-import Unauthorized from './pages/common/Unauthorized';
+import MyOrders from './pages/customer/MyOrders';
+import Shop from './pages/customer/Shop';
+import Login from './pages/auth/Login';
+import Register from './pages/auth/Register';
 
 function App() {
   return (
-    <AuthProvider>
+    <Provider store={store}>
       <Router>
         <Routes>
-          {/* Public routes */}
+          {/* Auth Routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route path="/unauthorized" element={<Unauthorized />} />
 
-          {/* Protected user routes */}
-          <Route element={<ProtectedRoute />}>
-            <Route path="/" element={<Layout />}>
-              <Route index element={<Navigate to="/shop" replace />} />
-              <Route path="shop" element={<Shop />} />
-              <Route path="orders" element={<MyOrders />} />
-            </Route>
+          {/* Main Routes */}
+          <Route path="/" element={<Layout />}>
+            <Route index element={<Navigate to="/shop" replace />} />
+            <Route path="shop" element={<Shop />} />
+            <Route path="orders" element={<MyOrders />} />
+            <Route path="admin/dashboard" element={<Navigate to="/admin/products" replace />} />
+            <Route path="admin/products" element={<Products />} />
+            <Route path="admin/reports" element={<Reports />} />
+            <Route path="admin/promotions" element={<Promotions />} />
           </Route>
-
-          {/* Protected admin routes */}
-          <Route element={<ProtectedRoute adminOnly={true} />}>
-            <Route path="admin" element={<Layout />}>
-              <Route index element={<Navigate to="products" replace />} />
-              <Route path="products" element={<Products />} />
-              <Route path="reports" element={<Reports />} />
-              <Route path="promotions" element={<Promotions />} />
-            </Route>
-          </Route>
-          
-          {/* Catch all route */}
-          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
-    </AuthProvider>
+    </Provider>
   );
 }
 

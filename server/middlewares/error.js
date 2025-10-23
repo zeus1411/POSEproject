@@ -2,7 +2,7 @@ import { StatusCodes } from 'http-status-codes';
 
 const errorHandlerMiddleware = (err, req, res, next) => {
     let customError = {
-        statusCode: err.statusCode || StatusCodes.INTERNAL_SERVER_ERROR,
+        statusCode: err.statusCode || 500,
         msg: err.message || 'Something went wrong, please try again later'
     };
 
@@ -10,25 +10,28 @@ const errorHandlerMiddleware = (err, req, res, next) => {
         customError.msg = Object.values(err.errors)
             .map(item => item.message)
             .join(', ');
-        customError.statusCode = StatusCodes.BAD_REQUEST;
+        customError.statusCode = 400;
     }
 
     if (err.code && err.code === 11000) {
         customError.msg = `Duplicate value entered for ${Object.keys(err.keyValue)} field, please choose another value`;
-        customError.statusCode = StatusCodes.BAD_REQUEST;
+        customError.statusCode = 400;
     }
 
     if (err.name === 'JsonWebTokenError') {
         customError.msg = 'Invalid token, please log in again';
-        customError.statusCode = StatusCodes.UNAUTHORIZED;
+        customError.statusCode = 401;
     }
 
     if (err.name === 'TokenExpiredError') {
         customError.msg = 'Token expired, please log in again';
-        customError.statusCode = StatusCodes.UNAUTHORIZED;
+        customError.statusCode = 401;
     }
 
-    return res.status(customError.statusCode).json({ msg: customError.msg });
+    return res.status(customError.statusCode).json({
+        success: false,
+        message: customError.msg
+    });
 };
 
 export default errorHandlerMiddleware;
