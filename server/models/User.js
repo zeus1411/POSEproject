@@ -30,37 +30,72 @@ const userSchema = new mongoose.Schema(
       minlength: [6, 'Mật khẩu phải có ít nhất 6 ký tự'],
       select: false // Không trả về password khi query
     },
+    phone: {
+      type: String,
+      trim: true
+    },
     role: {
       type: String,
-      enum: ['user', 'admin', 'seller'],
-      default: 'user'
+      enum: ['USER', 'ADMIN'],
+      default: 'USER'
     },
     avatar: {
       type: String,
       default: 'https://res.cloudinary.com/default-avatar.png'
     },
-    addresses: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Address'
+    dateOfBirth: {
+      type: Date
+    },
+    gender: {
+      type: String,
+      enum: ['male', 'female', null],
+      default: null
+    },
+    defaultAddress: {
+      fullName: {
+        type: String,
+        trim: true
+      },
+      phone: {
+        type: String,
+        trim: true
+      },
+      street: {
+        type: String,
+        trim: true
+      },
+      ward: {
+        type: String,
+        trim: true
+      },
+      district: {
+        type: String,
+        trim: true
+      },
+      city: {
+        type: String,
+        trim: true
+      },
+      country: {
+        type: String,
+        default: 'Việt Nam',
+        trim: true
+      },
+      postalCode: {
+        type: String,
+        trim: true
       }
-    ],
-    defaultAddressId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Address'
     },
     isActive: {
       type: Boolean,
       default: true
     },
-    isVerified: {
+    isEmailVerified: {
       type: Boolean,
       default: false
     },
-    verificationToken: String,
-    verificationTokenExpire: Date,
     resetPasswordToken: String,
-    resetPasswordExpire: Date,
+    resetPasswordExpires: Date,
     lastLogin: Date,
     loginAttempts: {
       type: Number,
@@ -82,10 +117,25 @@ userSchema.virtual('orders', {
   foreignField: 'userId'
 });
 
+// Virtual populate reviews
+userSchema.virtual('reviews', {
+  ref: 'Review',
+  localField: '_id',
+  foreignField: 'userId'
+});
+
+// Virtual populate payments
+userSchema.virtual('payments', {
+  ref: 'Payment',
+  localField: '_id',
+  foreignField: 'userId'
+});
+
 // Indexes
-userSchema.index({ email: 1 });
-userSchema.index({ username: 1 });
+userSchema.index({ email: 1 }, { unique: true });
+userSchema.index({ username: 1 }, { unique: true });
 userSchema.index({ role: 1 });
+userSchema.index({ phone: 1 }, { sparse: true });
 
 // Hash password before saving
 userSchema.pre('save', async function (next) {
@@ -119,12 +169,12 @@ userSchema.methods.generateAuthToken = function () {
 userSchema.methods.generateVerificationToken = function () {
   const token = crypto.randomBytes(32).toString('hex');
   
-  this.verificationToken = crypto
+  this.resetPasswordToken = crypto
     .createHash('sha256')
     .update(token)
     .digest('hex');
   
-  this.verificationTokenExpire = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+  this.resetPasswordExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
   
   return token;
 };
