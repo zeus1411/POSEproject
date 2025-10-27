@@ -1,242 +1,219 @@
-# Dự Án POSE - Nền Tảng Thương Mại Điện Tử
+# POSE Project - E-commerce Platform
 
-## Mục Lục
-- [Tổng Quan Dự Án](#tổng-quan-dự-án)
-- [Tính Năng](#tính-năng)
-- [Công Nghệ Sử Dụng](#công-nghệ-sử-dụng)
-- [Yêu Cầu Hệ Thống](#yêu-cầu-hệ-thống)
-- [Cài Đặt Và Chạy Ứng Dụng](#cài-đặt-và-chạy-ứng-dụng)
-- [Biến Môi Trường](#biến-môi-trường)
-- [Tài Liệu API](#tài-liệu-api)
-- [Cấu Trúc Frontend](#cấu-trúc-frontend)
-- [Cấu Trúc Backend](#cấu-trúc-backend)
-- [Luồng Xác Thực](#luồng-xác-thực)
-- [Triển Khai](#triển-khai)
-- [Đóng Góp](#đóng-góp)
-- [Giấy Phép](#giấy-phép)
+## Tổng quan
+Dự án POSE là một nền tảng thương mại điện tử được xây dựng với React, Node.js và MongoDB. Dự án bao gồm các tính năng quản lý sản phẩm, danh mục, tìm kiếm và lọc sản phẩm với giao diện đẹp và thân thiện với người dùng.
 
-## Tổng Quan Dự Án
-POSE là một nền tảng thương mại điện tử full-stack được xây dựng bằng MERN stack (MongoDB, Express.js, React, Node.js) cho phép người dùng duyệt sản phẩm, mua hàng và quản lý đơn đặt hàng. Nền tảng bao gồm cả giao diện dành cho người dùng và quản trị viên.
+## Tính năng đã triển khai
 
-## Tính Năng
+### Frontend (React + Redux)
+- ✅ **Trang danh sách sản phẩm** với giao diện đẹp và responsive
+- ✅ **Trang chi tiết sản phẩm** với thông tin đầy đủ
+- ✅ **Tìm kiếm và lọc sản phẩm** với nhiều tiêu chí
+- ✅ **Redux store** để quản lý state
+- ✅ **Pagination** cho danh sách sản phẩm
+- ✅ **Component tái sử dụng** (ProductCard, ProductGrid, SearchFilter, Pagination)
 
-### Dành Cho Người Dùng
-- Đăng ký và đăng nhập tài khoản
-- Duyệt sản phẩm với tìm kiếm và bộ lọc
-- Thêm sản phẩm vào giỏ hàng
-- Đặt hàng và theo dõi đơn hàng
-- Xem lịch sử đơn hàng
-- Quản lý thông tin cá nhân
+### Backend (Node.js + Express)
+- ✅ **API sản phẩm** với đầy đủ CRUD operations
+- ✅ **API danh mục** với cây danh mục
+- ✅ **Tìm kiếm và lọc** với MongoDB aggregation
+- ✅ **Xác thực và phân quyền** với JWT
+- ✅ **Upload hình ảnh** với Cloudinary
+- ✅ **Validation** với express-validator
 
-### Dành Cho Quản Trị Viên
-- Quản lý sản phẩm (thêm, sửa, xóa, xem)
-- Quản lý đơn hàng
-- Báo cáo và thống kê doanh thu
-- Quản lý khuyến mãi và giảm giá
-- Quản lý người dùng
+### Database (MongoDB)
+- ✅ **Schema sản phẩm** với đầy đủ thông tin
+- ✅ **Schema danh mục** với cây phân cấp
+- ✅ **Indexes** để tối ưu hiệu suất
+- ✅ **Virtual fields** và methods
 
-## Công Nghệ Sử Dụng
+## Cấu trúc dự án
 
-### Frontend
-- React.js
-- React Router để điều hướng
-- TailwindCSS cho giao diện
-- Redux để quản lý trạng thái
-- Axios để gọi API
-- React Icons
-
-### Backend
-- Node.js với Express.js
-- MongoDB với Mongoose ODM
-- JWT để xác thực
-- Bcrypt để mã hóa mật khẩu
-- Cloudinary để lưu trữ hình ảnh
-- Nodemailer để gửi email thông báo
-
-## Yêu Cầu Hệ Thống
-
-Trước khi bắt đầu, hãy đảm bảo bạn đã cài đặt:
-- Node.js (phiên bản 14 trở lên)
-- npm hoặc yarn
-- MongoDB (cục bộ hoặc MongoDB Atlas)
-- Git
-
-## Cài Đặt Và Chạy Ứng Dụng
-
-### 1. Sao chép kho lưu trữ
-```bash
-git clone [your-repository-url]
-cd POSE-project
+```
+POSEproject/
+├── client/                 # Frontend React
+│   ├── src/
+│   │   ├── components/     # Components tái sử dụng
+│   │   ├── pages/          # Các trang
+│   │   ├── redux/          # Redux store và slices
+│   │   ├── services/       # API services
+│   │   └── ...
+│   └── package.json
+├── server/                 # Backend Node.js
+│   ├── controllers/        # Controllers
+│   ├── models/           # MongoDB models
+│   ├── routes/           # API routes
+│   ├── middlewares/      # Middlewares
+│   ├── config/           # Database config
+│   └── package.json
+└── README.md
 ```
 
-### 2. Cài đặt Backend
+## Cài đặt và chạy dự án
+
+### Yêu cầu hệ thống
+- Node.js >= 16.0.0
+- MongoDB >= 4.4
+- npm hoặc yarn
+
+### Cài đặt
+
+1. **Clone repository**
+```bash
+git clone <repository-url>
+cd POSEproject
+```
+
+2. **Cài đặt dependencies cho server**
 ```bash
 cd server
 npm install
 ```
 
-### 3. Cài đặt Frontend
+3. **Cài đặt dependencies cho client**
 ```bash
 cd ../client
 npm install
 ```
 
-### 4. Khởi động máy chủ phát triển
-
-Trong thư mục server:
-```bash
-npm run dev
-```
-
-Trong thư mục client:
-```bash
-npm run dev
-```
-
-Ứng dụng sẽ khả dụng tại `http://localhost:5173`
-
-## Biến Môi Trường
-
-### Server (tệp `.env` trong thư mục server)
-```
-PORT=3000
-DATABASE_NAME='AquaticStorePOSE'
-MONGODB_URI='your_mongodb_connection_string'
+4. **Cấu hình environment variables**
+Tạo file `.env` trong thư mục `server`:
+```env
+MONGODB_URI=mongodb://localhost:27017
+DATABASE_NAME=pose_project
 JWT_SECRET=your_jwt_secret_key
-JWT_LIFETIME=1d
+PORT=5000
+CLOUDINARY_CLOUD_NAME=your_cloudinary_name
+CLOUDINARY_API_KEY=your_cloudinary_api_key
+CLOUDINARY_API_SECRET=your_cloudinary_api_secret
 ```
 
-### Client (tệp `.env` trong thư mục client)
-```
-VITE_API_URL=http://localhost:3000/api/v1
-```
-
-## Tài Liệu API
-
-### Xác Thực
-- `POST /api/v1/auth/register` - Đăng ký người dùng mới
-- `POST /api/v1/auth/login` - Đăng nhập
-- `GET /api/v1/auth/logout` - Đăng xuất
-- `GET /api/v1/auth/me` - Lấy thông tin người dùng hiện tại
-
-### Sản Phẩm
-- `GET /api/v1/products` - Lấy tất cả sản phẩm
-- `GET /api/v1/products/search` - Tìm kiếm sản phẩm
-- `GET /api/v1/products/:id` - Lấy sản phẩm theo ID
-- `POST /api/v1/products` - Tạo sản phẩm mới (Chỉ quản trị viên)
-- `PUT /api/v1/products/:id` - Cập nhật sản phẩm (Chỉ quản trị viên)
-- `DELETE /api/v1/products/:id` - Xóa sản phẩm (Chỉ quản trị viên)
-
-### Đơn Hàng
-- `GET /api/v1/orders` - Lấy đơn hàng của người dùng
-- `GET /api/v1/orders/:id` - Lấy đơn hàng theo ID
-- `POST /api/v1/orders` - Tạo đơn hàng mới
-- `PUT /api/v1/orders/:id` - Cập nhật trạng thái đơn hàng (Chỉ quản trị viên)
-
-### Người Dùng
-- `GET /api/v1/users` - Lấy tất cả người dùng (Chỉ quản trị viên)
-- `GET /api/v1/users/:id` - Lấy thông tin người dùng theo ID
-- `PUT /api/v1/users/:id` - Cập nhật thông tin người dùng
-- `DELETE /api/v1/users/:id` - Xóa người dùng (Chỉ quản trị viên)
-
-## Cấu Trúc Frontend
-
-```
-src/
-├── components/           # Các thành phần UI có thể tái sử dụng
-│   └── common/           # Các thành phần chung (Header, Footer, v.v.)
-├── context/             # Các React context
-│   └── AuthContext.jsx   # Context xác thực
-├── pages/               # Các trang
-│   ├── admin/           # Trang quản trị
-│   │   ├── Products.jsx
-│   │   ├── Promotions.jsx
-│   │   └── Reports.jsx
-│   ├── common/          # Trang công khai
-│   │   ├── Home.jsx
-│   │   ├── Login.jsx
-│   │   ├── Register.jsx
-│   │   └── Shop.jsx
-│   └── user/            # Trang dành cho người dùng
-│       └── MyOrders.jsx
-├── services/            # Các hàm gọi API
-│   └── authService.js
-├── App.jsx              # Thành phần chính của ứng dụng
-└── main.jsx             # Điểm khởi đầu của ứng dụng
+Tạo file `.env` trong thư mục `client`:
+```env
+VITE_API_URL=http://localhost:5000/api/v1
 ```
 
-## Cấu Trúc Backend
-
-```
-server/
-├── config/
-│   ├── cloudinary.js   # Cấu hình Cloudinary
-│   └── db.js           # Kết nối cơ sở dữ liệu
-├── controllers/        # Các controller xử lý route
-│   ├── authController.js
-│   ├── orderController.js
-│   ├── productController.js
-│   └── userController.js
-├── middleware/         # Các middleware tùy chỉnh
-├── models/             # Các model Mongoose
-│   ├── Order.js
-│   ├── Product.js
-│   ├── User.js
-│   └── ...
-├── routes/             # Các route API
-│   ├── authRoutes.js
-│   ├── orderRoutes.js
-│   ├── productRoutes.js
-│   └── userRoutes.js
-├── utils/              # Các hàm tiện ích
-│   ├── errorHandler.js
-│   ├── jwt.js
-│   └── sendEmail.js
-└── index.js           # Điểm khởi đầu của server
+5. **Seed dữ liệu mẫu**
+```bash
+cd server
+npm run seed
 ```
 
-## Luồng Xác Thực
+6. **Chạy server**
+```bash
+npm run dev
+```
 
-1. **Đăng Ký**
-   - Người dùng gửi biểu mẫu đăng ký
-   - Máy chủ xác thực thông tin và tạo người dùng mới
-   - Tạo JWT token và gửi về cho client
-   - Người dùng được tự động đăng nhập
+7. **Chạy client** (terminal mới)
+```bash
+cd client
+npm run dev
+```
 
-2. **Đăng Nhập**
-   - Người dùng gửi thông tin đăng nhập
-   - Máy chủ xác minh thông tin
-   - Tạo JWT token và lưu vào HTTP-only cookie
-   - Chuyển hướng người dùng đến trang chủ
+## Truy cập ứng dụng
 
-3. **Các Route Được Bảo Vệ**
-   - Client gửi JWT token trong mỗi yêu cầu
-   - Máy chủ xác minh token và đính kèm thông tin người dùng vào đối tượng yêu cầu
-   - Các yêu cầu không được phép sẽ bị chuyển hướng đến trang đăng nhập
+- **Frontend**: http://localhost:5173
+- **Backend API**: http://localhost:5000/api/v1
+- **Admin account**: admin@example.com / admin123
 
-## Triển Khai
+## API Endpoints
 
-### Triển Khai Backend
-1. Thiết lập cụm MongoDB Atlas hoặc sử dụng dịch vụ MongoDB được quản lý
-2. Cấu hình các biến môi trường trên nền tảng lưu trữ
-3. Triển khai lên dịch vụ lưu trữ Node.js (ví dụ: Heroku, Render hoặc AWS)
+### Sản phẩm
+- `GET /api/v1/products` - Lấy danh sách sản phẩm
+- `GET /api/v1/products/search` - Tìm kiếm sản phẩm với filters
+- `GET /api/v1/products/:id` - Lấy chi tiết sản phẩm
+- `POST /api/v1/products` - Tạo sản phẩm mới (Admin)
+- `PUT /api/v1/products/:id` - Cập nhật sản phẩm (Admin)
+- `DELETE /api/v1/products/:id` - Xóa sản phẩm (Admin)
 
-### Triển Khai Frontend
-1. Build ứng dụng React:
-   ```bash
-   cd client
-   npm run build
-   ```
-2. Triển khai thư mục `build` lên dịch vụ lưu trữ tĩnh (ví dụ: Vercel, Netlify hoặc AWS S3)
+### Danh mục
+- `GET /api/v1/categories` - Lấy danh sách danh mục
+- `GET /api/v1/categories/tree` - Lấy cây danh mục
+- `GET /api/v1/categories/root` - Lấy danh mục gốc
+- `GET /api/v1/categories/:id` - Lấy chi tiết danh mục
+- `POST /api/v1/categories` - Tạo danh mục mới (Admin)
+- `PUT /api/v1/categories/:id` - Cập nhật danh mục (Admin)
+- `DELETE /api/v1/categories/:id` - Xóa danh mục (Admin)
 
-## Đóng Góp
+## Tính năng chính
 
-1. Fork kho lưu trữ
-2. Tạo nhánh tính năng mới (`git checkout -b feature/TinhNangMoi`)
-3. Commit các thay đổi (`git commit -m 'Thêm tính năng mới'`)
-4. Đẩy lên nhánh (`git push origin feature/TinhNangMoi`)
-5. Mở Pull Request
+### 1. Trang danh sách sản phẩm
+- Hiển thị sản phẩm dạng grid responsive
+- Tìm kiếm theo tên, mô tả, tags
+- Lọc theo danh mục, giá, tình trạng
+- Sắp xếp theo nhiều tiêu chí
+- Pagination với navigation thông minh
 
-## Giấy Phép
+### 2. Trang chi tiết sản phẩm
+- Hiển thị hình ảnh sản phẩm với gallery
+- Thông tin chi tiết và thông số kỹ thuật
+- Đánh giá và rating
+- Chọn số lượng và thêm vào giỏ hàng
+- Wishlist và chia sẻ
 
-Dự án này được cấp phép theo giấy phép MIT - xem tệp [LICENSE](LICENSE) để biết chi tiết.
+### 3. Tìm kiếm và lọc
+- Tìm kiếm real-time
+- Bộ lọc nâng cao có thể thu gọn/mở rộng
+- Lưu trạng thái filter trong Redux
+- URL-friendly parameters
+
+### 4. Redux Store
+- Quản lý state tập trung
+- Async thunks cho API calls
+- Optimistic updates
+- Error handling
+
+## Công nghệ sử dụng
+
+### Frontend
+- **React 18** - UI framework
+- **Redux Toolkit** - State management
+- **React Router** - Routing
+- **Tailwind CSS** - Styling
+- **Heroicons** - Icons
+- **Axios** - HTTP client
+
+### Backend
+- **Node.js** - Runtime
+- **Express.js** - Web framework
+- **MongoDB** - Database
+- **Mongoose** - ODM
+- **JWT** - Authentication
+- **Cloudinary** - Image storage
+- **Bcryptjs** - Password hashing
+
+## Phát triển thêm
+
+### Tính năng có thể thêm
+- [ ] Giỏ hàng và checkout
+- [ ] Đánh giá sản phẩm
+- [ ] Wishlist persistent
+- [ ] So sánh sản phẩm
+- [ ] Đề xuất sản phẩm
+- [ ] Chat support
+- [ ] Push notifications
+- [ ] PWA support
+
+### Tối ưu hóa
+- [ ] Image lazy loading
+- [ ] Infinite scroll
+- [ ] Caching strategies
+- [ ] SEO optimization
+- [ ] Performance monitoring
+
+## Đóng góp
+
+1. Fork repository
+2. Tạo feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to branch (`git push origin feature/AmazingFeature`)
+5. Tạo Pull Request
+
+## License
+
+Distributed under the MIT License. See `LICENSE` for more information.
+
+## Liên hệ
+
+- Email: your-email@example.com
+- Project Link: [https://github.com/your-username/POSEproject](https://github.com/your-username/POSEproject)
