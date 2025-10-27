@@ -39,7 +39,7 @@ const Layout = () => {
   }
 
   // Redirect to login if not authenticated
-  if (!user) {
+  if (!user && (location.pathname.startsWith('/admin'))) {
     return <Navigate to="/login" replace />;
   }
 
