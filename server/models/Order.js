@@ -85,19 +85,36 @@ const orderSchema = new mongoose.Schema(
       ],
       default: 'PENDING'
     },
-    addressId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Address',
-      required: true
-    },
     shippingAddress: {
-      fullName: String,
-      phone: String,
-      street: String,
-      ward: String,
-      district: String,
-      city: String,
-      country: String
+      fullName: {
+        type: String,
+        required: true
+      },
+      phone: {
+        type: String,
+        required: true
+      },
+      street: {
+        type: String,
+        required: true
+      },
+      ward: {
+        type: String,
+        required: true
+      },
+      district: {
+        type: String,
+        required: true
+      },
+      city: {
+        type: String,
+        required: true
+      },
+      country: {
+        type: String,
+        default: 'Việt Nam'
+      },
+      postalCode: String
     },
     paymentId: {
       type: mongoose.Schema.Types.ObjectId,
