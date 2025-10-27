@@ -206,28 +206,6 @@ orderSchema.pre('save', function (next) {
   next();
 });
 
-// Copy address info before saving
-orderSchema.pre('save', async function (next) {
-  if (this.isModified('addressId') && this.addressId) {
-    const Address = mongoose.model('Address');
-    const address = await Address.findById(this.addressId);
-    
-    if (address) {
-      this.shippingAddress = {
-        fullName: address.fullName,
-        phone: address.phone,
-        street: address.street,
-        ward: address.ward,
-        district: address.district,
-        city: address.city,
-        country: address.country
-      };
-    }
-  }
-  
-  next();
-});
-
 // Add status to history when status changes
 orderSchema.pre('save', function (next) {
   if (this.isModified('status')) {
@@ -306,8 +284,7 @@ orderSchema.statics.getUserOrders = function (userId, options = {}) {
     .sort('-createdAt')
     .limit(limit)
     .skip((page - 1) * limit)
-    .populate('items.productId', 'name images')
-    .populate('addressId');
+    .populate('items.productId', 'name images');
 };
 
 // Check if order can be reviewed
