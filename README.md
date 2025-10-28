@@ -72,31 +72,8 @@ npm install
 
 3. **Cài đặt dependencies cho client**
 ```bash
-cd ../client
+cd client
 npm install
-```
-
-4. **Cấu hình environment variables**
-Tạo file `.env` trong thư mục `server`:
-```env
-MONGODB_URI=mongodb://localhost:27017
-DATABASE_NAME=pose_project
-JWT_SECRET=your_jwt_secret_key
-PORT=5000
-CLOUDINARY_CLOUD_NAME=your_cloudinary_name
-CLOUDINARY_API_KEY=your_cloudinary_api_key
-CLOUDINARY_API_SECRET=your_cloudinary_api_secret
-```
-
-Tạo file `.env` trong thư mục `client`:
-```env
-VITE_API_URL=http://localhost:5000/api/v1
-```
-
-5. **Seed dữ liệu mẫu**
-```bash
-cd server
-npm run seed
 ```
 
 6. **Chạy server**
@@ -113,7 +90,7 @@ npm run dev
 ## Truy cập ứng dụng
 
 - **Frontend**: http://localhost:5173
-- **Backend API**: http://localhost:5000/api/v1
+- **Backend API**: http://localhost:3000/api/v1
 - **Admin account**: admin@example.com / admin123
 
 ## API Endpoints
