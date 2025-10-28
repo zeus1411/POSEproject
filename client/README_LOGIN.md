@@ -135,7 +135,7 @@ npm install
 ### 2. Cấu Hình Environment
 File `.env` đã được tạo với:
 ```
-VITE_API_URL=http://localhost:5000/api/v1
+VITE_API_URL=http://localhost:3000/api/v1
 ```
 
 ### 3. Chạy Development Server
@@ -143,7 +143,7 @@ VITE_API_URL=http://localhost:5000/api/v1
 npm run dev
 ```
 
-Ứng dụng sẽ chạy tại: `http://localhost:5177`
+Ứng dụng sẽ chạy tại: `http://localhost:5173`
 
 ### 4. Chạy Backend Server
 ```bash
@@ -151,19 +151,19 @@ cd ../server
 npm run dev
 ```
 
-Server sẽ chạy tại: `http://localhost:5000`
+Server sẽ chạy tại: `http://localhost:3000`
 
 ## URLs
 
-- **Trang chủ:** `http://localhost:5177/`
-- **Đăng nhập:** `http://localhost:5177/login`
-- **Đăng ký:** `http://localhost:5177/register`
-- **API Server:** `http://localhost:5000/api/v1/auth`
+- **Trang chủ:** `http://localhost:5173/`
+- **Đăng nhập:** `http://localhost:5173/login`
+- **Đăng ký:** `http://localhost:5173/register`
+- **API Server:** `http://localhost:3000/api/v1/auth`
 
 ### Protected Routes
-- **Cửa hàng:** `http://localhost:5177/shop`
-- **Đơn hàng:** `http://localhost:5177/orders`
-- **Admin Products:** `http://localhost:5177/admin/products` - Quản lý sản phẩm (admin)
+- **Cửa hàng:** `http://localhost:5173/shop`
+- **Đơn hàng:** `http://localhost:5173/orders`
+- **Admin Products:** `http://localhost:5173/admin/products` - Quản lý sản phẩm (admin)
 - `/admin/promotions` - Quản lý khuyến mãi (admin)
 - `/admin/reports` - Báo cáo (admin)
 
@@ -201,7 +201,7 @@ Redirect to home page
 
 ## Lưu Ý Quan Trọng
 
-1. **CORS**: Đảm bảo server đã cấu hình CORS cho `http://localhost:5177`
+1. **CORS**: Đảm bảo server đã cấu hình CORS cho `http://localhost:5173`
 2. **Cookies**: Server phải set `sameSite: 'strict'` và client dùng `withCredentials: true`
 3. **JWT Secret**: Server cần có `JWT_SECRET` trong `.env`
 4. **Database**: MongoDB phải đang chạy
@@ -224,7 +224,7 @@ Các warning về `@tailwind` trong CSS là bình thường - đây là directiv
 Thêm vào server `index.js`:
 ```javascript
 app.use(cors({
-  origin: 'http://localhost:5177',
+  origin: 'http://localhost:5173',
   credentials: true
 }));
 ```
