@@ -16,7 +16,7 @@ const DB_NAME = process.env.DATABASE_NAME;
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '30mb' }));
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: process.env.CLIENT_URL,
   credentials: true
 }));
 app.use(cookieParser(process.env.JWT_SECRET));

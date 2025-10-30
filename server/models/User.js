@@ -51,6 +51,10 @@ const userSchema = new mongoose.Schema(
       enum: ['male', 'female', null],
       default: null
     },
+    resetPasswordOTP: {
+      code: String,
+      expires: Date
+    },
     defaultAddress: {
       fullName: {
         type: String,
@@ -226,6 +230,32 @@ userSchema.methods.resetLoginAttempts = function () {
     $set: { loginAttempts: 0, lastLogin: Date.now() },
     $unset: { lockUntil: 1 }
   });
+};
+
+// Generate and save OTP for password reset
+userSchema.methods.generatePasswordResetOTP = function() {
+  // Generate 6-digit OTP
+  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  
+  // Set OTP to expire in 10 minutes
+  const otpExpires = new Date();
+  otpExpires.setMinutes(otpExpires.getMinutes() + 10);
+  
+  this.resetPasswordOTP = {
+    code: otp,
+    expires: otpExpires
+  };
+  
+  return otp;
+};
+
+// Verify OTP
+userSchema.methods.verifyOTP = function(otp) {
+  return (
+    this.resetPasswordOTP && 
+    this.resetPasswordOTP.code === otp && 
+    new Date(this.resetPasswordOTP.expires) > new Date()
+  );
 };
 
 const User = mongoose.model('User', userSchema);
