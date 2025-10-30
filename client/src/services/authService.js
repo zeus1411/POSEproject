@@ -38,11 +38,29 @@ const getCurrentUser = async () => {
   return response.data;
 };
 
+// Send OTP for password reset
+const sendOTP = async (email) => {
+  const response = await api.post('/auth/forgot-password', { email });
+  return response.data;
+};
+
+// Reset password with OTP
+const resetPassword = async (email, otp, newPassword) => {
+  const response = await api.post('/auth/reset-password', { 
+    email, 
+    otp, 
+    newPassword 
+  });
+  return response.data;
+};
+
 const authService = {
   register,
   login,
   logout,
-  getCurrentUser
+  getCurrentUser,
+  sendOTP,
+  resetPassword
 };
 
 export default authService;
