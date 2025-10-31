@@ -53,7 +53,7 @@ const createOrder = async (req, res) => {
         throw new BadRequestError(`Sản phẩm không tồn tại`);
       }
 
-      if (!product.isActive) {
+      if (product.status !== 'ACTIVE') {
         throw new BadRequestError(`Sản phẩm "${product.name}" hiện không khả dụng`);
       }
 
@@ -67,10 +67,14 @@ const createOrder = async (req, res) => {
       const itemDiscount = product.discount || 0;
       const itemSubtotal = itemPrice * item.quantity * (1 - itemDiscount / 100);
 
+      const firstImage = Array.isArray(product.images) && product.images.length > 0
+        ? (typeof product.images[0] === 'string' ? product.images[0] : (product.images[0].url || ''))
+        : '';
+
       orderItems.push({
         productId: product._id,
         productName: product.name,
-        productImage: product.images && product.images.length > 0 ? product.images[0] : '',
+        productImage: firstImage,
         sku: product.sku,
         quantity: item.quantity,
         price: itemPrice,
@@ -82,7 +86,7 @@ const createOrder = async (req, res) => {
 
       // Giảm stock
       product.stock -= item.quantity;
-      product.sold = (product.sold || 0) + item.quantity;
+      product.soldCount = (product.soldCount || 0) + item.quantity;
       await product.save({ session });
     }
 
@@ -200,7 +204,7 @@ const previewOrder = async (req, res) => {
   // Lấy giỏ hàng
   const cart = await Cart.findOne({ userId }).populate({
     path: 'items.productId',
-    select: 'name price salePrice discount images sku stock isActive'
+    select: 'name price salePrice discount images sku stock status'
   });
 
   if (!cart || cart.items.length === 0) {
@@ -214,7 +218,7 @@ const previewOrder = async (req, res) => {
   for (const item of cart.items) {
     const product = item.productId;
     
-    if (!product || !product.isActive) {
+    if (!product || product.status !== 'ACTIVE') {
       continue;
     }
 
@@ -222,10 +226,14 @@ const previewOrder = async (req, res) => {
     const itemDiscount = product.discount || 0;
     const itemSubtotal = itemPrice * item.quantity * (1 - itemDiscount / 100);
 
+    const firstImage = Array.isArray(product.images) && product.images.length > 0
+      ? (typeof product.images[0] === 'string' ? product.images[0] : (product.images[0].url || ''))
+      : '';
+
     items.push({
       productId: product._id,
       productName: product.name,
-      productImage: product.images && product.images.length > 0 ? product.images[0] : '',
+      productImage: firstImage,
       sku: product.sku,
       quantity: item.quantity,
       price: itemPrice,
@@ -397,7 +405,7 @@ const cancelOrder = async (req, res) => {
       const product = await Product.findById(item.productId).session(session);
       if (product) {
         product.stock += item.quantity;
-        product.sold = Math.max(0, (product.sold || 0) - item.quantity);
+        product.soldCount = Math.max(0, (product.soldCount || 0) - item.quantity);
         await product.save({ session });
       }
     }

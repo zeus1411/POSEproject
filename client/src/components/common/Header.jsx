@@ -1,14 +1,18 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../../redux/slices/authSlice';
 import { UserCircleIcon, ShoppingCartIcon } from '@heroicons/react/24/outline';
+import MiniCart from './MiniCart';
+import { fetchCart } from '../../redux/slices/cartSlice';
 
 const Header = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
+  const { summary } = useSelector((state) => state.cart);
+  const [isMiniCartOpen, setIsMiniCartOpen] = useState(false);
   const isAdmin = location.pathname.startsWith('/admin');
 
   const handleLogout = async () => {
@@ -16,7 +20,14 @@ const Header = () => {
     navigate('/login');
   };
 
+  useEffect(() => {
+    if (user) {
+      dispatch(fetchCart());
+    }
+  }, [user, dispatch]);
+
   return (
+    <>
     <header className="bg-white shadow-sm sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
@@ -75,6 +86,19 @@ const Header = () => {
           <div className="flex items-center space-x-4">
             {user ? (
               <div className="flex items-center space-x-4">
+                {/* Mini Cart Toggle */}
+                <button
+                  onClick={() => setIsMiniCartOpen(true)}
+                  className="relative p-2 text-gray-600 hover:text-primary-600 transition-colors"
+                  aria-label="Giỏ hàng"
+                >
+                  <ShoppingCartIcon className="h-6 w-6" />
+                  {summary?.totalItems > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+                      {summary.totalItems > 99 ? '99+' : summary.totalItems}
+                    </span>
+                  )}
+                </button>
                 <div className="flex items-center space-x-2">
                   <UserCircleIcon className="h-8 w-8 text-gray-400" />
                   <span className="text-sm font-medium text-gray-700">
@@ -108,6 +132,9 @@ const Header = () => {
         </div>
       </div>
     </header>
+    {/* Mini Cart Sidebar */}
+    <MiniCart isOpen={isMiniCartOpen} onClose={() => setIsMiniCartOpen(false)} />
+    </>
   );
 };
 

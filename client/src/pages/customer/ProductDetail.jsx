@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { getProductById, clearCurrentProduct } from '../../redux/slices/productSlice';
+import { addToCart } from '../../redux/slices/cartSlice';
 import { 
   StarIcon, 
   HeartIcon, 
@@ -21,6 +22,7 @@ const ProductDetail = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { currentProduct, isLoading } = useSelector((state) => state.products);
+  const { user } = useSelector((state) => state.auth);
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [isInWishlist, setIsInWishlist] = useState(false);
@@ -76,9 +78,20 @@ const ProductDetail = () => {
     }
   };
 
-  const handleAddToCart = () => {
-    // TODO: Implement add to cart functionality
-    console.log('Add to cart:', { product: currentProduct, quantity });
+  const handleAddToCart = async () => {
+    if (!user) {
+      alert('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng');
+      navigate('/login');
+      return;
+    }
+
+    try {
+      await dispatch(addToCart({ productId: currentProduct._id, quantity })).unwrap();
+      // Reset quantity after successful add
+      setQuantity(1);
+    } catch (error) {
+      alert(error || 'Không thể thêm sản phẩm vào giỏ hàng');
+    }
   };
 
   const handleToggleWishlist = () => {

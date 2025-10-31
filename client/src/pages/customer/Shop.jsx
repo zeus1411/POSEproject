@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { searchProducts, setFilters, clearFilters } from '../../redux/slices/productSlice';
 import { getRootCategories } from '../../redux/slices/categorySlice';
+import { addToCart } from '../../redux/slices/cartSlice';
 import ProductGrid from '../../components/common/ProductGrid';
 import SearchFilter from '../../components/common/SearchFilter';
 import Pagination from '../../components/common/Pagination';
@@ -10,6 +11,7 @@ const Shop = () => {
   const dispatch = useDispatch();
   const { products, pagination, filters, isLoading } = useSelector((state) => state.products);
   const { categories } = useSelector((state) => state.categories);
+  const { user } = useSelector((state) => state.auth);
   const [wishlistItems, setWishlistItems] = useState([]);
 
   useEffect(() => {
@@ -29,9 +31,17 @@ const Shop = () => {
     dispatch(searchProducts({ ...filters, page }));
   };
 
-  const handleAddToCart = (product) => {
-    // TODO: Implement add to cart functionality
-    console.log('Add to cart:', product);
+  const handleAddToCart = async (product) => {
+    if (!user) {
+      alert('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng');
+      return;
+    }
+
+    try {
+      await dispatch(addToCart({ productId: product._id, quantity: 1 })).unwrap();
+    } catch (error) {
+      alert(error || 'Không thể thêm sản phẩm vào giỏ hàng');
+    }
   };
 
   const handleToggleWishlist = (productId) => {

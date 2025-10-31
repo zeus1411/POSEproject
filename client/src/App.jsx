@@ -13,6 +13,7 @@ import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import ResetPassword from './pages/auth/ResetPassword';
+import Checkout from './pages/customer/Checkout';
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
             <Route path="shop" element={<Shop />} />
             <Route path="product/:id" element={<ProductDetail />} />
             <Route path="orders" element={<MyOrders />} />
+            <Route path="checkout" element={<Checkout />} />
             <Route path="admin/dashboard" element={<Navigate to="/admin/products" replace />} />
             <Route path="admin/products" element={<Products />} />
             <Route path="admin/reports" element={<Reports />} />
