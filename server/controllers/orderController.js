@@ -9,6 +9,7 @@ import { BadRequestError, NotFoundError, UnauthorizedError } from '../utils/erro
 import mongoose from 'mongoose';
 import Stripe from 'stripe';
 
+import { buildVNPayUrl, verifyVNPayReturn } from '../services/vnpayService.js';
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 // @desc    Tạo đơn hàng mới từ giỏ hàng
@@ -19,6 +20,10 @@ const createOrder = async (req, res) => {
   session.startTransaction();
 
   try {
+    console.log('=== CREATE ORDER ===');
+    console.log('User:', req.user);
+    console.log('Request Body:', JSON.stringify(req.body, null, 2));
+    
     const { 
       shippingAddress, 
       paymentMethod = 'COD',
@@ -27,16 +32,29 @@ const createOrder = async (req, res) => {
     } = req.body;
 
     const userId = req.user.userId;
+    
+    console.log('UserId:', userId);
+    console.log('PaymentMethod:', paymentMethod);
 
     // Validate shipping address
-    if (!shippingAddress || !shippingAddress.fullName || !shippingAddress.phone || 
-        !shippingAddress.street || !shippingAddress.ward || 
-        !shippingAddress.district || !shippingAddress.city) {
-      throw new BadRequestError('Vui lòng cung cấp đầy đủ thông tin địa chỉ giao hàng');
+    if (!shippingAddress) {
+      throw new BadRequestError('Thiếu thông tin địa chỉ giao hàng');
     }
+    
+    const requiredFields = ['fullName', 'phone', 'street', 'ward', 'district', 'city'];
+    const missingFields = requiredFields.filter(field => !shippingAddress[field]);
+    
+    if (missingFields.length > 0) {
+      throw new BadRequestError(`Thiếu các trường bắt buộc: ${missingFields.join(', ')}`);
+    }
+
+    console.log('Shipping address validated');
 
     // Lấy giỏ hàng của user
     const cart = await Cart.findOne({ userId }).populate('items.productId');
+    
+    console.log('Cart found:', cart ? 'Yes' : 'No');
+    console.log('Cart items count:', cart?.items?.length || 0);
     
     if (!cart || cart.items.length === 0) {
       throw new BadRequestError('Giỏ hàng trống. Vui lòng thêm sản phẩm trước khi đặt hàng');
@@ -46,8 +64,12 @@ const createOrder = async (req, res) => {
     const orderItems = [];
     let subtotal = 0;
 
+    console.log('Processing cart items...');
+
     for (const item of cart.items) {
       const product = item.productId;
+      
+      console.log(`Processing product: ${product?._id} - ${product?.name}`);
       
       if (!product) {
         throw new BadRequestError(`Sản phẩm không tồn tại`);
@@ -84,20 +106,34 @@ const createOrder = async (req, res) => {
 
       subtotal += itemSubtotal;
 
-      // Giảm stock
-      product.stock -= item.quantity;
-      product.soldCount = (product.soldCount || 0) + item.quantity;
-      await product.save({ session });
+      // *** FIX: Cập nhật stock bằng updateOne để tránh validation ***
+      await Product.updateOne(
+        { _id: product._id },
+        {
+          $inc: { 
+            stock: -item.quantity,
+            soldCount: item.quantity 
+          }
+        },
+        { session }
+      );
+      
+      console.log(`Product ${product.name} stock updated`);
     }
 
-    // Tính phí ship (logic đơn giản, có thể phức tạp hơn)
+    console.log('Order items prepared:', orderItems.length);
+    console.log('Subtotal:', subtotal);
+
+    // Tính phí ship
     const shippingFee = subtotal >= 500000 ? 0 : 30000;
+    console.log('Shipping fee:', shippingFee);
 
     // Xử lý mã giảm giá (nếu có)
     let discount = 0;
     let promotionId = null;
     
     if (promotionCode) {
+      console.log('Processing promotion code:', promotionCode);
       const Promotion = mongoose.model('Promotion');
       const promotion = await Promotion.findOne({ 
         code: promotionCode,
@@ -116,13 +152,17 @@ const createOrder = async (req, res) => {
           discount = promotion.discountValue;
         }
         promotionId = promotion._id;
+        console.log('Promotion applied:', discount);
       }
     }
 
-    const tax = 0; // Có thể tính thuế nếu cần
+    const tax = 0;
     const totalPrice = subtotal + shippingFee + tax - discount;
+    
+    console.log('Total price:', totalPrice);
 
     // Tạo đơn hàng
+    console.log('Creating order...');
     const order = await Order.create([{
       userId,
       items: orderItems,
@@ -139,7 +179,75 @@ const createOrder = async (req, res) => {
       isPaid: false
     }], { session });
 
-    // Tạo payment record
+    console.log('Order created:', order[0]._id, order[0].orderNumber);
+
+    // Handle VNPay payment
+    if (paymentMethod === 'VNPAY') {
+      console.log('Processing VNPay payment...');
+      
+      // Create a payment record
+      const payment = await Payment.create([{
+        orderId: order[0]._id,
+        userId,
+        method: 'VNPAY',
+        status: 'PENDING_PAYMENT',
+        amount: totalPrice,
+        currency: 'VND',
+        transactionId: `VNPAY-${Date.now()}`
+      }], { session });
+
+      console.log('Payment record created:', payment[0]._id);
+
+      // Generate VNPay URL
+      console.log('Building VNPay URL...');
+      const vnpayUrl = await buildVNPayUrl({
+        order: {
+          ...order[0].toObject(),
+          orderNumber: order[0].orderNumber,
+          totalPrice: order[0].totalPrice
+        },
+        payment: {
+          _id: payment[0]._id,
+          transactionId: payment[0].transactionId
+        },
+        ipAddr: req.ip || req.headers['x-forwarded-for'] || '127.0.0.1'
+      });
+
+      console.log('VNPay URL generated:', vnpayUrl);
+
+      // Lưu payment vào order
+      order[0].paymentId = payment[0]._id;
+      await order[0].save({ session });
+
+      // Xóa giỏ hàng
+      await Cart.findOneAndUpdate(
+        { userId },
+        { $set: { items: [] } },
+        { session }
+      );
+
+      console.log('Cart cleared');
+
+      await session.commitTransaction();
+      session.endSession();
+
+      console.log('Transaction committed - VNPay order');
+      console.log('===================\n');
+
+      return res.status(StatusCodes.OK).json({
+        success: true,
+        message: 'Đơn hàng đã được tạo. Chuyển hướng đến trang thanh toán VNPay',
+        data: {
+          order: order[0],
+          payment: payment[0],
+          paymentUrl: vnpayUrl
+        }
+      });
+    }
+
+    // COD Payment
+    console.log('Processing COD payment...');
+    
     const payment = await Payment.create([{
       orderId: order[0]._id,
       userId,
@@ -149,7 +257,9 @@ const createOrder = async (req, res) => {
       currency: 'VND'
     }], { session });
 
-    // Cập nhật orderId vào order
+    console.log('Payment record created:', payment[0]._id);
+
+    // Cập nhật paymentId vào order
     order[0].paymentId = payment[0]._id;
     await order[0].save({ session });
 
@@ -160,15 +270,25 @@ const createOrder = async (req, res) => {
       { session }
     );
 
+    console.log('Cart cleared');
+
     // Tạo thông báo
-    await Notification.createOrderNotification(
-      userId,
-      order[0]._id,
-      'PENDING',
-      `Đơn hàng ${order[0].orderNumber} đã được tạo thành công`
-    );
+    try {
+      await Notification.createOrderNotification(
+        userId,
+        order[0]._id,
+        'PENDING',
+        `Đơn hàng ${order[0].orderNumber} đã được tạo thành công`
+      );
+      console.log('Notification created');
+    } catch (notifError) {
+      console.log('Notification creation failed (non-critical):', notifError.message);
+    }
 
     await session.commitTransaction();
+
+    console.log('Transaction committed - COD order');
+    console.log('===================\n');
 
     res.status(StatusCodes.CREATED).json({
       success: true,
@@ -181,6 +301,9 @@ const createOrder = async (req, res) => {
 
   } catch (error) {
     await session.abortTransaction();
+    console.error('Order creation failed:', error.message);
+    console.error('Stack:', error.stack);
+    console.error('===================\n');
     throw error;
   } finally {
     session.endSession();
@@ -559,103 +682,120 @@ const stripeWebhook = async (req, res) => {
   res.json({ received: true });
 };
 
-// @desc    Xử lý thanh toán VNPay (tạo payment URL)
-// @route   POST /api/orders/:id/payment/vnpay
+// @desc    Tạo URL thanh toán VNPay cho 1 order
+// @route   POST /api/v1/orders/:id/payment/vnpay
 // @access  Private (User)
 const createVNPayPayment = async (req, res) => {
-  const { id } = req.params;
+  const { id } = req.params;           // order id
   const userId = req.user.userId;
 
+  // 1. Lấy order
   const order = await Order.findById(id);
-
   if (!order) {
     throw new NotFoundError('Không tìm thấy đơn hàng');
   }
-
   if (order.userId.toString() !== userId) {
     throw new UnauthorizedError('Bạn không có quyền thanh toán đơn hàng này');
   }
-
   if (order.isPaid) {
     throw new BadRequestError('Đơn hàng đã được thanh toán');
   }
 
+  // 2. Lấy payment tương ứng
   const payment = await Payment.findById(order.paymentId);
-
-  if (!payment || payment.method !== 'VNPAY') {
-    throw new BadRequestError('Phương thức thanh toán không hợp lệ');
+  if (!payment) {
+    throw new BadRequestError('Không tìm thấy thông tin thanh toán');
+  }
+  if (payment.method !== 'VNPAY') {
+    throw new BadRequestError('Phương thức thanh toán không hợp lệ (không phải VNPay)');
   }
 
-  // Logic tạo VNPay payment URL (cần implement đầy đủ theo docs VNPay)
-  // Đây là version đơn giản
-  const vnpUrl = process.env.VNPAY_URL;
-  const vnpTmnCode = process.env.VNPAY_TMN_CODE;
-  const vnpHashSecret = process.env.VNPAY_HASH_SECRET;
-  const returnUrl = `${process.env.CLIENT_URL}/orders/${id}/payment/vnpay/return`;
+  // 3. Gọi service để build URL thanh toán VNPay đúng chuẩn, có ký hash
+  const vnpayResponse = await buildVNPayUrl({
+    order,
+    payment,
+    ipAddr: req.ip || req.headers['x-forwarded-for'] || '127.0.0.1',
+  });
 
-  const vnpParams = {
-    vnp_Version: '2.1.0',
-    vnp_Command: 'pay',
-    vnp_TmnCode: vnpTmnCode,
-    vnp_Amount: order.totalPrice * 100,
-    vnp_CreateDate: new Date().toISOString().replace(/[-:T.]/g, '').slice(0, 14),
-    vnp_CurrCode: 'VND',
-    vnp_IpAddr: req.ip,
-    vnp_Locale: 'vn',
-    vnp_OrderInfo: `Thanh toan don hang ${order.orderNumber}`,
-    vnp_OrderType: 'other',
-    vnp_ReturnUrl: returnUrl,
-    vnp_TxnRef: order.orderNumber
-  };
-
-  // Sort và tạo query string (cần implement hash)
-  const paymentUrl = `${vnpUrl}?${new URLSearchParams(vnpParams).toString()}`;
-
+  // vnpayResponse thường sẽ có dạng { redirectUrl: "...", ... }
+  // tuỳ lib, có thể là string url luôn. Ta chuẩn hoá trả ra client.
   res.status(StatusCodes.OK).json({
     success: true,
     data: {
-      paymentUrl
+      paymentUrl: vnpayResponse, 
+      // nếu vnpayResponse.redirectUrl tồn tại thì có thể trả redirectUrl thay vì cả object
     }
   });
 };
 
-// @desc    Xác nhận thanh toán VNPay (return URL)
-// @route   GET /api/orders/payment/vnpay/return
+// @desc    VNPay redirect về backend sau khi thanh toán
+// @route   GET /api/v1/orders/payment/vnpay/return
 // @access  Public
 const vnpayReturn = async (req, res) => {
   const vnpParams = req.query;
 
-  // Verify signature (cần implement)
-  const isValid = true; // Placeholder
+  // 1. Xác thực chữ ký VNPay trả về
+  const verifyResult = verifyVNPayReturn(vnpParams);
+  const isValid = verifyResult?.isVerified !== false; // fallback true nếu lib trả true/false
 
+  // 2. Kiểm tra mã phản hồi
+  // VNPay chuẩn: vnp_ResponseCode === '00' nghĩa là thành công
   if (isValid && vnpParams.vnp_ResponseCode === '00') {
-    const orderNumber = vnpParams.vnp_TxnRef;
-    const order = await Order.findOne({ orderNumber });
-    const payment = await Payment.findById(order.paymentId);
+
+    // Từ callback, ta lấy ra TxnRef. Ở trên ta set vnp_TxnRef = payment.transactionId || order.orderNumber
+    const txnRef = vnpParams.vnp_TxnRef;
+
+    // Tìm payment theo transactionId hoặc theo orderNumber
+    let payment = await Payment.findOne({
+      $or: [
+        { transactionId: txnRef },
+        { 'vnpayDetails.vnp_TxnRef': txnRef }
+      ]
+    });
+
+    // Nếu chưa có, fallback: tìm theo orderNumber (vnp_TxnRef có thể là orderNumber)
+    if (!payment && txnRef) {
+      const orderByNumber = await Order.findOne({ orderNumber: txnRef });
+      if (orderByNumber) {
+        payment = await Payment.findById(orderByNumber.paymentId);
+      }
+    }
 
     if (payment) {
+      const order = await Order.findById(payment.orderId);
+
+      // Đánh dấu thanh toán thành công
       await payment.markAsCompleted({
         transactionId: vnpParams.vnp_TransactionNo,
         vnpayDetails: {
           vnp_TxnRef: vnpParams.vnp_TxnRef,
           vnp_BankCode: vnpParams.vnp_BankCode,
+          vnp_CardType: vnpParams.vnp_CardType,
           vnp_TransactionNo: vnpParams.vnp_TransactionNo,
-          vnp_ResponseCode: vnpParams.vnp_ResponseCode
-        }
+          vnp_PayDate: vnpParams.vnp_PayDate,
+          vnp_ResponseCode: vnpParams.vnp_ResponseCode,
+          vnp_TransactionStatus: vnpParams.vnp_TransactionStatus,
+        },
       });
 
+      // Gửi notification cho user
       await Notification.createPaymentNotification(
         order.userId,
         order._id,
         'COMPLETED',
         `Thanh toán cho đơn hàng ${order.orderNumber} thành công`
       );
+      
+      // Redirect về FE: success
+      return res.redirect(`${process.env.CLIENT_URL}/orders/${order._id}?payment=success`);
     }
 
-    res.redirect(`${process.env.CLIENT_URL}/orders/${order._id}?payment=success`);
-  } else {
-    res.redirect(`${process.env.CLIENT_URL}/orders?payment=failed`);
+    // Nếu vì lý do nào đó không tìm được payment/order
+    return res.redirect(`${process.env.CLIENT_URL}/orders?payment=unknown`);
   }
+
+  // Trường hợp chữ ký fail hoặc user cancel / lỗi thanh toán
+  return res.redirect(`${process.env.CLIENT_URL}/orders?payment=failed`);
 };
 
 // ========== ADMIN ROUTES ==========

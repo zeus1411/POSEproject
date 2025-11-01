@@ -18,8 +18,21 @@ export const previewOrder = async (promotionCode) => {
 };
 
 export const createOrder = async ({ shippingAddress, paymentMethod = 'COD', promotionCode, notes }) => {
-  const response = await api.post('/orders', { shippingAddress, paymentMethod, promotionCode, notes });
-  return response.data?.data;
+  try {
+    const response = await api.post('/orders', { 
+      shippingAddress, 
+      paymentMethod, 
+      promotionCode, 
+      notes 
+    });
+    
+    // Return the full response data for both COD and VNPay
+    // DO NOT redirect here - let the component handle it
+    return response.data;
+  } catch (error) {
+    console.error('Error creating order:', error);
+    throw error;
+  }
 };
 
 export default { getUserOrders, getOrderById, previewOrder, createOrder };
