@@ -37,8 +37,8 @@ const orderSchema = new mongoose.Schema(
   {
     orderNumber: {
       type: String,
-      unique: true,
-      required: true
+      unique: true
+      // *** BỎ required: true ĐI - sẽ được generate trong pre-save hook ***
     },
     userId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -174,10 +174,15 @@ orderSchema.index({ status: 1 });
 orderSchema.index({ isPaid: 1 });
 orderSchema.index({ createdAt: -1 });
 
-// Generate order number before saving
+// Generate order number before saving - ĐẢM BẢO HOOK NÀY CHẠY
 orderSchema.pre('save', async function (next) {
   if (!this.orderNumber) {
-    const count = await this.constructor.countDocuments();
+    console.log('Generating orderNumber...');
+    
+    // Sử dụng session nếu có
+    const session = this.$session();
+    
+    const count = await this.constructor.countDocuments({}, session ? { session } : {});
     const date = new Date();
     const year = date.getFullYear().toString().slice(-2);
     const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -185,6 +190,8 @@ orderSchema.pre('save', async function (next) {
     const orderNum = String(count + 1).padStart(5, '0');
     
     this.orderNumber = `ORD${year}${month}${day}${orderNum}`;
+    
+    console.log('Generated orderNumber:', this.orderNumber);
   }
   
   next();
@@ -227,9 +234,6 @@ orderSchema.pre('save', function (next) {
   
   next();
 });
-
-// Note: Product stock updates should be handled in the controller/service layer
-// to avoid circular dependency issues and have better control over transactions
 
 // Method to update order status
 orderSchema.methods.updateStatus = async function (newStatus, note = '', updatedBy = null) {
@@ -313,8 +317,6 @@ orderSchema.statics.getStatistics = async function (startDate, endDate) {
   
   return stats[0] || { totalOrders: 0, totalRevenue: 0, averageOrderValue: 0 };
 };
-
-// Static method to get
 
 const Order = mongoose.model('Order', orderSchema);
 

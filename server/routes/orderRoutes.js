@@ -25,32 +25,10 @@ router.post(
   stripeWebhook
 );
 
-// Return URL từ VNPay
+// VNPay return URL (public)
 router.get('/payment/vnpay/return', vnpayReturn);
 
-// ========== USER ROUTES ==========
-// Xem trước đơn hàng (preview trước khi đặt)
-router.get('/preview', authenticateUser, previewOrder);
-
-// Tạo đơn hàng mới
-router.post('/', authenticateUser, createOrder);
-
-// Lấy danh sách đơn hàng của user
-router.get('/', authenticateUser, getUserOrders);
-
-// Lấy chi tiết đơn hàng
-router.get('/:id', authenticateUser, getOrderById);
-
-// Hủy đơn hàng
-router.patch('/:id/cancel', authenticateUser, cancelOrder);
-
-// Xử lý thanh toán Stripe
-router.post('/:id/payment/stripe', authenticateUser, processStripePayment);
-
-// Tạo VNPay payment URL
-router.post('/:id/payment/vnpay', authenticateUser, createVNPayPayment);
-
-// ========== ADMIN ROUTES ==========
+// ========== ADMIN ROUTES (ĐẶT TRƯỚC ĐỂ TRÁNH CONFLICT) ==========
 // Lấy tất cả đơn hàng (Admin)
 router.get(
   '/admin/all',
@@ -74,5 +52,27 @@ router.patch(
   authorizeRoles('ADMIN'),
   updateOrderStatus
 );
+
+// ========== USER ROUTES ==========
+// Xem trước đơn hàng (preview trước khi đặt) - ĐẶT TRƯỚC /
+router.get('/preview', authenticateUser, previewOrder);
+
+// Tạo đơn hàng mới
+router.post('/', authenticateUser, createOrder);
+
+// Lấy danh sách đơn hàng của user
+router.get('/', authenticateUser, getUserOrders);
+
+// VNPay payment URL
+router.post('/:id/payment/vnpay', authenticateUser, createVNPayPayment);
+
+// Hủy đơn hàng
+router.patch('/:id/cancel', authenticateUser, cancelOrder);
+
+// Xử lý thanh toán Stripe
+router.post('/:id/payment/stripe', authenticateUser, processStripePayment);
+
+// Lấy chi tiết đơn hàng - ĐẶT CUỐI CÙNG
+router.get('/:id', authenticateUser, getOrderById);
 
 export default router;
