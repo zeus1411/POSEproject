@@ -15,9 +15,33 @@ const SearchFilter = ({
   }, [filters]);
 
   const handleFilterChange = (key, value) => {
-    const newFilters = { ...localFilters, [key]: value };
-    setLocalFilters(newFilters);
+    let processedValue = value;
+    
+    // Handle price inputs (convert to number and multiply by 1000 for VND)
+    if ((key === 'minPrice' || key === 'maxPrice') && value !== '') {
+      // Remove any non-numeric characters and convert to number
+      const numericValue = Number(value.toString().replace(/[^0-9]/g, ''));
+      // Only update if it's a valid number
+      if (!isNaN(numericValue)) {
+        processedValue = numericValue * 1000; // Convert to VND
+      } else {
+        processedValue = '';
+      }
+    }
+    
+    const newFilters = { ...localFilters, [key]: processedValue };
+    setLocalFilters(prev => ({
+      ...prev,
+      [key]: value // Keep the raw input value in local state
+    }));
     onFiltersChange(newFilters);
+  };
+  
+  // Format price for display (convert from VND to thousands)
+  const formatPriceInput = (price) => {
+    if (price === '' || price === undefined || price === null) return '';
+    const value = typeof price === 'string' ? price : (price / 1000).toString();
+    return value.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
   };
 
   const handleSearch = (e) => {
@@ -29,8 +53,8 @@ const SearchFilter = ({
     const clearedFilters = {
       search: '',
       categoryId: '',
-      minPrice: '',
-      maxPrice: '',
+      minPrice: null,
+      maxPrice: null,
       inStock: '',
       sort: 'createdAt:desc'
     };
@@ -125,26 +149,45 @@ const SearchFilter = ({
 
             {/* Price Range */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Khoảng giá
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="number"
-                  placeholder="Từ"
-                  value={localFilters.minPrice}
-                  onChange={(e) => handleFilterChange('minPrice', e.target.value)}
-                  className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
-                />
-                <input
-                  type="number"
-                  placeholder="Đến"
-                  value={localFilters.maxPrice}
-                  onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
-                  className="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
-                />
-              </div>
-            </div>
+  {/* Hàng tiêu đề */}
+  <div className="flex items-baseline gap-2 mb-2">
+    <label className="block text-sm font-medium text-gray-700">
+      Khoảng giá
+    </label>
+    <span className="text-sm text-gray-500 whitespace-nowrap">
+      (nghìn VNĐ)
+    </span>
+  </div>
+
+  {/* Inputs */}
+  <div className="flex gap-2 items-center">
+    <div className="relative flex-1">
+      <input
+        type="text"
+        inputMode="numeric"
+        pattern="[0-9,]*"
+        placeholder="Từ"
+        value={formatPriceInput(localFilters.minPrice)}
+        onChange={(e) => handleFilterChange('minPrice', e.target.value)}
+        className="w-full px-3 py-2 pl-8 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+      />
+      <span className="absolute left-3 top-2 text-sm text-gray-500">₫</span>
+    </div>
+
+    <div className="relative flex-1">
+      <input
+        type="text"
+        inputMode="numeric"
+        pattern="[0-9,]*"
+        placeholder="Đến"
+        value={formatPriceInput(localFilters.maxPrice)}
+        onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
+        className="w-full px-3 py-2 pl-8 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-primary-500 focus:border-primary-500"
+      />
+      <span className="absolute left-3 top-2 text-sm text-gray-500">₫</span>
+    </div>
+  </div>
+</div>
 
             {/* Stock Filter */}
             <div>
