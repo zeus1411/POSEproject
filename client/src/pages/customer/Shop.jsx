@@ -10,7 +10,7 @@ import Pagination from '../../components/common/Pagination';
 const Shop = () => {
   const dispatch = useDispatch();
   const { products, pagination, filters, isLoading } = useSelector((state) => state.products);
-  const { categories } = useSelector((state) => state.categories);
+  const { rootCategories: categories } = useSelector((state) => state.categories);
   const { user } = useSelector((state) => state.auth);
   const [wishlistItems, setWishlistItems] = useState([]);
 

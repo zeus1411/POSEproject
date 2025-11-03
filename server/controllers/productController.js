@@ -105,7 +105,8 @@ export const deleteProduct = async (req, res, next) => {
 export const searchProducts = async (req, res, next) => {
     try {
         const {
-            q, // keyword
+            q, // keyword (legacy)
+            search, // new keyword parameter
             categoryId,
             minPrice,
             maxPrice,
@@ -115,9 +116,12 @@ export const searchProducts = async (req, res, next) => {
             sort // e.g. 'price:asc', 'createdAt:desc'
         } = req.query;
 
+        // Use search parameter if provided, otherwise fall back to q for backward compatibility
+        const searchTerm = search || q;
+
         // Validate keyword input edge cases
-        if (typeof q === 'string') {
-            const trimmed = q.trim();
+        if (searchTerm && typeof searchTerm === 'string') {
+            const trimmed = searchTerm.trim();
             if (trimmed.length === 0) {
                 return res.status(400).json({ message: 'Vui lòng nhập từ khóa tìm kiếm' });
             }
@@ -131,8 +135,8 @@ export const searchProducts = async (req, res, next) => {
         }
 
         // Keyword search on name/description (case/diacritic insensitive via collation)
-        if (q) {
-            const keyword = q.trim();
+        if (searchTerm) {
+            const keyword = searchTerm.trim();
             filter.$or = [
                 { name: { $regex: keyword, $options: 'i' } },
                 { description: { $regex: keyword, $options: 'i' } },
