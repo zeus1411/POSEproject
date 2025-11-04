@@ -339,6 +339,25 @@ const ProductDetail = () => {
             </div>
           </div>
         )}
+
+        {/* Đánh giá sản phẩm */}
+        <div className="mt-12 bg-white rounded-lg p-6 border border-gray-200">
+          <h2 className="text-xl font-bold text-gray-900 mb-4">Đánh giá sản phẩm</h2>
+
+          {/* Form gửi đánh giá */}
+          <ReviewForm productId={currentProduct._id} />
+
+          {/* Danh sách đánh giá */}
+          <div className="mt-6 space-y-3">
+            {reviews.loading ? (
+              <p className="text-gray-500">Đang tải đánh giá...</p>
+            ) : reviews.list.length > 0 ? (
+              reviews.list.map((r) => <ReviewCard key={r._id} review={r} />)
+            ) : (
+              <p className="text-gray-500">Chưa có đánh giá nào.</p>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );
