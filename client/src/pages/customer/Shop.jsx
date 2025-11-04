@@ -1,18 +1,22 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { searchProducts, setFilters, clearFilters } from '../../redux/slices/productSlice';
 import { getRootCategories } from '../../redux/slices/categorySlice';
 import { addToCart } from '../../redux/slices/cartSlice';
 import ProductGrid from '../../components/common/ProductGrid';
 import SearchFilter from '../../components/common/SearchFilter';
 import Pagination from '../../components/common/Pagination';
+import ConfirmDialog from '../../components/common/ConfirmDialog';
 
 const Shop = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { products, pagination, filters, isLoading } = useSelector((state) => state.products);
   const { rootCategories: categories } = useSelector((state) => state.categories);
   const { user } = useSelector((state) => state.auth);
   const [wishlistItems, setWishlistItems] = useState([]);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
   useEffect(() => {
     // Load categories
@@ -33,7 +37,7 @@ const Shop = () => {
 
   const handleAddToCart = async (product) => {
     if (!user) {
-      alert('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng');
+      setShowLoginPrompt(true);
       return;
     }
 
@@ -42,6 +46,15 @@ const Shop = () => {
     } catch (error) {
       alert(error || 'Không thể thêm sản phẩm vào giỏ hàng');
     }
+  };
+
+  const handleLoginNow = () => {
+    setShowLoginPrompt(false);
+    navigate('/login');
+  };
+
+  const handleStayOnPage = () => {
+    setShowLoginPrompt(false);
   };
 
   const handleToggleWishlist = (productId) => {
@@ -115,6 +128,17 @@ const Shop = () => {
           />
         )}
       </div>
+
+      {/* Login Prompt Dialog */}
+      <ConfirmDialog
+        isOpen={showLoginPrompt}
+        title="Đăng nhập để tiếp tục"
+        message="Bạn cần đăng nhập để thêm sản phẩm vào giỏ hàng."
+        confirmText="Đăng nhập ngay"
+        cancelText="Tiếp tục mua sắm"
+        onConfirm={handleLoginNow}
+        onCancel={handleStayOnPage}
+      />
     </div>
   );
 };

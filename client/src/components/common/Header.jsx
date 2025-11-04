@@ -5,6 +5,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { logout } from '../../redux/slices/authSlice';
 import { UserCircleIcon, ShoppingCartIcon } from '@heroicons/react/24/outline';
 import MiniCart from './MiniCart';
+import ConfirmDialog from './ConfirmDialog';
 import { fetchCart } from '../../redux/slices/cartSlice';
 
 const Header = () => {
@@ -15,6 +16,7 @@ const Header = () => {
   const { summary } = useSelector((state) => state.cart);
   const [isMiniCartOpen, setIsMiniCartOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const menuRef = useRef(null);
   const isAdmin = location.pathname.startsWith('/admin');
 
@@ -42,10 +44,19 @@ const Header = () => {
     };
   }, []);
 
-  const handleLogout = async () => {
+  const handleLogoutClick = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const handleLogoutConfirm = async () => {
     await dispatch(logout());
     setIsMenuOpen(false);
-    navigate('/login');
+    setShowLogoutConfirm(false);
+    navigate('/shop');
+  };
+
+  const handleLogoutCancel = () => {
+    setShowLogoutConfirm(false);
   };
 
   const goToProfile = () => {
@@ -141,7 +152,7 @@ const Header = () => {
                         <div className="border-t my-1" />
 
                         <button
-                          onClick={handleLogout}
+                          onClick={handleLogoutClick}
                           className="w-full text-left px-4 py-2 hover:bg-gray-50 text-sm text-red-600"
                         >
                           Đăng xuất
@@ -167,6 +178,18 @@ const Header = () => {
 
       {/* Mini Cart Sidebar */}
       <MiniCart isOpen={isMiniCartOpen} onClose={() => setIsMiniCartOpen(false)} />
+
+      {/* Logout Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={showLogoutConfirm}
+        title="Xác nhận đăng xuất"
+        message="Bạn có chắc chắn muốn đăng xuất?"
+        confirmText="Đăng xuất"
+        cancelText="Hủy"
+        onConfirm={handleLogoutConfirm}
+        onCancel={handleLogoutCancel}
+        isDangerous={true}
+      />
     </>
   );
 };

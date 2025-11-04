@@ -9,6 +9,7 @@ import Products from './pages/admin/Products';
 import MyOrders from './pages/customer/MyOrders';
 import Shop from './pages/customer/Shop';
 import ProductDetail from './pages/product/ProductDetail';
+
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import ForgotPassword from './pages/auth/ForgotPassword';

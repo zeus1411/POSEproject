@@ -16,7 +16,7 @@ const productService = {
   // Get product by ID
   getProductById: async (productId) => {
     const response = await api.get(`/products/${productId}`);
-    return response.data;
+    return response.data.data; // Return the nested data object
   },
 
   // Get featured products
