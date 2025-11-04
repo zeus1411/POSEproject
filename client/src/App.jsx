@@ -8,12 +8,13 @@ import Promotions from './pages/admin/Promotions';
 import Products from './pages/admin/Products';
 import MyOrders from './pages/customer/MyOrders';
 import Shop from './pages/customer/Shop';
-import ProductDetail from './pages/customer/ProductDetail';
+import ProductDetail from './pages/product/ProductDetail';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import ResetPassword from './pages/auth/ResetPassword';
 import Checkout from './pages/customer/Checkout';
+import ProfilePage from './pages/customer/ProfilePage';
 
 function App() {
   return (
@@ -31,6 +32,7 @@ function App() {
             <Route index element={<Navigate to="/shop" replace />} />
             <Route path="shop" element={<Shop />} />
             <Route path="product/:id" element={<ProductDetail />} />
+            <Route path="profile" element={<ProfilePage />} />
             <Route path="orders" element={<MyOrders />} />
             <Route path="checkout" element={<Checkout />} />
             <Route path="admin/dashboard" element={<Navigate to="/admin/products" replace />} />
