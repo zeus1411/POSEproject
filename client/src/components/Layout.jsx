@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Outlet, Navigate } from 'react-router-dom';
+import { Outlet, useLocation, Navigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { getCurrentUser } from '../redux/slices/authSlice';
 import Header from './common/Header';
@@ -7,17 +7,25 @@ import Sidebar from './common/Sidebar';
 import Footer from './common/Footer';
 import Toast from './common/Toast';
 
+// List of public routes that don't require authentication
+const publicRoutes = ['/shop', '/product/'];
+
+const isPublicRoute = (path) => {
+  return publicRoutes.some(route => path.startsWith(route));
+};
+
 const Layout = () => {
   const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(true);
+  const location = useLocation();
+  const isPublic = isPublicRoute(location.pathname);
 
   useEffect(() => {
     const checkAuth = async () => {
       try {
         await dispatch(getCurrentUser());
       } catch (error) {
-        // User is not authenticated, will redirect to login
         console.log('Not authenticated');
       } finally {
         setIsLoading(false);
@@ -39,17 +47,17 @@ const Layout = () => {
     );
   }
 
-  // Redirect to login if not authenticated
-  if (!user) {
-    return <Navigate to="/login" replace />;
+  // Redirect to /shop only if trying to access protected routes without authentication
+  if (!user && !isPublic) {
+    return <Navigate to="/shop" replace />;
   }
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
       <Header />
       <div className="flex flex-1">
-        <Sidebar />
-        <main className="flex-1 p-6 overflow-y-auto">
+        {user && <Sidebar />}
+        <main className={`flex-1 p-6 overflow-y-auto ${!user ? 'ml-0' : ''}`}>
           <Outlet />
         </main>
       </div>

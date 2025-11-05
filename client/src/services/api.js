@@ -26,9 +26,10 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Unauthorized - clear user data and redirect to login
+      // Clear user data but don't redirect automatically
+      // The component will handle the redirection based on the route
       localStorage.removeItem('user');
-      window.location.href = '/login';
+      console.log('Session expired or invalid token');
     }
     return Promise.reject(error);
   }
