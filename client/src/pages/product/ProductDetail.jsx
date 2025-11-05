@@ -3,6 +3,9 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { getProductById, clearCurrentProduct } from '../../redux/slices/productSlice';
 import { addToCart } from '../../redux/slices/cartSlice';
+import ReviewForm from '../../components/review/ReviewForm';
+import { fetchReviews } from "../../redux/slices/reviewSlice";
+import ReviewCard from '../../components/review/ReviewCard';
 import { 
   StarIcon, 
   HeartIcon, 
@@ -26,10 +29,12 @@ const ProductDetail = () => {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [isInWishlist, setIsInWishlist] = useState(false);
+  const reviews = useSelector((state) => state.reviews);
 
   useEffect(() => {
     if (id) {
       dispatch(getProductById(id));
+      dispatch(fetchReviews(id));
     }
     
     return () => {
