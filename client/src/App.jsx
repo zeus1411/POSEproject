@@ -12,7 +12,6 @@ import ProductDetail from './pages/product/ProductDetail';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import ForgotPassword from './pages/auth/ForgotPassword';
-import ResetPassword from './pages/auth/ResetPassword';
 import Checkout from './pages/customer/Checkout';
 import ProfilePage from './pages/customer/ProfilePage';
 
@@ -25,7 +24,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password/:token" element={<ResetPassword />} />
+          {/* Removed /reset-password/:token route - now using OTP flow in /forgot-password */}
 
           {/* Main Routes */}
           <Route path="/" element={<Layout />}>
