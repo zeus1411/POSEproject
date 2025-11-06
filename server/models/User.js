@@ -28,7 +28,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Vui lòng nhập mật khẩu'],
       minlength: [6, 'Mật khẩu phải có ít nhất 6 ký tự'],
-      select: false // Không trả về password khi query
+      select: false
     },
     phone: {
       type: String,
@@ -53,7 +53,11 @@ const userSchema = new mongoose.Schema(
     },
     resetPasswordOTP: {
       code: String,
-      expires: Date
+      expires: Date,
+      attempts: {
+        type: Number,
+        default: 0
+      }
     },
     defaultAddress: {
       fullName: {
@@ -114,21 +118,19 @@ const userSchema = new mongoose.Schema(
   }
 );
 
-// Virtual populate orders
+// Virtual populate
 userSchema.virtual('orders', {
   ref: 'Order',
   localField: '_id',
   foreignField: 'userId'
 });
 
-// Virtual populate reviews
 userSchema.virtual('reviews', {
   ref: 'Review',
   localField: '_id',
   foreignField: 'userId'
 });
 
-// Virtual populate payments
 userSchema.virtual('payments', {
   ref: 'Payment',
   localField: '_id',
@@ -204,7 +206,6 @@ userSchema.methods.isLocked = function () {
 
 // Increment login attempts
 userSchema.methods.incLoginAttempts = function () {
-  // Reset if lock has expired
   if (this.lockUntil && this.lockUntil < Date.now()) {
     return this.updateOne({
       $set: { loginAttempts: 1 },
@@ -216,7 +217,6 @@ userSchema.methods.incLoginAttempts = function () {
   const maxAttempts = 5;
   const lockTime = 2 * 60 * 60 * 1000; // 2 hours
   
-  // Lock account after max attempts
   if (this.loginAttempts + 1 >= maxAttempts && !this.isLocked()) {
     updates.$set = { lockUntil: Date.now() + lockTime };
   }
@@ -233,29 +233,67 @@ userSchema.methods.resetLoginAttempts = function () {
 };
 
 // Generate and save OTP for password reset
+// Changed from 10 minutes to 5 minutes as per use case requirement
 userSchema.methods.generatePasswordResetOTP = function() {
   // Generate 6-digit OTP
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   
-  // Set OTP to expire in 10 minutes
+  // Set OTP to expire in 5 minutes (as per use case requirement)
   const otpExpires = new Date();
-  otpExpires.setMinutes(otpExpires.getMinutes() + 10);
+  otpExpires.setMinutes(otpExpires.getMinutes() + 5);
   
   this.resetPasswordOTP = {
     code: otp,
-    expires: otpExpires
+    expires: otpExpires,
+    attempts: 0 // Track verification attempts
   };
   
   return otp;
 };
 
-// Verify OTP
+// Verify OTP with attempt tracking
 userSchema.methods.verifyOTP = function(otp) {
-  return (
-    this.resetPasswordOTP && 
-    this.resetPasswordOTP.code === otp && 
-    new Date(this.resetPasswordOTP.expires) > new Date()
-  );
+  // Check if OTP exists
+  if (!this.resetPasswordOTP || !this.resetPasswordOTP.code) {
+    return false;
+  }
+
+  // Check if OTP has expired
+  const now = new Date();
+  const expiresAt = new Date(this.resetPasswordOTP.expires);
+  
+  if (expiresAt <= now) {
+    return false;
+  }
+
+  // Increment attempts
+  if (!this.resetPasswordOTP.attempts) {
+    this.resetPasswordOTP.attempts = 0;
+  }
+  this.resetPasswordOTP.attempts += 1;
+
+  // Lock after 5 failed attempts
+  const maxAttempts = 5;
+  if (this.resetPasswordOTP.attempts > maxAttempts) {
+    this.resetPasswordOTP = undefined; // Clear OTP
+    return false;
+  }
+
+  // Verify OTP code
+  return this.resetPasswordOTP.code === otp.toString();
+};
+
+// Get remaining OTP time in minutes
+userSchema.methods.getOTPTimeRemaining = function() {
+  if (!this.resetPasswordOTP || !this.resetPasswordOTP.expires) {
+    return 0;
+  }
+  
+  const now = new Date();
+  const expiresAt = new Date(this.resetPasswordOTP.expires);
+  const diff = expiresAt - now;
+  
+  return Math.max(0, Math.ceil(diff / 60000)); // Convert to minutes
 };
 
 const User = mongoose.model('User', userSchema);
