@@ -1,55 +1,51 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { logout as logoutAction } from '../redux/slices/authSlice';
 import authService from '../services/authService';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.auth);
 
-  useEffect(() => {
-    const currentUser = authService.getCurrentUser();
-    if (currentUser) {
-      setUser(currentUser.user);
-      // Check if user is admin (you might need to adjust this based on your user role structure)
-      setIsAdmin(currentUser.user.role === 'admin');
-    }
-    setIsLoading(false);
-  }, []);
+  // Compute isAdmin from user
+  const isAdmin = user?.role === 'ADMIN';
 
   const login = async (credentials) => {
+    // Login sẽ được xử lý bởi Redux thunk trong Login.jsx
+    // Giữ hàm này để tương thích với code cũ
     const data = await authService.login(credentials);
-    setUser(data.user);
-    setIsAdmin(data.user.role === 'admin');
     return data;
   };
 
   const register = async (userData) => {
+    // Register sẽ được xử lý bởi Redux thunk trong Register.jsx
+    // Giữ hàm này để tương thích với code cũ
     const data = await authService.register(userData);
     return data;
   };
 
   const logout = () => {
-    authService.logout();
-    setUser(null);
-    setIsAdmin(false);
+    dispatch(logoutAction());
   };
 
   const value = {
     user,
     isAdmin,
-    isLoading,
+    isLoading: false, // Redux xử lý loading riêng
     login,
     register,
     logout,
   };
 
-  return <AuthContext.Provider value={value}>{!isLoading && children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  );
 };
 
-export const useAuth = () => {
-  return useContext(AuthContext);
-};
+export const useAuth = () => useContext(AuthContext);
 
 export default AuthContext;

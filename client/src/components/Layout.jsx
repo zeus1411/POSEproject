@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Outlet, Navigate } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { getCurrentUser } from '../redux/slices/authSlice';
 import Header from './common/Header';
@@ -15,10 +15,10 @@ const Layout = () => {
   useEffect(() => {
     const checkAuth = async () => {
       try {
-        await dispatch(getCurrentUser());
+        await dispatch(getCurrentUser()).unwrap();
       } catch (error) {
-        // User is not authenticated, will redirect to login
-        console.log('Not authenticated');
+        // 401 khi chưa đăng nhập là bình thường, không cần xử lý
+        // User sẽ ở trạng thái null và có thể xem shop tự do
       } finally {
         setIsLoading(false);
       }
@@ -37,11 +37,6 @@ const Layout = () => {
         </div>
       </div>
     );
-  }
-
-  // Redirect to login if not authenticated
-  if (!user) {
-    return <Navigate to="/login" replace />;
   }
 
   return (
