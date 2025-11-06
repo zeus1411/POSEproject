@@ -24,10 +24,10 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
-          {/* Removed /reset-password/:token route - now using OTP flow in /forgot-password */}
 
           {/* Main Routes */}
           <Route path="/" element={<Layout />}>
+            {/* Điểm quan trọng: index -> /shop */}
             <Route index element={<Navigate to="/shop" replace />} />
             <Route path="shop" element={<Shop />} />
             <Route path="product/:id" element={<ProductDetail />} />
@@ -39,6 +39,9 @@ function App() {
             <Route path="admin/reports" element={<Reports />} />
             <Route path="admin/promotions" element={<Promotions />} />
           </Route>
+
+          {/* Catch-all: mọi đường dẫn lạ → /shop */}
+          <Route path="*" element={<Navigate to="/shop" replace />} />
         </Routes>
       </Router>
     </Provider>

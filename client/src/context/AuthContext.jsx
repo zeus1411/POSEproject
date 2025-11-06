@@ -9,19 +9,34 @@ export const AuthProvider = ({ children }) => {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    const currentUser = authService.getCurrentUser();
-    if (currentUser) {
-      setUser(currentUser.user);
-      // Check if user is admin (you might need to adjust this based on your user role structure)
-      setIsAdmin(currentUser.user.role === 'admin');
-    }
-    setIsLoading(false);
+    const initAuth = async () => {
+      try {
+        // HÀM ASYNC → phải await
+        const data = await authService.getCurrentUser();
+        // Backend thường trả { success, user } hoặc { success, data: { user } }
+        // Dựa vào authController của bạn, giả sử là { success, user }
+        if (data && data.user) {
+          setUser(data.user);
+          // role trên backend: 'USER' | 'ADMIN'
+          setIsAdmin(data.user.role === 'ADMIN');
+        }
+      } catch (error) {
+        // 401 khi chưa đăng nhập là bình thường → bỏ qua
+        console.log('Không đăng nhập hoặc token hết hạn:', error?.response?.status);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initAuth();
   }, []);
 
   const login = async (credentials) => {
     const data = await authService.login(credentials);
-    setUser(data.user);
-    setIsAdmin(data.user.role === 'admin');
+    if (data && data.user) {
+      setUser(data.user);
+      setIsAdmin(data.user.role === 'ADMIN');
+    }
     return data;
   };
 
@@ -45,11 +60,14 @@ export const AuthProvider = ({ children }) => {
     logout,
   };
 
-  return <AuthContext.Provider value={value}>{!isLoading && children}</AuthContext.Provider>;
+  // Chỉ render children sau khi check xong auth để tránh flicker
+  return (
+    <AuthContext.Provider value={value}>
+      {!isLoading && children}
+    </AuthContext.Provider>
+  );
 };
 
-export const useAuth = () => {
-  return useContext(AuthContext);
-};
+export const useAuth = () => useContext(AuthContext);
 
 export default AuthContext;

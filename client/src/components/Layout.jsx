@@ -39,10 +39,6 @@ const Layout = () => {
     );
   }
 
-  // Redirect to login if not authenticated
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
