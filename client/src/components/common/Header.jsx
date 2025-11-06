@@ -38,9 +38,9 @@ const Header = () => {
   };
 
   // Đăng xuất sau khi confirm
-  const handleLogout = () => {
+  const handleLogout = async () => {
     setIsLogoutConfirmOpen(false);
-    dispatch(logoutAction());
+    await dispatch(logoutAction());
     setIsUserMenuOpen(false);
     navigate('/shop');
   };
