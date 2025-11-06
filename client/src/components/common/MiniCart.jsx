@@ -1,13 +1,34 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { XMarkIcon, TrashIcon, MinusIcon, PlusIcon } from '@heroicons/react/24/outline';
-import { updateCartItem, removeFromCart } from '../../redux/slices/cartSlice';
+import { 
+  updateCartItem, 
+  removeFromCart, 
+  optimisticUpdateQuantity, 
+  optimisticRemoveItem,
+  fetchCart 
+} from '../../redux/slices/cartSlice';
+
+// Debounce utility
+const useDebounce = (callback, delay) => {
+  const timeoutRef = useRef(null);
+  
+  return useCallback((...args) => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    timeoutRef.current = setTimeout(() => {
+      callback(...args);
+    }, delay);
+  }, [callback, delay]);
+};
 
 const MiniCart = ({ isOpen, onClose }) => {
   const dispatch = useDispatch();
-  const { cart, summary, loading } = useSelector((state) => state.cart);
+  const { cart, summary, loading, isUpdating } = useSelector((state) => state.cart);
   const miniCartRef = useRef(null);
+  const [pendingUpdates, setPendingUpdates] = useState(new Map());
 
   // Close mini cart when clicking outside
   useEffect(() => {
@@ -33,22 +54,52 @@ const MiniCart = ({ isOpen, onClose }) => {
     }).format(price);
   };
 
-  const handleUpdateQuantity = async (productId, currentQuantity, change) => {
-    const newQuantity = currentQuantity + change;
-    if (newQuantity < 1) return;
-    
+  // Debounced update to server
+  const debouncedServerUpdate = useDebounce(async (productId, quantity) => {
     try {
-      await dispatch(updateCartItem({ productId, quantity: newQuantity })).unwrap();
+      await dispatch(updateCartItem({ productId, quantity })).unwrap();
+      // Remove from pending updates after success
+      setPendingUpdates(prev => {
+        const next = new Map(prev);
+        next.delete(productId);
+        return next;
+      });
     } catch (error) {
       console.error('Error updating quantity:', error);
+      // Revert on error by fetching fresh data
+      dispatch(fetchCart());
     }
+  }, 500); // Wait 500ms after last change before sending to server
+
+  const handleUpdateQuantity = (productId, currentQuantity, change) => {
+    const newQuantity = currentQuantity + change;
+    
+    // Find the item to check stock
+    const item = cart?.items?.find(i => i.productId._id === productId);
+    if (!item) return;
+    
+    if (newQuantity < 1 || newQuantity > item.productId.stock) return;
+    
+    // OPTIMISTIC UPDATE: Update UI immediately
+    dispatch(optimisticUpdateQuantity({ productId, quantity: newQuantity }));
+    
+    // Mark as pending
+    setPendingUpdates(prev => new Map(prev).set(productId, newQuantity));
+    
+    // Debounced server update
+    debouncedServerUpdate(productId, newQuantity);
   };
 
   const handleRemoveItem = async (productId) => {
+    // OPTIMISTIC UPDATE: Remove from UI immediately
+    dispatch(optimisticRemoveItem(productId));
+    
     try {
       await dispatch(removeFromCart(productId)).unwrap();
     } catch (error) {
       console.error('Error removing item:', error);
+      // Revert on error
+      dispatch(fetchCart());
     }
   };
 
@@ -122,11 +173,14 @@ const MiniCart = ({ isOpen, onClose }) => {
                   const price = product.salePrice || product.price;
                   const discount = product.discount || 0;
                   const finalPrice = price * (1 - discount / 100);
+                  const isPending = pendingUpdates.has(product._id);
 
                   return (
                     <div
                       key={item._id}
-                      className="flex gap-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                      className={`flex gap-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors ${
+                        isPending ? 'opacity-70' : ''
+                      }`}
                     >
                       {/* Product Image */}
                       <Link
@@ -169,17 +223,17 @@ const MiniCart = ({ isOpen, onClose }) => {
                           <div className="flex items-center border border-gray-300 rounded-md">
                             <button
                               onClick={() => handleUpdateQuantity(product._id, item.quantity, -1)}
-                              disabled={item.quantity <= 1}
+                              disabled={item.quantity <= 1 || isPending}
                               className="p-1 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                             >
                               <MinusIcon className="w-4 h-4 text-gray-600" />
                             </button>
-                            <span className="px-3 py-1 text-sm font-medium text-gray-900">
+                            <span className="px-3 py-1 text-sm font-medium text-gray-900 min-w-[40px] text-center">
                               {item.quantity}
                             </span>
                             <button
                               onClick={() => handleUpdateQuantity(product._id, item.quantity, 1)}
-                              disabled={item.quantity >= product.stock}
+                              disabled={item.quantity >= product.stock || isPending}
                               className="p-1 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                             >
                               <PlusIcon className="w-4 h-4 text-gray-600" />
@@ -188,11 +242,19 @@ const MiniCart = ({ isOpen, onClose }) => {
 
                           <button
                             onClick={() => handleRemoveItem(product._id)}
-                            className="p-1 text-red-500 hover:bg-red-50 rounded-md transition-colors"
+                            disabled={isPending}
+                            className="p-1 text-red-500 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50"
                           >
                             <TrashIcon className="w-5 h-5" />
                           </button>
                         </div>
+                        
+                        {/* Stock warning */}
+                        {item.quantity >= product.stock && (
+                          <p className="text-xs text-amber-600 mt-1">
+                            Đã đạt giới hạn tồn kho
+                          </p>
+                        )}
                       </div>
                     </div>
                   );
@@ -204,6 +266,14 @@ const MiniCart = ({ isOpen, onClose }) => {
           {/* Footer - Summary & Checkout */}
           {items.length > 0 && (
             <div className="border-t border-gray-200 p-4 space-y-3">
+              {/* Updating indicator */}
+              {isUpdating && (
+                <div className="flex items-center justify-center gap-2 text-sm text-gray-500">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600"></div>
+                  <span>Đang cập nhật...</span>
+                </div>
+              )}
+              
               {/* Subtotal */}
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Tạm tính:</span>

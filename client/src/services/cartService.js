@@ -6,6 +6,12 @@ export const getCart = async () => {
   return response.data;
 };
 
+// Lấy chỉ summary (không lấy full cart items) - OPTIMIZED
+export const getCartSummary = async () => {
+  const response = await api.get('/cart/summary');
+  return response.data;
+};
+
 // Thêm sản phẩm vào giỏ hàng
 export const addToCart = async (productId, quantity = 1) => {
   const response = await api.post('/cart/items', { productId, quantity });
@@ -38,6 +44,7 @@ export const validateCart = async () => {
 
 export default {
   getCart,
+  getCartSummary,
   addToCart,
   updateCartItem,
   removeFromCart,
