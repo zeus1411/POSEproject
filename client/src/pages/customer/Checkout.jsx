@@ -570,9 +570,12 @@ const Checkout = () => {
                 {items.map((it) => (
                   <li key={it._id} className="py-3 flex items-center gap-3">
                     <img 
-                      src={it.productId?.images?.[0]?.url || '/placeholder-product.jpg'} 
+                      src={it.productId?.images?.[0] || '/placeholder-product.jpg'} 
                       alt={it.productId?.name} 
-                      className="w-12 h-12 rounded object-cover border flex-shrink-0" 
+                      className="w-12 h-12 rounded object-cover border flex-shrink-0"
+                      onError={(e) => {
+                        e.target.src = '/placeholder-product.jpg';
+                      }}
                     />
                     <div className="flex-1 min-w-0">
                       <div className="text-sm font-medium text-gray-900 line-clamp-2">{it.productId?.name}</div>

@@ -1,0 +1,18 @@
+{
+  "timestamp": "2025-11-07T06:31:35.498Z",
+  "total": 1,
+  "successful": 1,
+  "failed": 0,
+  "successfulUploads": [
+    {
+      "success": true,
+      "url": "https://res.cloudinary.com/dxtrwinoc/image/upload/v1762497094/pose/products/mbsegvwhhvgecn3mckoi.jpg",
+      "publicId": "pose/products/mbsegvwhhvgecn3mckoi",
+      "format": "jpg",
+      "width": 477,
+      "height": 329,
+      "bytes": 29767
+    }
+  ],
+  "failedUploads": []
+}

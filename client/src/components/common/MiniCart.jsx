@@ -189,9 +189,12 @@ const MiniCart = ({ isOpen, onClose }) => {
                         className="flex-shrink-0"
                       >
                         <img
-                          src={product.images?.[0]?.url || '/placeholder-product.jpg'}
+                          src={product.images?.[0] || '/placeholder-product.jpg'}
                           alt={product.name}
                           className="w-20 h-20 object-cover rounded-md"
+                          onError={(e) => {
+                            e.target.src = '/placeholder-product.jpg';
+                          }}
                         />
                       </Link>
 

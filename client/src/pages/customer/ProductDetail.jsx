@@ -157,9 +157,12 @@ const ProductDetail = () => {
             {/* Main Image */}
             <div className="aspect-square bg-white rounded-lg overflow-hidden border border-gray-200">
               <img
-                src={currentProduct.images?.[selectedImageIndex]?.url || '/placeholder-product.jpg'}
+                src={currentProduct.images?.[selectedImageIndex] || '/placeholder-product.jpg'}
                 alt={currentProduct.name}
                 className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.target.src = '/placeholder-product.jpg';
+                }}
               />
             </div>
 
@@ -177,9 +180,12 @@ const ProductDetail = () => {
                     }`}
                   >
                     <img
-                      src={image.url}
+                      src={image}
                       alt={`${currentProduct.name} ${index + 1}`}
                       className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.src = '/placeholder-product.jpg';
+                      }}
                     />
                   </button>
                 ))}
