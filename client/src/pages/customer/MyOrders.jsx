@@ -111,15 +111,35 @@ const MyOrders = () => {
                       {/* Thumbnails */}
                       <div className="flex gap-2 mt-3">
                         {order.items?.slice(0, 4).map((it) => {
-                          const imgSrc = typeof it.productImage === 'string'
-                            ? it.productImage
-                            : (it.productImage?.url || it.productId?.images?.[0]?.url || '/placeholder-product.jpg');
+                          // Handle both string URLs and object formats
+                          let imgSrc = '/placeholder-product.jpg';
+                          
+                          if (it.productImage) {
+                            // If productImage is a string URL
+                            if (typeof it.productImage === 'string') {
+                              imgSrc = it.productImage;
+                            } 
+                            // If productImage is an object with url property
+                            else if (it.productImage.url) {
+                              imgSrc = it.productImage.url;
+                            }
+                          } 
+                          // Fallback to product's first image
+                          else if (it.productId?.images?.[0]) {
+                            imgSrc = Array.isArray(it.productId.images) 
+                              ? it.productId.images[0] 
+                              : it.productId.images;
+                          }
+                          
                           return (
                             <img
                               key={it._id}
-                              src={imgSrc || '/placeholder-product.jpg'}
+                              src={imgSrc}
                               alt={it.productName || it.productId?.name || 'Sản phẩm'}
                               className="w-12 h-12 rounded object-cover border"
+                              onError={(e) => {
+                                e.target.src = '/placeholder-product.jpg';
+                              }}
                             />
                           );
                         })}
