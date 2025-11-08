@@ -311,7 +311,7 @@ const MiniCart = ({ isOpen, onClose }) => {
                 onClick={onClose}
                 className="block w-full py-3 px-4 bg-gradient-to-r from-primary-600 to-purple-600 text-white text-center font-semibold rounded-lg hover:from-primary-700 hover:to-purple-700 transition-all shadow-md hover:shadow-lg"
               >
-                Thanh toán
+                Xác nhận đơn hàng
               </Link>
 
               {/* Continue Shopping */}

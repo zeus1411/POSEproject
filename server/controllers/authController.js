@@ -3,7 +3,7 @@ import { StatusCodes } from 'http-status-codes';
 import User from '../models/User.js';
 import { 
     BadRequestError, 
-    UnauthenticatedError 
+    UnauthenticatedError, 
 } from '../utils/errorHandler.js';
 import { 
     attachCookiesToResponse,
@@ -70,10 +70,27 @@ const logout = async (req, res) => {
 };
 
 const getCurrentUser = async (req, res) => {
-    const user = await User.findOne({ _id: req.user.userId }).select('-password');
+    const user = await User.findOne({ _id: req.user.userId })
+        .select('-password')
+        .populate({
+            path: 'address',
+            select: 'fullName phoneNumber addressLine1 addressLine2 city district ward isDefault'
+        });
+    
+    if (!user) {
+        throw new UnauthenticatedError('User not found');
+    }
+    
+    // Create a clean user object with all necessary fields
+    const userResponse = {
+        ...createTokenUser(user),
+        // Include any additional fields that might be needed by the frontend
+        address: user.address
+    };
+    
     res.status(StatusCodes.OK).json({ 
         success: true,
-        user: createTokenUser(user)
+        user: userResponse
     });
 };
 

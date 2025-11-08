@@ -7,18 +7,16 @@ import { toast } from 'react-toastify';
 
 // ==================== VNPay Payment Modal Component ====================
 const VNPayPaymentModal = ({ order, paymentData, onClose, onSuccess, onError }) => {
-  const [paymentStatus, setPaymentStatus] = useState('pending'); // pending, processing, success, failed
+  const [paymentStatus, setPaymentStatus] = useState('pending');
   const [qrCodeUrl, setQrCodeUrl] = useState('');
-  const [countdown, setCountdown] = useState(600); // 10 minutes
+  const [countdown, setCountdown] = useState(600);
   
   useEffect(() => {
     if (paymentData?.paymentUrl) {
-      // Generate QR code from payment URL
       const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(paymentData.paymentUrl)}`;
       setQrCodeUrl(qrUrl);
     }
     
-    // Countdown timer
     const timer = setInterval(() => {
       setCountdown(prev => {
         if (prev <= 1) {
@@ -48,10 +46,7 @@ const VNPayPaymentModal = ({ order, paymentData, onClose, onSuccess, onError }) 
   };
   
   const handleTestPayment = () => {
-    // Simulate payment processing
     setPaymentStatus('processing');
-    
-    // Simulate successful payment after 2 seconds
     setTimeout(() => {
       setPaymentStatus('success');
       setTimeout(() => {
@@ -61,7 +56,6 @@ const VNPayPaymentModal = ({ order, paymentData, onClose, onSuccess, onError }) 
   };
   
   const openVNPayWindow = () => {
-    // Open VNPay in new window for testing
     if (paymentData?.paymentUrl) {
       window.open(paymentData.paymentUrl, 'vnpay', 'width=800,height=600');
     }
@@ -70,7 +64,6 @@ const VNPayPaymentModal = ({ order, paymentData, onClose, onSuccess, onError }) 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden">
-        {/* Header */}
         <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white relative">
           <button
             onClick={onClose}
@@ -94,11 +87,9 @@ const VNPayPaymentModal = ({ order, paymentData, onClose, onSuccess, onError }) 
           </p>
         </div>
         
-        {/* Content */}
         <div className="p-6">
           {paymentStatus === 'pending' && (
             <>
-              {/* Amount */}
               <div className="bg-blue-50 rounded-lg p-4 mb-6 text-center">
                 <p className="text-sm text-gray-600 mb-1">Số tiền thanh toán</p>
                 <p className="text-3xl font-bold text-blue-600">
@@ -106,7 +97,6 @@ const VNPayPaymentModal = ({ order, paymentData, onClose, onSuccess, onError }) 
                 </p>
               </div>
               
-              {/* QR Code */}
               <div className="bg-white border-2 border-dashed border-gray-300 rounded-lg p-6 mb-6">
                 <p className="text-center text-sm text-gray-600 mb-4">
                   Quét mã QR để thanh toán
@@ -126,7 +116,6 @@ const VNPayPaymentModal = ({ order, paymentData, onClose, onSuccess, onError }) 
                 )}
               </div>
               
-              {/* Timer */}
               <div className="flex items-center justify-center gap-2 mb-6 text-gray-600">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -136,10 +125,9 @@ const VNPayPaymentModal = ({ order, paymentData, onClose, onSuccess, onError }) 
                 </span>
               </div>
               
-              {/* Instructions */}
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
                 <p className="text-sm text-amber-800 font-medium mb-2">
-                  🔔 Hướng dẫn thanh toán:
+                  📌 Hướng dẫn thanh toán:
                 </p>
                 <ol className="text-sm text-amber-700 space-y-1 ml-4 list-decimal">
                   <li>Mở ứng dụng ngân hàng hoặc ví điện tử</li>
@@ -149,7 +137,6 @@ const VNPayPaymentModal = ({ order, paymentData, onClose, onSuccess, onError }) 
                 </ol>
               </div>
               
-              {/* Action Buttons */}
               <div className="space-y-3">
                 <button
                   onClick={openVNPayWindow}
@@ -158,7 +145,6 @@ const VNPayPaymentModal = ({ order, paymentData, onClose, onSuccess, onError }) 
                   Mở cổng thanh toán VNPay
                 </button>
                 
-                {/* Test Button for Development */}
                 <button
                   onClick={handleTestPayment}
                   className="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium"
@@ -174,7 +160,6 @@ const VNPayPaymentModal = ({ order, paymentData, onClose, onSuccess, onError }) 
                 </button>
               </div>
               
-              {/* Note */}
               <p className="text-xs text-gray-500 text-center mt-4">
                 Lưu ý: Vui lòng không tắt cửa sổ này cho đến khi hoàn tất thanh toán
               </p>
@@ -250,17 +235,7 @@ const Checkout = () => {
   const { user } = useSelector((s) => s.auth);
   const { cart, summary, loading } = useSelector((s) => s.cart);
   
-  const [shippingAddress, setShippingAddress] = useState({
-    fullName: user?.username || '',
-    phone: user?.phone || '',
-    street: '',
-    ward: '',
-    district: '',
-    city: '',
-    country: 'Việt Nam',
-    postalCode: ''
-  });
-  
+  const [userProfile, setUserProfile] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState('COD');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
@@ -268,6 +243,24 @@ const Checkout = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showVNPayModal, setShowVNPayModal] = useState(false);
   const [vnpayData, setVnpayData] = useState(null);
+
+  // Fetch user profile để lấy địa chỉ
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (!user) return;
+      
+      try {
+        // Import api từ service
+        const api = (await import('../../services/api')).default;
+        const response = await api.get('/users/profile');
+        setUserProfile(response.data?.data);
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+      }
+    };
+
+    fetchUserProfile();
+  }, [user]);
 
   useEffect(() => {
     if (!user) {
@@ -290,18 +283,18 @@ const Checkout = () => {
     loadPreview();
   }, []);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setShippingAddress((prev) => ({ ...prev, [name]: value }));
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!shippingAddress.fullName || !shippingAddress.phone || 
-        !shippingAddress.street || !shippingAddress.ward || 
-        !shippingAddress.district || !shippingAddress.city) {
-      toast.error('Vui lòng điền đầy đủ thông tin địa chỉ giao hàng');
+    // Kiểm tra user profile và địa chỉ
+    if (!userProfile?.address) {
+      toast.error('Vui lòng cập nhật địa chỉ của bạn trong trang Thông tin cá nhân trước khi đặt hàng');
+      return;
+    }
+
+    const addr = userProfile.address;
+    if (!addr.street || !addr.ward || !addr.district || !addr.city) {
+      toast.error('Địa chỉ của bạn chưa đầy đủ. Vui lòng cập nhật trong trang Thông tin cá nhân');
       return;
     }
     
@@ -313,22 +306,22 @@ const Checkout = () => {
     setError(null);
     
     try {
+      const addr = userProfile.address;
       const orderData = {
         shippingAddress: {
-          fullName: shippingAddress.fullName.trim(),
-          phone: shippingAddress.phone.trim(),
-          street: shippingAddress.street.trim(),
-          ward: shippingAddress.ward.trim(),
-          district: shippingAddress.district.trim(),
-          city: shippingAddress.city.trim(),
-          country: shippingAddress.country || 'Việt Nam',
-          postalCode: shippingAddress.postalCode || ''
+          fullName: userProfile.username || user.username,
+          phone: userProfile.phone || user.phone || '',
+          street: addr.street,
+          ward: addr.ward,
+          district: addr.district,
+          city: addr.city,
+          country: addr.country || 'Việt Nam',
+          postalCode: addr.postalCode || ''
         },
         paymentMethod: paymentMethod === 'VNPAY' ? 'VNPAY' : 'COD',
         notes: ''
       };
       
-      console.log('=== ORDER DEBUG ===');
       console.log('Submitting order with data:', JSON.stringify(orderData, null, 2));
       
       const result = await orderService.createOrder(orderData);
@@ -336,7 +329,6 @@ const Checkout = () => {
       
       setShowConfirmModal(false);
       
-      // Handle VNPay payment
       if (paymentMethod === 'VNPAY') {
         if (result?.data?.order && result?.data?.paymentUrl) {
           setVnpayData({
@@ -349,16 +341,12 @@ const Checkout = () => {
           throw new Error('Không nhận được thông tin thanh toán VNPay');
         }
       } else {
-        // COD: Success, navigate to orders
         await dispatch(resetCart());
         toast.success('Đặt hàng thành công!');
         navigate('/orders');
       }
     } catch (err) {
-      console.error('=== ORDER ERROR ===');
-      console.error('Full error:', err);
-      console.error('Error response:', err.response);
-      
+      console.error('Order error:', err);
       const errorMessage = err.response?.data?.message || err.message || 'Đã xảy ra lỗi khi đặt hàng. Vui lòng thử lại.';
       setError(errorMessage);
       toast.error(errorMessage);
@@ -393,18 +381,26 @@ const Checkout = () => {
     total: summary.total,
   };
 
+  // Format địa chỉ để hiển thị
+  const formatAddress = () => {
+    if (!userProfile?.address) return 'Chưa có địa chỉ';
+    const addr = userProfile.address;
+    const parts = [addr.street, addr.ward, addr.district, addr.city, addr.country].filter(Boolean);
+    return parts.join(', ') || 'Chưa có địa chỉ';
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <h1 className="text-2xl font-bold text-gray-900">Thanh toán</h1>
-          <p className="text-gray-600 mt-1">Nhập địa chỉ giao hàng và đặt hàng</p>
+          <h1 className="text-2xl font-bold text-gray-900">Xác nhận đơn hàng</h1>
+          <p className="text-gray-600 mt-1">Xác nhận thông tin đơn hàng, thông tin cá nhân và đặt hàng</p>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Form Section */}
-        <form onSubmit={handleSubmit} className="lg:col-span-2 bg-white rounded-lg border border-gray-200 p-6 space-y-6">
+        <div className="lg:col-span-2 space-y-6">
           {error && (
             <div className="p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg">
               <p className="font-medium">Lỗi:</p>
@@ -412,93 +408,81 @@ const Checkout = () => {
             </div>
           )}
 
-          {/* Shipping Address */}
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Địa chỉ giao hàng</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm text-gray-700 mb-1">
-                  Họ và tên <span className="text-red-500">*</span>
-                </label>
-                <input 
-                  name="fullName" 
-                  value={shippingAddress.fullName} 
-                  onChange={handleChange} 
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500" 
-                  required 
-                  placeholder="Nguyễn Văn A"
-                />
+          {/* Thông tin cá nhân */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Thông tin cá nhân</h2>
+            {userProfile ? (
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 text-sm">
+                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <span className="text-gray-600">Họ và tên:</span>
+                  <span className="font-medium text-gray-900">{userProfile.username || user.username}</span>
+                </div>
+                <div className="flex items-center gap-3 text-sm">
+                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  <span className="text-gray-600">Email:</span>
+                  <span className="font-medium text-gray-900">{userProfile.email || user.email}</span>
+                </div>
+                <div className="flex items-center gap-3 text-sm">
+                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                  </svg>
+                  <span className="text-gray-600">Số điện thoại:</span>
+                  <span className="font-medium text-gray-900">{userProfile.phone || 'Chưa cập nhật'}</span>
+                </div>
               </div>
-              <div>
-                <label className="block text-sm text-gray-700 mb-1">
-                  Số điện thoại <span className="text-red-500">*</span>
-                </label>
-                <input 
-                  name="phone" 
-                  value={shippingAddress.phone} 
-                  onChange={handleChange} 
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500" 
-                  required 
-                  placeholder="0901234567"
-                />
+            ) : (
+              <div className="text-center py-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
               </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm text-gray-700 mb-1">
-                  Địa chỉ <span className="text-red-500">*</span>
-                </label>
-                <input 
-                  name="street" 
-                  value={shippingAddress.street} 
-                  onChange={handleChange} 
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500" 
-                  required 
-                  placeholder="123 Đường ABC"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-700 mb-1">
-                  Phường/Xã <span className="text-red-500">*</span>
-                </label>
-                <input 
-                  name="ward" 
-                  value={shippingAddress.ward} 
-                  onChange={handleChange} 
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500" 
-                  required 
-                  placeholder="Phường 1"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-700 mb-1">
-                  Quận/Huyện <span className="text-red-500">*</span>
-                </label>
-                <input 
-                  name="district" 
-                  value={shippingAddress.district} 
-                  onChange={handleChange} 
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500" 
-                  required 
-                  placeholder="Quận 1"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-700 mb-1">
-                  Tỉnh/Thành phố <span className="text-red-500">*</span>
-                </label>
-                <input 
-                  name="city" 
-                  value={shippingAddress.city} 
-                  onChange={handleChange} 
-                  className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500" 
-                  required 
-                  placeholder="TP. Hồ Chí Minh"
-                />
-              </div>
+            )}
+          </div>
+
+          {/* Địa chỉ giao hàng */}
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900">Địa chỉ giao hàng</h2>
+              <button
+                onClick={() => navigate('/profile')}
+                className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+              >
+                Cập nhật địa chỉ
+              </button>
             </div>
+            
+            {userProfile?.address ? (
+              <div className="bg-gray-50 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <svg className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-gray-900">{formatAddress()}</p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <p className="text-sm text-amber-800">
+                  Bạn chưa cập nhật địa chỉ. Vui lòng cập nhật địa chỉ trong trang Thông tin cá nhân để tiếp tục đặt hàng.
+                </p>
+                <button
+                  onClick={() => navigate('/profile')}
+                  className="mt-2 text-sm font-medium text-amber-900 hover:text-amber-700"
+                >
+                  Cập nhật ngay →
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Payment Method */}
-          <div>
+          <div className="bg-white rounded-lg border border-gray-200 p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Phương thức thanh toán</h2>
             <div className="space-y-3">
               <div className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
@@ -537,14 +521,14 @@ const Checkout = () => {
           {/* Submit Button */}
           <div className="flex justify-end">
             <button 
-              type="submit" 
-              disabled={submitting || items.length === 0} 
+              onClick={handleSubmit}
+              disabled={submitting || items.length === 0 || !userProfile?.address} 
               className="px-6 py-3 text-white bg-gradient-to-r from-primary-600 to-purple-600 rounded-lg hover:from-primary-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-sm"
             >
               {submitting ? 'Đang tạo đơn hàng...' : 'Đặt hàng'}
             </button>
           </div>
-        </form>
+        </div>
 
         {/* Summary Section */}
         <div className="bg-white rounded-lg border border-gray-200 p-6 h-fit">
@@ -558,7 +542,7 @@ const Checkout = () => {
             <div className="text-center py-8">
               <p className="text-gray-600">Giỏ hàng trống</p>
               <button 
-                onClick={() => navigate('/products')}
+                onClick={() => navigate('/shop')}
                 className="mt-4 text-primary-600 hover:text-primary-700 text-sm font-medium"
               >
                 Tiếp tục mua sắm
@@ -635,7 +619,7 @@ const Checkout = () => {
               </div>
               <div className="text-sm">
                 <span className="text-gray-600">Địa chỉ:</span>
-                <p className="font-medium text-gray-900 mt-1">{`${shippingAddress.street}, ${shippingAddress.ward}, ${shippingAddress.district}, ${shippingAddress.city}`}</p>
+                <p className="font-medium text-gray-900 mt-1">{formatAddress()}</p>
               </div>
             </div>
             <div className="flex gap-3">
