@@ -31,8 +31,16 @@ const logout = async () => {
 
 // Get current user
 const getCurrentUser = async () => {
-  const response = await api.get('/auth/me');
-  return response.data;
+  const response = await api.get('/auth/me', {
+      // ✅ Force bypass cache với timestamp
+      params: { _t: Date.now() },
+      headers: {
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
+      }
+    });
+    
+    return response.data;
 };
 
 // Send OTP for password reset

@@ -183,6 +183,19 @@ const ProfilePage = () => {
       if (response.success) {
         // ✅ Cập nhật Redux store với data mới từ API response
         dispatch(setUser(response.data.user));
+        
+        // ✅ FORCE RELOAD user data để bypass cache
+        setTimeout(async () => {
+          try {
+            const freshUserData = await userService.getCurrentUser();
+            if (freshUserData.success) {
+              dispatch(setUser(freshUserData.data.user));
+            }
+          } catch (err) {
+            console.error('Error refreshing user data:', err);
+          }
+        }, 100);
+        
         setIsEditingPersonal(false);
         alert('Cập nhật thông tin cá nhân thành công!');
       }
