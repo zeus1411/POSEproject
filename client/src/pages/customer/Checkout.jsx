@@ -235,7 +235,6 @@ const Checkout = () => {
   const { user } = useSelector((s) => s.auth);
   const { cart, summary, loading } = useSelector((s) => s.cart);
   
-  const [userProfile, setUserProfile] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState('COD');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
@@ -243,24 +242,6 @@ const Checkout = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showVNPayModal, setShowVNPayModal] = useState(false);
   const [vnpayData, setVnpayData] = useState(null);
-
-  // Fetch user profile để lấy địa chỉ
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      if (!user) return;
-      
-      try {
-        // Import api từ service
-        const api = (await import('../../services/api')).default;
-        const response = await api.get('/users/profile');
-        setUserProfile(response.data?.data);
-      } catch (error) {
-        console.error('Error fetching user profile:', error);
-      }
-    };
-
-    fetchUserProfile();
-  }, [user]);
 
   useEffect(() => {
     if (!user) {
@@ -286,13 +267,13 @@ const Checkout = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // Kiểm tra user profile và địa chỉ
-    if (!userProfile?.address) {
+    // ✅ Sử dụng user từ Redux store thay vì userProfile
+    if (!user?.address) {
       toast.error('Vui lòng cập nhật địa chỉ của bạn trong trang Thông tin cá nhân trước khi đặt hàng');
       return;
     }
 
-    const addr = userProfile.address;
+    const addr = user.address;
     if (!addr.street || !addr.ward || !addr.district || !addr.city) {
       toast.error('Địa chỉ của bạn chưa đầy đủ. Vui lòng cập nhật trong trang Thông tin cá nhân');
       return;
@@ -306,11 +287,11 @@ const Checkout = () => {
     setError(null);
     
     try {
-      const addr = userProfile.address;
+      const addr = user.address;
       const orderData = {
         shippingAddress: {
-          fullName: userProfile.username || user.username,
-          phone: userProfile.phone || user.phone || '',
+          fullName: user.fullName || user.username,
+          phone: user.phone || '',
           street: addr.street,
           ward: addr.ward,
           district: addr.district,
@@ -381,10 +362,10 @@ const Checkout = () => {
     total: summary.total,
   };
 
-  // Format địa chỉ để hiển thị
+  // ✅ Format địa chỉ sử dụng user thay vì userProfile
   const formatAddress = () => {
-    if (!userProfile?.address) return 'Chưa có địa chỉ';
-    const addr = userProfile.address;
+    if (!user?.address) return 'Chưa có địa chỉ';
+    const addr = user.address;
     const parts = [addr.street, addr.ward, addr.district, addr.city, addr.country].filter(Boolean);
     return parts.join(', ') || 'Chưa có địa chỉ';
   };
@@ -411,28 +392,28 @@ const Checkout = () => {
           {/* Thông tin cá nhân */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Thông tin cá nhân</h2>
-            {userProfile ? (
+            {user ? (
               <div className="space-y-3">
                 <div className="flex items-center gap-3 text-sm">
                   <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                   <span className="text-gray-600">Họ và tên:</span>
-                  <span className="font-medium text-gray-900">{userProfile.username || user.username}</span>
+                  <span className="font-medium text-gray-900">{user.fullName || user.username}</span>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
                   <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
                   <span className="text-gray-600">Email:</span>
-                  <span className="font-medium text-gray-900">{userProfile.email || user.email}</span>
+                  <span className="font-medium text-gray-900">{user.email}</span>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
                   <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                   </svg>
                   <span className="text-gray-600">Số điện thoại:</span>
-                  <span className="font-medium text-gray-900">{userProfile.phone || 'Chưa cập nhật'}</span>
+                  <span className="font-medium text-gray-900">{user.phone || 'Chưa cập nhật'}</span>
                 </div>
               </div>
             ) : (
@@ -454,7 +435,7 @@ const Checkout = () => {
               </button>
             </div>
             
-            {userProfile?.address ? (
+            {user?.address ? (
               <div className="bg-gray-50 rounded-lg p-4">
                 <div className="flex items-start gap-3">
                   <svg className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -522,7 +503,7 @@ const Checkout = () => {
           <div className="flex justify-end">
             <button 
               onClick={handleSubmit}
-              disabled={submitting || items.length === 0 || !userProfile?.address} 
+              disabled={submitting || items.length === 0 || !user?.address} 
               className="px-6 py-3 text-white bg-gradient-to-r from-primary-600 to-purple-600 rounded-lg hover:from-primary-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-sm"
             >
               {submitting ? 'Đang tạo đơn hàng...' : 'Đặt hàng'}
