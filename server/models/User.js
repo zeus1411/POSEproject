@@ -30,18 +30,17 @@ const userSchema = new mongoose.Schema(
       minlength: [6, 'Mật khẩu phải có ít nhất 6 ký tự'],
       select: false
     },
+    
+    // ========== THÔNG TIN CÁ NHÂN ==========
+    fullName: {
+      type: String,
+      trim: true,
+      maxlength: [100, 'Họ tên không được vượt quá 100 ký tự']
+    },
     phone: {
       type: String,
-      trim: true
-    },
-    role: {
-      type: String,
-      enum: ['USER', 'ADMIN'],
-      default: 'USER'
-    },
-    avatar: {
-      type: String,
-      default: 'https://res.cloudinary.com/default-avatar.png'
+      trim: true,
+      match: [/(84|0[3|5|7|8|9])+([0-9]{8})\b/g, 'Số điện thoại không hợp lệ']
     },
     dateOfBirth: {
       type: Date
@@ -51,48 +50,64 @@ const userSchema = new mongoose.Schema(
       enum: ['male', 'female', null],
       default: null
     },
-    resetPasswordOTP: {
-      code: String,
-      expires: Date,
-      attempts: {
-        type: Number,
-        default: 0
-      }
+    avatar: {
+      type: String,
+      default: 'https://res.cloudinary.com/default-avatar.png'
     },
-    defaultAddress: {
-      fullName: {
-        type: String,
-        trim: true
-      },
-      phone: {
-        type: String,
-        trim: true
-      },
+    
+    // ========== ĐỊA CHỈ (KHÔNG có fullName, phone) ==========
+    address: {
+      // Địa chỉ chi tiết (số nhà, tên đường)
       street: {
         type: String,
-        trim: true
+        trim: true,
+        maxlength: [200, 'Địa chỉ không được vượt quá 200 ký tự']
       },
+      // Phường/Xã
       ward: {
         type: String,
         trim: true
       },
+      wardCode: {
+        type: String,
+        trim: true
+      },
+      // Quận/Huyện
       district: {
         type: String,
         trim: true
       },
+      districtId: {
+        type: Number
+      },
+      // Tỉnh/Thành phố
       city: {
         type: String,
         trim: true
       },
+      cityId: {
+        type: Number
+      },
       country: {
         type: String,
-        default: 'Việt Nam',
-        trim: true
+        default: 'Việt Nam'
       },
       postalCode: {
         type: String,
         trim: true
+      },
+      // Ghi chú địa chỉ
+      notes: {
+        type: String,
+        maxlength: [500, 'Ghi chú không được vượt quá 500 ký tự']
       }
+    },
+    
+    // ========== HỆ THỐNG ==========
+    role: {
+      type: String,
+      enum: ['USER', 'ADMIN'],
+      default: 'USER'
     },
     isActive: {
       type: Boolean,
@@ -101,6 +116,14 @@ const userSchema = new mongoose.Schema(
     isEmailVerified: {
       type: Boolean,
       default: false
+    },
+    resetPasswordOTP: {
+      code: String,
+      expires: Date,
+      attempts: {
+        type: Number,
+        default: 0
+      }
     },
     resetPasswordToken: String,
     resetPasswordExpires: Date,
@@ -233,19 +256,16 @@ userSchema.methods.resetLoginAttempts = function () {
 };
 
 // Generate and save OTP for password reset
-// Changed from 10 minutes to 5 minutes as per use case requirement
 userSchema.methods.generatePasswordResetOTP = function() {
-  // Generate 6-digit OTP
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
   
-  // Set OTP to expire in 5 minutes (as per use case requirement)
   const otpExpires = new Date();
   otpExpires.setMinutes(otpExpires.getMinutes() + 5);
   
   this.resetPasswordOTP = {
     code: otp,
     expires: otpExpires,
-    attempts: 0 // Track verification attempts
+    attempts: 0
   };
   
   return otp;
@@ -253,12 +273,10 @@ userSchema.methods.generatePasswordResetOTP = function() {
 
 // Verify OTP with attempt tracking
 userSchema.methods.verifyOTP = function(otp) {
-  // Check if OTP exists
   if (!this.resetPasswordOTP || !this.resetPasswordOTP.code) {
     return false;
   }
 
-  // Check if OTP has expired
   const now = new Date();
   const expiresAt = new Date(this.resetPasswordOTP.expires);
   
@@ -266,20 +284,17 @@ userSchema.methods.verifyOTP = function(otp) {
     return false;
   }
 
-  // Increment attempts
   if (!this.resetPasswordOTP.attempts) {
     this.resetPasswordOTP.attempts = 0;
   }
   this.resetPasswordOTP.attempts += 1;
 
-  // Lock after 5 failed attempts
   const maxAttempts = 5;
   if (this.resetPasswordOTP.attempts > maxAttempts) {
-    this.resetPasswordOTP = undefined; // Clear OTP
+    this.resetPasswordOTP = undefined;
     return false;
   }
 
-  // Verify OTP code
   return this.resetPasswordOTP.code === otp.toString();
 };
 
@@ -293,7 +308,41 @@ userSchema.methods.getOTPTimeRemaining = function() {
   const expiresAt = new Date(this.resetPasswordOTP.expires);
   const diff = expiresAt - now;
   
-  return Math.max(0, Math.ceil(diff / 60000)); // Convert to minutes
+  return Math.max(0, Math.ceil(diff / 60000));
+};
+
+// ========== METHODS MỚI - ĐỊA CHỈ ==========
+
+// Kiểm tra user đã có địa chỉ chưa
+userSchema.methods.hasAddress = function() {
+  return !!(this.address && this.address.street && this.address.city);
+};
+
+// Lấy địa chỉ đầy đủ để hiển thị
+userSchema.methods.getFullAddress = function() {
+  if (!this.hasAddress()) {
+    return null;
+  }
+  
+  return `${this.address.street}, ${this.address.ward}, ${this.address.district}, ${this.address.city}, ${this.address.country}`;
+};
+
+// Lấy thông tin giao hàng (dùng cho Order)
+userSchema.methods.getShippingInfo = function() {
+  if (!this.hasAddress()) {
+    throw new Error('User chưa cập nhật địa chỉ giao hàng');
+  }
+  
+  return {
+    fullName: this.fullName || this.username,
+    phone: this.phone,
+    street: this.address.street,
+    ward: this.address.ward,
+    district: this.address.district,
+    city: this.address.city,
+    country: this.address.country || 'Việt Nam',
+    postalCode: this.address.postalCode
+  };
 };
 
 const User = mongoose.model('User', userSchema);
