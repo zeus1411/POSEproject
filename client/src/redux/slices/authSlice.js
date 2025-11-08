@@ -42,9 +42,14 @@ export const getCurrentUser = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await authService.getCurrentUser();
+      
+      // ✅ DEBUG: Log response để xem cấu trúc
+      console.log('🔍 getCurrentUser response:', response);
+      console.log('🔍 response.data:', response.data);
+      console.log('🔍 response.data.user:', response.data?.user);
+      
       return response;
     } catch (error) {
-      // Không throw error cho 401 vì đây là trạng thái bình thường khi chưa đăng nhập
       if (error.response?.status === 401) {
         return rejectWithValue({ user: null, silent: true });
       }
