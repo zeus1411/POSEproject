@@ -31,7 +31,8 @@ const createTokenUser = (user) => {
         phone: user.phone,
         dateOfBirth: user.dateOfBirth,
         gender: user.gender,
-        address: user.address
+        address: user.address,
+        avatar: user.avatar // Add avatar to the token user
     };
 };
 

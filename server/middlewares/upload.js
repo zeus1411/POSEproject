@@ -13,8 +13,8 @@ cloudinary.config({
   secure: true
 });
 
-// Configure Cloudinary storage
-const storage = new CloudinaryStorage({
+// Configure Cloudinary storage for products
+const productStorage = new CloudinaryStorage({
   cloudinary,
   params: {
     folder: 'pose/products',
@@ -27,7 +27,25 @@ const storage = new CloudinaryStorage({
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, file.fieldname + '-' + uniqueSuffix);
+    cb(null, 'product-' + uniqueSuffix);
+  }
+});
+
+// Configure Cloudinary storage for avatars
+const avatarStorage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: 'pose/avatars',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+    format: 'webp',
+    transformation: [
+      { width: 200, height: 200, crop: 'thumb', gravity: 'face', radius: 'max' },
+      { fetch_format: 'auto' }
+    ],
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, 'avatar-' + uniqueSuffix);
   }
 });
 
@@ -40,11 +58,17 @@ const imageFilter = (req, file, cb) => {
   }
 };
 
-// Initialize multer
+// Initialize multer instances
 const upload = multer({
-  storage,
+  storage: productStorage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
   fileFilter: imageFilter
 });
 
-export { upload, cloudinary };
+const uploadAvatar = multer({
+  storage: avatarStorage,
+  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB for avatars
+  fileFilter: imageFilter
+});
+
+export { upload, uploadAvatar, cloudinary };

@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { ShoppingCartIcon, UserCircleIcon } from '@heroicons/react/24/outline';
+import { User } from 'lucide-react';
 
 import { fetchCart } from '../../redux/slices/cartSlice';
 import { logout as logoutAction } from '../../redux/slices/authSlice';
@@ -103,7 +104,20 @@ const Header = () => {
                     onClick={() => setIsUserMenuOpen((prev) => !prev)}
                     className="flex items-center gap-2 px-3 py-1.5 rounded-full hover:bg-gray-100"
                   >
-                    <UserCircleIcon className="w-7 h-7 text-gray-700" />
+                    {user.avatar ? (
+                      <img 
+                        src={user.avatar} 
+                        alt={user.username} 
+                        className="w-7 h-7 rounded-full object-cover"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.style.display = 'none';
+                          e.target.nextElementSibling.style.display = 'block';
+                        }}
+                      />
+                    ) : (
+                      <UserCircleIcon className="w-7 h-7 text-gray-700" />
+                    )}
                     <span className="text-sm font-medium text-gray-800">
                       {user.username}
                     </span>

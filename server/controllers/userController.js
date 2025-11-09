@@ -1,6 +1,6 @@
 import User from '../models/User.js';
 import { StatusCodes } from 'http-status-codes';
-import { BadRequestError, NotFoundError } from '../utils/errorHandler.js';
+import { BadRequestError, NotFoundError, UnauthenticatedError } from '../utils/errorHandler.js';
 
 // @desc    Cập nhật profile (thông tin cá nhân + địa chỉ)
 // @route   PATCH /api/v1/users/profile
@@ -128,8 +128,59 @@ export const changePassword = async (req, res) => {
   });
 };
 
+// @desc    Upload user avatar
+// @route   PATCH /api/v1/users/avatar
+// @access  Private
+export const uploadAvatar = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      throw new BadRequestError('Vui lòng tải lên ảnh đại diện');
+    }
+
+    console.log('Uploading avatar for user ID:', req.user?.userId);
+    console.log('File path:', req.file.path);
+
+    if (!req.user?.userId) {
+      console.error('No user ID in request');
+      throw new UnauthenticatedError('Không tìm thấy thông tin người dùng');
+    }
+
+    // First find the user to ensure they exist
+    const user = await User.findById(req.user.userId);
+    
+    if (!user) {
+      console.error('User not found with ID:', req.user.userId);
+      throw new NotFoundError('Không tìm thấy người dùng');
+    }
+
+    // Update the avatar field
+    user.avatar = req.file.path;
+    
+    // Save the user document
+    await user.save({ validateBeforeSave: false });
+
+    // Get the updated user without the password field
+    const updatedUser = await User.findById(user._id).select('-password');
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: 'Cập nhật ảnh đại diện thành công',
+      data: { user: updatedUser }
+    });
+  } catch (error) {
+    console.error('Error in uploadAvatar:', {
+      error: error.message,
+      stack: error.stack,
+      userId: req.user?._id,
+      file: req.file
+    });
+    next(error);
+  }
+};
+
 export default {
   updateProfile,
   getProfile,
-  changePassword
+  changePassword,
+  uploadAvatar
 };
