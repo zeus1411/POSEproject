@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { User, MapPin, Phone, Mail, Edit2, Save, X } from 'lucide-react';
+import { User, MapPin, Phone, Mail, Edit2, Save, X, Eye, EyeOff } from 'lucide-react';
 import userService from '../../services/userService';
 import addressService from '../../services/addressService';
 import { setUser } from '../../redux/slices/authSlice'; // Import action
@@ -12,7 +12,7 @@ const ProfilePage = () => {
   const [isEditingPersonal, setIsEditingPersonal] = useState(false);
   const [isEditingAddress, setIsEditingAddress] = useState(false);
   const [loading, setLoading] = useState(false);
-  
+
   // Personal info form
   const [personalData, setPersonalData] = useState({
     fullName: '',
@@ -228,6 +228,112 @@ const ProfilePage = () => {
     if (!user?.address?.street) return 'Chưa cập nhật địa chỉ';
     const { street, ward, district, city } = user.address;
     return `${street}, ${ward}, ${district}, ${city}`;
+  };
+  // Password change
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  // Hiện/ẩn mật khẩu
+  const [passwordVisible, setPasswordVisible] = useState({
+    current: false,
+    new: false,
+    confirm: false,
+  });
+
+  const togglePasswordVisibility = (field) => {
+    setPasswordVisible((prev) => ({ ...prev, [field]: !prev[field] }));
+  };
+
+  // Strength checker
+  const [passwordStrength, setPasswordStrength] = useState({
+    label: '',
+    color: 'border-gray-300',
+    textColor: 'text-gray-400',
+    bar: '',
+    width: '0%',
+  });
+
+  const handlePasswordChange = (value) => {
+    setPasswordData({...passwordData, newPassword: value});
+    checkPasswordStrength(value);
+  };
+
+  const checkPasswordStrength = (password) => {
+    let strength = 0;
+
+    if (password.length >= 8) strength++;
+    if (/[A-Z]/.test(password)) strength++;
+    if (/[a-z]/.test(password)) strength++;
+    if (/[0-9]/.test(password)) strength++;
+    if (/[^A-Za-z0-9]/.test(password)) strength++;
+
+    if (strength <= 2) {
+      setPasswordStrength({
+        label: 'Yếu',
+        color: 'border-red-300',
+        textColor: 'text-red-500',
+        bar: 'bg-red-400',
+        width: '25%',
+      });
+    } else if (strength === 3) {
+      setPasswordStrength({
+        label: 'Trung bình',
+        color: 'border-yellow-300',
+        textColor: 'text-yellow-500',
+        bar: 'bg-yellow-400',
+        width: '50%',
+      });
+    } else if (strength >= 4) {
+      setPasswordStrength({
+        label: 'Mạnh',
+        color: 'border-green-300',
+        textColor: 'text-green-500',
+        bar: 'bg-green-400',
+        width: '100%',
+      });
+    } else {
+      setPasswordStrength({
+        label: '',
+        color: 'border-gray-300',
+        textColor: 'text-gray-400',
+        bar: '',
+        width: '0%',
+      });
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+      alert('Vui lòng điền đầy đủ thông tin');
+      return;
+    }
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      alert('Mật khẩu xác nhận không khớp');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const response = await userService.changePassword(passwordData);
+      if (response.success) {
+        alert('Đổi mật khẩu thành công!');
+        setPasswordData({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: ''
+        });
+        setIsChangingPassword(false);
+      } else {
+        alert(response.message || 'Đổi mật khẩu thất bại');
+      }
+    } catch (error) {
+      alert(error.response?.data?.message || 'Có lỗi xảy ra khi đổi mật khẩu');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -495,6 +601,131 @@ const ProfilePage = () => {
                 />
               </div>
             </div>
+          )}
+        </div>
+
+        {/* Change Password */}
+        <div className="bg-white rounded-lg shadow-sm p-6 mt-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-gray-900">Đổi mật khẩu</h2>
+            {!isChangingPassword ? (
+              <button
+                onClick={() => setIsChangingPassword(true)}
+                className="flex items-center gap-2 px-4 py-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
+              >
+                <Edit2 className="w-4 h-4" />
+                Đổi mật khẩu
+              </button>
+            ) : (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setIsChangingPassword(false)}
+                  className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={handleChangePassword}
+                  disabled={loading}
+                  className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:bg-gray-400"
+                >
+                  <Save className="w-4 h-4" />
+                  {loading ? 'Đang lưu...' : 'Lưu'}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {isChangingPassword ? (
+            <div className="space-y-5">
+              {/* Current Password */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Mật khẩu hiện tại
+                </label>
+                <div className="relative">
+                  <input
+                    type={passwordVisible.current ? "text" : "password"}
+                    value={passwordData.currentPassword}
+                    onChange={(e) => setPasswordData({...passwordData, currentPassword: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                    placeholder="Nhập mật khẩu hiện tại"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => togglePasswordVisibility('current')}
+                    className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-primary-600"
+                  >
+                    {passwordVisible.current ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+
+              {/* New Password */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Mật khẩu mới
+                </label>
+                <div className="relative">
+                  <input
+                    type={passwordVisible.new ? "text" : "password"}
+                    value={passwordData.newPassword}
+                    onChange={(e) => handlePasswordChange(e.target.value)}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 ${
+                      passwordStrength.color
+                    }`}
+                    placeholder="Nhập mật khẩu mới"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => togglePasswordVisibility('new')}
+                    className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-primary-600"
+                  >
+                    {passwordVisible.new ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                {/* Gợi ý */}
+                <p className="text-xs text-gray-500 mt-1">
+                  Mật khẩu phải có ít nhất <span className="font-semibold">8 ký tự</span>, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt.
+                </p>
+
+                {/* Strength meter */}
+                <div className="mt-2 h-2 w-full bg-gray-200 rounded-full">
+                  <div
+                    className={`h-2 rounded-full transition-all ${passwordStrength.bar}`}
+                    style={{ width: passwordStrength.width }}
+                  ></div>
+                </div>
+                <p className={`text-xs mt-1 ${passwordStrength.textColor}`}>
+                  {passwordStrength.label}
+                </p>
+              </div>
+
+              {/* Confirm Password */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Xác nhận mật khẩu mới
+                </label>
+                <div className="relative">
+                  <input
+                    type={passwordVisible.confirm ? "text" : "password"}
+                    value={passwordData.confirmPassword}
+                    onChange={(e) => setPasswordData({...passwordData, confirmPassword: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500"
+                    placeholder="Nhập lại mật khẩu mới"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => togglePasswordVisibility('confirm')}
+                    className="absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-primary-600"
+                  >
+                    {passwordVisible.confirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <p className="text-gray-600">Nhấn nút “Đổi mật khẩu” để thay đổi mật khẩu của bạn.</p>
           )}
         </div>
 
