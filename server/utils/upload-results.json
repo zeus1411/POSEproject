@@ -1,17 +1,107 @@
 {
-  "timestamp": "2025-11-07T06:31:35.498Z",
-  "total": 1,
-  "successful": 1,
+  "timestamp": "2025-11-09T04:54:33.661Z",
+  "total": 11,
+  "successful": 11,
   "failed": 0,
   "successfulUploads": [
     {
       "success": true,
-      "url": "https://res.cloudinary.com/dxtrwinoc/image/upload/v1762497094/pose/products/mbsegvwhhvgecn3mckoi.jpg",
-      "publicId": "pose/products/mbsegvwhhvgecn3mckoi",
+      "url": "https://res.cloudinary.com/dxtrwinoc/image/upload/v1762664053/pose/products/h9ozssihvmmqexjxhjzi.jpg",
+      "publicId": "pose/products/h9ozssihvmmqexjxhjzi",
       "format": "jpg",
       "width": 477,
       "height": 329,
       "bytes": 29767
+    },
+    {
+      "success": true,
+      "url": "https://res.cloudinary.com/dxtrwinoc/image/upload/v1762664054/pose/products/txpxcjg9ijpfwxcfsuak.jpg",
+      "publicId": "pose/products/txpxcjg9ijpfwxcfsuak",
+      "format": "jpg",
+      "width": 800,
+      "height": 606,
+      "bytes": 69949
+    },
+    {
+      "success": true,
+      "url": "https://res.cloudinary.com/dxtrwinoc/image/upload/v1762664056/pose/products/bxpw1ffm0dnwvxk6w1z1.jpg",
+      "publicId": "pose/products/bxpw1ffm0dnwvxk6w1z1",
+      "format": "jpg",
+      "width": 600,
+      "height": 401,
+      "bytes": 71758
+    },
+    {
+      "success": true,
+      "url": "https://res.cloudinary.com/dxtrwinoc/image/upload/v1762664058/pose/products/dg4olew0ot2ytzy9fx42.jpg",
+      "publicId": "pose/products/dg4olew0ot2ytzy9fx42",
+      "format": "jpg",
+      "width": 793,
+      "height": 580,
+      "bytes": 74568
+    },
+    {
+      "success": true,
+      "url": "https://res.cloudinary.com/dxtrwinoc/image/upload/v1762664060/pose/products/qjoxcjvgpq4h2q29znlg.jpg",
+      "publicId": "pose/products/qjoxcjvgpq4h2q29znlg",
+      "format": "jpg",
+      "width": 500,
+      "height": 375,
+      "bytes": 67325
+    },
+    {
+      "success": true,
+      "url": "https://res.cloudinary.com/dxtrwinoc/image/upload/v1762664062/pose/products/ipvml3xonbg82yvlfq8p.jpg",
+      "publicId": "pose/products/ipvml3xonbg82yvlfq8p",
+      "format": "jpg",
+      "width": 720,
+      "height": 720,
+      "bytes": 17045
+    },
+    {
+      "success": true,
+      "url": "https://res.cloudinary.com/dxtrwinoc/image/upload/v1762664063/pose/products/ne68h6nwqkrfevwbomkx.jpg",
+      "publicId": "pose/products/ne68h6nwqkrfevwbomkx",
+      "format": "jpg",
+      "width": 600,
+      "height": 668,
+      "bytes": 53452
+    },
+    {
+      "success": true,
+      "url": "https://res.cloudinary.com/dxtrwinoc/image/upload/v1762664065/pose/products/o3iwyltomzzpajmqgi57.jpg",
+      "publicId": "pose/products/o3iwyltomzzpajmqgi57",
+      "format": "jpg",
+      "width": 800,
+      "height": 526,
+      "bytes": 58651
+    },
+    {
+      "success": true,
+      "url": "https://res.cloudinary.com/dxtrwinoc/image/upload/v1762664068/pose/products/upqqnnvyfr9zbkrllvdg.jpg",
+      "publicId": "pose/products/upqqnnvyfr9zbkrllvdg",
+      "format": "jpg",
+      "width": 454,
+      "height": 517,
+      "bytes": 28883
+    },
+    {
+      "success": true,
+      "url": "https://res.cloudinary.com/dxtrwinoc/image/upload/v1762664070/pose/products/y52w11myf9ax8qowbdwn.jpg",
+      "publicId": "pose/products/y52w11myf9ax8qowbdwn",
+      "format": "jpg",
+      "width": 742,
+      "height": 667,
+      "bytes": 53001
+    },
+    {
+      "success": true,
+      "url": "https://res.cloudinary.com/dxtrwinoc/image/upload/v1762664072/pose/products/z9ibtyzt8jsehvwgrfsy.jpg",
+      "publicId": "pose/products/z9ibtyzt8jsehvwgrfsy",
+      "format": "jpg",
+      "width": 800,
+      "height": 800,
+      "bytes": 93811
     }
   ],
   "failedUploads": []

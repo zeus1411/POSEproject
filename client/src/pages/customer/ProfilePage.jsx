@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { User, MapPin, Phone, Mail, Edit2, Save, X, Eye, EyeOff } from 'lucide-react';
 import userService from '../../services/userService';
 import addressService from '../../services/addressService';
-import { setUser } from '../../redux/slices/authSlice'; // Import action
+import { setUser } from '../../redux/slices/authSlice';
+import { toast } from 'react-toastify';
 
 const ProfilePage = () => {
   const { user } = useSelector(state => state.auth);
@@ -38,6 +39,10 @@ const ProfilePage = () => {
   const [districts, setDistricts] = useState([]);
   const [wards, setWards] = useState([]);
   const [loadingLocation, setLoadingLocation] = useState(false);
+  
+  // Avatar upload
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (user) {
@@ -336,6 +341,52 @@ const ProfilePage = () => {
     }
   };
 
+  // Handle avatar upload
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.match('image.*')) {
+      toast.error('Vui lòng chọn file ảnh (JPEG, PNG)');
+      return;
+    }
+
+    // Validate file size (max 2MB)
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Kích thước ảnh không được vượt quá 2MB');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('avatar', file);
+
+    try {
+      setIsUploading(true);
+      const response = await userService.updateAvatar(formData);
+      
+      // Update user in Redux store
+      dispatch(setUser(response.data.user));
+      
+      toast.success('Cập nhật ảnh đại diện thành công');
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+      toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi tải lên ảnh đại diện');
+    } finally {
+      setIsUploading(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  // Trigger file input click
+  const handleAvatarClick = () => {
+    if (isUploading) return;
+    fileInputRef.current?.click();
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4 space-y-6">
@@ -343,8 +394,38 @@ const ProfilePage = () => {
         {/* Header */}
         <div className="bg-white rounded-lg shadow-sm p-6">
           <div className="flex items-center gap-4">
-            <div className="w-20 h-20 bg-primary-100 rounded-full flex items-center justify-center">
-              <User className="w-10 h-10 text-primary-600" />
+            <div className="relative group">
+              <div 
+                className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden cursor-pointer"
+                onClick={handleAvatarClick}
+              >
+                {user?.avatar ? (
+                  <img 
+                    src={user.avatar} 
+                    alt="Avatar" 
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <User className="w-10 h-10 text-gray-500" />
+                )}
+                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-30 flex items-center justify-center transition-all duration-300">
+                  {isUploading ? (
+                    <Loader2 className="w-6 h-6 text-white animate-spin" />
+                  ) : (
+                    <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <Camera className="w-6 h-6 text-white" />
+                    </div>
+                  )}
+                </div>
+              </div>
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleAvatarChange}
+                accept="image/*"
+                className="hidden"
+                disabled={isUploading}
+              />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-gray-900">{user?.username}</h1>
@@ -352,23 +433,22 @@ const ProfilePage = () => {
                 <Mail className="w-4 h-4" />
                 {user?.email}
               </p>
+              <button
+                onClick={handleAvatarClick}
+                disabled={isUploading}
+                className="mt-2 text-sm text-blue-600 hover:text-blue-800 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isUploading ? 'Đang tải lên...' : 'Đổi ảnh đại diện'}
+              </button>
             </div>
           </div>
         </div>
 
         {/* Personal Information */}
         <div className="bg-white rounded-lg shadow-sm p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-900">Thông tin cá nhân</h2>
-            {!isEditingPersonal ? (
-              <button
-                onClick={() => setIsEditingPersonal(true)}
-                className="flex items-center gap-2 px-4 py-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
-              >
-                <Edit2 className="w-4 h-4" />
-                Chỉnh sửa
-              </button>
-            ) : (
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-xl font-semibold">Thông tin cá nhân</h2>
+            {isEditingPersonal ? (
               <div className="flex gap-2">
                 <button
                   onClick={() => setIsEditingPersonal(false)}
@@ -379,12 +459,20 @@ const ProfilePage = () => {
                 <button
                   onClick={handleUpdatePersonal}
                   disabled={loading}
-                  className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:bg-gray-400"
+                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
                 >
                   <Save className="w-4 h-4" />
                   {loading ? 'Đang lưu...' : 'Lưu'}
                 </button>
               </div>
+            ) : (
+              <button
+                onClick={() => setIsEditingPersonal(true)}
+                className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
+              >
+                <Edit2 className="w-4 h-4" />
+                Chỉnh sửa
+              </button>
             )}
           </div>
 
