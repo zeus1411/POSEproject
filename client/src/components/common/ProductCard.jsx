@@ -1,9 +1,26 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { StarIcon, HeartIcon, ShoppingCartIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
+import { useDispatch, useSelector } from 'react-redux';
+import { addToCart } from '../../redux/slices/cartSlice';
 
-const ProductCard = ({ product, onAddToCart, onToggleWishlist, isInWishlist = false }) => {
+const ProductCard = ({ product, onToggleWishlist, isInWishlist = false }) => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { user } = useSelector((s) => s.auth);
+
+  const handleAddToCart = async (e) => {
+    e.stopPropagation();
+    if (!user) {
+      const redirect = encodeURIComponent(location.pathname + location.search);
+      navigate(`/login?redirect=${redirect || '/shop'}`);
+      return;
+    }
+    // Đã đăng nhập: gọi redux thunk addToCart
+    await dispatch(addToCart({ productId: product._id, quantity: 1 }));
+  };
   const formatPrice = (price) => {
     return new Intl.NumberFormat('vi-VN', {
       style: 'currency',
@@ -48,9 +65,12 @@ const ProductCard = ({ product, onAddToCart, onToggleWishlist, isInWishlist = fa
       <div className="relative aspect-square overflow-hidden">
         <Link to={`/product/${product._id}`}>
           <img
-            src={product.images?.[0]?.url || '/placeholder-product.jpg'}
+            src={product.images?.[0] || '/placeholder-product.jpg'}
             alt={product.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            onError={(e) => {
+              e.target.src = '/placeholder-product.jpg';
+            }}
           />
         </Link>
         
@@ -88,7 +108,7 @@ const ProductCard = ({ product, onAddToCart, onToggleWishlist, isInWishlist = fa
         {/* Quick Add to Cart */}
         <div className="absolute inset-x-0 bottom-0 bg-white/95 backdrop-blur-sm transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
           <button
-            onClick={() => onAddToCart?.(product)}
+            onClick={handleAddToCart}
             className="w-full py-2 px-4 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium transition-colors duration-200 flex items-center justify-center gap-2"
           >
             <ShoppingCartIcon className="w-4 h-4" />

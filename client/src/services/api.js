@@ -6,8 +6,9 @@ const api = axios.create({
   baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
+    'Cache-Control': 'no-cache', // ✅ Force no cache
   },
-  withCredentials: true, // Important for cookies
+  withCredentials: true,
 });
 
 // Request interceptor to add token
@@ -21,15 +22,18 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor to handle errors
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
-      // Unauthorized - clear user data and redirect to login
+    // Không log lỗi 401 từ endpoint /auth/me vì đây là hành vi bình thường khi chưa đăng nhập
+    const is401FromAuthMe = 
+      error.response?.status === 401 && 
+      error.config?.url?.includes('/auth/me');
+    
+    if (!is401FromAuthMe && error.response?.status === 401) {
       localStorage.removeItem('user');
-      window.location.href = '/login';
     }
+    
     return Promise.reject(error);
   }
 );

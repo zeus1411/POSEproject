@@ -33,16 +33,18 @@ const productSchema = new mongoose.Schema(
       min: [0, 'Giảm giá không được âm'],
       max: [100, 'Giảm giá không được vượt quá 100%']
     },
-    images: [
-      {
-        url: {
-          type: String,
-          required: true
+    images: {
+      type: [String],
+      default: [],
+      validate: {
+        validator: function(images) {
+          // Validate that each item is a string and is a valid URL
+          return Array.isArray(images) && 
+                 images.every(img => typeof img === 'string' && img.trim().length > 0);
         },
-        publicId: String,
-        alt: String
+        message: 'Mỗi phần tử trong mảng ảnh phải là một URL hợp lệ'
       }
-    ],
+    },
     stock: {
       type: Number,
       required: [true, 'Vui lòng nhập số lượng tồn kho'],

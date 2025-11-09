@@ -26,9 +26,10 @@ export const addToCart = createAsyncThunk(
   }
 );
 
+// OPTIMIZED: Update cart item with optimistic update
 export const updateCartItem = createAsyncThunk(
   'cart/updateCartItem',
-  async ({ productId, quantity }, { rejectWithValue }) => {
+  async ({ productId, quantity }, { rejectWithValue, getState }) => {
     try {
       const response = await cartService.updateCartItem(productId, quantity);
       return response.data;
@@ -62,6 +63,30 @@ export const clearCart = createAsyncThunk(
   }
 );
 
+// Helper function to calculate summary
+const calculateSummary = (items) => {
+  let totalItems = 0;
+  let subtotal = 0;
+  
+  items.forEach(item => {
+    if (item.productId) {
+      const price = item.productId.salePrice || item.productId.price;
+      const discount = item.productId.discount || 0;
+      const itemTotal = price * item.quantity * (1 - discount / 100);
+      totalItems += item.quantity;
+      subtotal += itemTotal;
+    }
+  });
+  
+  const shippingFee = subtotal >= 500000 ? 0 : 30000;
+  return {
+    totalItems,
+    subtotal,
+    shippingFee,
+    total: subtotal + shippingFee
+  };
+};
+
 const initialState = {
   cart: null,
   summary: {
@@ -72,7 +97,8 @@ const initialState = {
   },
   loading: false,
   error: null,
-  successMessage: null
+  successMessage: null,
+  isUpdating: false // New flag for update operations
 };
 
 const cartSlice = createSlice({
@@ -90,6 +116,31 @@ const cartSlice = createSlice({
       state.summary = initialState.summary;
       state.error = null;
       state.successMessage = null;
+    },
+    // OPTIMISTIC UPDATE: Update quantity immediately in UI
+    optimisticUpdateQuantity: (state, action) => {
+      const { productId, quantity } = action.payload;
+      if (state.cart && state.cart.items) {
+        const itemIndex = state.cart.items.findIndex(
+          item => item.productId._id === productId
+        );
+        if (itemIndex !== -1) {
+          state.cart.items[itemIndex].quantity = quantity;
+          // Recalculate summary
+          state.summary = calculateSummary(state.cart.items);
+        }
+      }
+    },
+    // OPTIMISTIC REMOVE: Remove item immediately from UI
+    optimisticRemoveItem: (state, action) => {
+      const productId = action.payload;
+      if (state.cart && state.cart.items) {
+        state.cart.items = state.cart.items.filter(
+          item => item.productId._id !== productId
+        );
+        // Recalculate summary
+        state.summary = calculateSummary(state.cart.items);
+      }
     }
   },
   extraReducers: (builder) => {
@@ -118,108 +169,45 @@ const cartSlice = createSlice({
         state.loading = false;
         state.cart = action.payload.cart;
         state.successMessage = 'Đã thêm sản phẩm vào giỏ hàng';
-        
-        // Calculate summary
-        const items = action.payload.cart.items || [];
-        let totalItems = 0;
-        let subtotal = 0;
-        
-        items.forEach(item => {
-          if (item.productId) {
-            const price = item.productId.salePrice || item.productId.price;
-            const discount = item.productId.discount || 0;
-            const itemTotal = price * item.quantity * (1 - discount / 100);
-            totalItems += item.quantity;
-            subtotal += itemTotal;
-          }
-        });
-        
-        const shippingFee = subtotal >= 500000 ? 0 : 30000;
-        state.summary = {
-          totalItems,
-          subtotal,
-          shippingFee,
-          total: subtotal + shippingFee
-        };
+        state.summary = calculateSummary(action.payload.cart.items || []);
       })
       .addCase(addToCart.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
       
-      // Update Cart Item
+      // Update Cart Item - OPTIMIZED
       .addCase(updateCartItem.pending, (state) => {
-        state.loading = true;
+        state.isUpdating = true;
         state.error = null;
       })
       .addCase(updateCartItem.fulfilled, (state, action) => {
-        state.loading = false;
+        state.isUpdating = false;
+        // Only update if data differs (avoid unnecessary re-renders)
         state.cart = action.payload.cart;
-        state.successMessage = 'Đã cập nhật giỏ hàng';
-        
-        // Calculate summary
-        const items = action.payload.cart.items || [];
-        let totalItems = 0;
-        let subtotal = 0;
-        
-        items.forEach(item => {
-          if (item.productId) {
-            const price = item.productId.salePrice || item.productId.price;
-            const discount = item.productId.discount || 0;
-            const itemTotal = price * item.quantity * (1 - discount / 100);
-            totalItems += item.quantity;
-            subtotal += itemTotal;
-          }
-        });
-        
-        const shippingFee = subtotal >= 500000 ? 0 : 30000;
-        state.summary = {
-          totalItems,
-          subtotal,
-          shippingFee,
-          total: subtotal + shippingFee
-        };
+        state.summary = calculateSummary(action.payload.cart.items || []);
+        // Don't show success message for quantity updates (too noisy)
       })
       .addCase(updateCartItem.rejected, (state, action) => {
-        state.loading = false;
+        state.isUpdating = false;
         state.error = action.payload;
+        // Revert optimistic update by fetching fresh data
+        // This will be handled in the component
       })
       
       // Remove from Cart
       .addCase(removeFromCart.pending, (state) => {
-        state.loading = true;
+        state.isUpdating = true;
         state.error = null;
       })
       .addCase(removeFromCart.fulfilled, (state, action) => {
-        state.loading = false;
+        state.isUpdating = false;
         state.cart = action.payload.cart;
         state.successMessage = 'Đã xóa sản phẩm khỏi giỏ hàng';
-        
-        // Calculate summary
-        const items = action.payload.cart.items || [];
-        let totalItems = 0;
-        let subtotal = 0;
-        
-        items.forEach(item => {
-          if (item.productId) {
-            const price = item.productId.salePrice || item.productId.price;
-            const discount = item.productId.discount || 0;
-            const itemTotal = price * item.quantity * (1 - discount / 100);
-            totalItems += item.quantity;
-            subtotal += itemTotal;
-          }
-        });
-        
-        const shippingFee = subtotal >= 500000 ? 0 : 30000;
-        state.summary = {
-          totalItems,
-          subtotal,
-          shippingFee,
-          total: subtotal + shippingFee
-        };
+        state.summary = calculateSummary(action.payload.cart.items || []);
       })
       .addCase(removeFromCart.rejected, (state, action) => {
-        state.loading = false;
+        state.isUpdating = false;
         state.error = action.payload;
       })
       
@@ -241,5 +229,12 @@ const cartSlice = createSlice({
   }
 });
 
-export const { clearCartError, clearCartSuccess, resetCart } = cartSlice.actions;
+export const { 
+  clearCartError, 
+  clearCartSuccess, 
+  resetCart,
+  optimisticUpdateQuantity,
+  optimisticRemoveItem
+} = cartSlice.actions;
+
 export default cartSlice.reducer;

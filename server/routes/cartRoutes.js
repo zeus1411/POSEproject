@@ -1,6 +1,7 @@
 import express from 'express';
 import {
   getCart,
+  getCartSummary,
   addToCart,
   updateCartItem,
   removeFromCart,
@@ -11,25 +12,28 @@ import { authenticateUser } from '../middlewares/auth.js';
 
 const router = express.Router();
 
-// Tất cả routes đều cần authentication
+// All cart routes require authentication
 router.use(authenticateUser);
 
-// Lấy giỏ hàng
+// Get cart summary only (optimized - no full items)
+router.get('/summary', getCartSummary);
+
+// Get full cart
 router.get('/', getCart);
 
-// Xác thực giỏ hàng
-router.post('/validate', validateCart);
-
-// Thêm sản phẩm vào giỏ
+// Add item to cart
 router.post('/items', addToCart);
 
-// Cập nhật số lượng sản phẩm
+// Update cart item quantity
 router.patch('/items/:productId', updateCartItem);
 
-// Xóa sản phẩm khỏi giỏ
+// Remove item from cart
 router.delete('/items/:productId', removeFromCart);
 
-// Xóa toàn bộ giỏ hàng
+// Clear entire cart
 router.delete('/', clearCart);
+
+// Validate cart before checkout
+router.post('/validate', validateCart);
 
 export default router;

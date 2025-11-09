@@ -1,9 +1,16 @@
-// e:/POSE project/client/src/pages/common/Home.jsx
-import { Link } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { Link, useNavigate } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { logout } from '../../redux/slices/authSlice';
 
 const Home = () => {
-  const { user, logout } = useAuth();
+  const { user } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await dispatch(logout());
+    navigate('/shop');
+  };
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -19,7 +26,7 @@ const Home = () => {
             {user ? (
               <div className="rounded-md shadow">
                 <button
-                  onClick={logout}
+                  onClick={handleLogout}
                   className="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 md:py-4 md:text-lg md:px-10"
                 >
                   Logout

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { getProductById, clearCurrentProduct } from '../../redux/slices/productSlice';
 import { addToCart } from '../../redux/slices/cartSlice';
@@ -83,10 +83,12 @@ const ProductDetail = () => {
     }
   };
 
+  const location = useLocation();
+  
   const handleAddToCart = async () => {
     if (!user) {
-      alert('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng');
-      navigate('/login');
+      const redirect = encodeURIComponent(location.pathname + location.search);
+      navigate(`/login?redirect=${redirect || '/shop'}`);
       return;
     }
 
@@ -160,9 +162,12 @@ const ProductDetail = () => {
             {/* Main Image */}
             <div className="aspect-square bg-white rounded-lg overflow-hidden border border-gray-200">
               <img
-                src={currentProduct.images?.[selectedImageIndex]?.url || '/placeholder-product.jpg'}
+                src={currentProduct.images?.[selectedImageIndex] || '/placeholder-product.jpg'}
                 alt={currentProduct.name}
                 className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.target.src = '/placeholder-product.jpg';
+                }}
               />
             </div>
 
@@ -180,9 +185,12 @@ const ProductDetail = () => {
                     }`}
                   >
                     <img
-                      src={image.url}
+                      src={image}
                       alt={`${currentProduct.name} ${index + 1}`}
                       className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.src = '/placeholder-product.jpg';
+                      }}
                     />
                   </button>
                 ))}

@@ -1,127 +1,113 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import authService from '../../services/authService';
 
-// Get user from localStorage
-const user = JSON.parse(localStorage.getItem('user'));
-
 const initialState = {
-  user: user || null,
+  user: null,
   isLoading: false,
-  isSuccess: false,
   isError: false,
+  isSuccess: false,
+  error: null,
   message: '',
 };
 
-// Register user
-export const register = createAsyncThunk(
-  'auth/register',
-  async (userData, thunkAPI) => {
-    try {
-      return await authService.register(userData);
-    } catch (error) {
-      const message =
-        error.response?.data?.message ||
-        error.response?.data?.msg ||
-        error.message ||
-        error.toString();
-      return thunkAPI.rejectWithValue(message);
-    }
-  }
-);
-
-// Login user
+// Async thunks
 export const login = createAsyncThunk(
   'auth/login',
-  async (userData, thunkAPI) => {
+  async (userData, { rejectWithValue }) => {
     try {
-      return await authService.login(userData);
+      const response = await authService.login(userData);
+      return response;
     } catch (error) {
-      const message =
-        error.response?.data?.message ||
-        error.response?.data?.msg ||
-        error.message ||
-        error.toString();
-      return thunkAPI.rejectWithValue(message);
+      const message = error.response?.data?.message || 'Đăng nhập thất bại';
+      return rejectWithValue(message);
     }
   }
 );
 
-// Logout user
-export const logout = createAsyncThunk(
-  'auth/logout',
-  async (_, thunkAPI) => {
+export const register = createAsyncThunk(
+  'auth/register',
+  async (userData, { rejectWithValue }) => {
     try {
-      await authService.logout();
+      const response = await authService.register(userData);
+      return response;
     } catch (error) {
-      const message =
-        error.response?.data?.message ||
-        error.response?.data?.msg ||
-        error.message ||
-        error.toString();
-      return thunkAPI.rejectWithValue(message);
+      const message = error.response?.data?.message || 'Đăng ký thất bại';
+      return rejectWithValue(message);
     }
   }
 );
 
-// Get current user
 export const getCurrentUser = createAsyncThunk(
   'auth/getCurrentUser',
-  async (_, thunkAPI) => {
+  async (_, { rejectWithValue }) => {
     try {
-      return await authService.getCurrentUser();
+      const response = await authService.getCurrentUser();
+      
+      // ✅ DEBUG: Log response để xem cấu trúc
+      console.log('🔍 getCurrentUser response:', response);
+      console.log('🔍 response.data:', response.data);
+      console.log('🔍 response.data.user:', response.data?.user);
+      
+      return response;
     } catch (error) {
-      const message =
-        error.response?.data?.message ||
-        error.response?.data?.msg ||
-        error.message ||
-        error.toString();
-      return thunkAPI.rejectWithValue(message);
+      if (error.response?.status === 401) {
+        return rejectWithValue({ user: null, silent: true });
+      }
+      return rejectWithValue(
+        error.response?.data?.message || 'Không thể lấy thông tin người dùng'
+      );
     }
   }
 );
 
-export const authSlice = createSlice({
+export const logout = createAsyncThunk(
+  'auth/logout',
+  async (_, { rejectWithValue }) => {
+    try {
+      await authService.logout();
+      return null;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || 'Đăng xuất thất bại'
+      );
+    }
+  }
+);
+
+const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
     reset: (state) => {
       state.isLoading = false;
-      state.isSuccess = false;
       state.isError = false;
+      state.isSuccess = false;
+      state.error = null;
       state.message = '';
     },
     setError: (state, action) => {
-      state.isLoading = false;
       state.isError = true;
       state.message = action.payload;
-      state.isSuccess = false;
+    },
+    setUser: (state, action) => {
+      state.user = action.payload;
+    },
+    clearUser: (state) => {
+      state.user = null;
     },
   },
   extraReducers: (builder) => {
     builder
-      // Register
-      .addCase(register.pending, (state) => {
-        state.isLoading = true;
-      })
-      .addCase(register.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.isSuccess = true;
-        state.user = action.payload.user;
-      })
-      .addCase(register.rejected, (state, action) => {
-        state.isLoading = false;
-        state.isError = true;
-        state.message = action.payload;
-        state.user = null;
-      })
       // Login
       .addCase(login.pending, (state) => {
         state.isLoading = true;
+        state.isError = false;
+        state.isSuccess = false;
       })
       .addCase(login.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isSuccess = true;
-        state.user = action.payload.user;
+        state.user = action.payload?.user || null;
       })
       .addCase(login.rejected, (state, action) => {
         state.isLoading = false;
@@ -129,25 +115,51 @@ export const authSlice = createSlice({
         state.message = action.payload;
         state.user = null;
       })
-      // Logout
-      .addCase(logout.fulfilled, (state) => {
-        state.user = null;
-      })
-      // Get current user
-      .addCase(getCurrentUser.pending, (state) => {
+      // Register
+      .addCase(register.pending, (state) => {
         state.isLoading = true;
+        state.isError = false;
+        state.isSuccess = false;
       })
-      .addCase(getCurrentUser.fulfilled, (state, action) => {
+      .addCase(register.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.user = action.payload.user;
+        state.isSuccess = true;
+        state.user = action.payload?.data?.user || null;
       })
-      .addCase(getCurrentUser.rejected, (state, action) => {
+      .addCase(register.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
         state.message = action.payload;
+        state.user = null;
+      })
+      // Get Current User
+      .addCase(getCurrentUser.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(getCurrentUser.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.user = action.payload?.user || null;
+      })
+      .addCase(getCurrentUser.rejected, (state, action) => {
+        state.isLoading = false;
+        // Không set error cho 401 vì đây là trạng thái bình thường
+        if (action.payload?.silent) {
+          state.user = null;
+          state.error = null;
+        } else {
+          state.error = action.payload;
+        }
+      })
+      // Logout
+      .addCase(logout.fulfilled, (state) => {
+        state.user = null;
+        state.isSuccess = false;
+        state.isError = false;
+        state.message = '';
       });
   },
 });
 
-export const { reset, setError } = authSlice.actions;
+export const { reset, setError, setUser, clearUser } = authSlice.actions;
 export default authSlice.reducer;

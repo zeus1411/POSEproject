@@ -4,7 +4,6 @@ import api from './api';
 const register = async (userData) => {
   const response = await api.post('/auth/register', userData);
   if (response.data.success && response.data.user) {
-    // Server sets cookie, just store user info
     localStorage.setItem('user', JSON.stringify(response.data.user));
   }
   return response.data;
@@ -14,7 +13,6 @@ const register = async (userData) => {
 const login = async (userData) => {
   const response = await api.post('/auth/login', userData);
   if (response.data.success && response.data.user) {
-    // Server sets cookie, just store user info
     localStorage.setItem('user', JSON.stringify(response.data.user));
   }
   return response.data;
@@ -27,15 +25,22 @@ const logout = async () => {
   } catch (error) {
     console.error('Logout error:', error);
   } finally {
-    // Clear local storage
     localStorage.removeItem('user');
   }
 };
 
 // Get current user
 const getCurrentUser = async () => {
-  const response = await api.get('/auth/me');
-  return response.data;
+  const response = await api.get('/auth/me', {
+      // ✅ Force bypass cache với timestamp
+      params: { _t: Date.now() },
+      headers: {
+        'Cache-Control': 'no-cache',
+        'Pragma': 'no-cache'
+      }
+    });
+    
+    return response.data;
 };
 
 // Send OTP for password reset
@@ -44,13 +49,26 @@ const sendOTP = async (email) => {
   return response.data;
 };
 
+// Resend OTP for password reset
+const resendOTP = async (email) => {
+  const response = await api.post('/auth/resend-otp', { email });
+  return response.data;
+};
+
 // Reset password with OTP
-const resetPassword = async (email, otp, newPassword) => {
+const resetPassword = async (email, otp, newPassword, confirmPassword) => {
   const response = await api.post('/auth/reset-password', { 
     email, 
     otp, 
-    newPassword 
+    newPassword,
+    confirmPassword
   });
+  
+  // If reset is successful and user is auto-logged in, store user info
+  if (response.data.success && response.data.user) {
+    localStorage.setItem('user', JSON.stringify(response.data.user));
+  }
+  
   return response.data;
 };
 
@@ -60,6 +78,7 @@ const authService = {
   logout,
   getCurrentUser,
   sendOTP,
+  resendOTP,
   resetPassword
 };
 

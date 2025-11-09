@@ -8,11 +8,10 @@ import Promotions from './pages/admin/Promotions';
 import Products from './pages/admin/Products';
 import MyOrders from './pages/customer/MyOrders';
 import Shop from './pages/customer/Shop';
-import ProductDetail from './pages/product/ProductDetail';
+import ProductDetail from "./pages/customer/ProductDetail";
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import ForgotPassword from './pages/auth/ForgotPassword';
-import ResetPassword from './pages/auth/ResetPassword';
 import Checkout from './pages/customer/Checkout';
 import ProfilePage from './pages/customer/ProfilePage';
 
@@ -25,10 +24,10 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
-          <Route path="/reset-password/:token" element={<ResetPassword />} />
 
           {/* Main Routes */}
           <Route path="/" element={<Layout />}>
+            {/* Điểm quan trọng: index -> /shop */}
             <Route index element={<Navigate to="/shop" replace />} />
             <Route path="shop" element={<Shop />} />
             <Route path="product/:id" element={<ProductDetail />} />
@@ -40,6 +39,9 @@ function App() {
             <Route path="admin/reports" element={<Reports />} />
             <Route path="admin/promotions" element={<Promotions />} />
           </Route>
+
+          {/* Catch-all: mọi đường dẫn lạ → /shop */}
+          <Route path="*" element={<Navigate to="/shop" replace />} />
         </Routes>
       </Router>
     </Provider>

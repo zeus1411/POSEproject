@@ -26,7 +26,12 @@ const createTokenUser = (user) => {
         userId: user._id,
         username: user.username,
         email: user.email,
-        role: user.role
+        role: user.role,
+        fullName: user.fullName, // Changed from fullname to fullName to match User model
+        phone: user.phone,
+        dateOfBirth: user.dateOfBirth,
+        gender: user.gender,
+        address: user.address
     };
 };
 
