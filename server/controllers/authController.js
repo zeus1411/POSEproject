@@ -85,8 +85,11 @@ const getCurrentUser = async (req, res) => {
     const userResponse = {
         ...createTokenUser(user),
         // Include any additional fields that might be needed by the frontend
-        address: user.address
+        address: user.address,
+        avatar: user.avatar // Ensure avatar is included
     };
+    
+    console.log('Current user data:', userResponse); // Debug log
     
     res.status(StatusCodes.OK).json({ 
         success: true,
