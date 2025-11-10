@@ -7,6 +7,7 @@ import orderRoutes from './orderRoutes.js';
 import userRoutes from './userRoutes.js';
 import addressRoutes from './addressRoutes.js';
 import locationRoutes from './locationRoutes.js';
+import reviewRoutes from './reviewRoutes.js';
 const router = express.Router();
 
 // Mount all routes
@@ -18,4 +19,5 @@ router.use('/orders', orderRoutes);
 router.use('/users', userRoutes);
 router.use('/addresses', addressRoutes);
 router.use('/locations', locationRoutes);
+router.use('/reviews', reviewRoutes);
 export default router;
