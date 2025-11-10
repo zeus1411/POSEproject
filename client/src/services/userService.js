@@ -9,6 +9,12 @@ const getCurrentUser = async () => {
 // Cập nhật profile (personal info + address)
 const updateProfile = async (data) => {
   const response = await api.patch('/users/profile', data);
+  
+  // Update user in localStorage if the request was successful
+  if (response.data.success && response.data.user) {
+    localStorage.setItem('user', JSON.stringify(response.data.user));
+  }
+  
   return response.data;
 };
 
@@ -19,6 +25,12 @@ const updateAvatar = async (formData) => {
       'Content-Type': 'multipart/form-data'
     }
   });
+  
+  // Update user in localStorage if the request was successful
+  if (response.data.success && response.data.user) {
+    localStorage.setItem('user', JSON.stringify(response.data.user));
+  }
+  
   return response.data;
 };
 
