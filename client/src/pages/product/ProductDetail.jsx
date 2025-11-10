@@ -5,7 +5,10 @@ import { getProductById, clearCurrentProduct } from '../../redux/slices/productS
 import { addToCart } from '../../redux/slices/cartSlice';
 import ReviewForm from '../../components/review/ReviewForm';
 import { fetchReviews } from "../../redux/slices/reviewSlice";
-import ReviewCard from '../../components/review/ReviewCard';
+import ReviewCard from '../../components/review/ReviewCard';  
+import ReviewList from '../../components/review/ReviewList';
+import { checkReviewStatus } from "../../redux/slices/reviewSlice";
+
 import { 
   StarIcon, 
   HeartIcon, 
@@ -35,12 +38,13 @@ const ProductDetail = () => {
     if (id) {
       dispatch(getProductById(id));
       dispatch(fetchReviews(id));
+      if (user) dispatch(checkReviewStatus(id)); // ✅ nếu đăng nhập mới check
     }
     
     return () => {
       dispatch(clearCurrentProduct());
     };
-  }, [dispatch, id]);
+  }, [dispatch, id, user]);
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat('vi-VN', {
@@ -358,19 +362,26 @@ const ProductDetail = () => {
           <h2 className="text-xl font-bold text-gray-900 mb-4">Đánh giá sản phẩm</h2>
 
           {/* Form gửi đánh giá */}
-          <ReviewForm productId={currentProduct._id} />
+          {user && reviews.purchased && !reviews.hasReviewed && (
+            <ReviewForm productId={currentProduct._id} />
+          )}
+
+          {user && reviews.purchased && reviews.hasReviewed && (
+            <p className="text-gray-500 mb-4">
+              Bạn đã gửi đánh giá cho sản phẩm này rồi. Cảm ơn bạn!
+            </p>
+          )}
+
+          {user && !reviews.purchased && (
+            <p className="text-gray-500 mb-4">
+              Bạn chỉ có thể gửi đánh giá sau khi đã mua sản phẩm này.
+            </p>
+          )}
 
           {/* Danh sách đánh giá */}
-          <div className="mt-6 space-y-3">
-            {reviews.loading ? (
-              <p className="text-gray-500">Đang tải đánh giá...</p>
-            ) : reviews.list.length > 0 ? (
-              reviews.list.map((r) => <ReviewCard key={r._id} review={r} />)
-            ) : (
-              <p className="text-gray-500">Chưa có đánh giá nào.</p>
-            )}
-          </div>
+          <ReviewList productId={currentProduct._id} />
         </div>
+
       </div>
     </div>
   );
