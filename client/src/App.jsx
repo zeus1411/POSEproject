@@ -7,6 +7,7 @@ import Reports from './pages/admin/Reports';
 import Promotions from './pages/admin/Promotions';
 import Products from './pages/admin/Products';
 import MyOrders from './pages/customer/MyOrders';
+import OrderDetail from './pages/customer/OrderDetail';
 import Shop from './pages/customer/Shop';
 import ProductDetail from "./pages/product/ProductDetail";
 import Login from './pages/auth/Login';
@@ -33,6 +34,7 @@ function App() {
             <Route path="product/:id" element={<ProductDetail />} />
             <Route path="profile" element={<ProfilePage />} />
             <Route path="orders" element={<MyOrders />} />
+            <Route path="orders/:id" element={<OrderDetail />} />
             <Route path="checkout" element={<Checkout />} />
             <Route path="admin/dashboard" element={<Navigate to="/admin/products" replace />} />
             <Route path="admin/products" element={<Products />} />

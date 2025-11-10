@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { fetchUserOrders, setOrderStatusFilter } from '../../redux/slices/orderSlice';
 
 const statusOptions = [
@@ -32,6 +33,7 @@ const StatusBadge = ({ status }) => {
 
 const MyOrders = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { user } = useSelector((s) => s.auth);
   const { orders, pagination, loading, error, filter } = useSelector((s) => s.orders);
 
@@ -155,7 +157,10 @@ const MyOrders = () => {
                       <div className="text-lg font-bold text-primary-600">{formatCurrency(order.totalPrice)}</div>
                       <div className="mt-2 text-sm text-gray-500">{order.items?.reduce((s, i)=> s + i.quantity, 0)} sản phẩm</div>
                       <div className="mt-3">
-                        <button className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary-600 to-purple-600 rounded-lg hover:from-primary-700 hover:to-purple-700 transition shadow-sm">
+                        <button 
+                          onClick={() => navigate(`/orders/${order._id}`)}
+                          className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary-600 to-purple-600 rounded-lg hover:from-primary-700 hover:to-purple-700 transition shadow-sm"
+                        >
                           Xem chi tiết
                         </button>
                       </div>
