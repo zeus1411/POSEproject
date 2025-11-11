@@ -228,6 +228,19 @@ const createOrder = async (req, res) => {
 
       console.log('Cart cleared');
 
+      // Tạo thông báo + email xác nhận đơn (VNPAY)
+      try {
+        await Notification.createOrderNotification(
+          userId,
+          order[0]._id,
+          'PENDING',
+          `Đơn hàng ${order[0].orderNumber} đã được tạo thành công`
+        );
+        console.log('Notification created (VNPay order)');
+      } catch (notifError) {
+        console.log('Notification creation failed (VNPay, non-critical):', notifError.message);
+      }
+
       await session.commitTransaction();
       session.endSession();
 
@@ -243,6 +256,7 @@ const createOrder = async (req, res) => {
           paymentUrl: vnpayUrl
         }
       });
+
     }
 
     // COD Payment

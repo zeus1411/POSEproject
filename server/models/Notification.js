@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import sendEmail from '../utils/sendEmail.js';
 
 const notificationSchema = new mongoose.Schema(
   {
@@ -136,24 +137,91 @@ notificationSchema.methods.markAsUnread = async function () {
 
 // Send email notification
 notificationSchema.methods.sendEmail = async function () {
+  // Không gửi nếu:
+  // - Notification không có channel EMAIL
+  // - Hoặc email đã được gửi trước đó
   if (!this.channels.includes('EMAIL') || this.emailSent) {
     return;
   }
-  
+
   try {
-    // Email sending logic will be implemented in service layer
-    // This is just a placeholder to mark email as sent
+    // Lấy thông tin user để biết email
+    await this.populate('userId', 'email username fullName');
+
+    const user = this.userId;
+    const toEmail = user?.email;
+
+    if (!toEmail) {
+      throw new Error('Không tìm thấy email của người dùng để gửi thông báo');
+    }
+
+    // Subject ưu tiên lấy từ emailData, fallback về title
+    const subject = this.emailData?.subject || this.title;
+    const message = this.message;
+
+    const displayName = user.fullName || user.username || 'bạn';
+
+    // Link hành động (nếu có), ví dụ: /orders/:id
+    const actionUrl = this.actionUrl
+      ? `${process.env.CLIENT_URL}${this.actionUrl}`
+      : process.env.CLIENT_URL;
+
+    // HTML đơn giản (dùng chung cho mọi loại notification)
+    const html = `
+      <div style="font-family: Arial, sans-serif; font-size:14px; color:#333;">
+        <h2 style="color:#16a085; margin-bottom:16px;">${subject}</h2>
+        <p>Xin chào ${displayName},</p>
+        <p>${message}</p>
+
+        ${
+          this.relatedType === 'order'
+            ? `
+          <p>📦 Bạn có thể xem chi tiết đơn hàng tại đây:</p>
+          <p>
+            <a href="${actionUrl}"
+               style="background:#16a085;color:#fff;padding:10px 18px;text-decoration:none;border-radius:4px;display:inline-block;margin-top:8px;">
+              Xem đơn hàng
+            </a>
+          </p>
+        `
+            : this.actionUrl
+            ? `
+          <p>
+            <a href="${actionUrl}">Xem chi tiết</a>
+          </p>
+        `
+            : ''
+        }
+
+        <hr style="margin-top:32px; border:none; border-top:1px solid #eee;" />
+        <p style="font-size:12px; color:#999;">
+          Email này được gửi tự động từ hệ thống Aquatic Store. Vui lòng không trả lời email này.
+        </p>
+      </div>
+    `;
+
+    // Gọi util nodemailer
+    await sendEmail({
+      email: toEmail,
+      subject,
+      message,
+      html,
+    });
+
+    // Đánh dấu đã gửi
     this.emailSent = true;
     this.emailSentAt = new Date();
     await this.save();
-    
+
     return true;
   } catch (error) {
+    console.error('Error sending notification email:', error);
     this.emailError = error.message;
     await this.save();
     return false;
   }
 };
+
 
 // Static method to create notification
 notificationSchema.statics.createNotification = async function (data) {
@@ -226,7 +294,12 @@ notificationSchema.statics.deleteOldNotifications = async function (days = 30) {
 };
 
 // Static method to create order notification
-notificationSchema.statics.createOrderNotification = async function (userId, orderId, status, message) {
+notificationSchema.statics.createOrderNotification = async function (
+  userId,
+  orderId,
+  status,
+  message
+) {
   const titles = {
     CONFIRMED: 'Đơn hàng đã được xác nhận',
     PROCESSING: 'Đơn hàng đang được xử lý',
@@ -235,8 +308,11 @@ notificationSchema.statics.createOrderNotification = async function (userId, ord
     CANCELLED: 'Đơn hàng đã bị hủy',
     REFUNDED: 'Đơn hàng đã được hoàn tiền'
   };
-  
-  return this.createNotification({
+
+  // Chỉ những status này mới gửi EMAIL
+  const shouldSendEmail = ['PENDING', 'SHIPPING', 'COMPLETED', 'CANCELLED'].includes(status);
+
+  const data = {
     userId,
     type: 'ORDER_UPDATE',
     priority: ['CANCELLED', 'REFUNDED'].includes(status) ? 'HIGH' : 'MEDIUM',
@@ -246,14 +322,20 @@ notificationSchema.statics.createOrderNotification = async function (userId, ord
     relatedType: 'order',
     actionUrl: `/orders/${orderId}`,
     actionText: 'Xem chi tiết',
-    channels: ['IN_APP', 'EMAIL'],
-    emailData: {
+    channels: shouldSendEmail ? ['IN_APP', 'EMAIL'] : ['IN_APP'],
+  };
+
+  if (shouldSendEmail) {
+    data.emailData = {
       subject: titles[status] || 'Cập nhật đơn hàng',
       templateName: `order-${status.toLowerCase()}`,
       templateData: new Map([['orderId', orderId.toString()]])
-    }
-  });
+    };
+  }
+
+  return this.createNotification(data);
 };
+
 
 // Static method to create payment notification
 notificationSchema.statics.createPaymentNotification = async function (userId, orderId, paymentStatus, message) {
