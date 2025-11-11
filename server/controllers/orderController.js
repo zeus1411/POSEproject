@@ -485,7 +485,7 @@ const getOrderById = async (req, res) => {
   }
 
   // Check ownership
-  if (userRole !== 'ADMIN' && order.userId._id.toString() !== userId) {
+  if (userRole !== 'admin' && order.userId._id.toString() !== userId) {
     throw new UnauthorizedError('Bạn không có quyền xem đơn hàng này');
   }
 
@@ -845,7 +845,7 @@ const vnpayReturn = async (req, res) => {
   return res.redirect(`${process.env.CLIENT_URL}/orders?payment=failed`);
 };
 
-// ========== ADMIN ROUTES ==========
+// ========== admin ROUTES ==========
 
 // @desc    Lấy tất cả đơn hàng (Admin)
 // @route   GET /api/orders/admin/all

@@ -10,7 +10,7 @@ export const AuthProvider = ({ children }) => {
   const { user } = useSelector((state) => state.auth);
 
   // Compute isAdmin from user
-  const isAdmin = user?.role === 'ADMIN';
+  const isAdmin = user?.role === 'admin';
 
   const login = async (credentials) => {
     // Login sẽ được xử lý bởi Redux thunk trong Login.jsx
