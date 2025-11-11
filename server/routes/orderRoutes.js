@@ -11,7 +11,7 @@ import {
   vnpayReturn,
   getAllOrders,
   updateOrderStatus,
-  getOrderStatistics
+  getOrderStatistics,
 } from '../controllers/orderController.js';
 import { authenticateUser, authorizeRoles } from '../middlewares/auth.js';
 
@@ -51,6 +51,14 @@ router.patch(
   authenticateUser,
   authorizeRoles('admin'),
   updateOrderStatus
+);
+
+// Xem chi tiết một đơn hàng (Admin)
+router.get(
+  '/admin/:id',
+  authenticateUser,
+  authorizeRoles('admin'),
+  getOrderById
 );
 
 // ========== user ROUTES ==========
