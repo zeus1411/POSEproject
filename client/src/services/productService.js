@@ -69,6 +69,53 @@ const productService = {
       params: { limit }
     });
     return response.data;
+  },
+
+  // ========== ADMIN OPERATIONS ==========
+  
+  // Get all products (admin - includes inactive)
+  getAllProductsAdmin: async (params = {}) => {
+    const response = await api.get('/products', {
+      params: {
+        ...params,
+        includeInactive: 'true'
+      }
+    });
+    return response.data;
+  },
+
+  // Create product (admin)
+  createProduct: async (formData) => {
+    const response = await api.post('/products', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    return response.data;
+  },
+
+  // Update product (admin)
+  updateProduct: async (productId, formData) => {
+    const response = await api.put(`/products/${productId}`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    return response.data;
+  },
+
+  // Update product images (admin)
+  updateProductImages: async (productId, imageUrls) => {
+    const response = await api.post(`/products/${productId}/update-images`, {
+      imageUrls
+    });
+    return response.data;
+  },
+
+  // Delete product (admin)
+  deleteProduct: async (productId) => {
+    const response = await api.delete(`/products/${productId}`);
+    return response.data;
   }
 };
 

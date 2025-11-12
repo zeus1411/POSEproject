@@ -4,7 +4,6 @@ import { Provider } from 'react-redux';
 import store from './redux/store';
 import Layout from './components/Layout';
 import Reports from './pages/admin/Reports';
-import Promotions from './pages/admin/Promotions';
 import Products from './pages/admin/Products';
 import MyOrders from './pages/customer/MyOrders';
 import OrderDetail from './pages/customer/OrderDetail';
@@ -39,7 +38,6 @@ function App() {
             <Route path="admin/dashboard" element={<Navigate to="/admin/products" replace />} />
             <Route path="admin/products" element={<Products />} />
             <Route path="admin/reports" element={<Reports />} />
-            <Route path="admin/promotions" element={<Promotions />} />
           </Route>
 
           {/* Catch-all: mọi đường dẫn lạ → /shop */}

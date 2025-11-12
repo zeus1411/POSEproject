@@ -1,21 +1,23 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useSelector } from 'react-redux';
 import {
   ShoppingBagIcon,
   ClipboardDocumentListIcon,
   ChartBarIcon,
-  TagIcon,
   Squares2X2Icon,
 } from '@heroicons/react/24/outline';
 
 const Sidebar = () => {
   const location = useLocation();
-  const isAdmin = location.pathname.startsWith('/admin');
+  const { user } = useSelector((state) => state.auth);
+  
+  // ✅ FIX: Check user role instead of URL path
+  const isAdmin = user?.role === 'admin';
 
   const adminMenuItems = [
     { name: 'Dashboard', path: '/admin/dashboard', icon: Squares2X2Icon },
     { name: 'Quản lý sản phẩm', path: '/admin/products', icon: ShoppingBagIcon },
-    { name: 'Khuyến mãi', path: '/admin/promotions', icon: TagIcon },
     { name: 'Báo cáo', path: '/admin/reports', icon: ChartBarIcon },
   ];
 
