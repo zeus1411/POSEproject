@@ -33,7 +33,7 @@ const authenticateUser = async (req, res, next) => {
             userId: decoded.userId,
             username: decoded.username,
             email: decoded.email,
-            role: decoded.role
+            role: (decoded.role || '').toLowerCase()
         };
         
         console.log('User authenticated:', req.user);
