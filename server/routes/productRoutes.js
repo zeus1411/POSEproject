@@ -14,10 +14,12 @@ import { upload } from '../middlewares/upload.js';
 
 const router = express.Router();
 
-// Public (user, guest): xem danh sách, chi tiết, tìm kiếm
+// Public routes (no authentication required)
 router.get('/', getProducts);
 router.get('/search', searchProducts);
-router.get('/:id', getProductById);
+
+// Protected routes (require authentication)
+router.get('/:id', authenticateUser, getProductById);
 
 // Admin-only: CRUD with image uploads
 router.post(

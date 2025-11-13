@@ -56,23 +56,54 @@ export const getProducts = async (req, res, next) => {
 export const getProductById = async (req, res, next) => {
     try {
         const { id } = req.params;
+        const { includeInactive } = req.query;
+        
+        console.log('getProductById - Request received', { 
+            id, 
+            includeInactive, 
+            user: req.user 
+        });
+
+        const isAdmin = req.user?.role === 'admin';
+        
         const isValidId = mongoose.Types.ObjectId.isValid(id);
         if (!isValidId) {
+            console.log('getProductById - Invalid ID:', id);
             return res.status(400).json({ message: 'ID không hợp lệ' });
         }
-        const isAdmin = req.user?.role === 'admin';
-        const product = await Product.findById(id);
+
+        const product = await Product.findById(id).populate('categoryId', 'name _id');
         if (!product) {
+            console.log('getProductById - Product not found:', id);
             return res.status(404).json({ message: 'Product not found' });
         }
-        // User can only view ACTIVE products
-        if (!isAdmin && product.status !== 'ACTIVE') {
+
+        console.log('getProductById - Found product:', { 
+            _id: product._id, 
+            name: product.name, 
+            status: product.status,
+            isAdmin,
+            includeInactive
+        });
+
+        // Check if user can view this product
+        const canViewInactive = isAdmin && includeInactive === 'true';
+        if (product.status !== 'ACTIVE' && !canViewInactive) {
+            console.log('getProductById - Access denied to inactive product:', {
+                productStatus: product.status,
+                isAdmin,
+                includeInactive
+            });
             return res.status(404).json({ message: 'Product not found' });
         }
+
         // Lazy update viewCount - don't block the response
         Product.findByIdAndUpdate(id, { $inc: { viewCount: 1 } }).catch(() => { });
+        
+        console.log('getProductById - Sending product data');
         res.status(200).json(product);
     } catch (error) {
+        console.error('getProductById - Error:', error);
         next(error);
     }
 };
@@ -265,7 +296,17 @@ export const searchProducts = async (req, res, next) => {
         const filter = {};
         const isAdmin = req.user?.role === 'admin';
         const includeInactive = req.query.includeInactive === 'true';
-        if (!isAdmin || !includeInactive) {
+        
+        // For admin users, show all products by default (both ACTIVE and INACTIVE)
+        // Only filter by status if explicitly set in the query
+        if (req.query.status !== undefined) {
+            // Only add status to filter if it's a non-empty string
+            if (req.query.status) {
+                filter.status = req.query.status;
+            }
+            // If status is empty string (all statuses selected), don't filter by status
+        } else if (!isAdmin) {
+            // For non-admin users, only show ACTIVE products by default
             filter.status = 'ACTIVE';
         }
 

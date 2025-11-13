@@ -18,6 +18,7 @@ const initialState = {
     search: '',
     categoryId: '',
     status: '',
+    sort: 'createdAt:desc',
     page: 1,
     limit: 10
   }
@@ -28,7 +29,12 @@ export const getAllProductsAdmin = createAsyncThunk(
   'adminProducts/getAllProductsAdmin',
   async (params = {}, thunkAPI) => {
     try {
-      return await productService.getAllProductsAdmin(params);
+      const response = await productService.getAllProductsAdmin(params);
+      // Handle both direct array response and paginated response
+      if (Array.isArray(response)) {
+        return { items: response, pagination: { total: response.length, page: 1, pages: 1, limit: response.length } };
+      }
+      return response;
     } catch (error) {
       const message =
         error.response?.data?.message ||
@@ -80,6 +86,24 @@ export const updateProductAdmin = createAsyncThunk(
   async ({ productId, formData }, thunkAPI) => {
     try {
       return await productService.updateProduct(productId, formData);
+    } catch (error) {
+      const message =
+        error.response?.data?.message ||
+        error.response?.data?.msg ||
+        error.message ||
+        error.toString();
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
+// Update product status
+export const updateProductStatusAdmin = createAsyncThunk(
+  'adminProducts/updateStatus',
+  async ({ productId, status }, thunkAPI) => {
+    try {
+      const response = await productService.updateProduct(productId, { status });
+      return response;
     } catch (error) {
       const message =
         error.response?.data?.message ||
@@ -143,13 +167,25 @@ export const adminProductSlice = createSlice({
       state.isSuccess = false;
     },
     setFilters: (state, action) => {
-      state.filters = { ...state.filters, ...action.payload };
+      // Preserve existing filters and update with new ones
+      const newFilters = { 
+        ...state.filters,
+        ...action.payload
+      };
+      
+      // Ensure page is a number and at least 1
+      newFilters.page = action.payload.page !== undefined ? 
+        Math.max(1, parseInt(action.payload.page) || 1) : 
+        state.filters.page;
+        
+      state.filters = newFilters;
     },
     clearFilters: (state) => {
       state.filters = {
         search: '',
         categoryId: '',
         status: '',
+        sort: 'createdAt:desc',
         page: 1,
         limit: 10
       };
@@ -168,9 +204,27 @@ export const adminProductSlice = createSlice({
       .addCase(getAllProductsAdmin.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isSuccess = true;
-        state.products = Array.isArray(action.payload) ? action.payload : action.payload.items || [];
-        if (action.payload.pagination) {
-          state.pagination = action.payload.pagination;
+        
+        // Handle both array and paginated responses
+        if (Array.isArray(action.payload)) {
+          state.products = action.payload;
+          state.pagination = {
+            ...state.pagination,
+            total: action.payload.length,
+            page: 1,
+            pages: 1
+          };
+        } else {
+          // Handle paginated response
+          state.products = action.payload.items || [];
+          if (action.payload.pagination) {
+            state.pagination = {
+              total: parseInt(action.payload.pagination.total) || 0,
+              page: parseInt(action.payload.pagination.page) || 1,
+              pages: parseInt(action.payload.pagination.pages) || 1,
+              limit: parseInt(action.payload.pagination.limit) || 10
+            };
+          }
         }
       })
       .addCase(getAllProductsAdmin.rejected, (state, action) => {

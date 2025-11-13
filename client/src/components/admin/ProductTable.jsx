@@ -1,7 +1,7 @@
 import React from 'react';
-import { Edit2, Trash2, Eye } from 'lucide-react';
+import { Edit2, Trash2, Eye, Check, X } from 'lucide-react';
 
-const ProductTable = ({ products, onEdit, onDelete, onView, isLoading }) => {
+const ProductTable = ({ products, onEdit, onDelete, onToggleStatus, isLoading }) => {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -45,7 +45,9 @@ const ProductTable = ({ products, onEdit, onDelete, onView, isLoading }) => {
                   )}
                   <div>
                     <p className="font-medium text-gray-900">{product.name}</p>
-                    <p className="text-sm text-gray-500">{product.categoryId?.name || 'N/A'}</p>
+                    {product.categoryId?.name && (
+                      <p className="text-sm text-gray-500">{product.categoryId.name}</p>
+                    )}
                   </div>
                 </div>
               </td>
@@ -74,11 +76,18 @@ const ProductTable = ({ products, onEdit, onDelete, onView, isLoading }) => {
               <td className="px-6 py-4">
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => onView(product._id)}
-                    className="p-2 text-blue-600 hover:bg-blue-50 rounded transition"
-                    title="Xem chi tiết"
+                    onClick={() => onToggleStatus && onToggleStatus(product._id, product.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE')}
+                    className={`p-2 rounded-full transition ${
+                      product.status === 'ACTIVE' 
+                        ? 'text-green-600 hover:bg-green-50' 
+                        : 'text-gray-400 hover:bg-gray-50'
+                    }`}
+                    title={product.status === 'ACTIVE' ? 'Vô hiệu hóa' : 'Kích hoạt'}
                   >
-                    <Eye size={18} />
+                    {product.status === 'ACTIVE' ? 
+                      <Check size={18} className="text-green-600" /> : 
+                      <X size={18} className="text-gray-400" />
+                    }
                   </button>
                   <button
                     onClick={() => onEdit(product._id)}
