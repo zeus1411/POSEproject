@@ -101,10 +101,10 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 overflow-y-auto">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full m-4 my-8">
-        <div className="flex justify-between items-center p-6 border-b">
-          <h2 className="text-xl font-bold text-gray-900">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 overflow-y-auto pt-8 pb-8">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-lg m-4 overflow-hidden">
+        <div className="flex justify-between items-center p-4 border-b">
+          <h2 className="text-lg font-semibold text-gray-900">
             {product ? 'Chỉnh sửa sản phẩm' : 'Tạo sản phẩm mới'}
           </h2>
           <button
@@ -115,7 +115,7 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        <form onSubmit={handleSubmit} className="p-4 space-y-4 max-h-[80vh] overflow-y-auto">
           {/* Name */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -126,7 +126,7 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
               name="name"
               value={formData.name}
               onChange={handleInputChange}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              className={`w-full px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 ${
                 errors.name ? 'border-red-500' : 'border-gray-300'
               }`}
               placeholder="Nhập tên sản phẩm"
@@ -145,7 +145,7 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
                 name="sku"
                 value={formData.sku}
                 onChange={handleInputChange}
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                className={`w-full px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 ${
                   errors.sku ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="Nhập SKU"
@@ -162,7 +162,7 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
                 name="price"
                 value={formData.price}
                 onChange={handleInputChange}
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                className={`w-full px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 ${
                   errors.price ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="0"
@@ -183,7 +183,7 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
                 name="stock"
                 value={formData.stock}
                 onChange={handleInputChange}
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                className={`w-full px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 ${
                   errors.stock ? 'border-red-500' : 'border-gray-300'
                 }`}
                 placeholder="0"
@@ -241,8 +241,8 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
               onChange={handleInputChange}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="ACTIVE">Hoạt động</option>
-              <option value="INACTIVE">Không hoạt động</option>
+              <option value="ACTIVE">Đang hoạt động</option>
+              <option value="INACTIVE">Ngừng kinh doanh</option>
             </select>
           </div>
 

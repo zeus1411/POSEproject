@@ -43,8 +43,9 @@ const Layout = () => {
     <div className="flex flex-col min-h-screen bg-gray-50">
       <Header />
       <div className="flex flex-1">
-        <Sidebar />
-        <main className="flex-1 p-6 overflow-y-auto">
+        {/* Only show common sidebar for non-admin users */}
+        {user?.role !== 'admin' && <Sidebar />}
+        <main className={`${user?.role !== 'admin' ? 'flex-1' : 'w-full'} p-6 overflow-y-auto`}>
           <Outlet />
         </main>
       </div>

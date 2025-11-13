@@ -15,7 +15,12 @@ const productService = {
 
   // Get product by ID
   getProductById: async (productId) => {
-    const response = await api.get(`/products/${productId}`);
+    // Include includeInactive parameter to allow fetching inactive products
+    const response = await api.get(`/products/${productId}`, {
+      params: {
+        includeInactive: 'true'  // Always include inactive for admin
+      }
+    });
     return response.data;
   },
 
@@ -73,14 +78,29 @@ const productService = {
 
   // ========== ADMIN OPERATIONS ==========
   
-  // Get all products (admin - includes inactive)
+  // Get all products (admin - includes inactive by default)
   getAllProductsAdmin: async (params = {}) => {
-    const response = await api.get('/products', {
-      params: {
-        ...params,
-        includeInactive: 'true'
-      }
-    });
+    const { page = 1, limit = 10, status, categoryId, search, sort } = params;
+    
+    // Build query params
+    const queryParams = {
+      page,
+      limit,
+      // Always include inactive for admin
+      includeInactive: 'true'
+    };
+    
+    // Only add status to query if it's explicitly set (including empty string)
+    if (status !== undefined) {
+      queryParams.status = status;
+    }
+    
+    // Add other optional parameters
+    if (categoryId) queryParams.categoryId = categoryId;
+    if (search) queryParams.q = search;
+    if (sort) queryParams.sort = sort;
+
+    const response = await api.get('/products/search', { params: queryParams });
     return response.data;
   },
 

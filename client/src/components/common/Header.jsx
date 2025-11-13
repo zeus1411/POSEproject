@@ -125,13 +125,25 @@ const Header = () => {
 
                   {isUserMenuOpen && (
                     <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-100 rounded-lg shadow-lg z-20">
+                      {user.role === 'admin' && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsUserMenuOpen(false);
+                            navigate('/admin/products');
+                          }}
+                          className="w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 border-b border-gray-100"
+                        >
+                          Quản lý
+                        </button>
+                      )}
                       <button
                         type="button"
                         onClick={() => {
                           setIsUserMenuOpen(false);
                           navigate('/profile');
                         }}
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100"
                       >
                         Thông tin cá nhân
                       </button>
