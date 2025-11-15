@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { User, MapPin, Phone, Mail, Edit2, Save, X, Eye, EyeOff, Camera } from 'lucide-react';
+import { User, MapPin, Phone, Mail, Edit2, Save, X, Eye, EyeOff, Camera} from 'lucide-react';
 import userService from '../../services/userService';
 import addressService from '../../services/addressService';
 import { setUser } from '../../redux/slices/authSlice';

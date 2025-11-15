@@ -294,9 +294,9 @@ const OrderDetail = () => {
                               </p>
                             </div>
                             <div className="text-right text-sm whitespace-nowrap text-gray-500">
-                              {isCurrent && status !== 'CANCELLED' && (
+                              {isCurrent && status !== 'CANCELLED' && status !== 'COMPLETED' && (
                                 <span className="text-blue-600 font-medium">
-                                  Đang xử lý
+                                  Đang xử lý...
                                 </span>
                               )}
                             </div>
