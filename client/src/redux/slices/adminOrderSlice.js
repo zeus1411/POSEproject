@@ -1,14 +1,14 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
+import api from "../../services/api";
 
-const API = "http://localhost:3000/api/v1/orders/admin"; 
+const API = "/orders/admin"; 
 
 // Lấy toàn bộ đơn hàng (admin)
 export const fetchAdminOrders = createAsyncThunk(
   "adminOrders/fetchAll",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await axios.get(`${API}/all`, { withCredentials: true });
+      const res = await api.get(`${API}/all`, { withCredentials: true });
 
       const raw = res.data;
 
@@ -28,15 +28,14 @@ export const updateAdminOrderStatus = createAsyncThunk(
   "adminOrders/updateStatus",
   async ({ orderId, status }, { rejectWithValue }) => {
     try {
-      const res = await axios.patch(
+      const res = await api.patch(
         `${API}/${orderId}/status`,
         { status },
         { withCredentials: true }
       );
-      return res.data.data.order; 
+      return res.data?.data?.order || res.data?.data; 
     } catch (err) {
-      // Thêm log này để thấy rõ lỗi 400
-      console.error("Lỗi 400:", err.response.data.message); 
+      console.error("Error updating order status:", err.response?.data?.message); 
       return rejectWithValue(err.response?.data?.message);
     }
   }
@@ -62,23 +61,29 @@ const adminOrderSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-    .addCase(updateAdminOrderStatus.fulfilled, (state, action) => {
+      .addCase(updateAdminOrderStatus.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateAdminOrderStatus.fulfilled, (state, action) => {
+        state.loading = false;
         const updated = action.payload;
 
-        // ✅ Chỉ giữ lại đoạn code an toàn này
-        if (updated && updated._id) { 
-            const index = state.list.findIndex(o => o._id === updated._id);
-            if (index !== -1) {
+        if (updated && updated._id) {
+          const index = state.list.findIndex((o) => o._id === updated._id);
+          if (index !== -1) {
             state.list[index] = updated;
-            }
+          }
         } else {
-            // Log ra nếu backend không trả về order 
-            // (giúp bạn biết để sửa backend nếu cần)
-            console.warn(
+          console.warn(
             "Cập nhật thành công nhưng backend không trả về order object."
-            );
+          );
         }
-    });
+      })
+      .addCase(updateAdminOrderStatus.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      });
   },
 });
 
