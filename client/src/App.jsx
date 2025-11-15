@@ -15,7 +15,7 @@ import ForgotPassword from './pages/auth/ForgotPassword';
 import Checkout from './pages/customer/Checkout';
 import ProfilePage from './pages/customer/ProfilePage';
 import AdminOrders from './pages/admin/Orders';
-import AdminLayout from './components/admin/AdminLayout';
+import AdminOrderDetail from './pages/admin/AdminOrderDetail';
 
 
 function App() {
@@ -42,6 +42,7 @@ function App() {
             <Route path="admin/products" element={<Products />} />
             <Route path="admin/reports" element={<Reports />} />
             <Route path="admin/orders" element={<AdminOrders />} />
+            <Route path="/admin/orders/:id" element={<AdminOrderDetail />} />
           </Route>
 
           {/* Catch-all: mọi đường dẫn lạ → /shop */}

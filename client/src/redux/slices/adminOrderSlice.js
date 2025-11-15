@@ -42,44 +42,88 @@ export const updateAdminOrderStatus = createAsyncThunk(
   }
 );
 
+export const fetchAdminOrderDetail = createAsyncThunk(
+  "adminOrders/fetchDetail",
+  async (orderId, { rejectWithValue }) => {
+    try {
+      const res = await axios.get(
+        `${API}/${orderId}`, // Giả sử API là GET /api/v1/orders/admin/:id
+        { withCredentials: true }
+      );
+      
+      // Dựa trên logic backend trước đó, 
+      // data có thể nằm trong res.data.data.order
+      if (res.data?.data?.order) {
+        return res.data.data.order;
+      }
+      // Hoặc nằm trong res.data.order
+      if (res.data?.order) {
+        return res.data.order;
+      }
+      // Fallback
+      return res.data;
+
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message);
+    }
+  }
+);
+
 const adminOrderSlice = createSlice({
   name: "adminOrders",
   initialState: {
     list: [],
     loading: false,
     error: null,
+    currentOrder: null, // ✅ Thêm state để lưu chi tiết
+    loadingDetail: false, // ✅ Thêm state loading riêng cho chi tiết
+  },
+  reducers: {
+    clearCurrentOrder: (state) => {
+        state.currentOrder = null;
+        state.error = null;
+    }
   },
   extraReducers: (builder) => {
     builder
-      .addCase(fetchAdminOrders.pending, (state) => {
-        state.loading = true;
-      })
-      .addCase(fetchAdminOrders.fulfilled, (state, action) => {
-        state.loading = false;
-        state.list = action.payload;
-      })
-      .addCase(fetchAdminOrders.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
-    .addCase(updateAdminOrderStatus.fulfilled, (state, action) => {
-        const updated = action.payload;
-
-        // ✅ Chỉ giữ lại đoạn code an toàn này
-        if (updated && updated._id) { 
-            const index = state.list.findIndex(o => o._id === updated._id);
-            if (index !== -1) {
-            state.list[index] = updated;
+        .addCase(fetchAdminOrders.pending, (state) => {
+            state.loading = true;
+        })
+        .addCase(fetchAdminOrders.fulfilled, (state, action) => {
+            state.loading = false;
+            state.list = action.payload;
+        })
+        .addCase(fetchAdminOrders.rejected, (state, action) => {
+            state.loading = false;
+            state.error = action.payload;
+        })
+        .addCase(updateAdminOrderStatus.fulfilled, (state, action) => {
+            const updated = action.payload;
+            if (updated && updated._id) { 
+                const index = state.list.findIndex(o => o._id === updated._id);
+                if (index !== -1) {
+                state.list[index] = updated;
+                }
+            } else {
+                console.warn(
+                "Cập nhật thành công nhưng backend không trả về order object."
+                );
             }
-        } else {
-            // Log ra nếu backend không trả về order 
-            // (giúp bạn biết để sửa backend nếu cần)
-            console.warn(
-            "Cập nhật thành công nhưng backend không trả về order object."
-            );
-        }
-    });
-  },
+        })
+        .addCase(fetchAdminOrderDetail.pending, (state) => {
+            state.loadingDetail = true;
+            state.currentOrder = null;
+            state.error = null;
+        })
+          .addCase(fetchAdminOrderDetail.fulfilled, (state, action) => {
+            state.loadingDetail = false;
+            state.currentOrder = action.payload;
+        })
+        .addCase(fetchAdminOrderDetail.rejected, (state, action) => {
+            state.loadingDetail = false;
+            state.error = action.payload;
+        });
+    },
 });
-
+export const { clearCurrentOrder } = adminOrderSlice.actions;
 export default adminOrderSlice.reducer;
