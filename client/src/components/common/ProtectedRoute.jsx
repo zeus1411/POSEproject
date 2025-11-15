@@ -21,7 +21,7 @@ const ProtectedRoute = ({ adminOnly = false }) => {
     return <Navigate to={`/login?redirect=${encodeURIComponent(location.pathname)}`} replace />;
   }
 
-  if (adminOnly && user.role !== 'ADMIN') {
+  if (adminOnly && user.role !== 'admin') {
     return <Navigate to="/shop" replace />;
   }
 

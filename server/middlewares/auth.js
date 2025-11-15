@@ -33,7 +33,7 @@ const authenticateUser = async (req, res, next) => {
             userId: decoded.userId,
             username: decoded.username,
             email: decoded.email,
-            role: decoded.role
+            role: (decoded.role || '').toLowerCase()
         };
         
         console.log('User authenticated:', req.user);
@@ -110,7 +110,7 @@ const checkOwnership = (modelName = 'user', paramName = 'id') => {
             }
             
             // If user is admin, bypass ownership check
-            if (req.user.role === 'ADMIN') {
+            if (req.user.role === 'admin') {
                 console.log('Admin user - ownership check bypassed');
                 console.log('=======================\n');
                 return next();

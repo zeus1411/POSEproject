@@ -9,7 +9,8 @@ export const getUserOrders = async (page = 1, limit = 10, status) => {
 
 export const getOrderById = async (id) => {
   const response = await api.get(`/orders/${id}`);
-  return response.data?.data;
+  // Backend returns { success, data: { order } }, so return the raw order doc
+  return response.data?.data?.order;
 };
 
 export const previewOrder = async (promotionCode) => {
@@ -35,4 +36,25 @@ export const createOrder = async ({ shippingAddress, paymentMethod = 'COD', prom
   }
 };
 
-export default { getUserOrders, getOrderById, previewOrder, createOrder };
+/**
+ * Cancel an order
+ * @param {string} orderId - The ID of the order to cancel
+ * @returns {Promise<Object>} The updated order
+ */
+export const cancelOrder = async (orderId) => {
+  try {
+    const response = await api.patch(`/orders/${orderId}/cancel`);
+    return response.data?.data?.order || response.data?.data || response.data;
+  } catch (error) {
+    console.error('Error cancelling order:', error);
+    throw error;
+  }
+};
+
+export default { 
+  getUserOrders, 
+  getOrderById, 
+  previewOrder, 
+  createOrder, 
+  cancelOrder 
+};

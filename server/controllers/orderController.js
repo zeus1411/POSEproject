@@ -228,6 +228,19 @@ const createOrder = async (req, res) => {
 
       console.log('Cart cleared');
 
+      // Tạo thông báo + email xác nhận đơn (VNPAY)
+      try {
+        await Notification.createOrderNotification(
+          userId,
+          order[0]._id,
+          'PENDING',
+          `Đơn hàng ${order[0].orderNumber} đã được tạo thành công`
+        );
+        console.log('Notification created (VNPay order)');
+      } catch (notifError) {
+        console.log('Notification creation failed (VNPay, non-critical):', notifError.message);
+      }
+
       await session.commitTransaction();
       session.endSession();
 
@@ -243,6 +256,7 @@ const createOrder = async (req, res) => {
           paymentUrl: vnpayUrl
         }
       });
+
     }
 
     // COD Payment
@@ -485,7 +499,7 @@ const getOrderById = async (req, res) => {
   }
 
   // Check ownership
-  if (userRole !== 'ADMIN' && order.userId._id.toString() !== userId) {
+  if (userRole !== 'admin' && order.userId._id.toString() !== userId) {
     throw new UnauthorizedError('Bạn không có quyền xem đơn hàng này');
   }
 
@@ -501,13 +515,18 @@ const getOrderById = async (req, res) => {
 const cancelOrder = async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
-
+  
   try {
     const { id } = req.params;
-    const { reason } = req.body;
+    const reason = req.body?.reason || 'Không có lý do';
     const userId = req.user.userId;
 
-    const order = await Order.findById(id).session(session);
+    console.time('cancelOrder:findOrder');
+    const order = await Order.findById(id)
+      .select('status userId items paymentId')
+      .session(session)
+      .lean();
+    console.timeEnd('cancelOrder:findOrder');
 
     if (!order) {
       throw new NotFoundError('Không tìm thấy đơn hàng');
@@ -518,50 +537,92 @@ const cancelOrder = async (req, res) => {
       throw new UnauthorizedError('Bạn không có quyền hủy đơn hàng này');
     }
 
-    // Chỉ cho phép hủy các đơn hàng chưa xử lý hoặc đang xử lý
-    if (!['PENDING', 'CONFIRMED', 'PROCESSING'].includes(order.status)) {
-      throw new BadRequestError('Không thể hủy đơn hàng ở trạng thái hiện tại');
+    // Check cancellable status
+    const cancellableStatuses = ['PENDING', 'CONFIRMED', 'PROCESSING', 'FAILED'];
+    if (!cancellableStatuses.includes(order.status)) {
+      throw new BadRequestError(
+        `Không thể hủy đơn hàng ở trạng thái "${order.status}". Chỉ có thể hủy đơn hàng ở trạng thái: ${cancellableStatuses.join(', ')}`
+      );
     }
 
-    // Hoàn stock
-    for (const item of order.items) {
-      const product = await Product.findById(item.productId).session(session);
-      if (product) {
-        product.stock += item.quantity;
-        product.soldCount = Math.max(0, (product.soldCount || 0) - item.quantity);
-        await product.save({ session });
-      }
-    }
+    // Update order status first to prevent race conditions
+    console.time('cancelOrder:updateOrder');
+    const updatedOrder = await Order.findByIdAndUpdate(
+      id,
+      {
+        $set: {
+          status: 'CANCELLED',
+          cancelReason: reason,
+          cancelledAt: new Date(),
+          cancelledBy: userId
+        }
+      },
+      { new: true, session }
+    ).lean();
+    console.timeEnd('cancelOrder:updateOrder');
 
-    // Cập nhật order
-    await order.cancelOrder(reason, userId);
-
-    // Cập nhật payment
-    const payment = await Payment.findById(order.paymentId).session(session);
-    if (payment && payment.status !== 'COMPLETED') {
-      payment.status = 'CANCELLED';
-      await payment.save({ session });
-    }
-
-    // Tạo thông báo
-    await Notification.createOrderNotification(
-      userId,
-      order._id,
-      'CANCELLED',
-      `Đơn hàng ${order.orderNumber} đã bị hủy`
+    // Update product stocks in parallel
+    console.time('cancelOrder:updateProducts');
+    const productUpdates = order.items.map(item => 
+      Product.updateOne(
+        { _id: item.productId },
+        { 
+          $inc: { 
+            stock: item.quantity,
+            soldCount: -item.quantity 
+          } 
+        },
+        { session }
+      )
     );
+    await Promise.all(productUpdates);
+    console.timeEnd('cancelOrder:updateProducts');
 
+    // Update payment status if exists
+    if (order.paymentId) {
+      console.time('cancelOrder:updatePayment');
+      await Payment.updateOne(
+        { _id: order.paymentId, status: { $ne: 'COMPLETED' } },
+        { $set: { status: 'CANCELLED' } },
+        { session }
+      );
+      console.timeEnd('cancelOrder:updatePayment');
+    }
+
+    // Commit transaction
     await session.commitTransaction();
+    console.log('✅ Transaction committed successfully');
+
+    // Get updated order with populated fields
+    console.time('cancelOrder:fetchUpdatedOrder');
+    const populatedOrder = await Order.findById(id)
+      .populate('items.productId', 'name price images')
+      .populate('userId', 'fullName email phoneNumber')
+      .populate('paymentId', 'method status')
+      .lean();
+    console.timeEnd('cancelOrder:fetchUpdatedOrder');
 
     res.status(StatusCodes.OK).json({
       success: true,
       message: 'Đơn hàng đã được hủy thành công',
-      data: { order }
+      data: { order: populatedOrder }
     });
 
   } catch (error) {
     await session.abortTransaction();
-    throw error;
+    console.error('❌ Error in cancelOrder:', error.message);
+    
+    const statusCode = error.statusCode || 
+      (error.name === 'NotFoundError' ? StatusCodes.NOT_FOUND : 
+       error.name === 'UnauthorizedError' ? StatusCodes.UNAUTHORIZED : 
+       error.name === 'BadRequestError' ? StatusCodes.BAD_REQUEST : 
+       StatusCodes.INTERNAL_SERVER_ERROR);
+    
+    res.status(statusCode).json({
+      success: false,
+      message: error.message || 'Có lỗi xảy ra khi hủy đơn hàng',
+      error: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   } finally {
     session.endSession();
   }
@@ -798,7 +859,7 @@ const vnpayReturn = async (req, res) => {
   return res.redirect(`${process.env.CLIENT_URL}/orders?payment=failed`);
 };
 
-// ========== ADMIN ROUTES ==========
+// ========== admin ROUTES ==========
 
 // @desc    Lấy tất cả đơn hàng (Admin)
 // @route   GET /api/orders/admin/all

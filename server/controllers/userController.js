@@ -178,9 +178,247 @@ export const uploadAvatar = async (req, res, next) => {
   }
 };
 
+// ========== ADMIN USER MANAGEMENT ==========
+
+// @desc    Danh sách người dùng (Admin)
+// @route   GET /api/v1/users/admin
+// @access  Private (admin)
+export const getAllUsers = async (req, res) => {
+  const {
+    page = 1,
+    limit = 10,
+    search,
+    role,
+    isActive,
+    sortBy = 'createdAt',
+    sortOrder = 'desc'
+  } = req.query;
+
+  const query = {};
+
+  // Tìm kiếm theo username / email / fullName / phone
+  if (search) {
+    const regex = new RegExp(search, 'i');
+    query.$or = [
+      { username: regex },
+      { email: regex },
+      { fullName: regex },
+      { phone: regex }
+    ];
+  }
+
+  // Filter theo role
+  if (role && ['user', 'admin'].includes(role)) {
+    query.role = role;
+  }
+
+  // Filter theo trạng thái hoạt động
+  if (typeof isActive !== 'undefined') {
+    if (isActive === 'true' || isActive === true) query.isActive = true;
+    if (isActive === 'false' || isActive === false) query.isActive = false;
+  }
+
+  // Pagination
+  const pageNumber = Math.max(parseInt(page, 10) || 1, 1);
+  const pageSize = Math.min(parseInt(limit, 10) || 10, 100);
+  const skip = (pageNumber - 1) * pageSize;
+
+  // Sort whitelist
+  const sortFieldWhitelist = ['createdAt', 'updatedAt', 'lastLogin', 'username', 'email'];
+  const field = sortFieldWhitelist.includes(sortBy) ? sortBy : 'createdAt';
+  const direction = sortOrder === 'asc' ? 1 : -1;
+  const sort = { [field]: direction };
+
+  const [users, totalUsers] = await Promise.all([
+    User.find(query)
+      .select('-password -resetPasswordOTP -resetPasswordToken -resetPasswordExpires')
+      .sort(sort)
+      .skip(skip)
+      .limit(pageSize),
+    User.countDocuments(query)
+  ]);
+
+  const totalPages = Math.ceil(totalUsers / pageSize);
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    data: {
+      users,
+      pagination: {
+        totalUsers,
+        totalPages,
+        currentPage: pageNumber,
+        pageSize
+      }
+    }
+  });
+};
+
+// @desc    Lấy chi tiết 1 user (Admin)
+// @route   GET /api/v1/users/admin/:id
+// @access  Private (admin)
+export const getUserByIdAdmin = async (req, res) => {
+  const { id } = req.params;
+
+  const user = await User.findById(id)
+    .select('-password -resetPasswordOTP -resetPasswordToken -resetPasswordExpires')
+    .populate({
+      path: 'orders',
+      select: 'orderNumber status totalAmount createdAt'
+    })
+    .populate({
+      path: 'reviews',
+      select: 'rating comment productId createdAt'
+    })
+    .populate({
+      path: 'payments',
+      select: 'amount status method createdAt'
+    });
+
+  if (!user) {
+    throw new NotFoundError('Không tìm thấy người dùng');
+  }
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    data: { user }
+  });
+};
+
+// @desc    Admin cập nhật thông tin user / role / trạng thái
+// @route   PUT /api/v1/users/admin/:id
+// @access  Private (admin)
+export const updateUserByAdmin = async (req, res) => {
+  const { id } = req.params;
+
+  const user = await User.findById(id);
+
+  if (!user) {
+    throw new NotFoundError('Không tìm thấy người dùng');
+  }
+
+  // Không cho update password trực tiếp ở đây
+  if (req.body.password || req.body.newPassword) {
+    throw new BadRequestError('Không thể đổi mật khẩu qua API này');
+  }
+
+  // Các field thông tin cá nhân được phép sửa
+  const allowedPersonalFields = [
+    'fullName',
+    'phone',
+    'dateOfBirth',
+    'gender',
+    'username',
+    'email'
+  ];
+
+  allowedPersonalFields.forEach((field) => {
+    if (req.body[field] !== undefined) {
+      user[field] = req.body[field];
+    }
+  });
+
+  // Cập nhật địa chỉ (nếu có)
+  if (req.body.address) {
+    const allowedAddressFields = [
+      'street',
+      'ward',
+      'wardCode',
+      'district',
+      'districtId',
+      'city',
+      'cityId',
+      'country',
+      'postalCode',
+      'notes'
+    ];
+
+    if (!user.address) {
+      user.address = {};
+    }
+
+    allowedAddressFields.forEach((field) => {
+      if (req.body.address[field] !== undefined) {
+        user.address[field] = req.body.address[field];
+      }
+    });
+  }
+
+  // Cập nhật role
+  if (req.body.role !== undefined) {
+    const newRole = req.body.role;
+    if (!['user', 'admin'].includes(newRole)) {
+      throw new BadRequestError('Vai trò không hợp lệ');
+    }
+    user.role = newRole;
+  }
+
+  // Cập nhật trạng thái hoạt động
+  if (req.body.isActive !== undefined) {
+    user.isActive =
+      req.body.isActive === true ||
+      req.body.isActive === 'true' ||
+      req.body.isActive === 1 ||
+      req.body.isActive === '1';
+  }
+
+  // Cập nhật trạng thái xác minh email
+  if (req.body.isEmailVerified !== undefined) {
+    user.isEmailVerified =
+      req.body.isEmailVerified === true ||
+      req.body.isEmailVerified === 'true' ||
+      req.body.isEmailVerified === 1 ||
+      req.body.isEmailVerified === '1';
+  }
+
+  await user.save();
+
+  const updatedUser = await User.findById(id).select(
+    '-password -resetPasswordOTP -resetPasswordToken -resetPasswordExpires'
+  );
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    message: 'Cập nhật người dùng thành công',
+    data: { user: updatedUser }
+  });
+};
+
+// @desc    Xóa / vô hiệu hóa user (Admin)
+// @route   DELETE /api/v1/users/admin/:id
+// @access  Private (admin)
+export const deleteUserByAdmin = async (req, res) => {
+  const { id } = req.params;
+
+  // Không cho admin tự xóa chính mình
+  if (req.user.userId === id) {
+    throw new BadRequestError('Bạn không thể xóa tài khoản của chính mình');
+  }
+
+  const user = await User.findById(id);
+
+  if (!user) {
+    throw new NotFoundError('Không tìm thấy người dùng');
+  }
+
+  // Soft delete: vô hiệu hóa tài khoản thay vì xóa cứng
+  user.isActive = false;
+  await user.save({ validateBeforeSave: false });
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    message: 'Tài khoản đã được vô hiệu hóa thành công'
+  });
+};
+
+
 export default {
   updateProfile,
   getProfile,
   changePassword,
-  uploadAvatar
+  uploadAvatar,
+  getAllUsers,
+  getUserByIdAdmin,
+  updateUserByAdmin,
+  deleteUserByAdmin
 };

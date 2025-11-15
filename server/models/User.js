@@ -31,6 +31,12 @@ const userSchema = new mongoose.Schema(
       select: false
     },
     
+    role: {
+      type: String,
+      enum: ['user', 'admin'],
+      default: 'user'
+    },
+    
     // ========== THÔNG TIN CÁ NHÂN ==========
     fullName: {
       type: String,
@@ -104,11 +110,6 @@ const userSchema = new mongoose.Schema(
     },
     
     // ========== HỆ THỐNG ==========
-    role: {
-      type: String,
-      enum: ['USER', 'ADMIN'],
-      default: 'USER'
-    },
     isActive: {
       type: Boolean,
       default: true

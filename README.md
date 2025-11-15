@@ -1,7 +1,377 @@
-# POSE Project - Nền Tảng Thương Mại Điện Tử
+# POSE Project - Modern E-commerce Platform
 
-## Tổng quan
-Dự án POSE là một nền tảng thương mại điện tử hiện đại được xây dựng bằng React (Vite) cho frontend và Node.js/Express cho backend, sử dụng MongoDB làm cơ sở dữ liệu. Ứng dụng cung cấp trải nghiệm mua sắm trực tuyến với giao diện người dùng đẹp mắt và dễ sử dụng.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Node.js](https://img.shields.io/badge/Node.js-18.x-green)](https://nodejs.org/)
+[![MongoDB](https://img.shields.io/badge/MongoDB-7.0-brightgreen)](https://www.mongodb.com/)
+[![React](https://img.shields.io/badge/React-18.2-blue)](https://reactjs.org/)
+[![Express](https://img.shields.io/badge/Express-5.0-lightgrey)](https://expressjs.com/)
+
+## Overview
+POSE is a modern, full-featured e-commerce platform built with a React.js frontend and Node.js/Express backend, powered by MongoDB. The application provides a seamless online shopping experience with a beautiful, responsive user interface and robust backend services.
+
+## Key Features
+
+### 🛍️ Customer Facing
+- **Product Browsing**
+  - Responsive product catalog with filtering and sorting
+  - Advanced search functionality
+  - Product categories and tags
+  - Product reviews and ratings
+
+- **Shopping Experience**
+  - Shopping cart management
+  - Wishlist functionality
+  - Order tracking
+  - Multiple payment methods (VNPay, Stripe)
+
+- **User Account**
+  - User registration and authentication
+  - Profile management
+  - Order history
+  - Address book
+
+### 🛠️ Admin Dashboard
+- **Product Management**
+  - Add/edit/delete products
+  - Manage inventory
+  - Handle product categories and attributes
+
+- **Order Management**
+  - Process orders
+  - Update order status
+  - Handle returns and refunds
+
+- **User Management**
+  - Manage customer accounts
+  - Handle user roles and permissions
+  - View user activity
+
+- **Analytics**
+  - Sales reports
+  - Customer insights
+  - Inventory management
+
+## 🚀 Tech Stack
+
+### Frontend
+- **Framework**: React 18 with Vite
+- **State Management**: Redux Toolkit
+- **Styling**: TailwindCSS + Emotion
+- **UI Components**: Material-UI, Headless UI, Hero Icons
+- **Routing**: React Router v6
+- **Form Handling**: React Hook Form
+- **HTTP Client**: Axios
+- **Internationalization**: i18next
+
+### Backend
+- **Runtime**: Node.js 18+
+- **Framework**: Express.js
+- **Database**: MongoDB with Mongoose ODM
+- **Authentication**: JWT, bcryptjs
+- **File Upload**: Multer, Cloudinary
+- **Payment Integration**: VNPay, Stripe
+- **Email**: Nodemailer
+- **Validation**: express-validator
+- **Logging**: Winston
+
+### DevOps
+- **Containerization**: Docker
+- **CI/CD**: GitHub Actions
+- **Monitoring**: N/A
+- **Logging**: Winston + CloudWatch
+
+## 🏗️ Project Structure
+
+```
+POSEproject/
+├── client/                      # Frontend React (Vite)
+│   ├── public/                  # Static assets
+│   ├── src/
+│   │   ├── assets/             # Images, icons, styles
+│   │   ├── components/          # Reusable components
+│   │   │   ├── common/         # Common components
+│   │   │   └── ui/             # UI components
+│   │   ├── context/            # React Context
+│   │   ├── pages/              # Page components
+│   │   ├── redux/              # Redux store and slices
+│   │   ├── services/           # API services
+│   │   ├── utils/              # Utility functions
+│   │   ├── App.jsx             # Root component
+│   │   └── main.jsx            # App entry point
+│   ├── .env.development        # Frontend environment variables
+│   ├── .env.production         # Production environment variables
+│   ├── vite.config.js          # Vite configuration
+│   └── package.json            # Frontend dependencies
+│
+├── server/                     # Backend Node.js
+│   ├── config/                # Configuration files
+│   ├── controllers/           # Route controllers
+│   ├── middlewares/           # Express middlewares
+│   ├── models/                # MongoDB models
+│   ├── routes/                # API routes
+│   ├── services/              # Business logic
+│   ├── utils/                 # Utility functions
+│   ├── .env                  # Environment variables
+│   └── package.json          # Backend dependencies
+│
+├── docker/                    # Docker configuration
+│   ├── nginx/                # Nginx configuration
+│   ├── mongo/                # MongoDB configuration
+│   └── Dockerfile            # Dockerfile for the application
+│
+├── .github/workflows/        # GitHub Actions workflows
+├── docker-compose.yml        # Docker Compose configuration
+├── .gitignore               # Git ignore file
+└── README.md                # This file
+```
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js 18+
+- MongoDB 7.0+
+- npm 9+ or yarn 1.22+
+- Docker 20.10+ (for containerization)
+
+### Local Development
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/yourusername/pose-project.git
+   cd pose-project
+   ```
+
+2. **Setup Backend**
+   ```bash
+   cd server
+   cp .env.example .env
+   npm install
+   npm run dev
+   ```
+
+3. **Setup Frontend**
+   ```bash
+   cd ../client
+   cp .env.example .env
+   npm install
+   npm run dev
+   ```
+
+4. **Access the application**
+   - Frontend: http://localhost:5173
+   - Backend API: http://localhost:3000
+   - Admin Dashboard: http://localhost:5173/admin
+
+### Environment Variables
+
+#### Backend (server/.env)
+```env
+# Server
+PORT=3000
+NODE_ENV=development
+
+# Database
+MONGODB_URI=mongodb://localhost:27017/pose_db
+
+# JWT
+JWT_SECRET=your_jwt_secret
+JWT_EXPIRE=30d
+JWT_COOKIE_EXPIRE=30
+
+# Cloudinary
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+
+# Email
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_EMAIL=your_email@gmail.com
+SMTP_PASSWORD=your_app_password
+
+# VNPay
+VNPAY_TMN_CODE=your_tmn_code
+VNPAY_HASH_SECRET=your_hash_secret
+VNPAY_URL=https://sandbox.vnpayment.vn/paymentv2/vpcpay.html
+VNPAY_RETURN_URL=http://localhost:3000/api/payment/vnpay_return
+
+# Stripe
+STRIPE_SECRET_KEY=your_stripe_secret_key
+STRIPE_WEBHOOK_SECRET=your_webhook_secret
+```
+
+#### Frontend (client/.env)
+```env
+VITE_API_URL=http://localhost:3000/api
+VITE_GOOGLE_MAPS_API_KEY=your_google_maps_api_key
+VITE_STRIPE_PUBLIC_KEY=your_stripe_public_key
+```
+
+## 🐳 Docker Setup
+
+### Prerequisites
+- Docker 20.10+
+- Docker Compose 2.0+
+
+### Quick Start
+
+1. **Clone and navigate to project**
+   ```bash
+   git clone https://github.com/yourusername/pose-project.git
+   cd pose-project
+   ```
+
+2. **Set up environment variables**
+   ```bash
+   cp server/.env.example server/.env
+   cp client/.env.example client/.env
+   ```
+   Update the environment variables as needed.
+
+3. **Build and start containers**
+   ```bash
+   docker-compose up --build
+   ```
+
+4. **Access the application**
+   - Frontend: http://localhost:80
+   - Backend API: http://localhost:3000
+   - MongoDB: mongodb://localhost:27017
+
+### Available Services
+- **pose-frontend**: React application
+- **pose-backend**: Node.js/Express API
+- **mongo**: MongoDB database
+- **mongo-express**: Web-based MongoDB admin interface (http://localhost:8081)
+
+## 🛠 API Documentation
+
+API documentation is available at `http://localhost:3000/api-docs` when running the application in development mode.
+
+### Authentication
+- `POST /api/auth/register` - Register a new user
+- `POST /api/auth/login` - User login
+- `GET /api/auth/me` - Get current user profile
+- `PUT /api/auth/updatedetails` - Update user details
+- `PUT /api/auth/updatepassword` - Update password
+- `POST /api/auth/forgotpassword` - Forgot password
+- `PUT /api/auth/resetpassword/:resettoken` - Reset password
+
+### Products
+- `GET /api/products` - Get all products
+- `GET /api/products/:id` - Get single product
+- `POST /api/products` - Create product (Admin)
+- `PUT /api/products/:id` - Update product (Admin)
+- `DELETE /api/products/:id` - Delete product (Admin)
+- `POST /api/products/:id/reviews` - Add product review
+
+### Orders
+- `GET /api/orders` - Get all orders (Admin)
+- `GET /api/orders/myorders` - Get logged in user orders
+- `GET /api/orders/:id` - Get order by ID
+- `POST /api/orders` - Create new order
+- `PUT /api/orders/:id/pay` - Update order to paid
+- `PUT /api/orders/:id/deliver` - Update order to delivered (Admin)
+
+## 🧪 Testing
+
+### Running Tests
+```bash
+# Run backend tests
+cd server
+npm test
+
+# Run frontend tests
+cd ../client
+npm test
+```
+
+### Linting
+```bash
+# Backend
+cd server
+npm run lint
+
+# Frontend
+cd ../client
+npm run lint
+```
+
+## 🚀 Deployment
+
+### Prerequisites
+- Server with Node.js 18+ and MongoDB 7.0+
+- Nginx (recommended)
+- PM2 (for process management)
+
+### Steps
+1. **Build the frontend**
+   ```bash
+   cd client
+   npm install
+   npm run build
+   ```
+
+2. **Set up the backend**
+   ```bash
+   cd ../server
+   npm install --production
+   ```
+
+3. **Configure Nginx**
+   ```nginx
+   server {
+       listen 80;
+       server_name yourdomain.com;
+
+       location / {
+           root /path/to/client/dist;
+           try_files $uri /index.html;
+       }
+
+       location /api {
+           proxy_pass http://localhost:3000;
+           proxy_http_version 1.1;
+           proxy_set_header Upgrade $http_upgrade;
+           proxy_set_header Connection 'upgrade';
+           proxy_set_header Host $host;
+           proxy_cache_bypass $http_upgrade;
+       }
+   }
+   ```
+
+4. **Start the application**
+   ```bash
+   # Start backend with PM2
+   cd server
+   pm2 start npm --name "pose-backend" -- start
+   
+   # Set PM2 to start on system boot
+   pm2 startup
+   pm2 save
+   ```
+
+## 🤝 Contributing
+
+1. Fork the project
+2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Open a Pull Request
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- [React](https://reactjs.org/)
+- [Express](https://expressjs.com/)
+- [MongoDB](https://www.mongodb.com/)
+- [Vite](https://vitejs.dev/)
+- [TailwindCSS](https://tailwindcss.com/)
+- [Material-UI](https://mui.com/)
+- And all other open-source libraries and tools used in this project.
 
 ## Tính năng chính
 

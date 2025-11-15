@@ -11,7 +11,7 @@ import {
   vnpayReturn,
   getAllOrders,
   updateOrderStatus,
-  getOrderStatistics
+  getOrderStatistics,
 } from '../controllers/orderController.js';
 import { authenticateUser, authorizeRoles } from '../middlewares/auth.js';
 
@@ -28,12 +28,12 @@ router.post(
 // VNPay return URL (public)
 router.get('/payment/vnpay/return', vnpayReturn);
 
-// ========== ADMIN ROUTES (ĐẶT TRƯỚC ĐỂ TRÁNH CONFLICT) ==========
+// ========== admin ROUTES (ĐẶT TRƯỚC ĐỂ TRÁNH CONFLICT) ==========
 // Lấy tất cả đơn hàng (Admin)
 router.get(
   '/admin/all',
   authenticateUser,
-  authorizeRoles('ADMIN'),
+  authorizeRoles('admin'),
   getAllOrders
 );
 
@@ -41,7 +41,7 @@ router.get(
 router.get(
   '/admin/statistics',
   authenticateUser,
-  authorizeRoles('ADMIN'),
+  authorizeRoles('admin'),
   getOrderStatistics
 );
 
@@ -49,11 +49,19 @@ router.get(
 router.patch(
   '/admin/:id/status',
   authenticateUser,
-  authorizeRoles('ADMIN'),
+  authorizeRoles('admin'),
   updateOrderStatus
 );
 
-// ========== USER ROUTES ==========
+// Xem chi tiết một đơn hàng (Admin)
+router.get(
+  '/admin/:id',
+  authenticateUser,
+  authorizeRoles('admin'),
+  getOrderById
+);
+
+// ========== user ROUTES ==========
 // Xem trước đơn hàng (preview trước khi đặt) - ĐẶT TRƯỚC /
 router.get('/preview', authenticateUser, previewOrder);
 
