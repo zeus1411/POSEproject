@@ -14,6 +14,9 @@ import Register from './pages/auth/Register';
 import ForgotPassword from './pages/auth/ForgotPassword';
 import Checkout from './pages/customer/Checkout';
 import ProfilePage from './pages/customer/ProfilePage';
+import AdminOrders from './pages/admin/Orders';
+import AdminLayout from './components/admin/AdminLayout';
+
 
 function App() {
   return (
@@ -38,6 +41,7 @@ function App() {
             <Route path="admin/dashboard" element={<Navigate to="/admin/products" replace />} />
             <Route path="admin/products" element={<Products />} />
             <Route path="admin/reports" element={<Reports />} />
+            <Route path="admin/orders" element={<AdminOrders />} />
           </Route>
 
           {/* Catch-all: mọi đường dẫn lạ → /shop */}
