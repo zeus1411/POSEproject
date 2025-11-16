@@ -953,9 +953,25 @@ const updateOrderStatus = async (req, res) => {
     note || `Đơn hàng ${order.orderNumber} đã được cập nhật sang trạng thái ${status}`
   );
 
+  // Lấy lại order với thông tin customer đầy đủ
+  const updatedOrder = await Order.findById(id)
+    .populate('userId', 'fullName email phone')
+    .lean();
+
+  // Đổi tên trường userId thành customer để phù hợp với frontend
+  if (updatedOrder) {
+    updatedOrder.customer = {
+      _id: updatedOrder.userId._id,
+      fullName: updatedOrder.userId.fullName,
+      email: updatedOrder.userId.email,
+      phone: updatedOrder.userId.phone
+    };
+    delete updatedOrder.userId;
+  }
+
   res.status(StatusCodes.OK).json({
     success: true,
-    data: order
+    data: updatedOrder || order
   });
 };
 
