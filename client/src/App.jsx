@@ -3,7 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { Provider } from 'react-redux';
 import store from './redux/store';
 import Layout from './components/Layout';
-import Reports from './pages/admin/Reports';
+import Statistics from './pages/admin/Statistics';
 import Products from './pages/admin/Products';
 import MyOrders from './pages/customer/MyOrders';
 import OrderDetail from './pages/customer/OrderDetail';
@@ -16,6 +16,7 @@ import Checkout from './pages/customer/Checkout';
 import ProfilePage from './pages/customer/ProfilePage';
 import AdminOrders from './pages/admin/Orders';
 import AdminOrderDetail from './pages/admin/AdminOrderDetail';
+import AdminLayout from './components/admin/AdminLayout';
 
 
 function App() {
@@ -40,10 +41,11 @@ function App() {
             <Route path="checkout" element={<Checkout />} />
             <Route path="admin/dashboard" element={<Navigate to="/admin/products" replace />} />
             <Route path="admin/products" element={<Products />} />
-            <Route path="admin/reports" element={<Reports />} />
+            <Route path="admin/statistics" element={<Statistics />} />
             <Route path="admin/orders" element={<AdminOrders />} />
             <Route path="/admin/orders/:id" element={<AdminOrderDetail />} />
-          </Route>
+            <Route path="/admin/my-orders" element={<AdminLayout> <MyOrders /> </AdminLayout>} />
+        </Route>
 
           {/* Catch-all: mọi đường dẫn lạ → /shop */}
           <Route path="*" element={<Navigate to="/shop" replace />} />

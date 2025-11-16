@@ -51,10 +51,20 @@ export const cancelOrder = async (orderId) => {
   }
 };
 
+export const getOrderStatistics = async (startDate, endDate) => {
+  const params = {};
+  if (startDate) params.startDate = startDate;
+  if (endDate) params.endDate = endDate;
+  
+  const response = await api.get('/orders/admin/statistics', { params });
+  return response.data?.data;
+};
+
 export default { 
   getUserOrders, 
   getOrderById, 
   previewOrder, 
   createOrder, 
-  cancelOrder 
+  cancelOrder,
+  getOrderStatistics
 };

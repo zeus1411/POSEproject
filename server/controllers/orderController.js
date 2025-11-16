@@ -955,8 +955,7 @@ const updateOrderStatus = async (req, res) => {
 
   res.status(StatusCodes.OK).json({
     success: true,
-    message: 'Cập nhật trạng thái đơn hàng thành công',
-    data: { order }
+    data: order
   });
 };
 
@@ -987,11 +986,110 @@ const getOrderStatistics = async (req, res) => {
     }
   ]);
 
+  // Thống kê sản phẩm bán chạy nhất
+  const topProducts = await Order.aggregate([
+    {
+      $match: {
+        createdAt: { $gte: start, $lte: end },
+        status: { $nin: ['CANCELLED', 'FAILED'] }
+      }
+    },
+    {
+      $unwind: '$items'
+    },
+    {
+      $group: {
+        _id: '$items.productId',
+        productName: { $first: '$items.productName' },
+        totalQuantity: { $sum: '$items.quantity' },
+        totalRevenue: { $sum: '$items.subtotal' },
+        orderCount: { $sum: 1 }
+      }
+    },
+    {
+      $sort: { totalQuantity: -1 }
+    },
+    {
+      $limit: 10
+    }
+  ]);
+
+  // Thống kê doanh thu theo ngày
+  const dailyRevenue = await Order.aggregate([
+    {
+      $match: {
+        createdAt: { $gte: start, $lte: end },
+        status: { $nin: ['CANCELLED', 'FAILED'] }
+      }
+    },
+    {
+      $group: {
+        _id: {
+          $dateToString: { format: '%Y-%m-%d', date: '$createdAt' }
+        },
+        revenue: { $sum: '$totalPrice' },
+        orders: { $sum: 1 }
+      }
+    },
+    {
+      $sort: { _id: 1 }
+    }
+  ]);
+
+  // Thống kê phương thức thanh toán
+  const paymentMethodStats = await Order.aggregate([
+    {
+      $match: {
+        createdAt: { $gte: start, $lte: end }
+      }
+    },
+    {
+      $lookup: {
+        from: 'payments',
+        localField: 'paymentId',
+        foreignField: '_id',
+        as: 'payment'
+      }
+    },
+    {
+      $group: {
+        _id: { $arrayElemAt: ['$payment.paymentMethod', 0] },
+        count: { $sum: 1 },
+        totalRevenue: { $sum: '$totalPrice' }
+      }
+    }
+  ]);
+
+  // Tổng số khách hàng
+  const totalCustomers = await Order.aggregate([
+    {
+      $match: {
+        createdAt: { $gte: start, $lte: end }
+      }
+    },
+    {
+      $group: {
+        _id: '$userId'
+      }
+    },
+    {
+      $count: 'total'
+    }
+  ]);
+
   res.status(StatusCodes.OK).json({
     success: true,
     data: {
       overall: stats,
-      byStatus: statusStats
+      byStatus: statusStats,
+      topProducts: topProducts,
+      dailyRevenue: dailyRevenue,
+      paymentMethods: paymentMethodStats,
+      totalCustomers: totalCustomers[0]?.total || 0,
+      dateRange: {
+        start: start.toISOString(),
+        end: end.toISOString()
+      }
     }
   });
 };

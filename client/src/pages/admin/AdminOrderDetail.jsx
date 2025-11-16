@@ -1,15 +1,14 @@
-// client/src/pages/admin/AdminOrderDetail.jsx
-
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { FiArrowLeft, FiPackage, FiTruck, FiCheckCircle, FiXCircle, FiClock, FiDollarSign, FiMapPin, FiX } from 'react-icons/fi';
+import ConfirmDialog from "../../components/common/ConfirmDialog";
 
 // ✅ BƯỚC 1: Thay đổi import Redux
 import { 
   fetchAdminOrderDetail, 
   clearCurrentOrder 
-} from '../../redux/slices/adminOrderSlice'; // Dùng slice của Admin
+} from '../../redux/slices/adminOrderSlice';
 
 // ✅ BƯỚC 2: Thêm import Layout
 import AdminLayout from '../../components/admin/AdminLayout';
