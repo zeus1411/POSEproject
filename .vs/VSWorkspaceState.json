@@ -1,0 +1,16 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\client",
+    "\\client\\src",
+    "\\client\\src\\pages",
+    "\\client\\src\\pages\\customer",
+    "\\client\\src\\services",
+    "\\server",
+    "\\server\\controllers",
+    "\\server\\models",
+    "\\server\\services"
+  ],
+  "SelectedNode": "\\client\\src\\pages\\admin\\AdminOrderDetail.jsx",
+  "PreviewInSolutionExplorer": false
+}

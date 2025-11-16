@@ -17,7 +17,7 @@ const AdminSidebar = () => {
     { name: 'Cửa hàng', href: '/shop', icon: ShoppingBagIcon },
     { name: 'Sản phẩm', href: '/admin/products', icon: CubeIcon },
     { name: 'Đơn hàng', href: '/admin/orders', icon: ShoppingBagIcon },
-    { name: 'Đơn hàng của tôi', href: '/orders', icon: ShoppingBagIcon },
+    { name: 'Đơn hàng của tôi', href: '/admin/my-orders', icon: ShoppingBagIcon },
     { name: 'Xem Thống Kê', href: '/admin/statistics', icon: ChartBarIcon },
   ];
 

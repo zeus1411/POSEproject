@@ -15,6 +15,7 @@ import ForgotPassword from './pages/auth/ForgotPassword';
 import Checkout from './pages/customer/Checkout';
 import ProfilePage from './pages/customer/ProfilePage';
 import AdminOrders from './pages/admin/Orders';
+import AdminOrderDetail from './pages/admin/AdminOrderDetail';
 import AdminLayout from './components/admin/AdminLayout';
 
 
@@ -42,7 +43,9 @@ function App() {
             <Route path="admin/products" element={<Products />} />
             <Route path="admin/statistics" element={<Statistics />} />
             <Route path="admin/orders" element={<AdminOrders />} />
-          </Route>
+            <Route path="/admin/orders/:id" element={<AdminOrderDetail />} />
+            <Route path="/admin/my-orders" element={<AdminLayout> <MyOrders /> </AdminLayout>} />
+        </Route>
 
           {/* Catch-all: mọi đường dẫn lạ → /shop */}
           <Route path="*" element={<Navigate to="/shop" replace />} />
