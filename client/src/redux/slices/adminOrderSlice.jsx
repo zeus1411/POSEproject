@@ -111,7 +111,14 @@ const adminOrderSlice = createSlice({
                 if (updated && updated._id) {
                     const index = state.list.findIndex((o) => o._id === updated._id);
                     if (index !== -1) {
-                        state.list[index] = updated;
+                        // Preserve the existing customer and other important fields
+                        const existingOrder = state.list[index];
+                        state.list[index] = {
+                            ...existingOrder,    // Keep existing order data
+                            ...updated,          // Apply updates
+                            customer: updated.customer || existingOrder.customer, // Preserve customer info
+                            orderItems: updated.orderItems || existingOrder.orderItems // Preserve order items
+                        };
                     }
                 } else {
                     console.warn(
