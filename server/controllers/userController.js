@@ -174,16 +174,22 @@ export const uploadAvatar = async (req, res, next) => {
     // Get the updated user without the password field
     const updatedUser = await User.findById(user._id).select('-password');
 
+    console.log('✅ Avatar updated successfully:', {
+      userId: updatedUser._id,
+      avatar: updatedUser.avatar
+    });
+
+    // ✅ FIX: Return consistent structure
     res.status(StatusCodes.OK).json({
       success: true,
       message: 'Cập nhật ảnh đại diện thành công',
       data: { user: updatedUser }
     });
   } catch (error) {
-    console.error('Error in uploadAvatar:', {
+    console.error('❌ Error in uploadAvatar:', {
       error: error.message,
       stack: error.stack,
-      userId: req.user?._id,
+      userId: req.user?.userId,
       file: req.file
     });
     next(error);

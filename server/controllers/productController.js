@@ -117,19 +117,40 @@ export const updateProduct = async (req, res, next) => {
             return res.status(400).json({ message: 'ID không hợp lệ' });
         }
 
-        // If there are new uploaded files, add their URLs to the images array
+        // Get the current product
+        const currentProduct = await Product.findById(id);
+        if (!currentProduct) {
+            return res.status(404).json({ message: 'Không tìm thấy sản phẩm' });
+        }
+
+        // ✅ Handle images update
+        let finalImages = [];
+        
+        // 1. Add existing images that weren't deleted
+        if (req.body.existingImages) {
+            try {
+                const existingImages = JSON.parse(req.body.existingImages);
+                if (Array.isArray(existingImages)) {
+                    finalImages = [...existingImages];
+                }
+            } catch (err) {
+                console.error('Error parsing existingImages:', err);
+            }
+        }
+        
+        // 2. Add newly uploaded images
         if (req.files && req.files.length > 0) {
             const newImageUrls = req.files.map(file => file.path);
-            
-            // Get the current product to check existing images
-            const currentProduct = await Product.findById(id);
-            if (!currentProduct) {
-                return res.status(404).json({ message: 'Không tìm thấy sản phẩm' });
-            }
-            
-            // Combine existing images with new ones (if any)
-            req.body.images = [...(Array.isArray(currentProduct.images) ? currentProduct.images : []), ...newImageUrls];
+            finalImages = [...finalImages, ...newImageUrls];
         }
+        
+        // 3. Update images in request body
+        if (finalImages.length > 0) {
+            req.body.images = finalImages;
+        }
+
+        // ✅ Remove existingImages from body (not a model field)
+        delete req.body.existingImages;
 
         const updatedProduct = await Product.findByIdAndUpdate(
             id,

@@ -34,14 +34,15 @@ const calculateCartSummary = (items) => {
 export const getCart = async (req, res) => {
   const userId = req.user.userId;
   
-  let cart = await Cart.findOne({ userId }).populate({
+  // ✅ FIX: Dùng findOneAndUpdate với upsert để tránh race condition khi tạo cart
+  let cart = await Cart.findOneAndUpdate(
+    { userId },
+    { $setOnInsert: { userId, items: [] } },
+    { upsert: true, new: true }
+  ).populate({
     path: 'items.productId',
     select: 'name price salePrice discount images stock sku status'
   });
-  
-  if (!cart) {
-    cart = await Cart.create({ userId, items: [] });
-  }
   
   // Filter out inactive products
   cart.items = cart.items.filter(item => 
@@ -119,12 +120,12 @@ export const addToCart = async (req, res) => {
     throw new BadRequestError(`Chỉ còn ${product.stock} sản phẩm trong kho`);
   }
   
-  // Find or create cart
-  let cart = await Cart.findOne({ userId });
-  
-  if (!cart) {
-    cart = new Cart({ userId, items: [] });
-  }
+  // ✅ FIX: Find or create cart using findOneAndUpdate to prevent duplicate key error
+  let cart = await Cart.findOneAndUpdate(
+    { userId },
+    { $setOnInsert: { userId, items: [] } },
+    { upsert: true, new: true }
+  );
   
   // Check if product already in cart
   const existingItemIndex = cart.items.findIndex(
