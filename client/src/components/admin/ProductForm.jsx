@@ -16,6 +16,7 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
 
   const [imageFiles, setImageFiles] = useState([]);
   const [imagePreview, setImagePreview] = useState([]);
+  const [existingImages, setExistingImages] = useState([]); // ✅ Track existing images
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
@@ -30,7 +31,10 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
         status: product.status || 'ACTIVE',
         images: product.images || []
       });
-      setImagePreview(product.images || []);
+      // ✅ Separate existing images from new uploads
+      setExistingImages(product.images || []);
+      setImagePreview([]);
+      setImageFiles([]);
     }
   }, [product]);
 
@@ -50,14 +54,22 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files);
-    setImageFiles(files);
+    
+    // ✅ Append new files instead of replacing
+    setImageFiles(prev => [...prev, ...files]);
 
-    // Create preview URLs
+    // Create preview URLs for new files
     const previews = files.map(file => URL.createObjectURL(file));
-    setImagePreview(previews);
+    setImagePreview(prev => [...prev, ...previews]);
   };
 
-  const removeImage = (index) => {
+  const removeExistingImage = (index) => {
+    // ✅ Remove from existing images
+    setExistingImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removeNewImage = (index) => {
+    // ✅ Remove from new uploads
     setImagePreview(prev => prev.filter((_, i) => i !== index));
     setImageFiles(prev => prev.filter((_, i) => i !== index));
   };
@@ -72,7 +84,12 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
     if (!formData.stock) newErrors.stock = 'Tồn kho là bắt buộc';
     if (formData.stock < 0) newErrors.stock = 'Tồn kho không thể âm';
     if (!formData.categoryId) newErrors.categoryId = 'Danh mục là bắt buộc';
-    if (!product && imagePreview.length === 0) newErrors.images = 'Vui lòng tải lên ít nhất một ảnh';
+    
+    // ✅ Check total images (existing + new)
+    const totalImages = existingImages.length + imagePreview.length;
+    if (!product && totalImages === 0) {
+      newErrors.images = 'Vui lòng tải lên ít nhất một ảnh';
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -92,7 +109,12 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
     submitData.append('categoryId', formData.categoryId);
     submitData.append('status', formData.status);
 
-    // Add new image files
+    // ✅ Send existing images that weren't deleted
+    if (product && existingImages.length > 0) {
+      submitData.append('existingImages', JSON.stringify(existingImages));
+    }
+
+    // ✅ Add new image files
     imageFiles.forEach(file => {
       submitData.append('images', file);
     });
@@ -272,24 +294,57 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
             {errors.images && <p className="text-red-500 text-sm mt-1">{errors.images}</p>}
 
             {/* Image Preview */}
-            {imagePreview.length > 0 && (
-              <div className="mt-4 grid grid-cols-4 gap-4">
-                {imagePreview.map((preview, index) => (
-                  <div key={index} className="relative">
-                    <img
-                      src={preview}
-                      alt={`Preview ${index}`}
-                      className="w-full h-24 object-cover rounded"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeImage(index)}
-                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                    >
-                      <X size={16} />
-                    </button>
+            {(existingImages.length > 0 || imagePreview.length > 0) && (
+              <div className="mt-4">
+                {/* ✅ Existing Images */}
+                {existingImages.length > 0 && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-700 mb-2">Ảnh hiện tại</p>
+                    <div className="grid grid-cols-4 gap-4 mb-4">
+                      {existingImages.map((imageUrl, index) => (
+                        <div key={`existing-${index}`} className="relative">
+                          <img
+                            src={imageUrl}
+                            alt={`Existing ${index}`}
+                            className="w-full h-24 object-cover rounded border-2 border-blue-200"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeExistingImage(index)}
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                          >
+                            <X size={16} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                ))}
+                )}
+                
+                {/* ✅ New Images */}
+                {imagePreview.length > 0 && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-700 mb-2">Ảnh mới</p>
+                    <div className="grid grid-cols-4 gap-4">
+                      {imagePreview.map((preview, index) => (
+                        <div key={`new-${index}`} className="relative">
+                          <img
+                            src={preview}
+                            alt={`New ${index}`}
+                            className="w-full h-24 object-cover rounded border-2 border-green-200"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeNewImage(index)}
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                          >
+                            <X size={16} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
