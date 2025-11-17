@@ -25,7 +25,8 @@ const Register = () => {
 
   useEffect(() => {
     if (isSuccess && user) {
-      navigate('/');
+      // ✅ FIX: Navigate to /shop instead of /
+      navigate('/shop');
     }
     // Remove dispatch(reset()) to prevent premature state reset
   }, [isSuccess, user, navigate]);

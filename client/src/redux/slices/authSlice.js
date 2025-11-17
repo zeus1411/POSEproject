@@ -124,7 +124,8 @@ const authSlice = createSlice({
       .addCase(register.fulfilled, (state, action) => {
         state.isLoading = false;
         state.isSuccess = true;
-        state.user = action.payload?.data?.user || null;
+        // ✅ FIX: Backend trả về response.data.user (không có nested data)
+        state.user = action.payload?.user || null;
       })
       .addCase(register.rejected, (state, action) => {
         state.isLoading = false;
