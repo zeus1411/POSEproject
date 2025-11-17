@@ -3,6 +3,7 @@ import { X } from "lucide-react";
 
 const EditProfileModal = ({ isOpen, onClose, profile, onSave }) => {
   const [form, setForm] = useState({
+    username: "",
     name: "",
     phone: "",
     dob: "",
@@ -12,6 +13,7 @@ const EditProfileModal = ({ isOpen, onClose, profile, onSave }) => {
   useEffect(() => {
     if (profile) {
       setForm({
+        username: profile.username || "",
         name: profile.name || "",
         phone: profile.phone || "",
         dob: profile.dob || "",
@@ -42,6 +44,16 @@ const EditProfileModal = ({ isOpen, onClose, profile, onSave }) => {
         <h2 className="text-xl font-semibold text-gray-800 mb-4">Cập nhật thông tin</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <input
+            name="username"
+            value={form.username}
+            onChange={handleChange}
+            className="w-full border px-3 py-2 rounded-lg"
+            placeholder="Tên người dùng"
+            minLength={3}
+            maxLength={30}
+          />
+
           <input
             name="name"
             value={form.name}

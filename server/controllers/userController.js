@@ -19,7 +19,8 @@ export const updateProfile = async (req, res) => {
     'fullName',
     'phone',
     'dateOfBirth',
-    'gender'
+    'gender',
+    'username'
   ];
   
   // Update personal info
@@ -28,6 +29,17 @@ export const updateProfile = async (req, res) => {
       user[field] = req.body[field];
     }
   });
+  
+  // Validate username if being changed
+  if (req.body.username && req.body.username !== user.username) {
+    const existingUser = await User.findOne({ 
+      username: req.body.username,
+      _id: { $ne: userId } // Exclude current user
+    });
+    if (existingUser) {
+      throw new BadRequestError('Tên người dùng đã được sử dụng');
+    }
+  }
   
   // Update address (nếu có)
   if (req.body.address) {
@@ -302,14 +314,13 @@ export const updateUserByAdmin = async (req, res) => {
     throw new BadRequestError('Không thể đổi mật khẩu qua API này');
   }
 
-  // Các field thông tin cá nhân được phép sửa
+  // Các field thông tin cá nhân được phép sửa (không bao gồm email)
   const allowedPersonalFields = [
     'fullName',
     'phone',
     'dateOfBirth',
     'gender',
-    'username',
-    'email'
+    'username'
   ];
 
   allowedPersonalFields.forEach((field) => {
@@ -317,6 +328,17 @@ export const updateUserByAdmin = async (req, res) => {
       user[field] = req.body[field];
     }
   });
+
+  // Validate username if being changed
+  if (req.body.username && req.body.username !== user.username) {
+    const existingUser = await User.findOne({ 
+      username: req.body.username,
+      _id: { $ne: id } // Exclude current user
+    });
+    if (existingUser) {
+      throw new BadRequestError('Tên người dùng đã được sử dụng');
+    }
+  }
 
   // Cập nhật địa chỉ (nếu có)
   if (req.body.address) {
@@ -353,24 +375,6 @@ export const updateUserByAdmin = async (req, res) => {
     user.role = newRole;
   }
 
-  // Cập nhật trạng thái hoạt động
-  if (req.body.isActive !== undefined) {
-    user.isActive =
-      req.body.isActive === true ||
-      req.body.isActive === 'true' ||
-      req.body.isActive === 1 ||
-      req.body.isActive === '1';
-  }
-
-  // Cập nhật trạng thái xác minh email
-  if (req.body.isEmailVerified !== undefined) {
-    user.isEmailVerified =
-      req.body.isEmailVerified === true ||
-      req.body.isEmailVerified === 'true' ||
-      req.body.isEmailVerified === 1 ||
-      req.body.isEmailVerified === '1';
-  }
-
   await user.save();
 
   const updatedUser = await User.findById(id).select(
@@ -384,7 +388,7 @@ export const updateUserByAdmin = async (req, res) => {
   });
 };
 
-// @desc    Xóa / vô hiệu hóa user (Admin)
+// @desc    Xóa user (Admin)
 // @route   DELETE /api/v1/users/admin/:id
 // @access  Private (admin)
 export const deleteUserByAdmin = async (req, res) => {
@@ -401,13 +405,12 @@ export const deleteUserByAdmin = async (req, res) => {
     throw new NotFoundError('Không tìm thấy người dùng');
   }
 
-  // Soft delete: vô hiệu hóa tài khoản thay vì xóa cứng
-  user.isActive = false;
-  await user.save({ validateBeforeSave: false });
+  // Hard delete: xóa hoàn toàn từ database
+  await User.findByIdAndDelete(id);
 
   res.status(StatusCodes.OK).json({
     success: true,
-    message: 'Tài khoản đã được vô hiệu hóa thành công'
+    message: 'Người dùng đã được xóa thành công'
   });
 };
 

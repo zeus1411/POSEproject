@@ -9,6 +9,7 @@ import addressReducer from "./slices/addressSlice";
 import reviewReducer from "./slices/reviewSlice";
 import adminProductReducer from './slices/adminProductSlice';
 import adminOrdersReducer from './slices/adminOrderSlice';
+import adminUserReducer from './slices/adminUserSlice';
 
 export const store = configureStore({
   reducer: {
@@ -22,6 +23,7 @@ export const store = configureStore({
     reviews: reviewReducer,
     adminProducts: adminProductReducer,
     adminOrders: adminOrdersReducer,
+    adminUsers: adminUserReducer,
   },
 });
 

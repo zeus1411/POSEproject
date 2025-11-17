@@ -16,6 +16,7 @@ const ProfilePage = () => {
 
   // Personal info form
   const [personalData, setPersonalData] = useState({
+    username: '',
     fullName: '',
     phone: '',
     dateOfBirth: '',
@@ -48,6 +49,7 @@ const ProfilePage = () => {
     if (user) {
       // Load personal info
       setPersonalData({
+        username: user.username || '',
         fullName: user.fullName || '',
         phone: user.phone || '',
         dateOfBirth: user.dateOfBirth ? user.dateOfBirth.split('T')[0] : '',
@@ -479,6 +481,10 @@ const ProfilePage = () => {
           {!isEditingPersonal ? (
             <div className="space-y-3">
               <div className="flex items-center gap-3">
+                <span className="text-gray-600 w-32">Tên người dùng:</span>
+                <span className="text-gray-900">{user?.username || 'Chưa cập nhật'}</span>
+              </div>
+              <div className="flex items-center gap-3">
                 <span className="text-gray-600 w-32">Họ tên:</span>
                 <span className="text-gray-900">{user?.fullName || 'Chưa cập nhật'}</span>
               </div>
@@ -504,6 +510,19 @@ const ProfilePage = () => {
             </div>
           ) : (
             <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Tên người dùng</label>
+                <input
+                  type="text"
+                  value={personalData.username}
+                  onChange={(e) => setPersonalData({...personalData, username: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  placeholder="Tên người dùng"
+                  minLength={3}
+                  maxLength={30}
+                />
+                <p className="text-xs text-gray-500 mt-1">3-30 ký tự, bao gồm chữ cái, số và dấu gạch dưới</p>
+              </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Họ tên</label>
                 <input

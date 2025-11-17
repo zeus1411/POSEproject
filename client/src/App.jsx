@@ -5,6 +5,7 @@ import store from './redux/store';
 import Layout from './components/Layout';
 import Statistics from './pages/admin/Statistics';
 import Products from './pages/admin/Products';
+import ManageUsers from './pages/admin/ManageUsers';
 import MyOrders from './pages/customer/MyOrders';
 import OrderDetail from './pages/customer/OrderDetail';
 import Shop from './pages/customer/Shop';
@@ -41,6 +42,7 @@ function App() {
             <Route path="checkout" element={<Checkout />} />
             <Route path="admin/dashboard" element={<Navigate to="/admin/products" replace />} />
             <Route path="admin/products" element={<Products />} />
+            <Route path="admin/manage-users" element={<ManageUsers />} />
             <Route path="admin/statistics" element={<Statistics />} />
             <Route path="admin/orders" element={<AdminOrders />} />
             <Route path="/admin/orders/:id" element={<AdminOrderDetail />} />
