@@ -46,14 +46,25 @@ const VNPayPaymentModal = ({ order, paymentData, onClose, onSuccess, onError }) 
     }).format(amount);
   };
   
-  const handleTestPayment = () => {
+  const handleTestPayment = async () => {
     setPaymentStatus('processing');
-    setTimeout(() => {
+    
+    try {
+      // ✅ Call API to simulate VNPay payment success
+      await orderService.simulateVNPaySuccess(
+        order._id,
+        paymentData.payment.transactionId
+      );
+      
       setPaymentStatus('success');
       setTimeout(() => {
         onSuccess();
       }, 2000);
-    }, 2000);
+    } catch (error) {
+      console.error('Error simulating payment:', error);
+      setPaymentStatus('failed');
+      onError('Lỗi khi giả lập thanh toán');
+    }
   };
   
   const openVNPayWindow = () => {

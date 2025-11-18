@@ -9,6 +9,7 @@ import {
   stripeWebhook,
   createVNPayPayment,
   vnpayReturn,
+  simulateVNPayPayment,
   getAllOrders,
   updateOrderStatus,
   getOrderStatistics,
@@ -73,6 +74,9 @@ router.get('/', authenticateUser, getUserOrders);
 
 // VNPay payment URL
 router.post('/:id/payment/vnpay', authenticateUser, createVNPayPayment);
+
+// ✅ Simulate VNPay payment success (for testing)
+router.post('/:id/payment/vnpay/simulate', authenticateUser, simulateVNPayPayment);
 
 // Hủy đơn hàng
 router.patch('/:id/cancel', authenticateUser, cancelOrder);
