@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { fetchCart, resetCart } from '../../redux/slices/cartSlice';
 import * as orderService from '../../services/orderService';
 import { toast } from 'react-toastify';
+import Swal from 'sweetalert2';
 
 // ==================== VNPay Payment Modal Component ====================
 const VNPayPaymentModal = ({ order, paymentData, onClose, onSuccess, onError }) => {
@@ -323,8 +324,23 @@ const Checkout = () => {
         }
       } else {
         await dispatch(resetCart());
-        toast.success('Đặt hàng thành công!');
-        navigate('/orders');
+        // ✅ Hiển thị SweetAlert2 thông báo thành công
+        await Swal.fire({
+          icon: 'success',
+          title: '🎉 Chúc mừng!',
+          text: 'Bạn đã đặt hàng thành công! Cảm ơn bạn đã mua hàng.',
+          confirmButtonText: 'Xem đơn hàng',
+          confirmButtonColor: '#10B981',
+          showCancelButton: true,
+          cancelButtonText: 'Tiếp tục mua sắm',
+          cancelButtonColor: '#6B7280'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            navigate('/orders');
+          } else {
+            navigate('/shop');
+          }
+        });
       }
     } catch (err) {
       console.error('Order error:', err);
