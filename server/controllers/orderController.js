@@ -228,23 +228,27 @@ const createOrder = async (req, res) => {
 
       console.log('Cart cleared');
 
-      // Tạo thông báo + email xác nhận đơn (VNPAY)
-      try {
-        await Notification.createOrderNotification(
-          userId,
-          order[0]._id,
-          'PENDING',
-          `Đơn hàng ${order[0].orderNumber} đã được tạo thành công`
-        );
-        console.log('Notification created (VNPay order)');
-      } catch (notifError) {
-        console.log('Notification creation failed (VNPay, non-critical):', notifError.message);
-      }
-
+      // ✅ Commit transaction TRƯỚC - không chờ notification
       await session.commitTransaction();
       session.endSession();
 
       console.log('Transaction committed - VNPay order');
+
+      // ✅ Gửi notification ASYNC sau khi commit (không chặn response)
+      setImmediate(async () => {
+        try {
+          await Notification.createOrderNotification(
+            userId,
+            order[0]._id,
+            'PENDING',
+            `Đơn hàng ${order[0].orderNumber} đã được tạo thành công`
+          );
+          console.log('✅ Notification sent (VNPay order)');
+        } catch (notifError) {
+          console.error('❌ Notification failed (non-critical):', notifError.message);
+        }
+      });
+
       console.log('===================\n');
 
       return res.status(StatusCodes.OK).json({
@@ -286,22 +290,28 @@ const createOrder = async (req, res) => {
 
     console.log('Cart cleared');
 
-    // Tạo thông báo
-    try {
-      await Notification.createOrderNotification(
-        userId,
-        order[0]._id,
-        'PENDING',
-        `Đơn hàng ${order[0].orderNumber} đã được tạo thành công`
-      );
-      console.log('Notification created');
-    } catch (notifError) {
-      console.log('Notification creation failed (non-critical):', notifError.message);
-    }
-
+    // ✅ Commit transaction TRƯỚC - không chờ notification
     await session.commitTransaction();
 
     console.log('Transaction committed - COD order');
+
+    // ✅ Gửi notification ASYNC sau khi commit (không chặn response)
+    const orderId = order[0]._id;
+    const orderNumber = order[0].orderNumber;
+    setImmediate(async () => {
+      try {
+        await Notification.createOrderNotification(
+          userId,
+          orderId,
+          'PENDING',
+          `Đơn hàng ${orderNumber} đã được tạo thành công`
+        );
+        console.log('✅ Notification sent (COD order)');
+      } catch (notifError) {
+        console.error('❌ Notification failed (non-critical):', notifError.message);
+      }
+    });
+
     console.log('===================\n');
 
     res.status(StatusCodes.CREATED).json({
@@ -538,7 +548,7 @@ const cancelOrder = async (req, res) => {
     }
 
     // Check cancellable status
-    const cancellableStatuses = ['PENDING', 'CONFIRMED', 'PROCESSING', 'FAILED'];
+    const cancellableStatuses = ['PENDING', 'CONFIRMED', 'FAILED']; // ✅ Bỏ PROCESSING
     if (!cancellableStatuses.includes(order.status)) {
       throw new BadRequestError(
         `Không thể hủy đơn hàng ở trạng thái "${order.status}". Chỉ có thể hủy đơn hàng ở trạng thái: ${cancellableStatuses.join(', ')}`
@@ -915,15 +925,13 @@ const updateOrderStatus = async (req, res) => {
     throw new NotFoundError('Không tìm thấy đơn hàng');
   }
 
-  // Validate status transition
+  // ✅ Validate status transition - Updated logic (bỏ PROCESSING, REFUNDED)
   const validTransitions = {
     'PENDING': ['CONFIRMED', 'CANCELLED'],
-    'CONFIRMED': ['PROCESSING', 'CANCELLED'],
-    'PROCESSING': ['SHIPPING', 'CANCELLED'],
+    'CONFIRMED': ['SHIPPING', 'CANCELLED'], // ✅ Từ Đã xác nhận → Đang giao (bỏ PROCESSING)
     'SHIPPING': ['COMPLETED', 'CANCELLED'],
-    'COMPLETED': ['REFUNDED'],
+    'COMPLETED': [], // ✅ Hoàn thành là trạng thái cuối (bỏ REFUNDED)
     'CANCELLED': [],
-    'REFUNDED': [],
     'FAILED': []
   };
 

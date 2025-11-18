@@ -227,10 +227,13 @@ notificationSchema.methods.sendEmail = async function () {
 notificationSchema.statics.createNotification = async function (data) {
   const notification = await this.create(data);
   
+  // ⚠️ TEMPORARILY DISABLED - Gmail daily limit exceeded
   // Send notifications through configured channels
-  if (notification.channels.includes('EMAIL')) {
-    await notification.sendEmail();
-  }
+  // if (notification.channels.includes('EMAIL')) {
+  //   await notification.sendEmail();
+  // }
+  
+  console.log('📧 Email notification skipped (Gmail limit exceeded)');
   
   // Additional channel sending logic can be added here
   

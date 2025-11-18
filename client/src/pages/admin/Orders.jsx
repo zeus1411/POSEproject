@@ -15,20 +15,27 @@ const ORDER_STATUSES = [
     { key: "SHIPPING", label: "Đang giao", color: "indigo" },
     { key: "COMPLETED", label: "Hoàn thành", color: "green" },
     { key: "CANCELLED", label: "Đã hủy", color: "red" },
-    { key: "REFUNDED", label: "Đã hoàn tiền", color: "emerald" },
     { key: "FAILED", label: "Thất bại", color: "red" },
 ];
 
-// Status transition rules
+// Status transition rules - ✅ Fixed logic
 const validTransitions = {
     PENDING: ["CONFIRMED", "CANCELLED"],
-    CONFIRMED: ["PROCESSING", "CANCELLED"],
-    PROCESSING: ["SHIPPING", "CANCELLED"],
+    CONFIRMED: ["SHIPPING", "CANCELLED"], // ✅ Từ Đã xác nhận → Đang giao (bỏ PROCESSING)
     SHIPPING: ["COMPLETED", "CANCELLED"],
-    COMPLETED: ["REFUNDED"],
+    COMPLETED: [], // ✅ Hoàn thành là trạng thái cuối (bỏ REFUNDED)
     CANCELLED: [],
-    REFUNDED: [],
     FAILED: [],
+};
+
+// Vietnamese labels for status options in dropdown
+const STATUS_LABELS = {
+    PENDING: "Chờ xử lý",
+    CONFIRMED: "Đã xác nhận",
+    SHIPPING: "Đang giao",
+    COMPLETED: "Hoàn thành",
+    CANCELLED: "Đã hủy",
+    FAILED: "Thất bại"
 };
 
 // Status badge colors
@@ -182,7 +189,7 @@ const AdminOrdersPage = () => {
                                                         "bg-gray-100 text-gray-800"
                                                         }`}
                                                 >
-                                                    {order.status}
+                                                    {STATUS_LABELS[order.status] || order.status}
                                                 </span>
                                             </td>
                                             <td className="px-6 py-4 text-sm space-y-2">
@@ -207,11 +214,11 @@ const AdminOrdersPage = () => {
                                                             }`}
                                                     >
                                                         <option value={order.status}>
-                                                            {order.status}
+                                                            {STATUS_LABELS[order.status] || order.status}
                                                         </option>
                                                         {nextStatuses.map((status) => (
                                                             <option key={status} value={status}>
-                                                                {status}
+                                                                {STATUS_LABELS[status] || status}
                                                             </option>
                                                         ))}
                                                     </select>
@@ -248,7 +255,7 @@ const AdminOrdersPage = () => {
                             <p className="text-gray-600 mb-6">
                                 Bạn có chắc muốn cập nhật trạng thái đơn hàng sang{" "}
                                 <span className="font-semibold text-gray-900">
-                                    {confirmingStatus}
+                                    {STATUS_LABELS[confirmingStatus] || confirmingStatus}
                                 </span>{" "}
                                 không?
                             </p>
