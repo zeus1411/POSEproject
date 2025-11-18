@@ -214,6 +214,9 @@ export const getAllUsers = async (req, res) => {
 
   const query = {};
 
+  // ✅ Loại bỏ chính user đang đăng nhập khỏi danh sách
+  query._id = { $ne: req.user.userId };
+
   // Tìm kiếm theo username / email / fullName / phone
   if (search) {
     const regex = new RegExp(search, 'i');

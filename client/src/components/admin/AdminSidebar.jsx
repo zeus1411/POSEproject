@@ -13,11 +13,9 @@ const AdminSidebar = () => {
   const location = useLocation();
   
   const navigation = [
-    { name: 'Tổng quan', href: '/admin', icon: HomeIcon },
     { name: 'Cửa hàng', href: '/shop', icon: ShoppingBagIcon },
-    { name: 'Sản phẩm', href: '/admin/products', icon: CubeIcon },
-    { name: 'Đơn hàng', href: '/admin/orders', icon: ShoppingBagIcon },
-    { name: 'Đơn hàng của tôi', href: '/admin/my-orders', icon: ShoppingBagIcon },
+    { name: 'Quản lý sản phẩm', href: '/admin/products', icon: CubeIcon },
+    { name: 'Quản lý đơn hàng', href: '/admin/orders', icon: ShoppingBagIcon },
     { name: 'Quản lý người dùng', href: '/admin/manage-users', icon: UserGroupIcon },
     { name: 'Xem Thống Kê', href: '/admin/statistics', icon: ChartBarIcon },
   ];

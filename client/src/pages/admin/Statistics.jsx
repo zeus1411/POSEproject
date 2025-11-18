@@ -37,7 +37,7 @@ const Statistics = () => {
 
   useEffect(() => {
     fetchStatistics();
-  }, [startDate, endDate]);
+  }, []); // ✅ Chỉ fetch lần đầu khi component mount
 
   const fetchStatistics = async () => {
     try {

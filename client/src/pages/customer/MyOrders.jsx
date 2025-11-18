@@ -7,7 +7,6 @@ const statusOptions = [
   { key: '', label: 'Tất cả' },
   { key: 'PENDING', label: 'Chờ xử lý' },
   { key: 'CONFIRMED', label: 'Đã xác nhận' },
-  { key: 'PROCESSING', label: 'Đang xử lý' },
   { key: 'SHIPPING', label: 'Đang giao' },
   { key: 'COMPLETED', label: 'Hoàn thành' },
   { key: 'CANCELLED', label: 'Đã hủy' },

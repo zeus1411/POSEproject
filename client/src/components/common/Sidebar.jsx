@@ -6,6 +6,7 @@ import {
   ClipboardDocumentListIcon,
   ChartBarIcon,
   Squares2X2Icon,
+  UserGroupIcon,
 } from '@heroicons/react/24/outline';
 
 const Sidebar = () => {
@@ -16,8 +17,9 @@ const Sidebar = () => {
   const isAdmin = user?.role === 'admin';
 
   const adminMenuItems = [
-    { name: 'Dashboard', path: '/admin/dashboard', icon: Squares2X2Icon },
     { name: 'Quản lý sản phẩm', path: '/admin/products', icon: ShoppingBagIcon },
+    { name: 'Quản lý đơn hàng', path: '/admin/orders', icon: ClipboardDocumentListIcon },
+    { name: 'Quản lý người dùng', path: '/admin/users', icon: UserGroupIcon },
     { name: 'Báo cáo', path: '/admin/reports', icon: ChartBarIcon },
   ];
 
