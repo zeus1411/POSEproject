@@ -49,6 +49,22 @@ const AdminUserForm = ({ user, onSubmit, onCancel, isLoading }) => {
       newErrors.phone = 'Số điện thoại không hợp lệ';
     }
 
+    // ✅ Nếu role thay đổi so với ban đầu, kiểm tra các trường bắt buộc
+    if (user && formData.role !== user.role) {
+      if (!formData.fullName || !formData.fullName.trim()) {
+        newErrors.fullName = 'Họ và tên là bắt buộc khi thay đổi vai trò';
+      }
+      if (!formData.phone || !formData.phone.trim()) {
+        newErrors.phone = 'Số điện thoại là bắt buộc khi thay đổi vai trò';
+      }
+      if (!formData.dateOfBirth) {
+        newErrors.dateOfBirth = 'Ngày sinh là bắt buộc khi thay đổi vai trò';
+      }
+      if (!formData.gender || formData.gender === '') {
+        newErrors.gender = 'Giới tính là bắt buộc khi thay đổi vai trò';
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -138,8 +154,15 @@ const AdminUserForm = ({ user, onSubmit, onCancel, isLoading }) => {
                 value={formData.fullName}
                 onChange={handleChange}
                 placeholder="Nguyễn Văn A"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 ${
+                  errors.fullName
+                    ? 'border-red-500 focus:ring-red-500'
+                    : 'border-gray-300 focus:ring-blue-500'
+                }`}
               />
+              {errors.fullName && (
+                <p className="text-red-500 text-sm mt-1">{errors.fullName}</p>
+              )}
             </div>
 
             {/* Phone */}
@@ -167,32 +190,46 @@ const AdminUserForm = ({ user, onSubmit, onCancel, isLoading }) => {
             {/* Date of Birth */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Ngày sinh
+                Ngày sinh {user && formData.role !== user.role && <span className="text-red-500">*</span>}
               </label>
               <input
                 type="date"
                 name="dateOfBirth"
                 value={formData.dateOfBirth}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
+                  errors.dateOfBirth
+                    ? 'border-red-500 focus:ring-red-500'
+                    : 'border-gray-300 focus:ring-blue-500'
+                }`}
               />
+              {errors.dateOfBirth && (
+                <p className="text-red-500 text-sm mt-1">{errors.dateOfBirth}</p>
+              )}
             </div>
 
             {/* Gender */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Giới tính
+                Giới tính {user && formData.role !== user.role && <span className="text-red-500">*</span>}
               </label>
               <select
                 name="gender"
                 value={formData.gender}
                 onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
+                  errors.gender
+                    ? 'border-red-500 focus:ring-red-500'
+                    : 'border-gray-300 focus:ring-blue-500'
+                }`}
               >
                 <option value="">-- Chọn giới tính --</option>
                 <option value="male">Nam</option>
                 <option value="female">Nữ</option>
               </select>
+              {errors.gender && (
+                <p className="text-red-500 text-sm mt-1">{errors.gender}</p>
+              )}
             </div>
 
             {/* Role */}
@@ -209,6 +246,14 @@ const AdminUserForm = ({ user, onSubmit, onCancel, isLoading }) => {
                 <option value="user">Người dùng</option>
                 <option value="admin">Quản trị viên</option>
               </select>
+              {user && formData.role !== user.role && (
+                <p className="text-amber-600 text-xs mt-1 flex items-start gap-1">
+                  <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  <span>Để thay đổi vai trò, vui lòng nhập đầy đủ: Họ tên, SĐT, Ngày sinh, Giới tính</span>
+                </p>
+              )}
             </div>
           </div>
 

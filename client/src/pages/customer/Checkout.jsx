@@ -279,15 +279,99 @@ const Checkout = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    // ✅ Sử dụng user từ Redux store thay vì userProfile
+    // ✅ Kiểm tra thông tin cá nhân
+    if (!user?.fullName && !user?.username) {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Thiếu thông tin!',
+        html: `
+          <p class="text-gray-600 mb-3">Bạn chưa cập nhật họ tên.</p>
+          <p class="text-sm text-gray-500">Vui lòng cập nhật trong <strong>Thông tin cá nhân</strong> để tiếp tục đặt hàng.</p>
+        `,
+        confirmButtonText: 'Cập nhật ngay',
+        confirmButtonColor: '#3B82F6',
+        showCancelButton: true,
+        cancelButtonText: 'Đóng',
+        cancelButtonColor: '#6B7280'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          navigate('/profile');
+        }
+      });
+      return;
+    }
+
+    if (!user?.phone) {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Thiếu thông tin!',
+        html: `
+          <p class="text-gray-600 mb-3">Bạn chưa cập nhật số điện thoại.</p>
+          <p class="text-sm text-gray-500">Vui lòng cập nhật trong <strong>Thông tin cá nhân</strong> để tiếp tục đặt hàng.</p>
+        `,
+        confirmButtonText: 'Cập nhật ngay',
+        confirmButtonColor: '#3B82F6',
+        showCancelButton: true,
+        cancelButtonText: 'Đóng',
+        cancelButtonColor: '#6B7280'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          navigate('/profile');
+        }
+      });
+      return;
+    }
+
+    // ✅ Kiểm tra địa chỉ giao hàng
     if (!user?.address) {
-      toast.error('Vui lòng cập nhật địa chỉ của bạn trong trang Thông tin cá nhân trước khi đặt hàng');
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Chưa có địa chỉ giao hàng!',
+        html: `
+          <p class="text-gray-600 mb-3">Bạn chưa cập nhật địa chỉ giao hàng.</p>
+          <p class="text-sm text-gray-500">Vui lòng cập nhật <strong>Địa chỉ giao hàng</strong> trong trang Thông tin cá nhân để tiếp tục.</p>
+        `,
+        confirmButtonText: 'Cập nhật ngay',
+        confirmButtonColor: '#3B82F6',
+        showCancelButton: true,
+        cancelButtonText: 'Đóng',
+        cancelButtonColor: '#6B7280'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          navigate('/profile');
+        }
+      });
       return;
     }
 
     const addr = user.address;
     if (!addr.street || !addr.ward || !addr.district || !addr.city) {
-      toast.error('Địa chỉ của bạn chưa đầy đủ. Vui lòng cập nhật trong trang Thông tin cá nhân');
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Địa chỉ chưa đầy đủ!',
+        html: `
+          <p class="text-gray-600 mb-3">Địa chỉ giao hàng của bạn chưa đầy đủ thông tin.</p>
+          <div class="text-left bg-amber-50 rounded p-3 mb-3">
+            <p class="text-sm font-medium text-amber-800 mb-2">Thông tin còn thiếu:</p>
+            <ul class="text-sm text-amber-700 space-y-1 ml-4 list-disc">
+              ${!addr.street ? '<li>Địa chỉ chi tiết (số nhà, tên đường)</li>' : ''}
+              ${!addr.ward ? '<li>Phường/Xã</li>' : ''}
+              ${!addr.district ? '<li>Quận/Huyện</li>' : ''}
+              ${!addr.city ? '<li>Tỉnh/Thành phố</li>' : ''}
+            </ul>
+          </div>
+          <p class="text-sm text-gray-500">Vui lòng cập nhật đầy đủ thông tin trong trang Thông tin cá nhân.</p>
+        `,
+        confirmButtonText: 'Cập nhật ngay',
+        confirmButtonColor: '#3B82F6',
+        showCancelButton: true,
+        cancelButtonText: 'Đóng',
+        cancelButtonColor: '#6B7280'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          navigate('/profile');
+        }
+      });
       return;
     }
     
@@ -528,13 +612,27 @@ const Checkout = () => {
 
           {/* Submit Button */}
           <div className="flex justify-end">
-            <button 
-              onClick={handleSubmit}
-              disabled={submitting || items.length === 0 || !user?.address} 
-              className="px-6 py-3 text-white bg-gradient-to-r from-primary-600 to-purple-600 rounded-lg hover:from-primary-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-sm"
-            >
-              {submitting ? 'Đang tạo đơn hàng...' : 'Đặt hàng'}
-            </button>
+            <div className="relative group">
+              <button 
+                onClick={handleSubmit}
+                disabled={submitting || items.length === 0 || !user?.address} 
+                className="px-6 py-3 text-white bg-gradient-to-r from-primary-600 to-purple-600 rounded-lg hover:from-primary-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-sm transition-all"
+              >
+                {submitting ? 'Đang tạo đơn hàng...' : 'Đặt hàng'}
+              </button>
+              
+              {/* ✅ Tooltip khi button bị disabled */}
+              {(items.length === 0 || !user?.address) && !submitting && (
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-2 bg-gray-900 text-white text-sm rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
+                  {items.length === 0 
+                    ? 'Giỏ hàng trống' 
+                    : 'Vui lòng cập nhật địa chỉ giao hàng'}
+                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 -mt-1">
+                    <div className="border-4 border-transparent border-t-gray-900"></div>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
