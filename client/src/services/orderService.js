@@ -51,6 +51,25 @@ export const cancelOrder = async (orderId) => {
   }
 };
 
+/**
+ * Simulate VNPay payment success (for testing)
+ * @param {string} orderId - The ID of the order
+ * @param {string} transactionId - The transaction ID from payment
+ * @returns {Promise<Object>} The updated payment and order
+ */
+export const simulateVNPaySuccess = async (orderId, transactionId) => {
+  try {
+    const response = await api.post(`/orders/${orderId}/payment/vnpay/simulate`, {
+      transactionId,
+      responseCode: '00' // Success code
+    });
+    return response.data?.data;
+  } catch (error) {
+    console.error('Error simulating VNPay payment:', error);
+    throw error;
+  }
+};
+
 export const getOrderStatistics = async (startDate, endDate) => {
   const params = {};
   if (startDate) params.startDate = startDate;
@@ -66,5 +85,6 @@ export default {
   previewOrder, 
   createOrder, 
   cancelOrder,
+  simulateVNPaySuccess,
   getOrderStatistics
 };

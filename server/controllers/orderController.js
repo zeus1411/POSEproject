@@ -869,6 +869,94 @@ const vnpayReturn = async (req, res) => {
   return res.redirect(`${process.env.CLIENT_URL}/orders?payment=failed`);
 };
 
+// @desc    Simulate VNPay payment success (for testing)
+// @route   POST /api/orders/:id/payment/vnpay/simulate
+// @access  Private
+const simulateVNPayPayment = async (req, res) => {
+  try {
+    const { id: orderId } = req.params;
+    const { transactionId, responseCode = '00' } = req.body;
+    const userId = req.user.userId;
+
+    console.log('🧪 Simulating VNPay payment for order:', orderId);
+
+    // Find order and verify ownership
+    const order = await Order.findById(orderId);
+    if (!order) {
+      throw new NotFoundError('Không tìm thấy đơn hàng');
+    }
+
+    if (order.userId.toString() !== userId) {
+      throw new UnauthorizedError('Không có quyền truy cập đơn hàng này');
+    }
+
+    // Find payment
+    const payment = await Payment.findOne({
+      orderId: order._id,
+      transactionId
+    });
+
+    if (!payment) {
+      throw new NotFoundError('Không tìm thấy thông tin thanh toán');
+    }
+
+    if (payment.status === 'COMPLETED') {
+      return res.status(StatusCodes.OK).json({
+        success: true,
+        message: 'Thanh toán đã được xác nhận trước đó',
+        data: { payment, order }
+      });
+    }
+
+    // ✅ Mark payment as completed
+    await payment.markAsCompleted({
+      transactionId: `${transactionId}-SIMULATED`,
+      vnpayDetails: {
+        vnp_TxnRef: transactionId,
+        vnp_TransactionNo: `${Date.now()}`,
+        vnp_ResponseCode: responseCode,
+        vnp_PayDate: new Date().toISOString(),
+        isSimulated: true
+      }
+    });
+
+    // ✅ Update order status to CONFIRMED (paid)
+    if (order.status === 'PENDING') {
+      await order.updateStatus('CONFIRMED', 'Thanh toán VNPay thành công (giả lập)');
+    }
+
+    console.log('✅ Payment simulated successfully:', payment._id);
+
+    // Send notification asynchronously
+    setImmediate(async () => {
+      try {
+        await Notification.createPaymentNotification(
+          userId,
+          order._id,
+          'COMPLETED',
+          `Thanh toán cho đơn hàng ${order.orderNumber} thành công (Test)`
+        );
+        console.log('✅ Notification sent for simulated payment');
+      } catch (notifError) {
+        console.error('❌ Notification failed (non-critical):', notifError.message);
+      }
+    });
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: 'Giả lập thanh toán thành công',
+      data: {
+        payment: await Payment.findById(payment._id),
+        order: await Order.findById(order._id)
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Error simulating payment:', error);
+    throw error;
+  }
+};
+
 // ========== admin ROUTES ==========
 
 // @desc    Lấy tất cả đơn hàng (Admin)
@@ -1128,6 +1216,7 @@ export {
   stripeWebhook,
   createVNPayPayment,
   vnpayReturn,
+  simulateVNPayPayment,
   getAllOrders,
   updateOrderStatus,
   getOrderStatistics

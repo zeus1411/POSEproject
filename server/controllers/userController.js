@@ -214,6 +214,9 @@ export const getAllUsers = async (req, res) => {
 
   const query = {};
 
+  // ✅ Loại bỏ chính user đang đăng nhập khỏi danh sách
+  query._id = { $ne: req.user.userId };
+
   // Tìm kiếm theo username / email / fullName / phone
   if (search) {
     const regex = new RegExp(search, 'i');
@@ -318,6 +321,42 @@ export const updateUserByAdmin = async (req, res) => {
   // Không cho update password trực tiếp ở đây
   if (req.body.password || req.body.newPassword) {
     throw new BadRequestError('Không thể đổi mật khẩu qua API này');
+  }
+
+  // ✅ Nếu muốn thay đổi role, phải nhập đầy đủ thông tin bắt buộc
+  if (req.body.role !== undefined && req.body.role !== user.role) {
+    const requiredFields = ['fullName', 'phone', 'dateOfBirth', 'gender'];
+    const missingFields = [];
+    
+    requiredFields.forEach(field => {
+      const value = req.body[field] !== undefined ? req.body[field] : user[field];
+      // Check if field is missing or empty
+      if (!value || (typeof value === 'string' && value.trim() === '')) {
+        missingFields.push(field);
+      }
+    });
+
+    if (missingFields.length > 0) {
+      const fieldLabels = {
+        fullName: 'Họ và tên',
+        phone: 'Số điện thoại',
+        dateOfBirth: 'Ngày sinh',
+        gender: 'Giới tính'
+      };
+      const missingLabels = missingFields.map(f => fieldLabels[f]).join(', ');
+      throw new BadRequestError(
+        `Để thay đổi vai trò, vui lòng cập nhật đầy đủ các thông tin sau: ${missingLabels}`
+      );
+    }
+  }
+
+  // ✅ Xử lý gender: nếu là empty string thì set null
+  if (req.body.gender !== undefined) {
+    if (req.body.gender === '' || req.body.gender === null) {
+      req.body.gender = null;
+    } else if (!['male', 'female'].includes(req.body.gender)) {
+      throw new BadRequestError('Giới tính không hợp lệ. Chỉ chấp nhận: male, female hoặc để trống');
+    }
   }
 
   // Các field thông tin cá nhân được phép sửa (không bao gồm email)
