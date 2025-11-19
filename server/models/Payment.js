@@ -24,7 +24,6 @@ const paymentSchema = new mongoose.Schema(
         'PROCESSING',
         'COMPLETED',
         'FAILED',
-        'REFUNDED',
         'CANCELLED'
       ],
       default: 'PENDING_PAYMENT'
@@ -172,26 +171,6 @@ paymentSchema.methods.markAsFailed = async function (reason) {
   this.status = 'FAILED';
   this.failureReason = reason;
   this.processedAt = new Date();
-  
-  await this.save();
-  
-  return this;
-};
-
-// Method to process refund
-paymentSchema.methods.processRefund = async function (amount, reason) {
-  if (this.status !== 'COMPLETED') {
-    throw new Error('Chỉ có thể hoàn tiền cho giao dịch đã hoàn thành');
-  }
-  
-  if (amount > this.amount) {
-    throw new Error('Số tiền hoàn không được vượt quá số tiền gốc');
-  }
-  
-  this.status = 'REFUNDED';
-  this.refundAmount = amount;
-  this.refundReason = reason;
-  this.refundedAt = new Date();
   
   await this.save();
   
