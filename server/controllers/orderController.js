@@ -920,10 +920,9 @@ const simulateVNPayPayment = async (req, res) => {
       }
     });
 
-    // ✅ Update order status to CONFIRMED (paid)
-    if (order.status === 'PENDING') {
-      await order.updateStatus('CONFIRMED', 'Thanh toán VNPay thành công (giả lập)');
-    }
+    // ✅ Đơn hàng vẫn giữ trạng thái PENDING để admin xác nhận
+    // Không tự động chuyển sang CONFIRMED khi thanh toán thành công
+    console.log('✅ Payment simulated successfully - Order remains PENDING for admin confirmation');
 
     console.log('✅ Payment simulated successfully:', payment._id);
 

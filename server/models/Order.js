@@ -267,9 +267,10 @@ orderSchema.methods.confirmPayment = async function (paidAt = new Date()) {
   this.isPaid = true;
   this.paidAt = paidAt;
   
-  if (this.status === 'PENDING') {
-    this.status = 'CONFIRMED';
-  }
+  // ✅ KHÔNG tự động chuyển sang CONFIRMED - để admin xác nhận thủ công
+  // if (this.status === 'PENDING') {
+  //   this.status = 'CONFIRMED';
+  // }
   
   await this.save();
 };
