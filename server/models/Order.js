@@ -80,7 +80,6 @@ const orderSchema = new mongoose.Schema(
         'SHIPPING',
         'COMPLETED',
         'CANCELLED',
-        'REFUNDED',
         'FAILED'
       ],
       default: 'PENDING'
@@ -251,7 +250,7 @@ orderSchema.methods.updateStatus = async function (newStatus, note = '', updated
 
 // Method to cancel order
 orderSchema.methods.cancelOrder = async function (reason, cancelledBy) {
-  if (['COMPLETED', 'CANCELLED', 'REFUNDED'].includes(this.status)) {
+  if (['COMPLETED', 'CANCELLED'].includes(this.status)) {
     throw new Error('Không thể hủy đơn hàng này');
   }
   

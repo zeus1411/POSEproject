@@ -10,13 +10,21 @@ const statusOptions = [
   { key: 'SHIPPING', label: 'Đang giao' },
   { key: 'COMPLETED', label: 'Hoàn thành' },
   { key: 'CANCELLED', label: 'Đã hủy' },
-  { key: 'REFUNDED', label: 'Hoàn tiền' },
 ];
 
 const formatCurrency = (v) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(v || 0);
 const formatDate = (d) => new Date(d).toLocaleString('vi-VN');
 
 const StatusBadge = ({ status }) => {
+  const statusLabels = {
+    PENDING: 'Chờ xử lý',
+    CONFIRMED: 'Đã xác nhận',
+    SHIPPING: 'Đang giao',
+    COMPLETED: 'Hoàn thành',
+    CANCELLED: 'Đã hủy',
+    FAILED: 'Thất bại',
+  };
+  
   const map = {
     PENDING: 'bg-yellow-100 text-yellow-800',
     CONFIRMED: 'bg-blue-100 text-blue-800',
@@ -24,10 +32,14 @@ const StatusBadge = ({ status }) => {
     SHIPPING: 'bg-purple-100 text-purple-800',
     COMPLETED: 'bg-green-100 text-green-800',
     CANCELLED: 'bg-red-100 text-red-800',
-    REFUNDED: 'bg-emerald-100 text-emerald-800',
     FAILED: 'bg-red-100 text-red-800',
   };
-  return <span className={`px-2 py-1 text-xs font-semibold rounded-full ${map[status] || 'bg-gray-100 text-gray-800'}`}>{status || 'N/A'}</span>;
+  
+  return (
+    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${map[status] || 'bg-gray-100 text-gray-800'}`}>
+      {statusLabels[status] || status || 'N/A'}
+    </span>
+  );
 };
 
 const MyOrders = () => {

@@ -308,33 +308,21 @@ notificationSchema.statics.createOrderNotification = async function (
     PROCESSING: 'Đơn hàng đang được xử lý',
     SHIPPING: 'Đơn hàng đang được giao',
     COMPLETED: 'Đơn hàng đã giao thành công',
-    CANCELLED: 'Đơn hàng đã bị hủy',
-    REFUNDED: 'Đơn hàng đã được hoàn tiền'
+    CANCELLED: 'Đơn hàng đã bị hủy'
   };
-
-  // Chỉ những status này mới gửi EMAIL
-  const shouldSendEmail = ['PENDING', 'SHIPPING', 'COMPLETED', 'CANCELLED'].includes(status);
 
   const data = {
     userId,
     type: 'ORDER_UPDATE',
-    priority: ['CANCELLED', 'REFUNDED'].includes(status) ? 'HIGH' : 'MEDIUM',
+    priority: status === 'CANCELLED' ? 'HIGH' : 'MEDIUM',
     title: titles[status] || 'Cập nhật đơn hàng',
     message,
     relatedId: orderId,
     relatedType: 'order',
     actionUrl: `/orders/${orderId}`,
     actionText: 'Xem chi tiết',
-    channels: shouldSendEmail ? ['IN_APP', 'EMAIL'] : ['IN_APP'],
+    channels: ['IN_APP'], // Chỉ thông báo trong app, không gửi email
   };
-
-  if (shouldSendEmail) {
-    data.emailData = {
-      subject: titles[status] || 'Cập nhật đơn hàng',
-      templateName: `order-${status.toLowerCase()}`,
-      templateData: new Map([['orderId', orderId.toString()]])
-    };
-  }
 
   return this.createNotification(data);
 };
