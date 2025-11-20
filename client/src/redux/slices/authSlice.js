@@ -1,8 +1,19 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import authService from '../../services/authService';
 
+// Restore user from localStorage on app load
+const getUserFromLocalStorage = () => {
+  try {
+    const user = localStorage.getItem('user');
+    return user ? JSON.parse(user) : null;
+  } catch (error) {
+    console.error('Error parsing user from localStorage:', error);
+    return null;
+  }
+};
+
 const initialState = {
-  user: null,
+  user: getUserFromLocalStorage(),
   isLoading: false,
   isError: false,
   isSuccess: false,
@@ -91,9 +102,14 @@ const authSlice = createSlice({
     },
     setUser: (state, action) => {
       state.user = action.payload;
+      // Also update localStorage to persist user data
+      if (action.payload) {
+        localStorage.setItem('user', JSON.stringify(action.payload));
+      }
     },
     clearUser: (state) => {
       state.user = null;
+      localStorage.removeItem('user');
     },
   },
   extraReducers: (builder) => {

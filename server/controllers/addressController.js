@@ -1,6 +1,5 @@
-import Address from '../models/Address.js';
+import addressService from '../services/addressService.js';
 import { StatusCodes } from 'http-status-codes';
-import { BadRequestError, NotFoundError } from '../utils/errorHandler.js';
 
 // @desc    Lấy tất cả địa chỉ của user
 // @route   GET /api/v1/addresses
@@ -8,7 +7,7 @@ import { BadRequestError, NotFoundError } from '../utils/errorHandler.js';
 export const getUserAddresses = async (req, res) => {
   const userId = req.user.userId;
   
-  const addresses = await Address.find({ userId }).sort('-isDefault -createdAt');
+  const addresses = await addressService.getUserAddresses(userId);
   
   res.status(StatusCodes.OK).json({
     success: true,
@@ -22,14 +21,7 @@ export const getUserAddresses = async (req, res) => {
 export const getDefaultAddress = async (req, res) => {
   const userId = req.user.userId;
   
-  const address = await Address.findOne({ userId, isDefault: true });
-  
-  if (!address) {
-    return res.status(StatusCodes.OK).json({
-      success: true,
-      data: { address: null }
-    });
-  }
+  const address = await addressService.getDefaultAddress(userId);
   
   res.status(StatusCodes.OK).json({
     success: true,
@@ -44,11 +36,7 @@ export const getAddressById = async (req, res) => {
   const { id } = req.params;
   const userId = req.user.userId;
   
-  const address = await Address.findOne({ _id: id, userId });
-  
-  if (!address) {
-    throw new NotFoundError('Không tìm thấy địa chỉ');
-  }
+  const address = await addressService.getAddressById(id, userId);
   
   res.status(StatusCodes.OK).json({
     success: true,
@@ -61,15 +49,8 @@ export const getAddressById = async (req, res) => {
 // @access  Private
 export const createAddress = async (req, res) => {
   const userId = req.user.userId;
-  const addressData = { ...req.body, userId };
   
-  // Nếu chưa có địa chỉ nào, tự động set làm mặc định
-  const existingAddresses = await Address.countDocuments({ userId });
-  if (existingAddresses === 0) {
-    addressData.isDefault = true;
-  }
-  
-  const address = await Address.create(addressData);
+  const address = await addressService.createAddress(userId, req.body);
   
   res.status(StatusCodes.CREATED).json({
     success: true,
@@ -85,36 +66,7 @@ export const updateAddress = async (req, res) => {
   const { id } = req.params;
   const userId = req.user.userId;
   
-  const address = await Address.findOne({ _id: id, userId });
-  
-  if (!address) {
-    throw new NotFoundError('Không tìm thấy địa chỉ');
-  }
-  
-  // Cập nhật các field
-  const allowedFields = [
-    'fullName',
-    'phone',
-    'street',
-    'ward',
-    'wardCode',
-    'district',
-    'districtId',
-    'city',
-    'cityId',
-    'postalCode',
-    'type',
-    'isDefault',
-    'notes'
-  ];
-  
-  allowedFields.forEach(field => {
-    if (req.body[field] !== undefined) {
-      address[field] = req.body[field];
-    }
-  });
-  
-  await address.save();
+  const address = await addressService.updateAddress(id, userId, req.body);
   
   res.status(StatusCodes.OK).json({
     success: true,
@@ -130,27 +82,7 @@ export const deleteAddress = async (req, res) => {
   const { id } = req.params;
   const userId = req.user.userId;
   
-  const address = await Address.findOne({ _id: id, userId });
-  
-  if (!address) {
-    throw new NotFoundError('Không tìm thấy địa chỉ');
-  }
-  
-  // Không cho xóa địa chỉ mặc định nếu còn địa chỉ khác
-  if (address.isDefault) {
-    const otherAddresses = await Address.countDocuments({ 
-      userId, 
-      _id: { $ne: id } 
-    });
-    
-    if (otherAddresses > 0) {
-      throw new BadRequestError(
-        'Không thể xóa địa chỉ mặc định. Vui lòng chọn địa chỉ khác làm mặc định trước.'
-      );
-    }
-  }
-  
-  await address.deleteOne();
+  await addressService.deleteAddress(id, userId);
   
   res.status(StatusCodes.OK).json({
     success: true,
@@ -165,21 +97,7 @@ export const setDefaultAddress = async (req, res) => {
   const { id } = req.params;
   const userId = req.user.userId;
   
-  const address = await Address.findOne({ _id: id, userId });
-  
-  if (!address) {
-    throw new NotFoundError('Không tìm thấy địa chỉ');
-  }
-  
-  // Bỏ default của tất cả địa chỉ khác
-  await Address.updateMany(
-    { userId, _id: { $ne: id } },
-    { $set: { isDefault: false } }
-  );
-  
-  // Set địa chỉ này làm mặc định
-  address.isDefault = true;
-  await address.save();
+  const address = await addressService.setDefaultAddress(id, userId);
   
   res.status(StatusCodes.OK).json({
     success: true,
