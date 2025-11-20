@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { StarIcon, HeartIcon, ShoppingCartIcon } from '@heroicons/react/24/outline';
+import { StarIcon, HeartIcon, ShoppingCartIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
 import { useDispatch, useSelector } from 'react-redux';
 import { addToCart } from '../../redux/slices/cartSlice';
@@ -11,22 +11,9 @@ const ProductCard = ({ product, onToggleWishlist, isInWishlist = false }) => {
   const location = useLocation();
   const { user } = useSelector((s) => s.auth);
 
-  const handleAddToCart = async (e) => {
+  const handleViewDetail = (e) => {
     e.stopPropagation();
-    if (!user) {
-      const redirect = encodeURIComponent(location.pathname + location.search);
-      navigate(`/login?redirect=${redirect || '/shop'}`);
-      return;
-    }
-    
-    // Nếu sản phẩm có variants, redirect đến trang chi tiết để chọn
-    if (product.hasVariants && product.variants && product.variants.length > 0) {
-      navigate(`/product/${product._id}`);
-      return;
-    }
-    
-    // Đã đăng nhập và không có variants: gọi redux thunk addToCart
-    await dispatch(addToCart({ productId: product._id, quantity: 1 }));
+    navigate(`/product/${product._id}`);
   };
   const formatPrice = (price) => {
     return new Intl.NumberFormat('vi-VN', {
@@ -144,19 +131,15 @@ const ProductCard = ({ product, onToggleWishlist, isInWishlist = false }) => {
           )}
         </button>
 
-        {/* Quick Add to Cart */}
+        {/* Quick View Detail */}
         <div className="absolute inset-x-0 bottom-0 bg-white/95 backdrop-blur-sm transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
           <button
-            onClick={handleAddToCart}
+            onClick={handleViewDetail}
             disabled={totalStock === 0}
             className="w-full py-2 px-4 bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white text-sm font-medium transition-colors duration-200 flex items-center justify-center gap-2"
           >
-            <ShoppingCartIcon className="w-4 h-4" />
-            {product.hasVariants && product.variants?.length > 0 
-              ? 'Chọn biến thể' 
-              : totalStock === 0 
-              ? 'Hết hàng'
-              : 'Thêm vào giỏ'}
+            <EyeIcon className="w-4 h-4" />
+            {totalStock === 0 ? 'Hết hàng' : 'Xem chi tiết sản phẩm'}
           </button>
         </div>
       </div>

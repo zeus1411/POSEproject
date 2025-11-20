@@ -123,7 +123,7 @@ const MyOrders = () => {
 
                       {/* Thumbnails */}
                       <div className="flex gap-2 mt-3">
-                        {order.items?.slice(0, 4).map((it) => {
+                        {order.items?.slice(0, 4).map((it, idx) => {
                           // Handle both string URLs and object formats
                           let imgSrc = '/placeholder-product.jpg';
                           

@@ -145,6 +145,20 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
     }));
   };
 
+  // Tính tổng tồn kho từ variants
+  useEffect(() => {
+    if (formData.hasVariants && formData.variants && formData.variants.length > 0) {
+      const totalStock = formData.variants
+        .filter(v => v.isActive)
+        .reduce((sum, variant) => sum + (parseInt(variant.stock) || 0), 0);
+      
+      setFormData(prev => ({
+        ...prev,
+        stock: totalStock
+      }));
+    }
+  }, [formData.hasVariants, formData.variants]);
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 overflow-y-auto pt-8 pb-8">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-lg m-4 overflow-hidden">
@@ -198,23 +212,25 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
               {errors.sku && <p className="text-red-500 text-sm mt-1">{errors.sku}</p>}
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Giá (₫) *
-              </label>
-              <input
-                type="number"
-                name="price"
-                value={formData.price}
-                onChange={handleInputChange}
-                className={`w-full px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 ${
-                  errors.price ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="0"
-                min="0"
-              />
-              {errors.price && <p className="text-red-500 text-sm mt-1">{errors.price}</p>}
-            </div>
+            {!formData.hasVariants && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Giá (₫) *
+                </label>
+                <input
+                  type="number"
+                  name="price"
+                  value={formData.price}
+                  onChange={handleInputChange}
+                  className={`w-full px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 ${
+                    errors.price ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                  placeholder="0"
+                  min="0"
+                />
+                {errors.price && <p className="text-red-500 text-sm mt-1">{errors.price}</p>}
+              </div>
+            )}
           </div>
 
           {/* Stock and Category */}
@@ -222,15 +238,19 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Tồn kho *
+                {formData.hasVariants && (
+                  <span className="ml-2 text-xs text-blue-600">(Tự động tính từ variants)</span>
+                )}
               </label>
               <input
                 type="number"
                 name="stock"
                 value={formData.stock}
                 onChange={handleInputChange}
+                disabled={formData.hasVariants}
                 className={`w-full px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 ${
                   errors.stock ? 'border-red-500' : 'border-gray-300'
-                }`}
+                } ${formData.hasVariants ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                 placeholder="0"
                 min="0"
               />

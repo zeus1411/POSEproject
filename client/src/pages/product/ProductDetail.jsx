@@ -30,6 +30,7 @@ const ProductDetail = () => {
   const dispatch = useDispatch();
   const { currentProduct, isLoading } = useSelector((state) => state.products);
   const { user } = useSelector((state) => state.auth);
+  const { cart } = useSelector((state) => state.cart); // Add cart from state
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [isInWishlist, setIsInWishlist] = useState(false);
@@ -84,9 +85,7 @@ const ProductDetail = () => {
 
   const handleQuantityChange = (change) => {
     const newQuantity = quantity + change;
-    const maxStock = currentProduct?.hasVariants && selectedVariant
-      ? selectedVariant.stock
-      : currentProduct?.stock;
+    const maxStock = availableStock; // Use available stock instead of current stock
     
     if (newQuantity >= 1 && newQuantity <= maxStock) {
       setQuantity(newQuantity);
@@ -146,6 +145,31 @@ const ProductDetail = () => {
     }
     return currentProduct?.stock || 0;
   };
+  
+  // Get available stock (stock - quantity in cart)
+  const getAvailableStock = () => {
+    let currentStock = getCurrentStock();
+    
+    // Find matching item in cart
+    if (cart && cart.items) {
+      const cartItem = cart.items.find(item => {
+        if (item.productId._id !== currentProduct._id) return false;
+        
+        // If has variants, must match variant too
+        if (currentProduct?.hasVariants && selectedVariant) {
+          return item.variantId === selectedVariant._id;
+        }
+        
+        return true;
+      });
+      
+      if (cartItem) {
+        currentStock -= cartItem.quantity;
+      }
+    }
+    
+    return Math.max(0, currentStock);
+  };
 
   const handleToggleWishlist = () => {
     setIsInWishlist(!isInWishlist);
@@ -153,6 +177,7 @@ const ProductDetail = () => {
 
   const currentPrice = getCurrentPrice();
   const currentStock = getCurrentStock();
+  const availableStock = getAvailableStock(); // Available stock after cart quantity
 
   const discountPercentage = currentProduct?.originalPrice && currentPrice 
     ? Math.round(((currentProduct.originalPrice - currentPrice) / currentProduct.originalPrice) * 100)
@@ -285,11 +310,16 @@ const ProductDetail = () => {
               {/* Stock Status */}
               <div className="flex items-center gap-2 mb-6">
                 <div className={`w-3 h-3 rounded-full ${
-                  currentStock > 0 ? 'bg-green-500' : 'bg-red-500'
+                  availableStock > 0 ? 'bg-green-500' : 'bg-red-500'
                 }`}></div>
                 <span className="text-sm text-gray-600">
-                  {currentStock > 0 ? `Còn ${currentStock} sản phẩm` : 'Hết hàng'}
+                  {availableStock > 0 ? `Còn ${availableStock} sản phẩm` : 'Hết hàng'}
                 </span>
+                {currentStock > availableStock && (
+                  <span className="text-xs text-blue-600">
+                    ({currentStock - availableStock} trong giỏ hàng)
+                  </span>
+                )}
               </div>
             </div>
 
@@ -319,7 +349,7 @@ const ProductDetail = () => {
                   </span>
                   <button
                     onClick={() => handleQuantityChange(1)}
-                    disabled={quantity >= currentStock}
+                    disabled={quantity >= availableStock}
                     className="p-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <PlusIcon className="w-4 h-4" />
@@ -341,11 +371,11 @@ const ProductDetail = () => {
                 <div className="flex gap-4">
                   <button
                     onClick={handleAddToCart}
-                    disabled={currentStock === 0 || (currentProduct?.hasVariants && !selectedVariant)}
+                    disabled={availableStock === 0 || (currentProduct?.hasVariants && !selectedVariant)}
                     className="flex-1 bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white py-3 px-6 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center gap-2"
                   >
                     <ShoppingCartIcon className="w-5 h-5" />
-                    {currentStock === 0 
+                    {availableStock === 0 
                       ? 'Hết hàng' 
                       : currentProduct?.hasVariants && !selectedVariant
                       ? 'Chọn biến thể'

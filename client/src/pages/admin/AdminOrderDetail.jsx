@@ -332,9 +332,26 @@ const AdminOrderDetail = () => {
                         </div>
                         <div className="ml-4 flex-1">
                           <div className="flex justify-between">
-                            <h4 className="text-sm font-medium text-gray-900 line-clamp-2">{productName}</h4>
+                            <h4 className="text-sm font-medium text-gray-900">
+                              {productName}
+                            </h4>
                             <p className="ml-4 font-medium text-gray-900 whitespace-nowrap">{formatCurrency(price)}</p>
                           </div>
+                          
+                          {/* Display selected variant options */}
+                          {item.selectedVariant && item.selectedVariant.optionValues && (
+                            <div className="mt-2 flex flex-wrap gap-2">
+                              {Object.entries(item.selectedVariant.optionValues).map(([key, value]) => (
+                                <span 
+                                  key={key} 
+                                  className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-800"
+                                >
+                                  <span className="font-semibold">{key}:</span>&nbsp;{value}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                          
                           <p className="mt-1 text-sm text-gray-500">Số lượng: {quantity}</p>
                           <p className="mt-2 text-sm font-medium text-gray-900">Thành tiền: {formatCurrency(totalPrice)}</p>
                         </div>
