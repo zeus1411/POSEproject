@@ -18,7 +18,14 @@ const ProductCard = ({ product, onToggleWishlist, isInWishlist = false }) => {
       navigate(`/login?redirect=${redirect || '/shop'}`);
       return;
     }
-    // Đã đăng nhập: gọi redux thunk addToCart
+    
+    // Nếu sản phẩm có variants, redirect đến trang chi tiết để chọn
+    if (product.hasVariants && product.variants && product.variants.length > 0) {
+      navigate(`/product/${product._id}`);
+      return;
+    }
+    
+    // Đã đăng nhập và không có variants: gọi redux thunk addToCart
     await dispatch(addToCart({ productId: product._id, quantity: 1 }));
   };
   const formatPrice = (price) => {
@@ -27,6 +34,38 @@ const ProductCard = ({ product, onToggleWishlist, isInWishlist = false }) => {
       currency: 'VND'
     }).format(price);
   };
+
+  // Format giá hiển thị (Min-Max hoặc đơn)
+  const renderPrice = () => {
+    if (product.hasVariants && product.variants && product.variants.length > 0) {
+      const activePrices = product.variants
+        .filter(v => v.isActive)
+        .map(v => v.price);
+      
+      if (activePrices.length > 0) {
+        const minPrice = Math.min(...activePrices);
+        const maxPrice = Math.max(...activePrices);
+        
+        if (minPrice === maxPrice) {
+          return formatPrice(minPrice);
+        }
+        return `${formatPrice(minPrice)} - ${formatPrice(maxPrice)}`;
+      }
+    }
+    return formatPrice(product.price);
+  };
+
+  // Tính tổng stock từ variants hoặc product stock
+  const getTotalStock = () => {
+    if (product.hasVariants && product.variants && product.variants.length > 0) {
+      return product.variants
+        .filter(v => v.isActive)
+        .reduce((total, variant) => total + (variant.stock || 0), 0);
+    }
+    return product.stock || 0;
+  };
+
+  const totalStock = getTotalStock();
 
   const renderStars = (rating) => {
     const stars = [];
@@ -109,10 +148,15 @@ const ProductCard = ({ product, onToggleWishlist, isInWishlist = false }) => {
         <div className="absolute inset-x-0 bottom-0 bg-white/95 backdrop-blur-sm transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
           <button
             onClick={handleAddToCart}
-            className="w-full py-2 px-4 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium transition-colors duration-200 flex items-center justify-center gap-2"
+            disabled={totalStock === 0}
+            className="w-full py-2 px-4 bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white text-sm font-medium transition-colors duration-200 flex items-center justify-center gap-2"
           >
             <ShoppingCartIcon className="w-4 h-4" />
-            Thêm vào giỏ
+            {product.hasVariants && product.variants?.length > 0 
+              ? 'Chọn biến thể' 
+              : totalStock === 0 
+              ? 'Hết hàng'
+              : 'Thêm vào giỏ'}
           </button>
         </div>
       </div>
@@ -146,7 +190,7 @@ const ProductCard = ({ product, onToggleWishlist, isInWishlist = false }) => {
         {/* Price */}
         <div className="flex items-center gap-2 mb-3">
           <span className="text-lg font-bold text-primary-600">
-            {formatPrice(product.price)}
+            {renderPrice()}
           </span>
           {product.originalPrice && product.originalPrice > product.price && (
             <span className="text-sm text-gray-500 line-through">
@@ -159,10 +203,10 @@ const ProductCard = ({ product, onToggleWishlist, isInWishlist = false }) => {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className={`w-2 h-2 rounded-full ${
-              product.stock > 0 ? 'bg-green-500' : 'bg-red-500'
+              totalStock > 0 ? 'bg-green-500' : 'bg-red-500'
             }`}></div>
             <span className="text-xs text-gray-600">
-              {product.stock > 0 ? `Còn ${product.stock} sản phẩm` : 'Hết hàng'}
+              {totalStock > 0 ? `Còn ${totalStock} sản phẩm` : 'Hết hàng'}
             </span>
           </div>
           

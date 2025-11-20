@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Upload } from 'lucide-react';
 import { useSelector } from 'react-redux';
+import ProductVariantsManager from './ProductVariantsManager';
 
 const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => {
   const [formData, setFormData] = useState({
@@ -11,7 +12,10 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
     stock: '',
     categoryId: '',
     status: 'ACTIVE',
-    images: []
+    images: [],
+    hasVariants: false,
+    options: [],
+    variants: []
   });
 
   const [imageFiles, setImageFiles] = useState([]);
@@ -29,7 +33,10 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
         stock: product.stock || '',
         categoryId: product.categoryId?._id || '',
         status: product.status || 'ACTIVE',
-        images: product.images || []
+        images: product.images || [],
+        hasVariants: product.hasVariants || false,
+        options: product.options || [],
+        variants: product.variants || []
       });
       // ✅ Separate existing images from new uploads
       setExistingImages(product.images || []);
@@ -109,6 +116,13 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
     submitData.append('categoryId', formData.categoryId);
     submitData.append('status', formData.status);
 
+    // ✅ Send variants data
+    submitData.append('hasVariants', formData.hasVariants);
+    if (formData.hasVariants) {
+      submitData.append('options', JSON.stringify(formData.options));
+      submitData.append('variants', JSON.stringify(formData.variants));
+    }
+
     // ✅ Send existing images that weren't deleted
     if (product && existingImages.length > 0) {
       submitData.append('existingImages', JSON.stringify(existingImages));
@@ -120,6 +134,15 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
     });
 
     onSubmit(submitData);
+  };
+
+  const handleVariantsUpdate = (variantsData) => {
+    setFormData(prev => ({
+      ...prev,
+      hasVariants: variantsData.hasVariants,
+      options: variantsData.options,
+      variants: variantsData.variants
+    }));
   };
 
   return (
@@ -348,6 +371,12 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
               </div>
             )}
           </div>
+
+          {/* Product Variants Manager */}
+          <ProductVariantsManager 
+            product={product} 
+            onUpdate={handleVariantsUpdate}
+          />
 
           {/* Buttons */}
           <div className="flex gap-3 justify-end pt-6 border-t">

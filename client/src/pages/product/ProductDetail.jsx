@@ -8,6 +8,7 @@ import { fetchReviews } from "../../redux/slices/reviewSlice";
 import ReviewCard from '../../components/review/ReviewCard';  
 import ReviewList from '../../components/review/ReviewList';
 import { checkReviewStatus } from "../../redux/slices/reviewSlice";
+import ProductVariantSelector from '../../components/common/ProductVariantSelector';
 
 import { 
   StarIcon, 
@@ -32,6 +33,7 @@ const ProductDetail = () => {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [isInWishlist, setIsInWishlist] = useState(false);
+  const [selectedVariant, setSelectedVariant] = useState(null);
   const reviews = useSelector((state) => state.reviews);
 
   useEffect(() => {
@@ -82,7 +84,11 @@ const ProductDetail = () => {
 
   const handleQuantityChange = (change) => {
     const newQuantity = quantity + change;
-    if (newQuantity >= 1 && newQuantity <= currentProduct?.stock) {
+    const maxStock = currentProduct?.hasVariants && selectedVariant
+      ? selectedVariant.stock
+      : currentProduct?.stock;
+    
+    if (newQuantity >= 1 && newQuantity <= maxStock) {
       setQuantity(newQuantity);
     }
   };
@@ -96,8 +102,24 @@ const ProductDetail = () => {
       return;
     }
 
+    // Check if product has variants and user selected one
+    if (currentProduct?.hasVariants && !selectedVariant) {
+      alert('Vui lòng chọn biến thể sản phẩm');
+      return;
+    }
+
     try {
-      await dispatch(addToCart({ productId: currentProduct._id, quantity })).unwrap();
+      const cartData = {
+        productId: currentProduct._id,
+        quantity
+      };
+
+      // Add variantId if product has variants
+      if (currentProduct?.hasVariants && selectedVariant) {
+        cartData.variantId = selectedVariant._id;
+      }
+
+      await dispatch(addToCart(cartData)).unwrap();
       // Reset quantity after successful add
       setQuantity(1);
     } catch (error) {
@@ -105,12 +127,35 @@ const ProductDetail = () => {
     }
   };
 
+  const handleVariantChange = (variant) => {
+    setSelectedVariant(variant);
+    setQuantity(1); // Reset quantity when variant changes
+  };
+
+  // Get current price and stock based on variant selection
+  const getCurrentPrice = () => {
+    if (currentProduct?.hasVariants && selectedVariant) {
+      return selectedVariant.price;
+    }
+    return currentProduct?.price || 0;
+  };
+
+  const getCurrentStock = () => {
+    if (currentProduct?.hasVariants && selectedVariant) {
+      return selectedVariant.stock;
+    }
+    return currentProduct?.stock || 0;
+  };
+
   const handleToggleWishlist = () => {
     setIsInWishlist(!isInWishlist);
   };
 
-  const discountPercentage = currentProduct?.originalPrice && currentProduct?.price 
-    ? Math.round(((currentProduct.originalPrice - currentProduct.price) / currentProduct.originalPrice) * 100)
+  const currentPrice = getCurrentPrice();
+  const currentStock = getCurrentStock();
+
+  const discountPercentage = currentProduct?.originalPrice && currentPrice 
+    ? Math.round(((currentProduct.originalPrice - currentPrice) / currentProduct.originalPrice) * 100)
     : currentProduct?.discount || 0;
 
   if (isLoading) {
@@ -223,9 +268,9 @@ const ProductDetail = () => {
               {/* Price */}
               <div className="flex items-center gap-4 mb-4">
                 <span className="text-3xl font-bold text-primary-600">
-                  {formatPrice(currentProduct.price)}
+                  {formatPrice(currentPrice)}
                 </span>
-                {currentProduct.originalPrice && currentProduct.originalPrice > currentProduct.price && (
+                {currentProduct.originalPrice && currentProduct.originalPrice > currentPrice && (
                   <>
                     <span className="text-xl text-gray-500 line-through">
                       {formatPrice(currentProduct.originalPrice)}
@@ -240,13 +285,20 @@ const ProductDetail = () => {
               {/* Stock Status */}
               <div className="flex items-center gap-2 mb-6">
                 <div className={`w-3 h-3 rounded-full ${
-                  currentProduct.stock > 0 ? 'bg-green-500' : 'bg-red-500'
+                  currentStock > 0 ? 'bg-green-500' : 'bg-red-500'
                 }`}></div>
                 <span className="text-sm text-gray-600">
-                  {currentProduct.stock > 0 ? `Còn ${currentProduct.stock} sản phẩm` : 'Hết hàng'}
+                  {currentStock > 0 ? `Còn ${currentStock} sản phẩm` : 'Hết hàng'}
                 </span>
               </div>
             </div>
+
+            {/* Variant Selector */}
+            <ProductVariantSelector
+              product={currentProduct}
+              selectedVariant={selectedVariant}
+              onVariantChange={handleVariantChange}
+            />
 
             {/* Quantity Selector */}
             <div className="space-y-4">
@@ -267,7 +319,7 @@ const ProductDetail = () => {
                   </span>
                   <button
                     onClick={() => handleQuantityChange(1)}
-                    disabled={quantity >= currentProduct.stock}
+                    disabled={quantity >= currentStock}
                     className="p-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <PlusIcon className="w-4 h-4" />
@@ -276,30 +328,45 @@ const ProductDetail = () => {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-4">
-                <button
-                  onClick={handleAddToCart}
-                  disabled={currentProduct.stock === 0}
-                  className="flex-1 bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 text-white py-3 px-6 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center gap-2"
-                >
-                  <ShoppingCartIcon className="w-5 h-5" />
-                  Thêm vào giỏ hàng
-                </button>
-                
-                <button
-                  onClick={handleToggleWishlist}
-                  className="p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200"
-                >
-                  {isInWishlist ? (
-                    <HeartSolidIcon className="w-6 h-6 text-red-500" />
-                  ) : (
-                    <HeartIcon className="w-6 h-6 text-gray-600" />
-                  )}
-                </button>
+              <div className="space-y-3">
+                {/* Warning message if variants not selected */}
+                {currentProduct?.hasVariants && !selectedVariant && (
+                  <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                    <p className="text-sm text-yellow-800 font-medium">
+                      ⚠️ Vui lòng chọn biến thể sản phẩm trước khi thêm vào giỏ hàng
+                    </p>
+                  </div>
+                )}
 
-                <button className="p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200">
-                  <ShareIcon className="w-6 h-6 text-gray-600" />
-                </button>
+                <div className="flex gap-4">
+                  <button
+                    onClick={handleAddToCart}
+                    disabled={currentStock === 0 || (currentProduct?.hasVariants && !selectedVariant)}
+                    className="flex-1 bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white py-3 px-6 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center gap-2"
+                  >
+                    <ShoppingCartIcon className="w-5 h-5" />
+                    {currentStock === 0 
+                      ? 'Hết hàng' 
+                      : currentProduct?.hasVariants && !selectedVariant
+                      ? 'Chọn biến thể'
+                      : 'Thêm vào giỏ hàng'}
+                  </button>
+                  
+                  <button
+                    onClick={handleToggleWishlist}
+                    className="p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+                  >
+                    {isInWishlist ? (
+                      <HeartSolidIcon className="w-6 h-6 text-red-500" />
+                    ) : (
+                      <HeartIcon className="w-6 h-6 text-gray-600" />
+                    )}
+                  </button>
+
+                  <button className="p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200">
+                    <ShareIcon className="w-6 h-6 text-gray-600" />
+                  </button>
+                </div>
               </div>
             </div>
 

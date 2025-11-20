@@ -122,7 +122,57 @@ const productSchema = new mongoose.Schema(
       length: Number,
       width: Number,
       height: Number
-    }
+    },
+    
+    // ✅ Product Variants/Options - Cho phép admin tạo các biến thể sản phẩm
+    hasVariants: {
+      type: Boolean,
+      default: false
+    },
+    
+    // Options định nghĩa các loại lựa chọn (Kích thước, Màu sắc, Loại...)
+    options: [
+      {
+        name: {
+          type: String,
+          required: true,
+          trim: true
+        }, // Ví dụ: "Kích thước", "Màu sắc"
+        values: [
+          {
+            type: String,
+            required: true,
+            trim: true
+          }
+        ] // Ví dụ: ["YBG-300", "YBG-400", "YBG-500"]
+      }
+    ],
+    
+    // Variants chứa các biến thể cụ thể với giá và stock riêng
+    variants: [
+      {
+        optionValues: {
+          type: Map,
+          of: String
+        }, // Ví dụ: { "Kích thước": "YBG-300" }
+        price: {
+          type: Number,
+          required: true,
+          min: 0
+        },
+        stock: {
+          type: Number,
+          required: true,
+          min: 0,
+          default: 0
+        },
+        image: String, // Ảnh riêng cho variant (optional)
+        isActive: {
+          type: Boolean,
+          default: true
+        }
+      }
+    ]
   },
   {
     timestamps: true,
@@ -136,6 +186,49 @@ productSchema.virtual('reviews', {
   ref: 'Review',
   localField: '_id',
   foreignField: 'productId'
+});
+
+// Virtual field: Tính tổng stock từ variants (nếu có)
+productSchema.virtual('totalStock').get(function() {
+  if (this.hasVariants && this.variants && this.variants.length > 0) {
+    return this.variants
+      .filter(v => v.isActive)
+      .reduce((total, variant) => total + (variant.stock || 0), 0);
+  }
+  return this.stock;
+});
+
+// Virtual field: Lấy giá thấp nhất từ variants
+productSchema.virtual('minPrice').get(function() {
+  if (this.hasVariants && this.variants && this.variants.length > 0) {
+    const activePrices = this.variants
+      .filter(v => v.isActive)
+      .map(v => v.price);
+    return activePrices.length > 0 ? Math.min(...activePrices) : this.price;
+  }
+  return this.price;
+});
+
+// Virtual field: Lấy giá cao nhất từ variants
+productSchema.virtual('maxPrice').get(function() {
+  if (this.hasVariants && this.variants && this.variants.length > 0) {
+    const activePrices = this.variants
+      .filter(v => v.isActive)
+      .map(v => v.price);
+    return activePrices.length > 0 ? Math.max(...activePrices) : this.price;
+  }
+  return this.price;
+});
+
+// Virtual field: Format giá hiển thị (Min-Max hoặc đơn)
+productSchema.virtual('displayPrice').get(function() {
+  const min = this.minPrice;
+  const max = this.maxPrice;
+  
+  if (min === max) {
+    return min; // Giá đơn
+  }
+  return { min, max }; // Range giá
 });
 
 // Indexes for search and filter
