@@ -61,20 +61,20 @@ const ProductCard = ({ product, onToggleWishlist, isInWishlist = false }) => {
 
     for (let i = 0; i < fullStars; i++) {
       stars.push(
-        <StarIcon key={i} className="w-4 h-4 text-yellow-400 fill-current" />
+        <StarIcon key={i} className="w-5 h-5 text-yellow-400 fill-current" />
       );
     }
 
     if (hasHalfStar) {
       stars.push(
-        <StarIcon key="half" className="w-4 h-4 text-yellow-400 fill-current opacity-50" />
+        <StarIcon key="half" className="w-5 h-5 text-yellow-400 fill-current opacity-50" />
       );
     }
 
     const emptyStars = 5 - Math.ceil(rating);
     for (let i = 0; i < emptyStars; i++) {
       stars.push(
-        <StarIcon key={`empty-${i}`} className="w-4 h-4 text-gray-300" />
+        <StarIcon key={`empty-${i}`} className="w-5 h-5 text-gray-300" />
       );
     }
 
@@ -86,7 +86,7 @@ const ProductCard = ({ product, onToggleWishlist, isInWishlist = false }) => {
     : product.discount || 0;
 
   return (
-    <div className="group bg-white rounded-lg shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-100">
+    <div className="group bg-white rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 overflow-hidden border border-gray-200">
       {/* Product Image */}
       <div className="relative aspect-square overflow-hidden">
         <Link to={`/product/${product._id}`}>
@@ -101,19 +101,19 @@ const ProductCard = ({ product, onToggleWishlist, isInWishlist = false }) => {
         </Link>
         
         {/* Badges */}
-        <div className="absolute top-2 left-2 flex flex-col gap-1">
+        <div className="absolute top-3 left-3 flex flex-col gap-1.5">
           {product.isNew && (
-            <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+            <span className="bg-green-500 text-white text-sm px-3 py-1.5 rounded-full font-medium shadow-lg">
               Mới
             </span>
           )}
           {product.isFeatured && (
-            <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+            <span className="bg-blue-500 text-white text-sm px-3 py-1.5 rounded-full font-medium shadow-lg">
               Nổi bật
             </span>
           )}
           {discountPercentage > 0 && (
-            <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full font-medium">
+            <span className="bg-red-500 text-white text-sm px-3 py-1.5 rounded-full font-medium shadow-lg">
               -{discountPercentage}%
             </span>
           )}
@@ -122,12 +122,12 @@ const ProductCard = ({ product, onToggleWishlist, isInWishlist = false }) => {
         {/* Wishlist Button */}
         <button
           onClick={() => onToggleWishlist?.(product._id)}
-          className="absolute top-2 right-2 p-2 bg-white/80 hover:bg-white rounded-full transition-colors duration-200"
+          className="absolute top-3 right-3 p-2.5 bg-white/90 hover:bg-white rounded-full transition-all duration-200 shadow-lg hover:scale-110"
         >
           {isInWishlist ? (
-            <HeartSolidIcon className="w-5 h-5 text-red-500" />
+            <HeartSolidIcon className="w-6 h-6 text-red-500" />
           ) : (
-            <HeartIcon className="w-5 h-5 text-gray-600 hover:text-red-500" />
+            <HeartIcon className="w-6 h-6 text-gray-600 hover:text-red-500" />
           )}
         </button>
 
@@ -136,9 +136,9 @@ const ProductCard = ({ product, onToggleWishlist, isInWishlist = false }) => {
           <button
             onClick={handleViewDetail}
             disabled={totalStock === 0}
-            className="w-full py-2 px-4 bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white text-sm font-medium transition-colors duration-200 flex items-center justify-center gap-2"
+            className="w-full py-3 px-4 bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white text-base font-semibold transition-colors duration-200 flex items-center justify-center gap-2"
           >
-            <EyeIcon className="w-4 h-4" />
+            <EyeIcon className="w-5 h-5" />
             {totalStock === 0 ? 'Hết hàng' : 'Xem chi tiết sản phẩm'}
           </button>
         </div>
@@ -148,24 +148,24 @@ const ProductCard = ({ product, onToggleWishlist, isInWishlist = false }) => {
       <div className="p-4">
         {/* Category */}
         {product.categoryId && (
-          <p className="text-xs text-gray-500 mb-1">
+          <p className="text-sm text-gray-500 mb-2 font-medium">
             {product.categoryId.name}
           </p>
         )}
 
         {/* Product Name */}
         <Link to={`/product/${product._id}`}>
-          <h3 className="font-medium text-gray-900 mb-2 line-clamp-2 hover:text-primary-600 transition-colors duration-200">
+          <h3 className="font-semibold text-base text-gray-900 mb-2 line-clamp-2 hover:text-primary-600 transition-colors duration-200 leading-snug">
             {product.name}
           </h3>
         </Link>
 
         {/* Rating */}
-        <div className="flex items-center gap-1 mb-2">
+        <div className="flex items-center gap-1 mb-3">
           <div className="flex items-center">
             {renderStars(product.rating?.average || 0)}
           </div>
-          <span className="text-xs text-gray-500 ml-1">
+          <span className="text-sm text-gray-500 ml-1 font-medium">
             ({product.rating?.count || 0})
           </span>
         </div>
@@ -176,7 +176,7 @@ const ProductCard = ({ product, onToggleWishlist, isInWishlist = false }) => {
             {renderPrice()}
           </span>
           {product.originalPrice && product.originalPrice > product.price && (
-            <span className="text-sm text-gray-500 line-through">
+            <span className="text-base text-gray-500 line-through">
               {formatPrice(product.originalPrice)}
             </span>
           )}
@@ -185,16 +185,16 @@ const ProductCard = ({ product, onToggleWishlist, isInWishlist = false }) => {
         {/* Stock Status */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className={`w-2 h-2 rounded-full ${
+            <div className={`w-2.5 h-2.5 rounded-full ${
               totalStock > 0 ? 'bg-green-500' : 'bg-red-500'
             }`}></div>
-            <span className="text-xs text-gray-600">
+            <span className="text-sm text-gray-600 font-medium">
               {totalStock > 0 ? `Còn ${totalStock} sản phẩm` : 'Hết hàng'}
             </span>
           </div>
           
           {product.soldCount > 0 && (
-            <span className="text-xs text-gray-500">
+            <span className="text-sm text-gray-500 font-medium">
               Đã bán {product.soldCount}
             </span>
           )}
