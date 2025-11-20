@@ -1,6 +1,4 @@
-import Review from '../models/Review.js';
-import Product from '../models/Product.js';
-import Order from '../models/Order.js';
+import reviewService from '../services/reviewService.js';
 
 /**
  * @desc    Tạo mới đánh giá sản phẩm
@@ -12,48 +10,7 @@ export const createReview = async (req, res) => {
     const { productId, rating, comment, title } = req.body;
     const userId = req.user.userId;
 
-    if (!rating || rating < 1 || rating > 5) {
-      return res.status(400).json({ message: 'Vui lòng chọn số sao hợp lệ (1–5).' });
-    }
-
-    if (!comment || comment.trim().length < 10) {
-      return res.status(400).json({ message: 'Nội dung đánh giá phải có ít nhất 10 ký tự.' });
-    }
-
-    // Kiểm tra người dùng đã mua sản phẩm này chưa
-    const order = await Order.findOne({
-      userId,
-      'items.productId': productId,
-      status: 'COMPLETED'
-    });
-
-    if (!order) {
-      return res.status(400).json({ message: 'Bạn chỉ có thể đánh giá sản phẩm đã mua.' });
-    }
-
-    // Kiểm tra đã có đánh giá chưa
-    const existingReview = await Review.findOne({ userId, productId });
-    if (existingReview) {
-      return res.status(400).json({ message: 'Bạn đã đánh giá sản phẩm này rồi.' });
-    }
-
-    // Tạo review
-    const review = await Review.create({
-      productId,
-      userId,
-      orderId: order._id,
-      rating,
-      comment,
-      title,
-      isVerifiedPurchase: true,
-      status: 'APPROVED' // tạm thời auto duyệt, sau này có thể đổi sang PENDING
-    });
-
-    // Cập nhật rating trung bình cho sản phẩm
-    const product = await Product.findById(productId);
-    if (product && product.updateRating) {
-      await product.updateRating();
-    }
+    const review = await reviewService.createReview(userId, { productId, rating, comment, title });
 
     res.status(201).json({
       message: 'Gửi đánh giá thành công!',
@@ -61,7 +18,8 @@ export const createReview = async (req, res) => {
     });
   } catch (error) {
     console.error('Create review error:', error);
-    res.status(500).json({ message: 'Không thể gửi đánh giá. Vui lòng thử lại sau.' });
+    const statusCode = error.statusCode || 500;
+    res.status(statusCode).json({ message: error.message || 'Không thể gửi đánh giá. Vui lòng thử lại sau.' });
   }
 };
 
@@ -75,19 +33,9 @@ export const getReviewsByProduct = async (req, res) => {
     const { productId } = req.params;
     const { page = 1, limit = 10 } = req.query;
 
-    const reviews = await Review.find({ productId, status: 'APPROVED' })
-      .populate('userId', 'username avatar')
-      .sort({ createdAt: -1 })
-      .limit(Number(limit))
-      .skip((page - 1) * limit);
+    const result = await reviewService.getReviewsByProduct(productId, { page, limit });
 
-    const count = await Review.countDocuments({ productId, status: 'APPROVED' });
-
-    res.json({
-      reviews,
-      totalPages: Math.ceil(count / limit),
-      currentPage: Number(page)
-    });
+    res.json(result);
   } catch (error) {
     console.error('Get reviews error:', error);
     res.status(500).json({ message: 'Không thể tải danh sách đánh giá.' });

@@ -1,10 +1,15 @@
-import Category from '../models/Category.js';
-import mongoose from 'mongoose';
+import categoryService from '../services/categoryService.js';
+
+/**
+ * Category Controller
+ * Handles HTTP requests and responses
+ * Business logic is in categoryService
+ */
 
 // Get all categories
 export const getCategories = async (req, res, next) => {
     try {
-        const categories = await Category.find({ isActive: true }).sort('order');
+        const categories = await categoryService.getAllCategories();
         res.status(200).json(categories);
     } catch (error) {
         next(error);
@@ -14,7 +19,7 @@ export const getCategories = async (req, res, next) => {
 // Get category tree
 export const getCategoryTree = async (req, res, next) => {
     try {
-        const tree = await Category.getCategoryTree();
+        const tree = await categoryService.getCategoryTree();
         res.status(200).json(tree);
     } catch (error) {
         next(error);
@@ -24,7 +29,7 @@ export const getCategoryTree = async (req, res, next) => {
 // Get root categories
 export const getRootCategories = async (req, res, next) => {
     try {
-        const rootCategories = await Category.getRootCategories();
+        const rootCategories = await categoryService.getRootCategories();
         res.status(200).json(rootCategories);
     } catch (error) {
         next(error);
@@ -35,16 +40,7 @@ export const getRootCategories = async (req, res, next) => {
 export const getCategoryById = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const isValidId = mongoose.Types.ObjectId.isValid(id);
-        if (!isValidId) {
-            return res.status(400).json({ message: 'ID không hợp lệ' });
-        }
-
-        const category = await Category.findById(id);
-        if (!category) {
-            return res.status(404).json({ message: 'Không tìm thấy danh mục' });
-        }
-
+        const category = await categoryService.getCategoryById(id);
         res.status(200).json(category);
     } catch (error) {
         next(error);
@@ -55,11 +51,7 @@ export const getCategoryById = async (req, res, next) => {
 export const getCategoryBySlug = async (req, res, next) => {
     try {
         const { slug } = req.params;
-        const category = await Category.findOne({ slug, isActive: true });
-        if (!category) {
-            return res.status(404).json({ message: 'Không tìm thấy danh mục' });
-        }
-
+        const category = await categoryService.getCategoryBySlug(slug);
         res.status(200).json(category);
     } catch (error) {
         next(error);
@@ -69,8 +61,7 @@ export const getCategoryBySlug = async (req, res, next) => {
 // Create category (Admin only)
 export const createCategory = async (req, res, next) => {
     try {
-        const category = new Category(req.body);
-        const savedCategory = await category.save();
+        const savedCategory = await categoryService.createCategory(req.body);
         res.status(201).json(savedCategory);
     } catch (error) {
         next(error);
@@ -81,20 +72,7 @@ export const createCategory = async (req, res, next) => {
 export const updateCategory = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const isValidId = mongoose.Types.ObjectId.isValid(id);
-        if (!isValidId) {
-            return res.status(400).json({ message: 'ID không hợp lệ' });
-        }
-
-        const updatedCategory = await Category.findByIdAndUpdate(
-            id,
-            req.body,
-            { new: true, runValidators: true }
-        );
-        if (!updatedCategory) {
-            return res.status(404).json({ message: 'Không tìm thấy danh mục' });
-        }
-
+        const updatedCategory = await categoryService.updateCategory(id, req.body);
         res.status(200).json(updatedCategory);
     } catch (error) {
         next(error);
@@ -105,16 +83,7 @@ export const updateCategory = async (req, res, next) => {
 export const deleteCategory = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const isValidId = mongoose.Types.ObjectId.isValid(id);
-        if (!isValidId) {
-            return res.status(400).json({ message: 'ID không hợp lệ' });
-        }
-
-        const deletedCategory = await Category.findByIdAndDelete(id);
-        if (!deletedCategory) {
-            return res.status(404).json({ message: 'Không tìm thấy danh mục' });
-        }
-
+        await categoryService.deleteCategory(id);
         res.status(200).json({ message: 'Xóa danh mục thành công' });
     } catch (error) {
         next(error);
