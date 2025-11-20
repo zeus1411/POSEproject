@@ -5,14 +5,14 @@ import { getRootCategories } from '../../redux/slices/categorySlice';
 import { addToCart } from '../../redux/slices/cartSlice';
 import ProductGrid from '../../components/common/ProductGrid';
 import SearchFilter from '../../components/common/SearchFilter';
-import Pagination from '../../components/common/Pagination';
 import CategorySidebar from '../../components/common/CategorySidebar';
-import HeroCarousel from '../../components/common/HeroCarousel';
+import Pagination from '../../components/common/Pagination';
+import ShopCarousel from '../../components/common/ShopCarousel';
 
 const Shop = () => {
   const dispatch = useDispatch();
   const { products, pagination, filters, isLoading } = useSelector((state) => state.products);
-  const { rootCategories: categories, isLoading: categoriesLoading } = useSelector((state) => state.categories);
+  const { rootCategories: categories } = useSelector((state) => state.categories);
   const { user } = useSelector((state) => state.auth);
   const [wishlistItems, setWishlistItems] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
@@ -32,10 +32,7 @@ const Shop = () => {
 
   const handleCategoryChange = (categoryId) => {
     setSelectedCategory(categoryId);
-    const newFilters = {
-      ...filters,
-      categoryId: categoryId || undefined
-    };
+    const newFilters = { ...filters, categoryId: categoryId || '' };
     dispatch(setFilters(newFilters));
     dispatch(searchProducts({ ...newFilters, page: 1 }));
   };
@@ -66,39 +63,29 @@ const Shop = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-blue-50/30">
-      {/* Hero Carousel Section */}
-      <div className="bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <HeroCarousel />
+    <div className="min-h-screen bg-gray-50">
+      {/* Banner Carousel */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          <ShopCarousel />
         </div>
       </div>
 
-      {/* Main Content - Two Column Layout */}
-      <div className="max-w-[1600px] mx-auto px-3 sm:px-4 lg:px-6 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
-          {/* Left Sidebar - Categories */}
-          <aside className="lg:block hidden">
+      {/* Main Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex gap-8">
+          {/* Sidebar */}
+          <div className="hidden lg:block w-80 flex-shrink-0">
             <CategorySidebar
               categories={categories}
               selectedCategory={selectedCategory}
               onCategoryChange={handleCategoryChange}
-              isLoading={categoriesLoading}
+              isLoading={isLoading}
             />
-          </aside>
+          </div>
 
-          {/* Right Content - Products */}
-          <main className="min-w-0">
-            {/* Mobile Category Dropdown */}
-            <div className="lg:hidden mb-6">
-              <CategorySidebar
-                categories={categories}
-                selectedCategory={selectedCategory}
-                onCategoryChange={handleCategoryChange}
-                isLoading={categoriesLoading}
-              />
-            </div>
-
+          {/* Main Content Area */}
+          <div className="flex-1 min-w-0">
             {/* Search and Filter */}
             <SearchFilter
               filters={filters}
@@ -108,25 +95,19 @@ const Shop = () => {
             />
 
             {/* Results Summary */}
-            <div className="flex items-center justify-between mb-6 px-1">
+            <div className="flex items-center justify-between mb-6">
               <div className="text-sm text-gray-600">
                 {isLoading ? (
-                  <span className="flex items-center gap-2">
-                    <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                    Đang tải...
-                  </span>
+                  <span>Đang tải...</span>
                 ) : (
-                  <span className="flex items-center gap-2">
-                    <span className="font-semibold text-blue-600">{products.length}</span>
-                    sản phẩm / 
-                    <span className="font-semibold text-gray-900">{pagination.total}</span>
-                    tổng số
+                  <span>
+                    Hiển thị {products.length} sản phẩm trong tổng số {pagination.total} sản phẩm
                   </span>
                 )}
               </div>
               
-              <div className="text-sm text-gray-500 bg-white px-3 py-1.5 rounded-full border border-gray-200">
-                Trang {pagination.page} / {pagination.pages || 1}
+              <div className="text-sm text-gray-500">
+                Trang {pagination.page} / {pagination.pages}
               </div>
             </div>
 
@@ -149,7 +130,7 @@ const Shop = () => {
                 className="mt-8"
               />
             )}
-          </main>
+          </div>
         </div>
       </div>
     </div>

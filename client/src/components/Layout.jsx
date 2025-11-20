@@ -3,7 +3,6 @@ import { Outlet } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { getCurrentUser } from '../redux/slices/authSlice';
 import Header from './common/Header';
-import Sidebar from './common/Sidebar';
 import Footer from './common/Footer';
 import Toast from './common/Toast';
 
@@ -43,9 +42,7 @@ const Layout = () => {
     <div className="flex flex-col min-h-screen bg-gray-50">
       <Header />
       <div className="flex flex-1">
-        {/* Only show common sidebar for non-admin users */}
-        {user?.role !== 'admin' && <Sidebar />}
-        <main className={`${user?.role !== 'admin' ? 'flex-1' : 'w-full'} p-6 overflow-y-auto`}>
+        <main className="w-full overflow-y-auto">
           <Outlet />
         </main>
       </div>
