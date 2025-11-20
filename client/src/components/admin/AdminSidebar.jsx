@@ -13,7 +13,6 @@ const AdminSidebar = () => {
   const location = useLocation();
   
   const navigation = [
-    { name: 'Cửa hàng', href: '/shop', icon: ShoppingBagIcon },
     { name: 'Quản lý sản phẩm', href: '/admin/products', icon: CubeIcon },
     { name: 'Quản lý đơn hàng', href: '/admin/orders', icon: ShoppingBagIcon },
     { name: 'Quản lý người dùng', href: '/admin/manage-users', icon: UserGroupIcon },

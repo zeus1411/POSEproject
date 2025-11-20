@@ -29,11 +29,11 @@ const CategorySidebar = ({ categories = [], selectedCategory, onCategoryChange, 
   }
 
   return (
-    <div className="bg-white rounded-xl shadow-lg border border-gray-200 sticky top-6">
+    <div className="bg-white rounded-xl shadow-lg border border-gray-200 sticky top-6 w-[320px] flex-shrink-0">
       {/* Header */}
-      <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-cyan-50">
+      <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-teal-50 to-cyan-50">
         <div className="flex items-center gap-3 mb-2">
-          <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
+          <div className="w-12 h-12 bg-gradient-to-br from-teal-500 to-cyan-500 rounded-lg flex items-center justify-center">
             <span className="text-2xl">📂</span>
           </div>
           <h2 className="text-2xl font-bold text-gray-900">Danh mục</h2>
@@ -46,11 +46,11 @@ const CategorySidebar = ({ categories = [], selectedCategory, onCategoryChange, 
         {/* All Products Button */}
         <button
           onClick={() => onCategoryChange(null)}
-          className={`
+            className={`
             w-full flex items-center gap-4 px-5 py-4 rounded-xl
             transition-all duration-200 group
             ${!selectedCategory
-              ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg shadow-blue-500/30 scale-[1.02]'
+              ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white shadow-lg shadow-teal-500/30 scale-[1.02]'
               : 'bg-gray-50 hover:bg-gray-100 text-gray-700 hover:shadow-md'
             }
           `}
@@ -68,7 +68,7 @@ const CategorySidebar = ({ categories = [], selectedCategory, onCategoryChange, 
             </span>
           </div>
           <div className="flex-1 text-left min-w-0">
-            <div className="font-semibold text-lg truncate">Tất cả sản phẩm</div>
+            <div className="font-semibold text-lg leading-tight truncate">Tất cả sản phẩm</div>
             <div className={`text-sm ${!selectedCategory ? 'text-white/80' : 'text-gray-500'}`}>
               Xem toàn bộ
             </div>
@@ -92,7 +92,7 @@ const CategorySidebar = ({ categories = [], selectedCategory, onCategoryChange, 
               w-full flex items-center gap-4 px-4 py-3.5 rounded-xl
               transition-all duration-200 group relative overflow-hidden
               ${selectedCategory === category._id
-                ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg shadow-blue-500/30 scale-[1.02]'
+                ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white shadow-lg shadow-teal-500/30 scale-[1.02]'
                 : 'bg-gray-50 hover:bg-gray-100 text-gray-700 hover:shadow-md'
               }
             `}
@@ -119,7 +119,7 @@ const CategorySidebar = ({ categories = [], selectedCategory, onCategoryChange, 
 
             {/* Category Info */}
             <div className="flex-1 text-left min-w-0">
-              <div className="font-semibold text-lg leading-tight truncate">
+              <div className="font-semibold text-lg leading-tight line-clamp-2 overflow-wrap-anywhere">
                 {category.name}
               </div>
               {category.description && (
@@ -156,11 +156,11 @@ const CategorySidebar = ({ categories = [], selectedCategory, onCategoryChange, 
 
       {/* Footer - Selected Info */}
       {selectedCategory && (
-        <div className="p-4 border-t border-gray-200 bg-blue-50">
+        <div className="p-4 border-t border-gray-200 bg-teal-50">
           <div className="flex items-center gap-2 text-sm">
-            <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+            <div className="w-2 h-2 bg-teal-500 rounded-full animate-pulse"></div>
             <span className="text-gray-600">Đang lọc:</span>
-            <span className="font-semibold text-blue-600">
+            <span className="font-semibold text-teal-600">
               {categories.find(cat => cat._id === selectedCategory)?.name}
             </span>
           </div>

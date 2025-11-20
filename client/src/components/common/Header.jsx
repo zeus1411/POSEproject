@@ -50,29 +50,29 @@ const Header = () => {
 
   return (
     <>
-      <header className="bg-white shadow-sm">
+      <header className="bg-gradient-to-r from-teal-500 to-cyan-500 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-16">
+          <div className="flex justify-between h-20">
             {/* Logo / Brand */}
             <div className="flex items-center">
               <Link to="/shop" className="flex items-center gap-2">
-                <span className="text-xl font-bold text-primary-600">
+                <span className="text-3xl font-bold text-white">
                   AquaticPose
                 </span>
               </Link>
             </div>
 
             {/* Menu bên phải */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-6">
               {/* Nút Giỏ hàng (ai cũng thấy, nhưng click thì mới check login) */}
               <button
                 type="button"
                 onClick={handleOpenCart}
-                className="relative p-2 rounded-full hover:bg-gray-100"
+                className="relative p-2 rounded-full hover:bg-white/10 transition-colors"
               >
-                <ShoppingCartIcon className="w-6 h-6 text-gray-700" />
+                <ShoppingCartIcon className="w-8 h-8 text-white" />
                 {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-bold leading-none text-white bg-red-500 rounded-full">
+                  <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-teal-600 bg-white rounded-full shadow-md">
                     {cartCount}
                   </span>
                 )}
@@ -80,16 +80,16 @@ const Header = () => {
 
               {/* Nếu chưa đăng nhập → Hiển thị Login / Register */}
               {!user && (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                   <Link
                     to="/login"
-                    className="text-sm font-medium text-gray-700 hover:text-primary-600"
+                    className="text-base font-medium text-white hover:text-cyan-100 transition-colors"
                   >
                     Đăng nhập
                   </Link>
                   <Link
                     to="/register"
-                    className="text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 px-3 py-1.5 rounded-lg"
+                    className="text-base font-medium text-teal-600 bg-white hover:bg-cyan-50 px-4 py-2 rounded-lg shadow-md transition-all"
                   >
                     Đăng ký
                   </Link>
@@ -102,13 +102,13 @@ const Header = () => {
                   <button
                     type="button"
                     onClick={() => setIsUserMenuOpen((prev) => !prev)}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-full hover:bg-gray-100"
+                    className="flex items-center gap-3 px-4 py-2 rounded-full hover:bg-white/10 transition-colors"
                   >
                     {user.avatar ? (
                       <img 
                         src={user.avatar} 
                         alt={user.username} 
-                        className="w-7 h-7 rounded-full object-cover"
+                        className="w-8 h-8 rounded-full object-cover"
                         onError={(e) => {
                           e.target.onerror = null;
                           e.target.style.display = 'none';
@@ -116,15 +116,15 @@ const Header = () => {
                         }}
                       />
                     ) : (
-                      <UserCircleIcon className="w-7 h-7 text-gray-700" />
+                      <UserCircleIcon className="w-8 h-8 text-white" />
                     )}
-                    <span className="text-sm font-medium text-gray-800">
+                    <span className="text-base font-medium text-white">
                       {user.username}
                     </span>
                   </button>
 
                   {isUserMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-100 rounded-lg shadow-lg z-20">
+                    <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-100 rounded-xl shadow-xl z-20">
                       {user.role === 'admin' && (
                         <button
                           type="button"
@@ -132,7 +132,7 @@ const Header = () => {
                             setIsUserMenuOpen(false);
                             navigate('/admin/products');
                           }}
-                          className="w-full text-left px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 border-b border-gray-100"
+                          className="w-full text-left px-4 py-3 text-sm text-teal-600 hover:bg-teal-50 border-b border-gray-100 rounded-t-xl"
                         >
                           Quản lý
                         </button>
@@ -143,14 +143,26 @@ const Header = () => {
                           setIsUserMenuOpen(false);
                           navigate('/profile');
                         }}
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100"
+                        className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100"
                       >
                         Thông tin cá nhân
                       </button>
+                      {user.role !== 'admin' && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsUserMenuOpen(false);
+                            navigate('/orders');
+                          }}
+                          className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100"
+                        >
+                          Đơn hàng của tôi
+                        </button>
+                      )}
                       <button
                         type="button"
                         onClick={() => setIsLogoutConfirmOpen(true)}
-                        className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                        className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 rounded-b-xl"
                       >
                         Đăng xuất
                       </button>
@@ -171,7 +183,7 @@ const Header = () => {
       {/* Popup xác nhận đăng xuất */}
       {isLogoutConfirmOpen && (
         <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-lg shadow-xl max-w-sm w-full p-6">
+          <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
               Xác nhận đăng xuất
             </h3>
@@ -182,14 +194,14 @@ const Header = () => {
               <button
                 type="button"
                 onClick={() => setIsLogoutConfirmOpen(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
               >
                 Hủy
               </button>
               <button
                 type="button"
                 onClick={handleLogout}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700"
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700"
               >
                 Đăng xuất
               </button>
