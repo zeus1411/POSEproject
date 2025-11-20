@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import * as cartService from '../../services/cartService';
+import { logout } from './authSlice'; // Import logout action từ authSlice
 
 // Async thunks
 export const fetchCart = createAsyncThunk(
@@ -237,6 +238,16 @@ const cartSlice = createSlice({
       .addCase(clearCart.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+      
+      // ✅ Lắng nghe logout action từ authSlice để tự động clear cart
+      .addCase(logout.fulfilled, (state) => {
+        state.cart = null;
+        state.summary = initialState.summary;
+        state.loading = false;
+        state.error = null;
+        state.successMessage = null;
+        state.isUpdating = false;
       });
   }
 });

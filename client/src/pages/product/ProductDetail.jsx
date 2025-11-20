@@ -151,8 +151,10 @@ const ProductDetail = () => {
     let currentStock = getCurrentStock();
     
     // Find matching item in cart
-    if (cart && cart.items) {
+    if (cart && cart.items && Array.isArray(cart.items)) {
       const cartItem = cart.items.find(item => {
+        // ✅ Check if item and productId exist
+        if (!item || !item.productId || !currentProduct) return false;
         if (item.productId._id !== currentProduct._id) return false;
         
         // If has variants, must match variant too
