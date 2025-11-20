@@ -79,13 +79,33 @@ const createOrder = async (req, res) => {
         throw new BadRequestError(`Sản phẩm "${product.name}" hiện không khả dụng`);
       }
 
-      if (product.stock < item.quantity) {
+      // Handle variant products
+      let itemPrice = product.salePrice || product.price;
+      let availableStock = product.stock;
+      let selectedVariant = null;
+      
+      if (product.hasVariants && item.variantId) {
+        const variant = product.variants.find(v => v._id.toString() === item.variantId);
+        
+        if (!variant) {
+          throw new BadRequestError(`Biến thể sản phẩm "${product.name}" không tồn tại`);
+        }
+        
+        if (!variant.isActive) {
+          throw new BadRequestError(`Biến thể sản phẩm "${product.name}" không khả dụng`);
+        }
+        
+        selectedVariant = variant;
+        itemPrice = variant.price;
+        availableStock = variant.stock;
+      }
+
+      if (availableStock < item.quantity) {
         throw new BadRequestError(
-          `Sản phẩm "${product.name}" chỉ còn ${product.stock} sản phẩm trong kho`
+          `Sản phẩm "${product.name}" chỉ còn ${availableStock} sản phẩm trong kho`
         );
       }
 
-      const itemPrice = product.salePrice || product.price;
       const itemDiscount = product.discount || 0;
       const itemSubtotal = itemPrice * item.quantity * (1 - itemDiscount / 100);
 
@@ -93,7 +113,7 @@ const createOrder = async (req, res) => {
         ? (typeof product.images[0] === 'string' ? product.images[0] : (product.images[0].url || ''))
         : '';
 
-      orderItems.push({
+      const orderItem = {
         productId: product._id,
         productName: product.name,
         productImage: firstImage,
@@ -102,21 +122,51 @@ const createOrder = async (req, res) => {
         price: itemPrice,
         discount: itemDiscount,
         subtotal: itemSubtotal
-      });
+      };
+      
+      // Add variant info if exists
+      if (selectedVariant) {
+        orderItem.variantId = item.variantId;
+        orderItem.selectedVariant = {
+          optionValues: selectedVariant.optionValues,
+          price: selectedVariant.price,
+          stock: selectedVariant.stock
+        };
+      }
+      
+      orderItems.push(orderItem);
 
       subtotal += itemSubtotal;
 
       // *** FIX: Cập nhật stock bằng updateOne để tránh validation ***
-      await Product.updateOne(
-        { _id: product._id },
-        {
-          $inc: { 
-            stock: -item.quantity,
-            soldCount: item.quantity 
-          }
-        },
-        { session }
-      );
+      if (product.hasVariants && selectedVariant) {
+        // Update variant stock
+        await Product.updateOne(
+          { 
+            _id: product._id,
+            'variants._id': selectedVariant._id
+          },
+          {
+            $inc: { 
+              'variants.$.stock': -item.quantity,
+              soldCount: item.quantity 
+            }
+          },
+          { session }
+        );
+      } else {
+        // Update product stock
+        await Product.updateOne(
+          { _id: product._id },
+          {
+            $inc: { 
+              stock: -item.quantity,
+              soldCount: item.quantity 
+            }
+          },
+          { session }
+        );
+      }
       
       console.log(`Product ${product.name} stock updated`);
     }
@@ -920,10 +970,9 @@ const simulateVNPayPayment = async (req, res) => {
       }
     });
 
-    // ✅ Update order status to CONFIRMED (paid)
-    if (order.status === 'PENDING') {
-      await order.updateStatus('CONFIRMED', 'Thanh toán VNPay thành công (giả lập)');
-    }
+    // ✅ Đơn hàng vẫn giữ trạng thái PENDING để admin xác nhận
+    // Không tự động chuyển sang CONFIRMED khi thanh toán thành công
+    console.log('✅ Payment simulated successfully - Order remains PENDING for admin confirmation');
 
     console.log('✅ Payment simulated successfully:', payment._id);
 

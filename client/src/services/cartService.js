@@ -13,20 +13,23 @@ export const getCartSummary = async () => {
 };
 
 // Thêm sản phẩm vào giỏ hàng
-export const addToCart = async (productId, quantity = 1) => {
-  const response = await api.post('/cart/items', { productId, quantity });
+export const addToCart = async (productId, quantity = 1, variantId = null) => {
+  const response = await api.post('/cart/items', { productId, quantity, variantId });
   return response.data;
 };
 
 // Cập nhật số lượng sản phẩm trong giỏ
-export const updateCartItem = async (productId, quantity) => {
-  const response = await api.patch(`/cart/items/${productId}`, { quantity });
+export const updateCartItem = async (productId, quantity, variantId = null) => {
+  const response = await api.patch(`/cart/items/${productId}`, { quantity, variantId });
   return response.data;
 };
 
 // Xóa sản phẩm khỏi giỏ hàng
-export const removeFromCart = async (productId) => {
-  const response = await api.delete(`/cart/items/${productId}`);
+export const removeFromCart = async (productId, variantId = null) => {
+  const url = variantId 
+    ? `/cart/items/${productId}?variantId=${variantId}`
+    : `/cart/items/${productId}`;
+  const response = await api.delete(url);
   return response.data;
 };
 

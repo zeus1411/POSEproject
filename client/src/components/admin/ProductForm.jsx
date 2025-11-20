@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { X, Upload } from 'lucide-react';
 import { useSelector } from 'react-redux';
+import ProductVariantsManager from './ProductVariantsManager';
 
 const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => {
   const [formData, setFormData] = useState({
@@ -11,7 +12,10 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
     stock: '',
     categoryId: '',
     status: 'ACTIVE',
-    images: []
+    images: [],
+    hasVariants: false,
+    options: [],
+    variants: []
   });
 
   const [imageFiles, setImageFiles] = useState([]);
@@ -29,7 +33,10 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
         stock: product.stock || '',
         categoryId: product.categoryId?._id || '',
         status: product.status || 'ACTIVE',
-        images: product.images || []
+        images: product.images || [],
+        hasVariants: product.hasVariants || false,
+        options: product.options || [],
+        variants: product.variants || []
       });
       // ✅ Separate existing images from new uploads
       setExistingImages(product.images || []);
@@ -109,6 +116,13 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
     submitData.append('categoryId', formData.categoryId);
     submitData.append('status', formData.status);
 
+    // ✅ Send variants data
+    submitData.append('hasVariants', formData.hasVariants);
+    if (formData.hasVariants) {
+      submitData.append('options', JSON.stringify(formData.options));
+      submitData.append('variants', JSON.stringify(formData.variants));
+    }
+
     // ✅ Send existing images that weren't deleted
     if (product && existingImages.length > 0) {
       submitData.append('existingImages', JSON.stringify(existingImages));
@@ -121,6 +135,29 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
 
     onSubmit(submitData);
   };
+
+  const handleVariantsUpdate = (variantsData) => {
+    setFormData(prev => ({
+      ...prev,
+      hasVariants: variantsData.hasVariants,
+      options: variantsData.options,
+      variants: variantsData.variants
+    }));
+  };
+
+  // Tính tổng tồn kho từ variants
+  useEffect(() => {
+    if (formData.hasVariants && formData.variants && formData.variants.length > 0) {
+      const totalStock = formData.variants
+        .filter(v => v.isActive)
+        .reduce((sum, variant) => sum + (parseInt(variant.stock) || 0), 0);
+      
+      setFormData(prev => ({
+        ...prev,
+        stock: totalStock
+      }));
+    }
+  }, [formData.hasVariants, formData.variants]);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 overflow-y-auto pt-8 pb-8">
@@ -175,23 +212,25 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
               {errors.sku && <p className="text-red-500 text-sm mt-1">{errors.sku}</p>}
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Giá (₫) *
-              </label>
-              <input
-                type="number"
-                name="price"
-                value={formData.price}
-                onChange={handleInputChange}
-                className={`w-full px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 ${
-                  errors.price ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="0"
-                min="0"
-              />
-              {errors.price && <p className="text-red-500 text-sm mt-1">{errors.price}</p>}
-            </div>
+            {!formData.hasVariants && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Giá (₫) *
+                </label>
+                <input
+                  type="number"
+                  name="price"
+                  value={formData.price}
+                  onChange={handleInputChange}
+                  className={`w-full px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 ${
+                    errors.price ? 'border-red-500' : 'border-gray-300'
+                  }`}
+                  placeholder="0"
+                  min="0"
+                />
+                {errors.price && <p className="text-red-500 text-sm mt-1">{errors.price}</p>}
+              </div>
+            )}
           </div>
 
           {/* Stock and Category */}
@@ -199,15 +238,19 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Tồn kho *
+                {formData.hasVariants && (
+                  <span className="ml-2 text-xs text-blue-600">(Tự động tính từ variants)</span>
+                )}
               </label>
               <input
                 type="number"
                 name="stock"
                 value={formData.stock}
                 onChange={handleInputChange}
+                disabled={formData.hasVariants}
                 className={`w-full px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 ${
                   errors.stock ? 'border-red-500' : 'border-gray-300'
-                }`}
+                } ${formData.hasVariants ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                 placeholder="0"
                 min="0"
               />
@@ -348,6 +391,12 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
               </div>
             )}
           </div>
+
+          {/* Product Variants Manager */}
+          <ProductVariantsManager 
+            product={product} 
+            onUpdate={handleVariantsUpdate}
+          />
 
           {/* Buttons */}
           <div className="flex gap-3 justify-end pt-6 border-t">

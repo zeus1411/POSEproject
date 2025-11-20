@@ -53,16 +53,50 @@ const ProductTable = ({ products, onEdit, onDelete, onToggleStatus, isLoading })
               </td>
               <td className="px-6 py-4 text-sm text-gray-600">{product.sku}</td>
               <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                {product.price?.toLocaleString('vi-VN')} ₫
+                {(() => {
+                  if (product.hasVariants && product.variants && product.variants.length > 0) {
+                    const activePrices = product.variants
+                      .filter(v => v.isActive)
+                      .map(v => v.price);
+                    
+                    if (activePrices.length === 0) {
+                      return '0 ₫';
+                    }
+                    
+                    const minPrice = Math.min(...activePrices);
+                    const maxPrice = Math.max(...activePrices);
+                    
+                    if (minPrice === maxPrice) {
+                      return `${minPrice.toLocaleString('vi-VN')} ₫`;
+                    }
+                    
+                    return `${minPrice.toLocaleString('vi-VN')} - ${maxPrice.toLocaleString('vi-VN')} ₫`;
+                  }
+                  
+                  return `${product.price?.toLocaleString('vi-VN')} ₫`;
+                })()}
               </td>
               <td className="px-6 py-4">
-                <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                  product.stock > 0
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-red-100 text-red-800'
-                }`}>
-                  {product.stock}
-                </span>
+                {(() => {
+                  let totalStock = product.stock || 0;
+                  
+                  // Nếu sản phẩm có variants, tính tổng stock từ các variants active
+                  if (product.hasVariants && product.variants && product.variants.length > 0) {
+                    totalStock = product.variants
+                      .filter(v => v.isActive)
+                      .reduce((sum, variant) => sum + (variant.stock || 0), 0);
+                  }
+                  
+                  return (
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      totalStock > 0
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-red-100 text-red-800'
+                    }`}>
+                      {totalStock}
+                    </span>
+                  );
+                })()}
               </td>
               <td className="px-6 py-4">
                 <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${

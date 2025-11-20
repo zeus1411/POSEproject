@@ -16,9 +16,9 @@ export const fetchCart = createAsyncThunk(
 
 export const addToCart = createAsyncThunk(
   'cart/addToCart',
-  async ({ productId, quantity = 1 }, { rejectWithValue }) => {
+  async ({ productId, quantity = 1, variantId = null }, { rejectWithValue }) => {
     try {
-      const response = await cartService.addToCart(productId, quantity);
+      const response = await cartService.addToCart(productId, quantity, variantId);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Không thể thêm sản phẩm vào giỏ hàng');
@@ -29,9 +29,9 @@ export const addToCart = createAsyncThunk(
 // OPTIMIZED: Update cart item with optimistic update
 export const updateCartItem = createAsyncThunk(
   'cart/updateCartItem',
-  async ({ productId, quantity }, { rejectWithValue, getState }) => {
+  async ({ productId, quantity, variantId = null }, { rejectWithValue, getState }) => {
     try {
-      const response = await cartService.updateCartItem(productId, quantity);
+      const response = await cartService.updateCartItem(productId, quantity, variantId);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Không thể cập nhật giỏ hàng');
@@ -41,9 +41,9 @@ export const updateCartItem = createAsyncThunk(
 
 export const removeFromCart = createAsyncThunk(
   'cart/removeFromCart',
-  async (productId, { rejectWithValue }) => {
+  async ({ productId, variantId = null }, { rejectWithValue }) => {
     try {
-      const response = await cartService.removeFromCart(productId);
+      const response = await cartService.removeFromCart(productId, variantId);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Không thể xóa sản phẩm');
@@ -70,7 +70,19 @@ const calculateSummary = (items) => {
   
   items.forEach(item => {
     if (item.productId) {
-      const price = item.productId.salePrice || item.productId.price;
+      let price = item.productId.salePrice || item.productId.price;
+      
+      // If item has selected variant, use variant price
+      if (item.selectedVariant && item.selectedVariant.price) {
+        price = item.selectedVariant.price;
+      } else if (item.productId.hasVariants && item.variantId) {
+        // Find variant by variantId
+        const variant = item.productId.variants?.find(v => v._id === item.variantId);
+        if (variant) {
+          price = variant.price;
+        }
+      }
+      
       const discount = item.productId.discount || 0;
       const itemTotal = price * item.quantity * (1 - discount / 100);
       totalItems += item.quantity;

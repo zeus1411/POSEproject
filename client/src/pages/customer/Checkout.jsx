@@ -657,25 +657,55 @@ const Checkout = () => {
           ) : (
             <div className="space-y-4">
               <ul className="divide-y divide-gray-100 max-h-64 overflow-y-auto">
-                {items.map((it) => (
-                  <li key={it._id} className="py-3 flex items-center gap-3">
-                    <img 
-                      src={it.productId?.images?.[0] || '/placeholder-product.jpg'} 
-                      alt={it.productId?.name} 
-                      className="w-12 h-12 rounded object-cover border flex-shrink-0"
-                      onError={(e) => {
-                        e.target.src = '/placeholder-product.jpg';
-                      }}
-                    />
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-medium text-gray-900 line-clamp-2">{it.productId?.name}</div>
-                      <div className="text-xs text-gray-500">x{it.quantity}</div>
-                    </div>
-                    <div className="text-sm font-semibold text-gray-900 flex-shrink-0">
-                      {formatCurrency((it.productId?.salePrice || it.productId?.price) * it.quantity)}
-                    </div>
-                  </li>
-                ))}
+                {items.map((it) => {
+                  // Get price - use variant price if available
+                  let price = it.productId?.salePrice || it.productId?.price;
+                  if (it.selectedVariant && it.selectedVariant.price) {
+                    price = it.selectedVariant.price;
+                  } else if (it.productId?.hasVariants && it.variantId) {
+                    const variant = it.productId.variants?.find(v => v._id === it.variantId);
+                    if (variant) {
+                      price = variant.price;
+                    }
+                  }
+                  
+                  const itemTotal = (price || 0) * it.quantity;
+                  
+                  return (
+                    <li key={it._id} className="py-3 flex items-center gap-3">
+                      <img 
+                        src={it.productId?.images?.[0] || '/placeholder-product.jpg'} 
+                        alt={it.productId?.name} 
+                        className="w-12 h-12 rounded object-cover border flex-shrink-0"
+                        onError={(e) => {
+                          e.target.src = '/placeholder-product.jpg';
+                        }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium text-gray-900 line-clamp-2">{it.productId?.name}</div>
+                        
+                        {/* Display selected variant options */}
+                        {it.selectedVariant && it.selectedVariant.optionValues && (
+                          <div className="mt-1 flex flex-wrap gap-1">
+                            {Object.entries(it.selectedVariant.optionValues).map(([key, value]) => (
+                              <span 
+                                key={key} 
+                                className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
+                              >
+                                {key}: {value}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        
+                        <div className="text-xs text-gray-500">x{it.quantity}</div>
+                      </div>
+                      <div className="text-sm font-semibold text-gray-900 flex-shrink-0">
+                        {formatCurrency(itemTotal)}
+                      </div>
+                    </li>
+                  );
+                })}
               </ul>
               <div className="space-y-2 text-sm pt-4 border-t">
                 <div className="flex justify-between">

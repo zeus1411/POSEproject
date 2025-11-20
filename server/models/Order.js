@@ -12,6 +12,15 @@ const orderItemSchema = new mongoose.Schema({
   },
   productImage: String,
   sku: String,
+  variantId: String, // ID của variant được chọn
+  selectedVariant: {
+    optionValues: {
+      type: Map,
+      of: String
+    },
+    price: Number,
+    stock: Number
+  },
   quantity: {
     type: Number,
     required: true,
@@ -267,9 +276,10 @@ orderSchema.methods.confirmPayment = async function (paidAt = new Date()) {
   this.isPaid = true;
   this.paidAt = paidAt;
   
-  if (this.status === 'PENDING') {
-    this.status = 'CONFIRMED';
-  }
+  // ✅ KHÔNG tự động chuyển sang CONFIRMED - để admin xác nhận thủ công
+  // if (this.status === 'PENDING') {
+  //   this.status = 'CONFIRMED';
+  // }
   
   await this.save();
 };

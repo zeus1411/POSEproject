@@ -55,13 +55,13 @@ const MiniCart = ({ isOpen, onClose }) => {
   };
 
   // Debounced update to server
-  const debouncedServerUpdate = useDebounce(async (productId, quantity) => {
+  const debouncedServerUpdate = useDebounce(async (productId, quantity, variantId = null) => {
     try {
-      await dispatch(updateCartItem({ productId, quantity })).unwrap();
+      await dispatch(updateCartItem({ productId, quantity, variantId })).unwrap();
       // Remove from pending updates after success
       setPendingUpdates(prev => {
         const next = new Map(prev);
-        next.delete(productId);
+        next.delete(`${productId}-${variantId}`);
         return next;
       });
     } catch (error) {
@@ -71,31 +71,43 @@ const MiniCart = ({ isOpen, onClose }) => {
     }
   }, 500); // Wait 500ms after last change before sending to server
 
-  const handleUpdateQuantity = (productId, currentQuantity, change) => {
+  const handleUpdateQuantity = (item, currentQuantity, change) => {
+    const productId = item.productId._id;
+    const variantId = item.variantId || null;
     const newQuantity = currentQuantity + change;
     
-    // Find the item to check stock
-    const item = cart?.items?.find(i => i.productId._id === productId);
-    if (!item) return;
+    // Check stock - use variant stock if available
+    let maxStock = item.productId.stock;
+    if (item.selectedVariant && item.selectedVariant.stock !== undefined) {
+      maxStock = item.selectedVariant.stock;
+    } else if (item.productId.hasVariants && variantId) {
+      const variant = item.productId.variants?.find(v => v._id === variantId);
+      if (variant) {
+        maxStock = variant.stock;
+      }
+    }
     
-    if (newQuantity < 1 || newQuantity > item.productId.stock) return;
+    if (newQuantity < 1 || newQuantity > maxStock) return;
     
     // OPTIMISTIC UPDATE: Update UI immediately
     dispatch(optimisticUpdateQuantity({ productId, quantity: newQuantity }));
     
     // Mark as pending
-    setPendingUpdates(prev => new Map(prev).set(productId, newQuantity));
+    setPendingUpdates(prev => new Map(prev).set(`${productId}-${variantId}`, newQuantity));
     
     // Debounced server update
-    debouncedServerUpdate(productId, newQuantity);
+    debouncedServerUpdate(productId, newQuantity, variantId);
   };
 
-  const handleRemoveItem = async (productId) => {
+  const handleRemoveItem = async (item) => {
+    const productId = item.productId._id;
+    const variantId = item.variantId || null;
+    
     // OPTIMISTIC UPDATE: Remove from UI immediately
     dispatch(optimisticRemoveItem(productId));
     
     try {
-      await dispatch(removeFromCart(productId)).unwrap();
+      await dispatch(removeFromCart({ productId, variantId })).unwrap();
     } catch (error) {
       console.error('Error removing item:', error);
       // Revert on error
@@ -170,10 +182,21 @@ const MiniCart = ({ isOpen, onClose }) => {
                   if (!item.productId) return null;
                   
                   const product = item.productId;
-                  const price = product.salePrice || product.price;
+                  
+                  // Get price - use variant price if available
+                  let price = product.salePrice || product.price;
+                  if (item.selectedVariant && item.selectedVariant.price) {
+                    price = item.selectedVariant.price;
+                  } else if (product.hasVariants && item.variantId) {
+                    const variant = product.variants?.find(v => v._id === item.variantId);
+                    if (variant) {
+                      price = variant.price;
+                    }
+                  }
+                  
                   const discount = product.discount || 0;
                   const finalPrice = price * (1 - discount / 100);
-                  const isPending = pendingUpdates.has(product._id);
+                  const isPending = pendingUpdates.has(`${product._id}-${item.variantId || null}`);
 
                   return (
                     <div
@@ -210,6 +233,20 @@ const MiniCart = ({ isOpen, onClose }) => {
                           </h3>
                         </Link>
 
+                        {/* Display selected variant options */}
+                        {item.selectedVariant && item.selectedVariant.optionValues && (
+                          <div className="mt-1 flex flex-wrap gap-1">
+                            {Object.entries(item.selectedVariant.optionValues).map(([key, value]) => (
+                              <span 
+                                key={key} 
+                                className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800"
+                              >
+                                {key}: {value}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
                         <div className="mt-1">
                           <span className="text-sm font-semibold text-primary-600">
                             {formatPrice(finalPrice)}
@@ -225,7 +262,7 @@ const MiniCart = ({ isOpen, onClose }) => {
                         <div className="flex items-center gap-2 mt-2">
                           <div className="flex items-center border border-gray-300 rounded-md">
                             <button
-                              onClick={() => handleUpdateQuantity(product._id, item.quantity, -1)}
+                              onClick={() => handleUpdateQuantity(item, item.quantity, -1)}
                               disabled={item.quantity <= 1 || isPending}
                               className="p-1 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                             >
@@ -235,8 +272,8 @@ const MiniCart = ({ isOpen, onClose }) => {
                               {item.quantity}
                             </span>
                             <button
-                              onClick={() => handleUpdateQuantity(product._id, item.quantity, 1)}
-                              disabled={item.quantity >= product.stock || isPending}
+                              onClick={() => handleUpdateQuantity(item, item.quantity, 1)}
+                              disabled={isPending}
                               className="p-1 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                             >
                               <PlusIcon className="w-4 h-4 text-gray-600" />
@@ -244,7 +281,7 @@ const MiniCart = ({ isOpen, onClose }) => {
                           </div>
 
                           <button
-                            onClick={() => handleRemoveItem(product._id)}
+                            onClick={() => handleRemoveItem(item)}
                             disabled={isPending}
                             className="p-1 text-red-500 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50"
                           >
@@ -253,11 +290,23 @@ const MiniCart = ({ isOpen, onClose }) => {
                         </div>
                         
                         {/* Stock warning */}
-                        {item.quantity >= product.stock && (
-                          <p className="text-xs text-amber-600 mt-1">
-                            Đã đạt giới hạn tồn kho
-                          </p>
-                        )}
+                        {(() => {
+                          let maxStock = product.stock;
+                          if (item.selectedVariant && item.selectedVariant.stock !== undefined) {
+                            maxStock = item.selectedVariant.stock;
+                          } else if (product.hasVariants && item.variantId) {
+                            const variant = product.variants?.find(v => v._id === item.variantId);
+                            if (variant) {
+                              maxStock = variant.stock;
+                            }
+                          }
+                          
+                          return item.quantity >= maxStock && (
+                            <p className="text-xs text-amber-600 mt-1">
+                              Đã đạt giới hạn tồn kho
+                            </p>
+                          );
+                        })()}
                       </div>
                     </div>
                   );

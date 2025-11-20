@@ -10,7 +10,19 @@ const calculateCartSummary = (items) => {
   
   items.forEach(item => {
     if (item.productId) {
-      const price = item.productId.salePrice || item.productId.price;
+      let price = item.productId.salePrice || item.productId.price;
+      
+      // If item has selected variant, use variant price
+      if (item.selectedVariant && item.selectedVariant.price) {
+        price = item.selectedVariant.price;
+      } else if (item.productId.hasVariants && item.variantId) {
+        // Find variant by variantId
+        const variant = item.productId.variants?.find(v => v._id.toString() === item.variantId);
+        if (variant) {
+          price = variant.price;
+        }
+      }
+      
       const discount = item.productId.discount || 0;
       const itemTotal = price * item.quantity * (1 - discount / 100);
       totalItems += item.quantity;
@@ -41,7 +53,7 @@ export const getCart = async (req, res) => {
     { upsert: true, new: true }
   ).populate({
     path: 'items.productId',
-    select: 'name price salePrice discount images stock sku status'
+    select: 'name price salePrice discount images stock sku status hasVariants variants options'
   });
   
   // Filter out inactive products
@@ -95,7 +107,7 @@ export const getCartSummary = async (req, res) => {
 // @access  Private
 export const addToCart = async (req, res) => {
   const userId = req.user.userId;
-  const { productId, quantity = 1 } = req.body;
+  const { productId, quantity = 1, variantId } = req.body;
   
   if (!productId) {
     throw new BadRequestError('Product ID is required');
@@ -116,8 +128,29 @@ export const addToCart = async (req, res) => {
     throw new BadRequestError('Sản phẩm hiện không khả dụng');
   }
   
-  if (product.stock < quantity) {
-    throw new BadRequestError(`Chỉ còn ${product.stock} sản phẩm trong kho`);
+  // Handle variant products
+  let selectedVariant = null;
+  let availableStock = product.stock;
+  
+  if (product.hasVariants) {
+    if (!variantId) {
+      throw new BadRequestError('Vui lòng chọn biến thể sản phẩm');
+    }
+    
+    selectedVariant = product.variants.find(v => v._id.toString() === variantId);
+    if (!selectedVariant) {
+      throw new BadRequestError('Biến thể sản phẩm không tồn tại');
+    }
+    
+    if (!selectedVariant.isActive) {
+      throw new BadRequestError('Biến thể sản phẩm không khả dụng');
+    }
+    
+    availableStock = selectedVariant.stock;
+  }
+  
+  if (availableStock < quantity) {
+    throw new BadRequestError(`Chỉ còn ${availableStock} sản phẩm trong kho`);
   }
   
   // ✅ FIX: Find or create cart using findOneAndUpdate to prevent duplicate key error
@@ -127,23 +160,41 @@ export const addToCart = async (req, res) => {
     { upsert: true, new: true }
   );
   
-  // Check if product already in cart
-  const existingItemIndex = cart.items.findIndex(
-    item => item.productId.toString() === productId
-  );
+  // Check if product with same variant already in cart
+  const existingItemIndex = cart.items.findIndex(item => {
+    const sameProduct = item.productId.toString() === productId;
+    const sameVariant = product.hasVariants 
+      ? item.variantId === variantId 
+      : true;
+    return sameProduct && sameVariant;
+  });
   
   if (existingItemIndex > -1) {
     // Update quantity
     const newQuantity = cart.items[existingItemIndex].quantity + quantity;
     
-    if (newQuantity > product.stock) {
-      throw new BadRequestError(`Chỉ có thể thêm tối đa ${product.stock} sản phẩm`);
+    if (newQuantity > availableStock) {
+      throw new BadRequestError(`Chỉ có thể thêm tối đa ${availableStock} sản phẩm`);
     }
     
     cart.items[existingItemIndex].quantity = newQuantity;
   } else {
     // Add new item
-    cart.items.push({ productId, quantity });
+    const newItem = {
+      productId,
+      quantity
+    };
+    
+    if (product.hasVariants && selectedVariant) {
+      newItem.variantId = variantId;
+      newItem.selectedVariant = {
+        optionValues: selectedVariant.optionValues,
+        price: selectedVariant.price,
+        stock: selectedVariant.stock
+      };
+    }
+    
+    cart.items.push(newItem);
   }
   
   await cart.save();
@@ -151,7 +202,7 @@ export const addToCart = async (req, res) => {
   // Populate cart for response
   cart = await Cart.findById(cart._id).populate({
     path: 'items.productId',
-    select: 'name price salePrice discount images stock sku status'
+    select: 'name price salePrice discount images stock sku status hasVariants variants options'
   });
   
   const summary = calculateCartSummary(cart.items);
@@ -169,7 +220,7 @@ export const addToCart = async (req, res) => {
 export const updateCartItem = async (req, res) => {
   const userId = req.user.userId;
   const { productId } = req.params;
-  const { quantity } = req.body;
+  const { quantity, variantId } = req.body;
   
   if (quantity < 1) {
     throw new BadRequestError('Số lượng phải lớn hơn 0');
@@ -181,23 +232,36 @@ export const updateCartItem = async (req, res) => {
     throw new NotFoundError('Không tìm thấy giỏ hàng');
   }
   
-  const itemIndex = cart.items.findIndex(
-    item => item.productId.toString() === productId
-  );
-  
-  if (itemIndex === -1) {
-    throw new NotFoundError('Sản phẩm không có trong giỏ hàng');
-  }
-  
-  // Check product stock
   const product = await Product.findById(productId);
   
   if (!product) {
     throw new NotFoundError('Không tìm thấy sản phẩm');
   }
   
-  if (quantity > product.stock) {
-    throw new BadRequestError(`Chỉ còn ${product.stock} sản phẩm trong kho`);
+  const itemIndex = cart.items.findIndex(item => {
+    const sameProduct = item.productId.toString() === productId;
+    const sameVariant = product.hasVariants 
+      ? item.variantId === variantId 
+      : true;
+    return sameProduct && sameVariant;
+  });
+  
+  if (itemIndex === -1) {
+    throw new NotFoundError('Sản phẩm không có trong giỏ hàng');
+  }
+  
+  // Check stock availability
+  let availableStock = product.stock;
+  if (product.hasVariants && variantId) {
+    const variant = product.variants.find(v => v._id.toString() === variantId);
+    if (!variant) {
+      throw new BadRequestError('Biến thể sản phẩm không tồn tại');
+    }
+    availableStock = variant.stock;
+  }
+  
+  if (quantity > availableStock) {
+    throw new BadRequestError(`Chỉ còn ${availableStock} sản phẩm trong kho`);
   }
   
   // Update quantity
@@ -207,7 +271,7 @@ export const updateCartItem = async (req, res) => {
   // OPTIMIZED: Only populate necessary fields for response
   const updatedCart = await Cart.findById(cart._id).populate({
     path: 'items.productId',
-    select: 'name price salePrice discount images stock sku status'
+    select: 'name price salePrice discount images stock sku status hasVariants variants options'
   });
   
   const summary = calculateCartSummary(updatedCart.items);
@@ -224,6 +288,7 @@ export const updateCartItem = async (req, res) => {
 export const removeFromCart = async (req, res) => {
   const userId = req.user.userId;
   const { productId } = req.params;
+  const { variantId } = req.query; // Get variantId from query params
   
   const cart = await Cart.findOne({ userId });
   
@@ -231,16 +296,25 @@ export const removeFromCart = async (req, res) => {
     throw new NotFoundError('Không tìm thấy giỏ hàng');
   }
   
-  cart.items = cart.items.filter(
-    item => item.productId.toString() !== productId
-  );
+  cart.items = cart.items.filter(item => {
+    const sameProduct = item.productId.toString() === productId;
+    if (!sameProduct) return true; // Keep items with different productId
+    
+    // If variantId specified, only remove matching variant
+    if (variantId) {
+      return item.variantId !== variantId;
+    }
+    
+    // Otherwise remove all items with this productId
+    return false;
+  });
   
   await cart.save();
   
   // Populate for response
   const updatedCart = await Cart.findById(cart._id).populate({
     path: 'items.productId',
-    select: 'name price salePrice discount images stock sku status'
+    select: 'name price salePrice discount images stock sku status hasVariants variants options'
   });
   
   const summary = calculateCartSummary(updatedCart.items);

@@ -13,11 +13,48 @@ export const createProduct = async (req, res, next) => {
             req.body.images = [];
         }
 
+        // ✅ Parse variants data if present
+        if (req.body.hasVariants === 'true' || req.body.hasVariants === true) {
+            req.body.hasVariants = true;
+            
+            if (req.body.options && typeof req.body.options === 'string') {
+                try {
+                    req.body.options = JSON.parse(req.body.options);
+                    console.log('CREATE - Parsed options:', req.body.options);
+                } catch (err) {
+                    console.error('Error parsing options:', err);
+                    req.body.options = [];
+                }
+            }
+            
+            if (req.body.variants && typeof req.body.variants === 'string') {
+                try {
+                    const parsedVariants = JSON.parse(req.body.variants);
+                    // optionValues is already a plain object, Mongoose will convert to Map
+                    req.body.variants = parsedVariants;
+                    console.log('CREATE - Parsed variants count:', parsedVariants.length);
+                } catch (err) {
+                    console.error('Error parsing variants:', err);
+                    req.body.variants = [];
+                }
+            }
+        } else if (req.body.hasVariants === 'false' || req.body.hasVariants === false) {
+            req.body.hasVariants = false;
+            req.body.options = [];
+            req.body.variants = [];
+        }
+
         const payload = {
             ...req.body,
             sellerId: req.user?.userId, // already authenticated + authorized as admin
         };
         
+        console.log('CREATE - Final payload:', {
+            hasVariants: payload.hasVariants,
+            optionsCount: payload.options?.length,
+            variantsCount: payload.variants?.length
+        });
+
         const product = new Product(payload);
         const savedProduct = await product.save();
         res.status(201).json(savedProduct);
@@ -123,6 +160,15 @@ export const updateProduct = async (req, res, next) => {
             return res.status(404).json({ message: 'Không tìm thấy sản phẩm' });
         }
 
+        console.log('updateProduct - Request body:', {
+            hasVariants: req.body.hasVariants,
+            optionsType: typeof req.body.options,
+            variantsType: typeof req.body.variants,
+            variantsLength: req.body.variants ? 
+                (typeof req.body.variants === 'string' ? 'string' : req.body.variants.length) 
+                : 'none'
+        });
+
         // ✅ Handle images update
         let finalImages = [];
         
@@ -149,8 +195,49 @@ export const updateProduct = async (req, res, next) => {
             req.body.images = finalImages;
         }
 
+        // ✅ Parse variants data if present
+        if (req.body.hasVariants === 'true' || req.body.hasVariants === true) {
+            req.body.hasVariants = true;
+            
+            if (req.body.options && typeof req.body.options === 'string') {
+                try {
+                    req.body.options = JSON.parse(req.body.options);
+                    console.log('Parsed options:', req.body.options);
+                } catch (err) {
+                    console.error('Error parsing options:', err);
+                    req.body.options = [];
+                }
+            }
+            
+            if (req.body.variants && typeof req.body.variants === 'string') {
+                try {
+                    const parsedVariants = JSON.parse(req.body.variants);
+                    // optionValues is already a plain object, Mongoose will convert to Map
+                    req.body.variants = parsedVariants;
+                    console.log('Parsed variants count:', parsedVariants.length);
+                    console.log('First variant sample:', parsedVariants[0]);
+                } catch (err) {
+                    console.error('Error parsing variants:', err);
+                    req.body.variants = [];
+                }
+            }
+        } else if (req.body.hasVariants === 'false' || req.body.hasVariants === false) {
+            // Explicitly disabled
+            req.body.hasVariants = false;
+            req.body.options = [];
+            req.body.variants = [];
+            console.log('Variants disabled, clearing data');
+        }
+        // If hasVariants is not in request, don't modify existing variants
+
         // ✅ Remove existingImages from body (not a model field)
         delete req.body.existingImages;
+
+        console.log('Final update payload:', {
+            hasVariants: req.body.hasVariants,
+            optionsCount: req.body.options?.length,
+            variantsCount: req.body.variants?.length
+        });
 
         const updatedProduct = await Product.findByIdAndUpdate(
             id,
@@ -406,5 +493,156 @@ export const searchProducts = async (req, res, next) => {
         });
     } catch (error) {
         return next(error);
+    }
+};
+
+// ==================== PRODUCT VARIANTS MANAGEMENT ====================
+
+// @desc    Add/Update product variants and options
+// @route   PUT /api/v1/products/:id/variants
+// @access  Private (Admin)
+export const updateProductVariants = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { hasVariants, options, variants } = req.body;
+
+        const product = await Product.findById(id);
+        if (!product) {
+            return res.status(404).json({ message: 'Không tìm thấy sản phẩm' });
+        }
+
+        // Validate options structure
+        if (hasVariants && options) {
+            for (const option of options) {
+                if (!option.name || !option.values || option.values.length === 0) {
+                    return res.status(400).json({ 
+                        message: 'Mỗi option phải có tên và ít nhất 1 giá trị' 
+                    });
+                }
+            }
+        }
+
+        // Update product
+        product.hasVariants = hasVariants;
+        product.options = hasVariants ? options : [];
+        product.variants = hasVariants ? variants : [];
+
+        await product.save();
+
+        res.status(200).json({
+            success: true,
+            message: 'Cập nhật variants thành công',
+            data: product
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// @desc    Add a single variant to product
+// @route   POST /api/v1/products/:id/variants
+// @access  Private (Admin)
+export const addVariant = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const variantData = req.body;
+
+        const product = await Product.findById(id);
+        if (!product) {
+            return res.status(404).json({ message: 'Không tìm thấy sản phẩm' });
+        }
+
+        if (!product.hasVariants) {
+            return res.status(400).json({ 
+                message: 'Sản phẩm chưa được cấu hình để có variants' 
+            });
+        }
+
+        // Check if SKU already exists
+        const skuExists = product.variants.some(v => v.sku === variantData.sku);
+        if (skuExists) {
+            return res.status(400).json({ 
+                message: 'SKU đã tồn tại trong danh sách variants' 
+            });
+        }
+
+        product.variants.push(variantData);
+        await product.save();
+
+        res.status(201).json({
+            success: true,
+            message: 'Thêm variant thành công',
+            data: product
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// @desc    Update a specific variant
+// @route   PUT /api/v1/products/:id/variants/:variantId
+// @access  Private (Admin)
+export const updateVariant = async (req, res, next) => {
+    try {
+        const { id, variantId } = req.params;
+        const updateData = req.body;
+
+        const product = await Product.findById(id);
+        if (!product) {
+            return res.status(404).json({ message: 'Không tìm thấy sản phẩm' });
+        }
+
+        const variantIndex = product.variants.findIndex(
+            v => v._id.toString() === variantId
+        );
+
+        if (variantIndex === -1) {
+            return res.status(404).json({ message: 'Không tìm thấy variant' });
+        }
+
+        // Update variant
+        product.variants[variantIndex] = {
+            ...product.variants[variantIndex].toObject(),
+            ...updateData,
+            _id: product.variants[variantIndex]._id // Keep original ID
+        };
+
+        await product.save();
+
+        res.status(200).json({
+            success: true,
+            message: 'Cập nhật variant thành công',
+            data: product
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// @desc    Delete a specific variant
+// @route   DELETE /api/v1/products/:id/variants/:variantId
+// @access  Private (Admin)
+export const deleteVariant = async (req, res, next) => {
+    try {
+        const { id, variantId } = req.params;
+
+        const product = await Product.findById(id);
+        if (!product) {
+            return res.status(404).json({ message: 'Không tìm thấy sản phẩm' });
+        }
+
+        product.variants = product.variants.filter(
+            v => v._id.toString() !== variantId
+        );
+
+        await product.save();
+
+        res.status(200).json({
+            success: true,
+            message: 'Xóa variant thành công',
+            data: product
+        });
+    } catch (error) {
+        next(error);
     }
 };
