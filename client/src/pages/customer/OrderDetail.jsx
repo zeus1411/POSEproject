@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchOrderById, cancelOrder } from '../../redux/slices/orderSlice';
-import { FiArrowLeft, FiPackage, FiTruck, FiCheckCircle, FiXCircle, FiClock, FiDollarSign, FiMapPin, FiX, FiAlertCircle, FiTrash2 } from 'react-icons/fi';
+import { checkOrderReviewStatus } from '../../services/reviewService';
+import { FiArrowLeft, FiPackage, FiTruck, FiCheckCircle, FiXCircle, FiClock, FiDollarSign, FiMapPin, FiX, FiAlertCircle, FiTrash2, FiStar } from 'react-icons/fi';
 import { toast } from 'react-toastify';
 
 const formatCurrency = (v) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(v || 0);
@@ -73,12 +74,29 @@ const OrderDetail = () => {
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const [cancelError, setCancelError] = useState('');
+  const [reviewStatus, setReviewStatus] = useState({});
 
   useEffect(() => {
     if (id) {
       dispatch(fetchOrderById(id));
     }
   }, [dispatch, id]);
+
+  // Fetch review status when order is loaded and completed
+  useEffect(() => {
+    const fetchReviewStatus = async () => {
+      if (orderDetail && orderDetail.status === 'COMPLETED') {
+        try {
+          const data = await checkOrderReviewStatus(id);
+          setReviewStatus(data.reviewStatus || {});
+        } catch (error) {
+          console.error('Error fetching review status:', error);
+        }
+      }
+    };
+    
+    fetchReviewStatus();
+  }, [orderDetail, id]);
 
   // Extract order details with proper fallbacks
   const { 
@@ -371,6 +389,12 @@ const OrderDetail = () => {
                     const quantity = item.quantity || item.amount || 1;
                     const totalPrice = (item.subtotal != null ? item.subtotal : price * quantity);
                     
+                    // Check review status for this product
+                    const productIdStr = item.productId._id.toString();
+                    const productReviewStatus = reviewStatus[productIdStr] || {};
+                    const hasReviewed = productReviewStatus.hasReviewed;
+                    const canReview = status === 'COMPLETED';
+                    
                     return (
                       <div key={item._id || `item-${index}`} className="p-4 sm:p-6 flex">
                         <div className="flex-shrink-0 h-20 w-20 rounded-md overflow-hidden border border-gray-200">
@@ -410,9 +434,31 @@ const OrderDetail = () => {
                           <p className="mt-1 text-sm text-gray-500">
                             Số lượng: {quantity}
                           </p>
-                          <p className="mt-2 text-sm font-medium text-gray-900">
-                            Thành tiền: {formatCurrency(totalPrice)}
-                          </p>
+                          <div className="mt-2 flex items-center justify-between">
+                            <p className="text-sm font-medium text-gray-900">
+                              Thành tiền: {formatCurrency(totalPrice)}
+                            </p>
+                            
+                            {/* Review Button */}
+                            {canReview && (
+                              <div>
+                                {hasReviewed ? (
+                                  <span className="inline-flex items-center px-3 py-1 text-xs font-medium text-green-700 bg-green-50 rounded-full">
+                                    <FiCheckCircle className="w-3 h-3 mr-1" />
+                                    Cảm ơn bạn vì đã đánh giá!
+                                  </span>
+                                ) : (
+                                  <button
+                                    onClick={() => navigate(`/product/${item.productId._id}?orderId=${orderId}&review=true`)}
+                                    className="inline-flex items-center px-3 py-1.5 text-xs font-medium text-white bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 rounded-lg shadow-sm transition-all"
+                                  >
+                                    <FiStar className="w-3 h-3 mr-1" />
+                                    Viết đánh giá
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     );

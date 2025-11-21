@@ -1094,7 +1094,7 @@ const updateOrderStatus = async (req, res) => {
   const notificationMessages = {
     'CONFIRMED': `🎉 Đơn hàng ${order.orderNumber} đã được xác nhận! Chúng tôi đang chuẩn bị hàng cho bạn.`,
     'SHIPPING': `📦 Đơn hàng ${order.orderNumber} đang trên đường giao đến bạn!${trackingNumber ? ` Mã vận đơn: ${trackingNumber}` : ''}`,
-    'COMPLETED': `✅ Đơn hàng ${order.orderNumber} đã được giao thành công! Cảm ơn bạn đã mua hàng.`,
+    'COMPLETED': `✅ Đơn hàng ${order.orderNumber} đã được giao thành công! Đừng quên chia sẻ trải nghiệm của bạn bằng cách đánh giá sản phẩm nhé! 🌟`,
     'CANCELLED': `❌ Đơn hàng ${order.orderNumber} đã bị hủy.${note ? ` Lý do: ${note}` : ''}`
   };
 

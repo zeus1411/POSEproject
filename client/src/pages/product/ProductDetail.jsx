@@ -28,6 +28,13 @@ const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const location = useLocation();
+  
+  // Get orderId and review flag from query params
+  const searchParams = new URLSearchParams(location.search);
+  const orderIdFromUrl = searchParams.get('orderId');
+  const shouldShowReviewForm = searchParams.get('review') === 'true';
+  
   const { currentProduct, isLoading } = useSelector((state) => state.products);
   const { user } = useSelector((state) => state.auth);
   const { cart } = useSelector((state) => state.cart); // Add cart from state
@@ -36,6 +43,7 @@ const ProductDetail = () => {
   const [isInWishlist, setIsInWishlist] = useState(false);
   const [selectedVariant, setSelectedVariant] = useState(null);
   const reviews = useSelector((state) => state.reviews);
+  const [showReviewForm, setShowReviewForm] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -48,6 +56,20 @@ const ProductDetail = () => {
       dispatch(clearCurrentProduct());
     };
   }, [dispatch, id, user]);
+
+  // Auto scroll to review form if coming from order detail
+  useEffect(() => {
+    if (shouldShowReviewForm && orderIdFromUrl) {
+      setShowReviewForm(true);
+      // Scroll to review section after component renders
+      setTimeout(() => {
+        const reviewSection = document.getElementById('review-section');
+        if (reviewSection) {
+          reviewSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 500);
+    }
+  }, [shouldShowReviewForm, orderIdFromUrl]);
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat('vi-VN', {
@@ -92,8 +114,6 @@ const ProductDetail = () => {
     }
   };
 
-  const location = useLocation();
-  
   const handleAddToCart = async () => {
     if (!user) {
       const redirect = encodeURIComponent(location.pathname + location.search);
@@ -457,21 +477,39 @@ const ProductDetail = () => {
         )}
 
         {/* Đánh giá sản phẩm */}
-        <div className="mt-12 bg-white rounded-lg p-6 border border-gray-200">
+        <div id="review-section" className="mt-12 bg-white rounded-lg p-6 border border-gray-200">
           <h2 className="text-xl font-bold text-gray-900 mb-4">Đánh giá sản phẩm</h2>
 
-          {/* Form gửi đánh giá */}
-          {user && reviews.purchased && !reviews.hasReviewed && (
-            <ReviewForm productId={currentProduct._id} />
+          {/* Form gửi đánh giá - Show if coming from order or if user purchased */}
+          {user && (orderIdFromUrl || (reviews.purchased && !reviews.hasReviewed)) && (
+            <div className="mb-6">
+              {orderIdFromUrl && (
+                <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                  <p className="text-sm text-amber-800">
+                    ⭐ Bạn đang viết đánh giá cho sản phẩm này từ đơn hàng đã hoàn thành. 
+                    Hãy chia sẻ trải nghiệm của bạn!
+                  </p>
+                </div>
+              )}
+              <ReviewForm 
+                productId={currentProduct._id} 
+                orderId={orderIdFromUrl}
+                onReviewSubmitted={() => {
+                  // Refresh review status after submit
+                  dispatch(checkReviewStatus(id));
+                  dispatch(fetchReviews(id));
+                }}
+              />
+            </div>
           )}
 
-          {user && reviews.purchased && reviews.hasReviewed && (
+          {user && reviews.purchased && reviews.hasReviewed && !orderIdFromUrl && (
             <p className="text-gray-500 mb-4">
               Bạn đã gửi đánh giá cho sản phẩm này rồi. Cảm ơn bạn!
             </p>
           )}
 
-          {user && !reviews.purchased && (
+          {user && !reviews.purchased && !orderIdFromUrl && (
             <p className="text-gray-500 mb-4">
               Bạn chỉ có thể gửi đánh giá sau khi đã mua sản phẩm này.
             </p>
