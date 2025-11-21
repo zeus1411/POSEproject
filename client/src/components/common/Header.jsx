@@ -8,6 +8,7 @@ import { User } from 'lucide-react';
 import { fetchCart } from '../../redux/slices/cartSlice';
 import { logout as logoutAction } from '../../redux/slices/authSlice';
 import MiniCart from './MiniCart';
+import NotificationIcon from './NotificationIcon';
 
 const Header = () => {
   const dispatch = useDispatch();
@@ -91,6 +92,10 @@ const Header = () => {
                   Shop
                 </Link>
               </div>
+              
+              {/* Icon thông báo */}
+              <NotificationIcon />
+              
               {/* Nút Giỏ hàng (ai cũng thấy, nhưng click thì mới check login) */}
               <button
                 type="button"
