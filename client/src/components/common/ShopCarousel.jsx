@@ -27,7 +27,7 @@ const ShopCarousel = () => {
       id: 3,
       title: "Thiết bị chuyên dụng",
       subtitle: "Công nghệ mới nhất cho bể cá",
-      image: "https://res.cloudinary.com/dxtrwinoc/image/upload/v1763658505/Screenshot_2025-11-21_000602_jc0fsu.png",
+      image: "https://res.cloudinary.com/dxtrwinoc/image/upload/v1763699070/Screenshot_2025-11-21_112147_jmz5pe.png",
       buttonText: "Khám phá",
       buttonLink: "#"
     },

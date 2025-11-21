@@ -3,6 +3,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { Provider } from 'react-redux';
 import store from './redux/store';
 import Layout from './components/Layout';
+import ProtectedRoute from './components/common/ProtectedRoute';
+import Home from './pages/common/Home';
 import Statistics from './pages/admin/Statistics';
 import Products from './pages/admin/Products';
 import ManageUsers from './pages/admin/ManageUsers';
@@ -32,21 +34,29 @@ function App() {
 
           {/* Main Routes */}
           <Route path="/" element={<Layout />}>
-            {/* Điểm quan trọng: index -> /shop */}
-            <Route index element={<Navigate to="/shop" replace />} />
+            {/* Home page as landing page */}
+            <Route index element={<Home />} />
             <Route path="shop" element={<Shop />} />
             <Route path="product/:id" element={<ProductDetail />} />
-            <Route path="profile" element={<ProfilePage />} />
-            <Route path="orders" element={<MyOrders />} />
-            <Route path="orders/:id" element={<OrderDetail />} />
-            <Route path="checkout" element={<Checkout />} />
-            <Route path="admin/dashboard" element={<Navigate to="/admin/products" replace />} />
-            <Route path="admin/products" element={<Products />} />
-            <Route path="admin/manage-users" element={<ManageUsers />} />
-            <Route path="admin/statistics" element={<Statistics />} />
-            <Route path="admin/orders" element={<AdminOrders />} />
-            <Route path="/admin/orders/:id" element={<AdminOrderDetail />} />
-            <Route path="/admin/my-orders" element={<AdminLayout> <MyOrders /> </AdminLayout>} />
+            
+            {/* Protected Customer Routes */}
+            <Route element={<ProtectedRoute />}>
+              <Route path="profile" element={<ProfilePage />} />
+              <Route path="orders" element={<MyOrders />} />
+              <Route path="orders/:id" element={<OrderDetail />} />
+              <Route path="checkout" element={<Checkout />} />
+            </Route>
+
+            {/* Protected Admin Routes */}
+            <Route element={<ProtectedRoute adminOnly={true} />}>
+              <Route path="admin/dashboard" element={<Navigate to="/admin/products" replace />} />
+              <Route path="admin/products" element={<Products />} />
+              <Route path="admin/manage-users" element={<ManageUsers />} />
+              <Route path="admin/statistics" element={<Statistics />} />
+              <Route path="admin/orders" element={<AdminOrders />} />
+              <Route path="/admin/orders/:id" element={<AdminOrderDetail />} />
+              <Route path="/admin/my-orders" element={<AdminLayout> <MyOrders /> </AdminLayout>} />
+            </Route>
         </Route>
 
           {/* Catch-all: mọi đường dẫn lạ → /shop */}
