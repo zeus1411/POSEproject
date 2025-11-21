@@ -59,6 +59,41 @@ body {
   background: #D1D5DB;
 }
 
+/* Landing page animations */
+@keyframes blob {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.8s ease-out;
+}
+
 /* Animation delays */
 .animation-delay-2000 {
   animation-delay: 2s;
@@ -66,6 +101,29 @@ body {
 
 .animation-delay-4000 {
   animation-delay: 4s;
+}
+
+/* Scroll animations */
+.animate-on-scroll {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.8s ease-out;
+}
+
+.animate-on-scroll.animate-fade-in-up {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Gradient text support */
+.bg-clip-text {
+  -webkit-background-clip: text;
+  background-clip: text;
 }
 
 /* Toast animation */

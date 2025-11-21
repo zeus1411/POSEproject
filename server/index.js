@@ -20,15 +20,22 @@ if (missingVars.length > 0) {
 }
 
 const app = express();
-const port = process.env.PORT;
+const port = process.env.PORT || 3000;
 const MONGODB_URL = process.env.MONGODB_URI;
 const DB_NAME = process.env.DATABASE_NAME;
+
+console.log(`🔧 Starting server on port ${port}...`);
+console.log(`🌐 Client URL configured: ${process.env.CLIENT_URL}`);
 
 // Middleware
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '30mb' }));
 app.use(cors({
-    origin: process.env.CLIENT_URL,
+    origin: [
+        process.env.CLIENT_URL, 
+        'http://localhost:5173',
+        'http://localhost:5174'  // Backup port
+    ],
     credentials: true,
 }))
 

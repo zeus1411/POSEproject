@@ -21,9 +21,7 @@ const router = express.Router();
 // Public routes (no authentication required)
 router.get('/', getProducts);
 router.get('/search', searchProducts);
-
-// Protected routes (require authentication)
-router.get('/:id', authenticateUser, getProductById);
+router.get('/:id', getProductById);
 
 // Admin-only: CRUD with image uploads
 router.post(
