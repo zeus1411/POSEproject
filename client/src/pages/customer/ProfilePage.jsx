@@ -844,7 +844,7 @@ const ProfilePage = () => {
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
               <MapPin className="w-6 h-6" />
-              Địa chỉ giao hàng
+              Địa chỉ
             </h2>
             {!isEditingAddress ? (
               <button
