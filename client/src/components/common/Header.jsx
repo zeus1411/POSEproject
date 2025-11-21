@@ -2,7 +2,13 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { ShoppingCartIcon, UserCircleIcon } from '@heroicons/react/24/outline';
+import { 
+  ShoppingCartIcon, 
+  UserCircleIcon,
+  Cog6ToothIcon,
+  ShoppingBagIcon,
+  ArrowRightOnRectangleIcon
+} from '@heroicons/react/24/outline';
 import { User } from 'lucide-react';
 
 import { fetchCart } from '../../redux/slices/cartSlice';
@@ -48,6 +54,7 @@ const Header = () => {
   };
 
   const cartCount = summary?.totalItems || 0;
+  const isAdmin = user?.role === 'admin';
 
   return (
     <>
@@ -56,59 +63,65 @@ const Header = () => {
           <div className="flex justify-between h-20">
             {/* Logo / Brand */}
             <div className="flex items-center">
-              <Link to="/" className="flex items-center gap-2">
+              <Link to={isAdmin ? "/admin/products" : "/"} className="flex items-center gap-2">
                 <span className="text-3xl font-bold text-white">
                   AquaticPose
                 </span>
               </Link>
             </div>
 
-            {/* Navigation Menu */}
-            <div className="hidden md:flex items-center gap-8">
-              <nav className="flex items-center gap-6">
-                <Link 
-                  to="/" 
-                  className="text-base font-medium text-white hover:text-cyan-100 transition-colors"
-                >
-                  Home
-                </Link>
-                <Link 
-                  to="/shop" 
-                  className="text-base font-medium text-white hover:text-cyan-100 transition-colors"
-                >
-                  Shop
-                </Link>
-              </nav>
-            </div>
+            {/* Navigation Menu - Ẩn với admin */}
+            {!isAdmin && (
+              <div className="hidden md:flex items-center gap-8">
+                <nav className="flex items-center gap-6">
+                  <Link 
+                    to="/" 
+                    className="text-base font-medium text-white hover:text-cyan-100 transition-colors"
+                  >
+                    Home
+                  </Link>
+                  <Link 
+                    to="/shop" 
+                    className="text-base font-medium text-white hover:text-cyan-100 transition-colors"
+                  >
+                    Shop
+                  </Link>
+                </nav>
+              </div>
+            )}
 
             {/* Menu bên phải */}
             <div className="flex items-center gap-6">
-              {/* Mobile shop button - visible on small screens only */}
-              <div className="md:hidden">
-                <Link
-                  to="/shop"
-                  className="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold text-white bg-white/10 rounded-lg hover:bg-white/20 transition-colors"
+              {/* Mobile shop button - visible on small screens only - Ẩn với admin */}
+              {!isAdmin && (
+                <div className="md:hidden">
+                  <Link
+                    to="/shop"
+                    className="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold text-white bg-white/10 rounded-lg hover:bg-white/20 transition-colors"
+                  >
+                    Shop
+                  </Link>
+                </div>
+              )}
+              
+              {/* Icon thông báo - Ẩn với admin */}
+              {!isAdmin && <NotificationIcon />}
+              
+              {/* Nút Giỏ hàng - Ẩn với admin */}
+              {!isAdmin && (
+                <button
+                  type="button"
+                  onClick={handleOpenCart}
+                  className="relative p-2 rounded-full hover:bg-white/10 transition-colors"
                 >
-                  Shop
-                </Link>
-              </div>
-              
-              {/* Icon thông báo */}
-              <NotificationIcon />
-              
-              {/* Nút Giỏ hàng (ai cũng thấy, nhưng click thì mới check login) */}
-              <button
-                type="button"
-                onClick={handleOpenCart}
-                className="relative p-2 rounded-full hover:bg-white/10 transition-colors"
-              >
-                <ShoppingCartIcon className="w-8 h-8 text-white" />
-                {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-teal-600 bg-white rounded-full shadow-md">
-                    {cartCount}
-                  </span>
-                )}
-              </button>
+                  <ShoppingCartIcon className="w-8 h-8 text-white" />
+                  {cartCount > 0 && (
+                    <span className="absolute -top-1 -right-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-teal-600 bg-white rounded-full shadow-md">
+                      {cartCount}
+                    </span>
+                  )}
+                </button>
+              )}
 
               {/* Nếu chưa đăng nhập → Hiển thị Login / Register */}
               {!user && (
@@ -164,9 +177,10 @@ const Header = () => {
                             setIsUserMenuOpen(false);
                             navigate('/admin/products');
                           }}
-                          className="w-full text-left px-4 py-3 text-sm text-teal-600 hover:bg-teal-50 border-b border-gray-100 rounded-t-xl"
+                          className="w-full text-left px-4 py-3 text-sm text-teal-600 hover:bg-teal-50 border-b border-gray-100 rounded-t-xl flex items-center gap-3"
                         >
-                          Quản lý
+                          <Cog6ToothIcon className="w-5 h-5" />
+                          <span>Quản lý</span>
                         </button>
                       )}
                       <button
@@ -175,9 +189,10 @@ const Header = () => {
                           setIsUserMenuOpen(false);
                           navigate('/profile');
                         }}
-                        className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100"
+                        className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100 flex items-center gap-3"
                       >
-                        Thông tin cá nhân
+                        <UserCircleIcon className="w-5 h-5" />
+                        <span>Thông tin cá nhân</span>
                       </button>
                       {user.role !== 'admin' && (
                         <button
@@ -186,17 +201,19 @@ const Header = () => {
                             setIsUserMenuOpen(false);
                             navigate('/orders');
                           }}
-                          className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100"
+                          className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100 flex items-center gap-3"
                         >
-                          Đơn hàng của tôi
+                          <ShoppingBagIcon className="w-5 h-5" />
+                          <span>Đơn hàng của tôi</span>
                         </button>
                       )}
                       <button
                         type="button"
                         onClick={() => setIsLogoutConfirmOpen(true)}
-                        className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 rounded-b-xl"
+                        className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 rounded-b-xl flex items-center gap-3"
                       >
-                        Đăng xuất
+                        <ArrowRightOnRectangleIcon className="w-5 h-5" />
+                        <span>Đăng xuất</span>
                       </button>
                     </div>
                   )}

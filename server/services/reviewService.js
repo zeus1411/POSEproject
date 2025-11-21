@@ -12,11 +12,11 @@ class ReviewService {
   /**
    * Create new review
    * @param {string} userId - User ID
-   * @param {Object} reviewData - { productId, rating, comment, title }
+   * @param {Object} reviewData - { productId, rating, comment, title, orderId }
    * @returns {Promise<Object>} Created review
    */
   async createReview(userId, reviewData) {
-    const { productId, rating, comment, title } = reviewData;
+    const { productId, rating, comment, title, orderId } = reviewData;
 
     if (!rating || rating < 1 || rating > 5) {
       throw new BadRequestError('Vui lòng chọn số sao hợp lệ (1–5).');
@@ -26,28 +26,52 @@ class ReviewService {
       throw new BadRequestError('Nội dung đánh giá phải có ít nhất 10 ký tự.');
     }
 
-    // Check if user purchased this product
-    const order = await Order.findOne({
-      userId,
-      'items.productId': productId,
-      status: 'COMPLETED'
-    });
+    let finalOrderId = orderId;
+    
+    // If orderId is provided, verify it
+    if (orderId) {
+      const order = await Order.findOne({
+        _id: orderId,
+        userId,
+        'items.productId': productId,
+        status: 'COMPLETED'
+      });
 
-    if (!order) {
-      throw new BadRequestError('Bạn chỉ có thể đánh giá sản phẩm đã mua.');
-    }
+      if (!order) {
+        throw new BadRequestError('Đơn hàng không hợp lệ hoặc chưa hoàn thành.');
+      }
+      
+      // Check if already reviewed for this order
+      const existingReview = await Review.findOne({ userId, productId, orderId });
+      if (existingReview) {
+        throw new BadRequestError('Bạn đã đánh giá sản phẩm này trong đơn hàng này rồi.');
+      }
+    } else {
+      // If no orderId provided, find any completed order with this product
+      const order = await Order.findOne({
+        userId,
+        'items.productId': productId,
+        status: 'COMPLETED'
+      });
 
-    // Check if already reviewed
-    const existingReview = await Review.findOne({ userId, productId });
-    if (existingReview) {
-      throw new BadRequestError('Bạn đã đánh giá sản phẩm này rồi.');
+      if (!order) {
+        throw new BadRequestError('Bạn chỉ có thể đánh giá sản phẩm đã mua.');
+      }
+      
+      finalOrderId = order._id;
+      
+      // Check if already reviewed for this order
+      const existingReview = await Review.findOne({ userId, productId, orderId: finalOrderId });
+      if (existingReview) {
+        throw new BadRequestError('Bạn đã đánh giá sản phẩm này rồi.');
+      }
     }
 
     // Create review
     const review = await Review.create({
       productId,
       userId,
-      orderId: order._id,
+      orderId: finalOrderId,
       rating,
       comment,
       title,

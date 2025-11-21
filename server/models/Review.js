@@ -93,7 +93,7 @@ const reviewSchema = new mongoose.Schema(
 );
 
 // Indexes
-reviewSchema.index({ productId: 1, userId: 1 }, { unique: true });
+reviewSchema.index({ productId: 1, userId: 1, orderId: 1 }, { unique: true });
 reviewSchema.index({ productId: 1, rating: -1 });
 reviewSchema.index({ userId: 1 });
 reviewSchema.index({ orderId: 1 });
@@ -287,26 +287,27 @@ reviewSchema.statics.getProductReviewStats = async function (productId) {
   };
 };
 
-// Static method to check if user can review product
-reviewSchema.statics.canUserReview = async function (userId, productId) {
+// Static method to check if user can review product for specific order
+reviewSchema.statics.canUserReview = async function (userId, productId, orderId) {
   const Order = mongoose.model('Order');
   
-  // Check if user has purchased the product
+  // Check if user has purchased the product in this specific order
   const order = await Order.findOne({
+    _id: orderId,
     userId,
     'items.productId': productId,
     status: 'COMPLETED'
   });
   
   if (!order) {
-    return { canReview: false, reason: 'Bạn chưa mua sản phẩm này' };
+    return { canReview: false, reason: 'Đơn hàng chưa hoàn thành hoặc không chứa sản phẩm này' };
   }
   
-  // Check if user has already reviewed
-  const existingReview = await this.findOne({ userId, productId });
+  // Check if user has already reviewed this product in this order
+  const existingReview = await this.findOne({ userId, productId, orderId });
   
   if (existingReview) {
-    return { canReview: false, reason: 'Bạn đã đánh giá sản phẩm này rồi' };
+    return { canReview: false, reason: 'Bạn đã đánh giá sản phẩm này trong đơn hàng này rồi', reviewId: existingReview._id };
   }
   
   return { canReview: true, orderId: order._id };

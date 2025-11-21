@@ -22,7 +22,12 @@ const Login = () => {
 
   useEffect(() => {
     if (isSuccess && user) {
-      navigate('/');
+      // Redirect dựa theo role
+      if (user.role === 'admin') {
+        navigate('/admin/products');
+      } else {
+        navigate('/');
+      }
     }
     // Remove dispatch(reset()) to prevent premature state reset
   }, [isSuccess, user, navigate]);

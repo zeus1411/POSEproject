@@ -1,4 +1,6 @@
 import reviewService from '../services/reviewService.js';
+import Order from '../models/Order.js';
+import Review from '../models/Review.js';
 
 /**
  * @desc    Tạo mới đánh giá sản phẩm
@@ -7,10 +9,10 @@ import reviewService from '../services/reviewService.js';
  */
 export const createReview = async (req, res) => {
   try {
-    const { productId, rating, comment, title } = req.body;
+    const { productId, rating, comment, title, orderId } = req.body;
     const userId = req.user.userId;
 
-    const review = await reviewService.createReview(userId, { productId, rating, comment, title });
+    const review = await reviewService.createReview(userId, { productId, rating, comment, title, orderId });
 
     res.status(201).json({
       message: 'Gửi đánh giá thành công!',
@@ -127,6 +129,60 @@ export const checkReviewStatus = async (req, res) => {
 
   } catch (error) {
     console.error('Check review status error:', error);
+    res.status(500).json({ message: 'Không thể kiểm tra trạng thái đánh giá.' });
+  }
+};
+
+/**
+ * @desc    Kiểm tra trạng thái review cho từng sản phẩm trong order
+ * @route   GET /api/reviews/check-order-status/:orderId
+ * @access  Private
+ */
+export const checkOrderReviewStatus = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { orderId } = req.params;
+
+    const Order = (await import('../models/Order.js')).default;
+    const Review = (await import('../models/Review.js')).default;
+
+    // Lấy order
+    const order = await Order.findOne({
+      _id: orderId,
+      userId
+    }).populate('items.productId', '_id name');
+
+    if (!order) {
+      return res.status(404).json({ message: 'Không tìm thấy đơn hàng' });
+    }
+
+    // Kiểm tra review status cho từng sản phẩm
+    const reviewStatus = {};
+    
+    for (const item of order.items) {
+      const productId = item.productId._id.toString();
+      const existingReview = await Review.findOne({ 
+        userId, 
+        productId, 
+        orderId 
+      });
+      
+      reviewStatus[productId] = {
+        hasReviewed: !!existingReview,
+        reviewId: existingReview?._id,
+        productName: item.productId.name
+      };
+    }
+
+    res.json({
+      orderId,
+      orderStatus: order.status,
+      canReview: order.status === 'COMPLETED',
+      reviewStatus
+    });
+
+  } catch (error) {
+    console.error('Check order review status error:', error);
     res.status(500).json({ message: 'Không thể kiểm tra trạng thái đánh giá.' });
   }
 };

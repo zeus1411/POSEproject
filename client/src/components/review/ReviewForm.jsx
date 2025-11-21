@@ -3,16 +3,15 @@ import { useSelector, useDispatch } from "react-redux";
 import { createReview, fetchReviews } from "../../redux/slices/reviewSlice";
 import { StarIcon } from "@heroicons/react/24/solid";
 
-const ReviewForm = ({ productId }) => {
+const ReviewForm = ({ productId, orderId, onReviewSubmitted }) => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
-  const [title, setTitle] = useState("");
   const [comment, setComment] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [submitted, setSubmitted] = useState(false);
 
   // 🧠 Nếu chưa đăng nhập → hiển thị lời nhắc
   if (!user) {
@@ -25,10 +24,20 @@ const ReviewForm = ({ productId }) => {
     );
   }
 
+  // 🎉 Nếu đã gửi đánh giá thành công → hiển thị thông báo cảm ơn
+  if (submitted) {
+    return (
+      <div className="p-4 bg-green-50 border border-green-200 rounded-md mb-6">
+        <p className="text-green-700 text-sm font-medium">
+          ✓ Gửi đánh giá thành công! Cảm ơn bạn đã chia sẻ.
+        </p>
+      </div>
+    );
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    setSuccess("");
 
     if (rating === 0) {
       setError("Vui lòng chọn số sao đánh giá.");
@@ -43,13 +52,25 @@ const ReviewForm = ({ productId }) => {
     setSubmitting(true);
 
     try {
-      await dispatch(createReview({ productId, rating, title, comment })).unwrap();
-      setSuccess("Gửi đánh giá thành công!");
-      setRating(0);
-      setTitle("");
-      setComment("");
+      const reviewData = { productId, rating, comment };
+      
+      // Add orderId if provided (from order detail page)
+      if (orderId) {
+        reviewData.orderId = orderId;
+      }
+      
+      await dispatch(createReview(reviewData)).unwrap();
+      
+      // Mark as submitted to hide the form
+      setSubmitted(true);
+      
       // Reload danh sách đánh giá
       dispatch(fetchReviews(productId));
+      
+      // Call callback if provided
+      if (onReviewSubmitted) {
+        onReviewSubmitted();
+      }
     } catch (err) {
       setError(err || "Không thể gửi đánh giá, vui lòng thử lại.");
     } finally {
@@ -83,15 +104,6 @@ const ReviewForm = ({ productId }) => {
         ))}
       </div>
 
-      {/* Title */}
-      <input
-        type="text"
-        placeholder="Tiêu đề đánh giá (tuỳ chọn)"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        className="w-full border border-gray-300 rounded-md p-2 mb-3 text-sm focus:ring-primary-500 focus:border-primary-500"
-      />
-
       {/* Comment */}
       <textarea
         rows="4"
@@ -103,7 +115,6 @@ const ReviewForm = ({ productId }) => {
 
       {/* Message */}
       {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
-      {success && <p className="text-green-600 text-sm mt-2">{success}</p>}
 
       {/* Submit */}
       <button
