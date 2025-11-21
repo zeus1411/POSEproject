@@ -95,7 +95,7 @@ const Shop = () => {
             />
 
             {/* Results Summary */}
-            <div className="flex flex-col xs:flex-row items-start xs:items-center justify-between gap-2 mb-4">
+            <div className="flex flex-col xs:flex-row items-start xs:items-center justify-between gap-2 mb-4 pl-4 lg:pl-6">
               <div className="text-sm text-gray-600">
                 {isLoading ? (
                   <span>Đang tải...</span>

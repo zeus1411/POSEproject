@@ -32,9 +32,7 @@ app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '30mb' }));
 app.use(cors({
     origin: [
-        process.env.CLIENT_URL, 
-        'http://localhost:5173',
-        'http://localhost:5174'  // Backup port
+        process.env.CLIENT_URL
     ],
     credentials: true,
 }))
