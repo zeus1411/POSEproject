@@ -9,6 +9,7 @@ import {
     resendOTP,
     resetPassword
 } from '../controllers/authController.js';
+import { googleAuth } from '../controllers/googleAuthController.js';
 import { authenticateUser } from '../utils/jwt.js';
 
 const router = express.Router();
@@ -16,6 +17,7 @@ const router = express.Router();
 // Public routes
 router.post('/register', register);
 router.post('/login', login);
+router.post('/google', googleAuth); // Google OAuth
 router.post('/forgot-password', sendOTP); // Step 1: Send OTP
 router.post('/resend-otp', resendOTP); // Step 1.1: Resend OTP (exception flow 5.1)
 router.post('/reset-password', resetPassword); // Step 2: Verify OTP and reset password

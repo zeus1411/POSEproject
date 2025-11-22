@@ -50,7 +50,7 @@ const Header = () => {
     setIsLogoutConfirmOpen(false);
     await dispatch(logoutAction());
     setIsUserMenuOpen(false);
-    navigate('/shop');
+    navigate('/');
   };
 
   const cartCount = summary?.totalItems || 0;

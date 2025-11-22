@@ -18,6 +18,15 @@ const login = async (userData) => {
   return response.data;
 };
 
+// Google OAuth login
+const googleLogin = async (credential) => {
+  const response = await api.post('/auth/google', { credential });
+  if (response.data.success && response.data.user) {
+    localStorage.setItem('user', JSON.stringify(response.data.user));
+  }
+  return response.data;
+};
+
 // Logout user
 const logout = async () => {
   try {
@@ -75,6 +84,7 @@ const resetPassword = async (email, otp, newPassword, confirmPassword) => {
 const authService = {
   register,
   login,
+  googleLogin,
   logout,
   getCurrentUser,
   sendOTP,

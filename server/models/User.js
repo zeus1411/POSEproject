@@ -61,6 +61,13 @@ const userSchema = new mongoose.Schema(
       default: 'https://res.cloudinary.com/default-avatar.png'
     },
     
+    // ========== GOOGLE OAUTH ==========
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true, // Cho phép null và không bắt buộc unique khi null
+    },
+    
     // ========== ĐỊA CHỈ (KHÔNG có fullName, phone) ==========
     address: {
       // Địa chỉ chi tiết (số nhà, tên đường)
