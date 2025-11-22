@@ -58,13 +58,16 @@ const Header = () => {
 
   return (
     <>
-      <header className="bg-gradient-to-r from-teal-500 to-cyan-500 shadow-lg">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between h-20">
+      <header className="bg-gradient-to-r from-teal-500 to-cyan-500 shadow-lg fixed w-full z-10">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="flex justify-between h-16">
             {/* Logo / Brand */}
             <div className="flex items-center">
-              <Link to={isAdmin ? "/admin/products" : "/"} className="flex items-center gap-2">
-                <span className="text-3xl font-bold text-white">
+              <Link 
+                to={isAdmin ? "/admin/products" : "/"} 
+                className="flex items-center group"
+              >
+                <span className="text-2xl font-extrabold text-white tracking-tight">
                   AquaticPose
                 </span>
               </Link>
@@ -72,19 +75,37 @@ const Header = () => {
 
             {/* Navigation Menu - Ẩn với admin */}
             {!isAdmin && (
-              <div className="hidden md:flex items-center gap-8">
-                <nav className="flex items-center gap-6">
+              <div className="hidden md:flex items-center h-full">
+                <nav className="flex items-center h-full space-x-1">
                   <Link 
                     to="/" 
-                    className="text-base font-medium text-white hover:text-cyan-100 transition-colors"
+                    className={`relative flex items-center h-full px-6 text-sm font-medium transition-all duration-300 ${
+                      location.pathname === '/' 
+                        ? 'text-white' 
+                        : 'text-white/80 hover:text-white'
+                    }`}
                   >
-                    Home
+                    <span className="relative">
+                      Trang chủ
+                      {location.pathname === '/' && (
+                        <span className="absolute -bottom-7 left-0 w-full h-0.5 bg-white animate-underline"></span>
+                      )}
+                    </span>
                   </Link>
                   <Link 
                     to="/shop" 
-                    className="text-base font-medium text-white hover:text-cyan-100 transition-colors"
+                    className={`relative flex items-center h-full px-6 text-sm font-medium transition-all duration-300 ${
+                      location.pathname.startsWith('/shop')
+                        ? 'text-white' 
+                        : 'text-white/80 hover:text-white'
+                    }`}
                   >
-                    Shop
+                    <span className="relative">
+                      Cửa hàng
+                      {location.pathname.startsWith('/shop') && (
+                        <span className="absolute -bottom-7 left-0 w-full h-0.5 bg-white animate-underline"></span>
+                      )}
+                    </span>
                   </Link>
                 </nav>
               </div>
