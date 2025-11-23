@@ -12,17 +12,14 @@ import ProductVariantSelector from '../../components/common/ProductVariantSelect
 
 import { 
   StarIcon, 
-  HeartIcon, 
   ShoppingCartIcon, 
   MinusIcon, 
   PlusIcon,
   ArrowLeftIcon,
-  ShareIcon,
   TruckIcon,
   ShieldCheckIcon,
   ArrowPathIcon
 } from '@heroicons/react/24/outline';
-import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -40,7 +37,6 @@ const ProductDetail = () => {
   const { cart } = useSelector((state) => state.cart); // Add cart from state
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
-  const [isInWishlist, setIsInWishlist] = useState(false);
   const [selectedVariant, setSelectedVariant] = useState(null);
   const reviews = useSelector((state) => state.reviews);
   const [showReviewForm, setShowReviewForm] = useState(false);
@@ -191,10 +187,6 @@ const ProductDetail = () => {
     }
     
     return Math.max(0, currentStock);
-  };
-
-  const handleToggleWishlist = () => {
-    setIsInWishlist(!isInWishlist);
   };
 
   const currentPrice = getCurrentPrice();
@@ -402,21 +394,6 @@ const ProductDetail = () => {
                       : currentProduct?.hasVariants && !selectedVariant
                       ? 'Chọn biến thể'
                       : 'Thêm vào giỏ hàng'}
-                  </button>
-                  
-                  <button
-                    onClick={handleToggleWishlist}
-                    className="p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200"
-                  >
-                    {isInWishlist ? (
-                      <HeartSolidIcon className="w-6 h-6 text-red-500" />
-                    ) : (
-                      <HeartIcon className="w-6 h-6 text-gray-600" />
-                    )}
-                  </button>
-
-                  <button className="p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors duration-200">
-                    <ShareIcon className="w-6 h-6 text-gray-600" />
                   </button>
                 </div>
               </div>

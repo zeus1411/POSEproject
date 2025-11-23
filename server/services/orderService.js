@@ -23,8 +23,9 @@ class OrderService {
    * @returns {Promise<Object>} Created order with payment info
    */
   async createOrder(userId, orderData, req) {
-    const session = await mongoose.startSession();
-    session.startTransaction();
+    // NOTE: Transactions disabled for standalone MongoDB (Docker development)
+    // const session = await mongoose.startSession();
+    // session.startTransaction();
 
     try {
       const { 
@@ -138,8 +139,8 @@ class OrderService {
                 'variants.$.stock': -item.quantity,
                 soldCount: item.quantity 
               }
-            },
-            { session }
+            }
+            // { session } // Disabled for standalone MongoDB
           );
         } else {
           await Product.updateOne(
@@ -149,8 +150,8 @@ class OrderService {
                 stock: -item.quantity,
                 soldCount: item.quantity 
               }
-            },
-            { session }
+            }
+            // { session } // Disabled for standalone MongoDB
           );
         }
       }
@@ -200,7 +201,7 @@ class OrderService {
         promotionCode,
         notes,
         isPaid: false
-      }], { session });
+      }]); // session disabled for standalone MongoDB
 
       // Handle payment
       const payment = await Payment.create([{
@@ -211,20 +212,20 @@ class OrderService {
         amount: totalPrice,
         currency: 'VND',
         transactionId: paymentMethod === 'VNPAY' ? `VNPAY-${Date.now()}` : undefined
-      }], { session });
+      }]); // session disabled for standalone MongoDB
 
       order[0].paymentId = payment[0]._id;
-      await order[0].save({ session });
+      await order[0].save(); // session disabled for standalone MongoDB
 
       // Clear cart
       await Cart.findOneAndUpdate(
         { userId },
-        { $set: { items: [] } },
-        { session }
+        { $set: { items: [] } }
+        // { session } // Disabled for standalone MongoDB
       );
 
       // Commit transaction
-      await session.commitTransaction();
+      // await session.commitTransaction(); // Disabled for standalone MongoDB
 
       // Send notification async
       setImmediate(async () => {
@@ -268,10 +269,10 @@ class OrderService {
       };
 
     } catch (error) {
-      await session.abortTransaction();
+      // await session.abortTransaction(); // Disabled for standalone MongoDB
       throw error;
     } finally {
-      session.endSession();
+      // session.endSession(); // Disabled for standalone MongoDB
     }
   }
 
@@ -456,13 +457,14 @@ class OrderService {
    * @returns {Promise<Object>} Updated order
    */
   async cancelOrder(orderId, userId, reason = 'Không có lý do') {
-    const session = await mongoose.startSession();
-    session.startTransaction();
+    // NOTE: Transactions disabled for standalone MongoDB (Docker development)
+    // const session = await mongoose.startSession();
+    // session.startTransaction();
     
     try {
       const order = await Order.findById(orderId)
         .select('status userId items paymentId')
-        .session(session)
+        // .session(session) // Disabled for standalone MongoDB
         .lean();
 
       if (!order) {
@@ -491,7 +493,7 @@ class OrderService {
             cancelledBy: userId
           }
         },
-        { new: true, session }
+        { new: true } // session disabled for standalone MongoDB
       ).lean();
 
       // Restore product stocks
@@ -503,8 +505,8 @@ class OrderService {
               stock: item.quantity,
               soldCount: -item.quantity 
             } 
-          },
-          { session }
+          }
+          // { session } // Disabled for standalone MongoDB
         )
       );
       await Promise.all(productUpdates);
@@ -513,12 +515,12 @@ class OrderService {
       if (order.paymentId) {
         await Payment.updateOne(
           { _id: order.paymentId, status: { $ne: 'COMPLETED' } },
-          { $set: { status: 'CANCELLED' } },
-          { session }
+          { $set: { status: 'CANCELLED' } }
+          // { session } // Disabled for standalone MongoDB
         );
       }
 
-      await session.commitTransaction();
+      // await session.commitTransaction(); // Disabled for standalone MongoDB
 
       const populatedOrder = await Order.findById(orderId)
         .populate('items.productId', 'name price images')
@@ -529,10 +531,10 @@ class OrderService {
       return populatedOrder;
 
     } catch (error) {
-      await session.abortTransaction();
+      // await session.abortTransaction(); // Disabled for standalone MongoDB
       throw error;
     } finally {
-      session.endSession();
+      // session.endSession(); // Disabled for standalone MongoDB
     }
   }
 
