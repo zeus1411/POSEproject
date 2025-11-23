@@ -16,8 +16,9 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 // @route   POST /api/orders
 // @access  Private (User)
 const createOrder = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
+  // NOTE: Transactions disabled for standalone MongoDB (Docker development)
+  // const session = await mongoose.startSession();
+  // session.startTransaction();
 
   try {
     console.log('=== CREATE ORDER ===');
@@ -151,8 +152,8 @@ const createOrder = async (req, res) => {
               'variants.$.stock': -item.quantity,
               soldCount: item.quantity 
             }
-          },
-          { session }
+          }
+          // { session } // Disabled for standalone MongoDB
         );
       } else {
         // Update product stock
@@ -163,8 +164,8 @@ const createOrder = async (req, res) => {
               stock: -item.quantity,
               soldCount: item.quantity 
             }
-          },
-          { session }
+          }
+          // { session } // Disabled for standalone MongoDB
         );
       }
       
@@ -227,7 +228,7 @@ const createOrder = async (req, res) => {
       promotionCode,
       notes,
       isPaid: false
-    }], { session });
+    }]); // session disabled for standalone MongoDB
 
     console.log('Order created:', order[0]._id, order[0].orderNumber);
 
@@ -244,7 +245,7 @@ const createOrder = async (req, res) => {
         amount: totalPrice,
         currency: 'VND',
         transactionId: `VNPAY-${Date.now()}`
-      }], { session });
+      }]); // session disabled for standalone MongoDB
 
       console.log('Payment record created:', payment[0]._id);
 
@@ -267,20 +268,20 @@ const createOrder = async (req, res) => {
 
       // Lưu payment vào order
       order[0].paymentId = payment[0]._id;
-      await order[0].save({ session });
+      await order[0].save(); // session disabled for standalone MongoDB
 
       // Xóa giỏ hàng
       await Cart.findOneAndUpdate(
         { userId },
-        { $set: { items: [] } },
-        { session }
+        { $set: { items: [] } }
+        // { session } // Disabled for standalone MongoDB
       );
 
       console.log('Cart cleared');
 
       // ✅ Commit transaction TRƯỚC - không chờ notification
-      await session.commitTransaction();
-      session.endSession();
+      // await session.commitTransaction(); // Disabled for standalone MongoDB
+      // session.endSession(); // Disabled for standalone MongoDB
 
       console.log('Transaction committed - VNPay order');
 
@@ -323,25 +324,25 @@ const createOrder = async (req, res) => {
       status: 'PENDING_PAYMENT',
       amount: totalPrice,
       currency: 'VND'
-    }], { session });
+    }]); // session disabled for standalone MongoDB
 
     console.log('Payment record created:', payment[0]._id);
 
     // Cập nhật paymentId vào order
     order[0].paymentId = payment[0]._id;
-    await order[0].save({ session });
+    await order[0].save(); // session disabled for standalone MongoDB
 
     // Xóa giỏ hàng
     await Cart.findOneAndUpdate(
       { userId },
-      { $set: { items: [] } },
-      { session }
+      { $set: { items: [] } }
+      // { session } // Disabled for standalone MongoDB
     );
 
     console.log('Cart cleared');
 
     // ✅ Commit transaction TRƯỚC - không chờ notification
-    await session.commitTransaction();
+    // await session.commitTransaction(); // Disabled for standalone MongoDB
 
     console.log('Transaction committed - COD order');
 
@@ -374,13 +375,13 @@ const createOrder = async (req, res) => {
     });
 
   } catch (error) {
-    await session.abortTransaction();
+    // await session.abortTransaction(); // Disabled for standalone MongoDB
     console.error('Order creation failed:', error.message);
     console.error('Stack:', error.stack);
     console.error('===================\n');
     throw error;
   } finally {
-    session.endSession();
+    // session.endSession(); // Disabled for standalone MongoDB
   }
 };
 
@@ -573,8 +574,9 @@ const getOrderById = async (req, res) => {
 // @route   PATCH /api/orders/:id/cancel
 // @access  Private (User)
 const cancelOrder = async (req, res) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
+  // NOTE: Transactions disabled for standalone MongoDB (Docker development)
+  // const session = await mongoose.startSession();
+  // session.startTransaction();
   
   try {
     const { id } = req.params;
@@ -584,7 +586,7 @@ const cancelOrder = async (req, res) => {
     console.time('cancelOrder:findOrder');
     const order = await Order.findById(id)
       .select('status userId items paymentId')
-      .session(session)
+      // .session(session) // Disabled for standalone MongoDB
       .lean();
     console.timeEnd('cancelOrder:findOrder');
 
@@ -617,7 +619,7 @@ const cancelOrder = async (req, res) => {
           cancelledBy: userId
         }
       },
-      { new: true, session }
+      { new: true } // session disabled for standalone MongoDB
     ).lean();
     console.timeEnd('cancelOrder:updateOrder');
 
@@ -631,8 +633,8 @@ const cancelOrder = async (req, res) => {
             stock: item.quantity,
             soldCount: -item.quantity 
           } 
-        },
-        { session }
+        }
+        // { session } // Disabled for standalone MongoDB
       )
     );
     await Promise.all(productUpdates);
@@ -643,14 +645,14 @@ const cancelOrder = async (req, res) => {
       console.time('cancelOrder:updatePayment');
       await Payment.updateOne(
         { _id: order.paymentId, status: { $ne: 'COMPLETED' } },
-        { $set: { status: 'CANCELLED' } },
-        { session }
+        { $set: { status: 'CANCELLED' } }
+        // { session } // Disabled for standalone MongoDB
       );
       console.timeEnd('cancelOrder:updatePayment');
     }
 
     // Commit transaction
-    await session.commitTransaction();
+    // await session.commitTransaction(); // Disabled for standalone MongoDB
     console.log('✅ Transaction committed successfully');
 
     // Get updated order with populated fields
@@ -669,7 +671,7 @@ const cancelOrder = async (req, res) => {
     });
 
   } catch (error) {
-    await session.abortTransaction();
+    // await session.abortTransaction(); // Disabled for standalone MongoDB
     console.error('❌ Error in cancelOrder:', error.message);
     
     const statusCode = error.statusCode || 
@@ -684,7 +686,7 @@ const cancelOrder = async (req, res) => {
       error: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   } finally {
-    session.endSession();
+    // session.endSession(); // Disabled for standalone MongoDB
   }
 };
 

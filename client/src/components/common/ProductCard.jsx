@@ -1,7 +1,6 @@
 import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { StarIcon, HeartIcon, ShoppingCartIcon, EyeIcon } from '@heroicons/react/24/outline';
-import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
+import { StarIcon, ShoppingCartIcon, EyeIcon } from '@heroicons/react/24/outline';
 import { useDispatch, useSelector } from 'react-redux';
 import { addToCart } from '../../redux/slices/cartSlice';
 
@@ -118,18 +117,6 @@ const ProductCard = ({ product, onToggleWishlist, isInWishlist = false }) => {
             </span>
           )}
         </div>
-
-        {/* Wishlist Button */}
-        <button
-          onClick={() => onToggleWishlist?.(product._id)}
-          className="absolute top-3 right-3 p-2.5 bg-white/90 hover:bg-white rounded-full transition-all duration-200 shadow-lg hover:scale-110"
-        >
-          {isInWishlist ? (
-            <HeartSolidIcon className="w-6 h-6 text-red-500" />
-          ) : (
-            <HeartIcon className="w-6 h-6 text-gray-600 hover:text-red-500" />
-          )}
-        </button>
 
         {/* Quick View Detail */}
         <div className="absolute inset-x-0 bottom-0 bg-white/95 backdrop-blur-sm transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
