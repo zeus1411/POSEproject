@@ -57,7 +57,7 @@ const ResetPassword = () => {
       <div className="min-h-screen relative flex overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img 
-            src="https://images.unsplash.com/photo-1522069169874-c58ec4b76be5?ixlib=rb-4.0.3&auto=format&fit=crop&w=2400&q=80" 
+            src="https://res.cloudinary.com/dxtrwinoc/image/upload/v1763904200/reset-password-bg.jpg" 
             alt="Coral Reef Aquarium" 
             className="w-full h-full object-cover"
           />
@@ -91,7 +91,7 @@ const ResetPassword = () => {
       <div className="min-h-screen relative flex overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img 
-            src="https://images.unsplash.com/photo-1522069169874-c58ec4b76be5?ixlib=rb-4.0.3&auto=format&fit=crop&w=2400&q=80" 
+            src="https://res.cloudinary.com/dxtrwinoc/image/upload/v1763904200/reset-password-bg.jpg" 
             alt="Coral Reef Aquarium" 
             className="w-full h-full object-cover"
           />
@@ -117,7 +117,7 @@ const ResetPassword = () => {
       {/* Fullscreen Aquarium Background */}
       <div className="absolute inset-0 z-0">
         <img 
-          src="https://images.unsplash.com/photo-1522069169874-c58ec4b76be5?ixlib=rb-4.0.3&auto=format&fit=crop&w=2400&q=80" 
+          src="https://res.cloudinary.com/dxtrwinoc/image/upload/v1763904200/reset-password-bg.jpg" 
           alt="Coral Reef Aquarium" 
           className="w-full h-full object-cover"
         />

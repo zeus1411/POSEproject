@@ -134,7 +134,7 @@ const ForgotPassword = () => {
       {/* Fullscreen Aquarium Background */}
       <div className="absolute inset-0 z-0">
         <img 
-          src="https://images.unsplash.com/photo-1591037447398-4e35ecb533f9?ixlib=rb-4.0.3&auto=format&fit=crop&w=2400&q=80" 
+          src="https://res.cloudinary.com/dxtrwinoc/image/upload/v1763903947/Screenshot_2025-11-23_201535_gsanlw.png" 
           alt="Aquatic Plants Tank" 
           className="w-full h-full object-cover"
         />
