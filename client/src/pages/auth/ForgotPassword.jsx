@@ -130,24 +130,58 @@ const ForgotPassword = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-lg">
-        <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+    <div className="min-h-screen relative flex overflow-hidden">
+      {/* Fullscreen Aquarium Background */}
+      <div className="absolute inset-0 z-0">
+        <img 
+          src="https://images.unsplash.com/photo-1591037447398-4e35ecb533f9?ixlib=rb-4.0.3&auto=format&fit=crop&w=2400&q=80" 
+          alt="Aquatic Plants Tank" 
+          className="w-full h-full object-cover"
+        />
+        {/* Dark Blue/Cyan Gradient Overlay */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-900/75 via-cyan-900/65 to-teal-900/70" />
+      </div>
+
+      {/* Content Container - Improved Centering */}
+      <div className="relative z-10 w-full flex flex-col lg:flex-row items-center justify-center lg:justify-between gap-8 lg:gap-16 px-4 sm:px-8 lg:px-20 xl:px-32 py-12">
+        
+        {/* Hero Text - Left Side (animated fade-in from left) */}
+        <div className="w-full lg:w-1/2 lg:flex-shrink-0 animate-fade-in-left">
+          <div className="max-w-2xl space-y-6">
+            <p className="text-cyan-300 text-xs sm:text-sm font-bold tracking-[0.3em] uppercase">RESET ACCESS</p>
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-white leading-tight">
+              DON'T LOSE<br />YOUR WAVES
+            </h1>
+            <p className="text-lg sm:text-xl text-white/95 font-light leading-relaxed">
+              We'll help you get back<br />into your aquatic world.
+            </p>
+            <p className="text-sm sm:text-base text-white/80 leading-relaxed max-w-md">
+              Enter your email and we'll send you a verification code to reset your password safely.
+            </p>
+          </div>
+        </div>
+
+        {/* Glassmorphism Form Card - Larger & Better Centered (animated slide-in from right) */}
+        <div className="w-full lg:w-1/2 flex justify-center animate-slide-in-right">
+          <div className="w-full max-w-2xl">
+            {/* Extra Large Glassmorphism Card */}
+            <div className="backdrop-blur-2xl bg-white/15 rounded-[2rem] shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] border border-white/30 p-8 sm:p-12 lg:p-14">
+        <div className="mb-8">
+          <h2 className="text-center text-3xl font-extrabold text-white">
             {otpSent ? 'Đặt lại Mật khẩu' : 'Quên mật khẩu?'}
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p className="mt-3 text-center text-sm text-white/80">
             {otpSent 
               ? 'Nhập mã OTP đã được gửi đến email của bạn và mật khẩu mới.'
               : 'Nhập địa chỉ email của bạn và chúng tôi sẽ gửi mã OTP để đặt lại mật khẩu.'}
           </p>
         </div>
         
-        <form className="mt-8 space-y-6" onSubmit={otpSent ? handleResetPassword : handleSendOTP}>
+        <form className="space-y-6" onSubmit={otpSent ? handleResetPassword : handleSendOTP}>
           {!otpSent ? (
-            <div className="rounded-md shadow-sm">
+            <div>
               <div>
-                <label htmlFor="email-address" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="email-address" className="block text-sm font-semibold text-white mb-2 tracking-wide">
                   Địa chỉ Email
                 </label>
                 <input
@@ -156,7 +190,7 @@ const ForgotPassword = () => {
                   type="email"
                   autoComplete="email"
                   required
-                  className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  className="appearance-none block w-full px-4 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400/50 transition-all duration-300 text-sm"
                   placeholder="Nhập email của bạn"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -167,17 +201,17 @@ const ForgotPassword = () => {
           ) : (
             <div className="space-y-4">
               {/* OTP Timer Display */}
-              <div className="bg-blue-50 border border-blue-200 rounded-md p-3 text-center">
-                <p className="text-sm text-blue-800">
+              <div className="bg-cyan-500/20 backdrop-blur-sm border border-cyan-400/30 rounded-lg p-3 text-center">
+                <p className="text-sm text-white">
                   {timeRemaining > 0 ? (
                     <>
                       <span className="font-semibold">Mã OTP hết hạn sau:</span>
-                      <span className="ml-2 text-lg font-bold text-blue-600">
+                      <span className="ml-2 text-lg font-bold text-cyan-300">
                         {formatTime(timeRemaining)}
                       </span>
                     </>
                   ) : (
-                    <span className="text-red-600 font-semibold">
+                    <span className="text-red-300 font-semibold">
                       Mã OTP đã hết hạn. Vui lòng yêu cầu mã mới.
                     </span>
                   )}
@@ -185,8 +219,8 @@ const ForgotPassword = () => {
               </div>
 
               <div>
-                <label htmlFor="otp" className="block text-sm font-medium text-gray-700 mb-1">
-                  Mã OTP <span className="text-red-500">*</span>
+                <label htmlFor="otp" className="block text-sm font-semibold text-white mb-2 tracking-wide">
+                  Mã OTP <span className="text-red-300">*</span>
                 </label>
                 <input
                   id="otp"
@@ -196,25 +230,25 @@ const ForgotPassword = () => {
                   pattern="[0-9]*"
                   maxLength="6"
                   required
-                  className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm tracking-widest text-center text-lg font-semibold"
+                  className="appearance-none block w-full px-4 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400/50 transition-all duration-300 tracking-widest text-center text-lg font-semibold"
                   placeholder="000000"
                   value={otp}
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                   disabled={isLoading}
                 />
-                <p className="mt-1 text-xs text-gray-500">Nhập mã OTP 6 chữ số từ email</p>
+                <p className="mt-1 text-xs text-white/60">Nhập mã OTP 6 chữ số từ email</p>
               </div>
 
               <div>
-                <label htmlFor="new-password" className="block text-sm font-medium text-gray-700 mb-1">
-                  Mật khẩu mới <span className="text-red-500">*</span>
+                <label htmlFor="new-password" className="block text-sm font-semibold text-white mb-2 tracking-wide">
+                  Mật khẩu mới <span className="text-red-300">*</span>
                 </label>
                 <input
                   id="new-password"
                   name="newPassword"
                   type="password"
                   required
-                  className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  className="appearance-none block w-full px-4 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400/50 transition-all duration-300 text-sm"
                   placeholder="Nhập mật khẩu mới (tối thiểu 6 ký tự)"
                   value={newPassword}
                   onChange={(e) => setNewPassword(e.target.value)}
@@ -223,15 +257,15 @@ const ForgotPassword = () => {
               </div>
 
               <div>
-                <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700 mb-1">
-                  Xác nhận mật khẩu <span className="text-red-500">*</span>
+                <label htmlFor="confirm-password" className="block text-sm font-semibold text-white mb-2 tracking-wide">
+                  Xác nhận mật khẩu <span className="text-red-300">*</span>
                 </label>
                 <input
                   id="confirm-password"
                   name="confirmPassword"
                   type="password"
                   required
-                  className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  className="appearance-none block w-full px-4 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400/50 transition-all duration-300 text-sm"
                   placeholder="Nhập lại mật khẩu mới"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
@@ -246,7 +280,7 @@ const ForgotPassword = () => {
                     type="button"
                     onClick={handleResendOTP}
                     disabled={isLoading}
-                    className="text-sm font-medium text-indigo-600 hover:text-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed underline"
+                    className="text-sm font-medium text-cyan-300 hover:text-cyan-200 disabled:opacity-50 disabled:cursor-not-allowed underline transition-all duration-300"
                   >
                     {isLoading ? 'Đang gửi...' : '🔄 Gửi lại mã OTP'}
                   </button>
@@ -255,11 +289,11 @@ const ForgotPassword = () => {
             </div>
           )}
 
-          <div>
+          <div className="pt-2">
             <button
               type="submit"
               disabled={isLoading || (otpSent && timeRemaining === 0)}
-              className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full flex justify-center py-4 px-6 border border-transparent text-sm font-bold tracking-wider rounded-xl text-white bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 hover:scale-[1.02] hover:shadow-[0_0_30px_rgba(34,211,238,0.4)] focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:ring-offset-2 focus:ring-offset-transparent transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 shadow-lg"
             >
               {isLoading 
                 ? '⏳ Đang xử lý...' 
@@ -269,10 +303,10 @@ const ForgotPassword = () => {
             </button>
           </div>
 
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center pt-4">
             <Link
               to="/login"
-              className="font-medium text-indigo-600 hover:text-indigo-500 text-sm"
+              className="text-sm font-semibold text-cyan-300 hover:text-cyan-200 hover:underline transition-all duration-300"
             >
               ← Quay lại Đăng nhập
             </Link>
@@ -287,7 +321,7 @@ const ForgotPassword = () => {
                   setTimeRemaining(300);
                   setCanResend(false);
                 }}
-                className="text-sm font-medium text-indigo-600 hover:text-indigo-500"
+                className="text-sm font-semibold text-cyan-300 hover:text-cyan-200 hover:underline transition-all duration-300"
                 disabled={isLoading}
               >
                 📝 Đổi Email
@@ -295,6 +329,9 @@ const ForgotPassword = () => {
             )}
           </div>
         </form>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
