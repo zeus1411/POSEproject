@@ -128,38 +128,59 @@ POSEproject/
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js 18+
-- MongoDB 7.0+
-- npm 9+ or yarn 1.22+
-- Docker 20.10+ (for containerization)
+- **Option 1 (Recommended)**: Docker Desktop for Windows
+- **Option 2**: Node.js 18+, MongoDB 7.0+, npm 9+
 
-### Local Development
+### 🐳 Quick Start with Docker (Recommended)
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/yourusername/pose-project.git
-   cd pose-project
+**Xem hướng dẫn chi tiết tại [QUICKSTART.md](QUICKSTART.md)**
+
+```powershell
+# 1. Clone repository (nếu chưa có)
+git clone https://github.com/zeus1411/POSEproject.git
+cd POSEproject
+
+# 2. Build và start Docker containers
+docker-compose up -d --build
+
+# 3. Xem logs
+docker-compose logs -f
+
+# 4. Truy cập ứng dụng
+# Frontend: http://localhost
+# Backend API: http://localhost:3000/api/v1
+```
+
+**Dừng containers:**
+```powershell
+docker-compose down
+```
+
+### 💻 Local Development (Không dùng Docker)
+
+1. **Clone repository**
+   ```powershell
+   git clone https://github.com/zeus1411/POSEproject.git
+   cd POSEproject
    ```
 
 2. **Setup Backend**
-   ```bash
+   ```powershell
    cd server
-   cp .env.example .env
    npm install
    npm run dev
    ```
 
-3. **Setup Frontend**
-   ```bash
-   cd ../client
-   cp .env.example .env
+3. **Setup Frontend** (terminal mới)
+   ```powershell
+   cd client
    npm install
    npm run dev
    ```
 
-4. **Access the application**
+4. **Truy cập ứng dụng**
    - Frontend: http://localhost:5173
-   - Backend API: http://localhost:3000
+   - Backend API: http://localhost:3000/api/v1
    - Admin Dashboard: http://localhost:5173/admin
 
 ### Environment Variables
@@ -209,40 +230,41 @@ VITE_STRIPE_PUBLIC_KEY=your_stripe_public_key
 
 ## 🐳 Docker Setup
 
-### Prerequisites
-- Docker 20.10+
-- Docker Compose 2.0+
-
 ### Quick Start
 
-1. **Clone and navigate to project**
-   ```bash
-   git clone https://github.com/yourusername/pose-project.git
-   cd pose-project
-   ```
+**Xem chi tiết tại [QUICKSTART.md](QUICKSTART.md) hoặc [README.Docker.md](README.Docker.md)**
 
-2. **Set up environment variables**
-   ```bash
-   cp server/.env.example server/.env
-   cp client/.env.example client/.env
-   ```
-   Update the environment variables as needed.
+```powershell
+# Build và start tất cả services
+docker-compose up -d --build
 
-3. **Build and start containers**
-   ```bash
-   docker-compose up --build
-   ```
+# Xem logs
+docker-compose logs -f
 
-4. **Access the application**
-   - Frontend: http://localhost:80
-   - Backend API: http://localhost:3000
-   - MongoDB: mongodb://localhost:27017
+# Dừng containers
+docker-compose down
+```
 
-### Available Services
-- **pose-frontend**: React application
-- **pose-backend**: Node.js/Express API
-- **mongo**: MongoDB database
-- **mongo-express**: Web-based MongoDB admin interface (http://localhost:8081)
+**Truy cập ứng dụng:**
+- Frontend: http://localhost
+- Backend API: http://localhost:3000/api/v1
+
+### Docker Architecture
+
+```
+┌─────────────────┐      ┌─────────────────┐      ┌─────────────────┐
+│   Frontend      │      │    Backend      │      │    MongoDB      │
+│   (Nginx)       │─────▶│   (Node.js)     │─────▶│   Database      │
+│   Port: 80      │      │   Port: 3000    │      │   Port: 27017   │
+└─────────────────┘      └─────────────────┘      └─────────────────┘
+```
+
+### Services
+- **frontend**: React + Nginx (container: pose_frontend)
+- **backend**: Node.js + Express (container: pose_backend)
+- **mongodb**: MongoDB 7.0 (container: pose_mongodb)
+
+Xem hướng dẫn đầy đủ tại [README.Docker.md](README.Docker.md).
 
 ## 🛠 API Documentation
 

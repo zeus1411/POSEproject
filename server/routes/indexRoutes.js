@@ -11,6 +11,15 @@ import reviewRoutes from './reviewRoutes.js';
 import notificationRoutes from './notificationRoutes.js';
 const router = express.Router();
 
+// Health check endpoint for Docker
+router.get('/health', (req, res) => {
+    res.status(200).json({ 
+        status: 'ok', 
+        timestamp: new Date().toISOString(),
+        service: 'POSE Backend API'
+    });
+});
+
 // Mount all routes
 router.use('/auth', authRoutes);
 router.use('/products', productRoutes);
