@@ -230,14 +230,31 @@ class OrderService {
       // Send notification async
       setImmediate(async () => {
         try {
+          console.log('📧 Starting to send notifications for order:', order[0].orderNumber);
+          
+          // ✅ Notification for customer
           await Notification.createOrderNotification(
             userId,
             order[0]._id,
             'PENDING',
             `Đơn hàng ${order[0].orderNumber} đã được tạo thành công`
           );
+          console.log('✅ Customer notification created');
+          
+          // ✅ Notification for all admins
+          const user = await User.findById(userId);
+          console.log('👤 User found:', user?.username, 'Total price:', totalPrice);
+          
+          const adminNotifications = await Notification.createNewOrderNotificationForAdmins(
+            order[0]._id,
+            order[0].orderNumber,
+            user?.fullName || user?.username || 'Khách hàng',
+            totalPrice
+          );
+          console.log('✅ Admin notifications created:', adminNotifications.length);
         } catch (notifError) {
-          console.error('Notification failed (non-critical):', notifError.message);
+          console.error('❌ Notification failed (non-critical):', notifError);
+          console.error('Error stack:', notifError.stack);
         }
       });
 

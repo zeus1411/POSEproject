@@ -43,6 +43,8 @@ export const getProductById = async (req, res, next) => {
         const { includeInactive } = req.query;
         const isAdmin = req.user?.role === 'admin';
         
+        console.log('🎯 Controller getProductById:', { id, includeInactive, isAdmin, role: req.user?.role });
+        
         const product = await productService.getProductById(id, isAdmin, includeInactive === 'true');
         res.status(200).json(product);
     } catch (error) {

@@ -18,7 +18,8 @@ const notificationSchema = new mongoose.Schema(
         'PRODUCT_REVIEW',
         'SYSTEM_ANNOUNCEMENT',
         'WELCOME',
-        'PASSWORD_RESET'
+        'PASSWORD_RESET',
+        'NEW_ORDER_ADMIN'  // ✅ Thêm type mới cho admin
       ],
       required: true
     },
@@ -361,6 +362,45 @@ notificationSchema.statics.createPromotionNotification = async function (userId,
     channels: ['IN_APP', 'EMAIL'],
     expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
   });
+};
+
+// ✅ Static method to create new order notification for all admins
+notificationSchema.statics.createNewOrderNotificationForAdmins = async function (orderId, orderNumber, customerName, totalPrice) {
+  try {
+    // Get all admin users
+    const User = mongoose.model('User');
+    const admins = await User.find({ role: 'admin' });
+    
+    if (admins.length === 0) {
+      console.log('No admin users found to send notification');
+      return [];
+    }
+    
+    // Create notification for each admin
+    const notifications = await Promise.all(
+      admins.map(admin =>
+        this.createNotification({
+          userId: admin._id,
+          type: 'NEW_ORDER_ADMIN',
+          priority: 'HIGH',
+          title: '🛒 Đơn hàng mới cần xác nhận',
+          message: `Khách hàng ${customerName} vừa đặt đơn hàng #${orderNumber} với giá trị ${new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(totalPrice)}. Vui lòng xác nhận đơn hàng.`,
+          relatedId: orderId,
+          relatedType: 'order',
+          actionUrl: `/admin/orders/${orderId}`,
+          actionText: 'Xem đơn hàng',
+          icon: '🛒',
+          channels: ['IN_APP']
+        })
+      )
+    );
+    
+    console.log(`✅ Created ${notifications.length} admin notifications for new order ${orderNumber}`);
+    return notifications;
+  } catch (error) {
+    console.error('Error creating admin notifications:', error);
+    return [];
+  }
 };
 
 const Notification = mongoose.model('Notification', notificationSchema);

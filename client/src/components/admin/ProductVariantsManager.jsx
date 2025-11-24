@@ -10,18 +10,37 @@ const ProductVariantsManager = ({ product, onUpdate }) => {
     if (product) {
       setHasVariants(product.hasVariants || false);
       setOptions(product.options || []);
-      setVariants(product.variants || []);
+      
+      // ✅ Convert Map sang Object ngay khi load để có thể edit
+      const normalizedVariants = (product.variants || []).map(variant => ({
+        ...variant,
+        optionValues: variant.optionValues instanceof Map
+          ? Object.fromEntries(variant.optionValues)
+          : variant.optionValues || {}
+      }));
+      
+      console.log('📦 Loading variants:', normalizedVariants);
+      setVariants(normalizedVariants);
     }
   }, [product]);
 
   // Sync changes immediately with parent
   useEffect(() => {
-    const processedVariants = variants.map(variant => ({
-      ...variant,
-      optionValues: variant.optionValues instanceof Map 
-        ? Object.fromEntries(variant.optionValues) 
-        : variant.optionValues
-    }));
+    const processedVariants = variants.map(variant => {
+      const processed = {
+        ...variant,
+        optionValues: variant.optionValues instanceof Map 
+          ? Object.fromEntries(variant.optionValues) 
+          : variant.optionValues
+      };
+      
+      // Giữ _id nếu có (để backend update thay vì tạo mới)
+      if (variant._id) {
+        processed._id = variant._id;
+      }
+      
+      return processed;
+    });
 
     onUpdate({
       hasVariants,
@@ -84,18 +103,28 @@ const ProductVariantsManager = ({ product, onUpdate }) => {
 
   // Update variant option value
   const updateVariantOption = (variantIndex, optionName, value) => {
+    console.log('✏️ Updating variant option:', { variantIndex, optionName, value });
     const newVariants = [...variants];
-    if (!newVariants[variantIndex].optionValues) {
-      newVariants[variantIndex].optionValues = {};
-    }
-    newVariants[variantIndex].optionValues[optionName] = value;
+    // Deep clone variant để đảm bảo React detect change
+    newVariants[variantIndex] = {
+      ...newVariants[variantIndex],
+      optionValues: {
+        ...(newVariants[variantIndex].optionValues || {}),
+        [optionName]: value
+      }
+    };
+    console.log('✅ Updated variant:', newVariants[variantIndex]);
     setVariants(newVariants);
   };
 
   // Update variant field
   const updateVariant = (index, field, value) => {
     const newVariants = [...variants];
-    newVariants[index][field] = value;
+    // Deep clone để React detect change
+    newVariants[index] = {
+      ...newVariants[index],
+      [field]: value
+    };
     setVariants(newVariants);
   };
 

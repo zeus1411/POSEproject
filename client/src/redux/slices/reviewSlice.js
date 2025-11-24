@@ -1,14 +1,16 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
-
-const API_URL = "http://localhost:3000/api/v1/reviews"; // đổi theo backend của bạn
+import * as reviewService from "../../services/reviewService";
 
 // Lấy danh sách đánh giá của 1 sản phẩm
 export const fetchReviews = createAsyncThunk(
   "reviews/fetchReviews",
-  async (productId) => {
-    const res = await axios.get(`${API_URL}/${productId}`);
-    return res.data.reviews;
+  async (productId, { rejectWithValue }) => {
+    try {
+      const response = await reviewService.getProductReviews(productId);
+      return response.reviews || [];
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || "Lỗi khi tải đánh giá");
+    }
   }
 );
 
@@ -17,48 +19,26 @@ export const createReview = createAsyncThunk(
   "reviews/createReview",
   async ({ productId, rating, title, comment }, { rejectWithValue }) => {
     try {
-      const res = await axios.post(
-        "http://localhost:3000/api/v1/reviews",
-        { productId, rating, title, comment },
-        {
-          headers: { "Content-Type": "application/json" },
-          withCredentials: true,
-        }
-      );
-      return res.data.review;
+      const response = await reviewService.createReview({
+        productId,
+        rating,
+        title,
+        comment
+      });
+      return response.review;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || "Lỗi gửi đánh giá");
     }
   }
 );
 
-// // Kiểm tra user đã mua sản phẩm chưa
-// export const checkPurchased = createAsyncThunk(
-//   "reviews/checkPurchased",
-//   async (productId, { rejectWithValue }) => {
-//     try {
-//       const res = await axios.get(
-//         `http://localhost:3000/api/v1/reviews/check/${productId}`,
-//         { withCredentials: true }
-//       );
-//       return res.data.purchased;
-//     } catch (err) {
-//       return rejectWithValue(false);
-//     }
-//   }
-// );
-
-// ✅ Đổi tên thunk và cập nhật API
+// Kiểm tra trạng thái review của user
 export const checkReviewStatus = createAsyncThunk(
-  "reviews/checkReviewStatus", // Đổi tên
+  "reviews/checkReviewStatus",
   async (productId, { rejectWithValue }) => {
     try {
-      const res = await axios.get(
-        // ✅ Cập nhật đường dẫn API
-        `http://localhost:3000/api/v1/reviews/check-status/${productId}`, 
-        { withCredentials: true }
-      );
-      return res.data; // Trả về object { purchased: bool, hasReviewed: bool }
+      const response = await reviewService.checkReviewStatus(productId);
+      return response; // { purchased: bool, hasReviewed: bool }
     } catch (err) {
       return rejectWithValue({ purchased: false, hasReviewed: false });
     }

@@ -74,9 +74,9 @@ const VNPayPaymentModal = ({ order, paymentData, onClose, onSuccess, onError }) 
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden">
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-6 text-white relative">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto">
+      <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden my-auto max-h-[98vh] overflow-y-auto">
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-4 sm:p-6 text-white relative">
           <button
             onClick={onClose}
             className="absolute top-4 right-4 text-white hover:bg-white/20 rounded-full p-1 transition"
@@ -93,24 +93,24 @@ const VNPayPaymentModal = ({ order, paymentData, onClose, onSuccess, onError }) 
             </div>
           </div>
           
-          <h2 className="text-xl font-bold text-center">Thanh toán VNPay</h2>
-          <p className="text-blue-100 text-sm text-center mt-1">
+          <h2 className="text-lg sm:text-xl font-bold text-center">Thanh toán VNPay</h2>
+          <p className="text-blue-100 text-xs sm:text-sm text-center mt-1">
             Đơn hàng: {order?.orderNumber || 'N/A'}
           </p>
         </div>
         
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {paymentStatus === 'pending' && (
             <>
-              <div className="bg-blue-50 rounded-lg p-4 mb-6 text-center">
-                <p className="text-sm text-gray-600 mb-1">Số tiền thanh toán</p>
-                <p className="text-3xl font-bold text-blue-600">
+              <div className="bg-blue-50 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 text-center">
+                <p className="text-xs sm:text-sm text-gray-600 mb-1">Số tiền thanh toán</p>
+                <p className="text-2xl sm:text-3xl font-bold text-blue-600">
                   {formatCurrency(order?.totalPrice || 0)}
                 </p>
               </div>
               
-              <div className="bg-white border-2 border-dashed border-gray-300 rounded-lg p-6 mb-6">
-                <p className="text-center text-sm text-gray-600 mb-4">
+              <div className="bg-white border-2 border-dashed border-gray-300 rounded-lg p-3 sm:p-6 mb-4 sm:mb-6">
+                <p className="text-center text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">
                   Quét mã QR để thanh toán
                 </p>
                 {qrCodeUrl ? (
@@ -118,30 +118,30 @@ const VNPayPaymentModal = ({ order, paymentData, onClose, onSuccess, onError }) 
                     <img 
                       src={qrCodeUrl} 
                       alt="QR Code" 
-                      className="w-64 h-64 border border-gray-200 rounded-lg"
+                      className="w-48 h-48 sm:w-64 sm:h-64 border border-gray-200 rounded-lg"
                     />
                   </div>
                 ) : (
-                  <div className="flex justify-center items-center h-64 bg-gray-100 rounded-lg">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                  <div className="flex justify-center items-center h-48 sm:h-64 bg-gray-100 rounded-lg">
+                    <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-blue-600"></div>
                   </div>
                 )}
               </div>
               
-              <div className="flex items-center justify-center gap-2 mb-6 text-gray-600">
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex items-center justify-center gap-2 mb-4 sm:mb-6 text-gray-600">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                <span className="text-lg font-mono font-semibold">
+                <span className="text-base sm:text-lg font-mono font-semibold">
                   {formatTime(countdown)}
                 </span>
               </div>
               
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
-                <p className="text-sm text-amber-800 font-medium mb-2">
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
+                <p className="text-xs sm:text-sm text-amber-800 font-medium mb-2">
                   📌 Hướng dẫn thanh toán:
                 </p>
-                <ol className="text-sm text-amber-700 space-y-1 ml-4 list-decimal">
+                <ol className="text-xs sm:text-sm text-amber-700 space-y-1 ml-4 list-decimal">
                   <li>Mở ứng dụng ngân hàng hoặc ví điện tử</li>
                   <li>Quét mã QR ở trên</li>
                   <li>Xác nhận thanh toán</li>
@@ -149,62 +149,62 @@ const VNPayPaymentModal = ({ order, paymentData, onClose, onSuccess, onError }) 
                 </ol>
               </div>
               
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 <button
                   onClick={openVNPayWindow}
-                  className="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition font-medium shadow-md"
+                  className="w-full px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition font-medium shadow-md text-sm sm:text-base"
                 >
                   Mở cổng thanh toán VNPay
                 </button>
                 
                 <button
                   onClick={handleTestPayment}
-                  className="w-full px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium"
+                  className="w-full px-4 sm:px-6 py-2.5 sm:py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium text-sm sm:text-base"
                 >
                   ✓ Test: Giả lập thanh toán thành công
                 </button>
                 
                 <button
                   onClick={onClose}
-                  className="w-full px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium"
+                  className="w-full px-4 sm:px-6 py-2.5 sm:py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium text-sm sm:text-base"
                 >
                   Hủy thanh toán
                 </button>
               </div>
               
-              <p className="text-xs text-gray-500 text-center mt-4">
+              <p className="text-xs text-gray-500 text-center mt-3 sm:mt-4">
                 Lưu ý: Vui lòng không tắt cửa sổ này cho đến khi hoàn tất thanh toán
               </p>
             </>
           )}
           
           {paymentStatus === 'processing' && (
-            <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-lg font-medium text-gray-900 mb-2">
+            <div className="text-center py-6 sm:py-8">
+              <div className="animate-spin rounded-full h-12 w-12 sm:h-16 sm:w-16 border-b-2 border-blue-600 mx-auto mb-3 sm:mb-4"></div>
+              <p className="text-base sm:text-lg font-medium text-gray-900 mb-2">
                 Đang xử lý thanh toán...
               </p>
-              <p className="text-sm text-gray-600">
+              <p className="text-xs sm:text-sm text-gray-600">
                 Vui lòng đợi trong giây lát
               </p>
             </div>
           )}
           
           {paymentStatus === 'success' && (
-            <div className="text-center py-8">
-              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-12 h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="text-center py-6 sm:py-8">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                <svg className="w-10 h-10 sm:w-12 sm:h-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                 </svg>
               </div>
-              <p className="text-xl font-bold text-gray-900 mb-2">
+              <p className="text-lg sm:text-xl font-bold text-gray-900 mb-2">
                 Thanh toán thành công!
               </p>
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">
                 Đơn hàng của bạn đã được xác nhận
               </p>
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <p className="text-sm text-green-800">
+              <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4">
+                <p className="text-xs sm:text-sm text-green-800">
                   Cảm ơn bạn đã mua hàng. Chúng tôi sẽ xử lý đơn hàng của bạn ngay.
                 </p>
               </div>
@@ -212,21 +212,21 @@ const VNPayPaymentModal = ({ order, paymentData, onClose, onSuccess, onError }) 
           )}
           
           {paymentStatus === 'failed' && (
-            <div className="text-center py-8">
-              <div className="w-20 h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-12 h-12 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="text-center py-6 sm:py-8">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                <svg className="w-10 h-10 sm:w-12 sm:h-12 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </div>
-              <p className="text-xl font-bold text-gray-900 mb-2">
+              <p className="text-lg sm:text-xl font-bold text-gray-900 mb-2">
                 Thanh toán thất bại
               </p>
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">
                 Vui lòng thử lại hoặc chọn phương thức thanh toán khác
               </p>
               <button
                 onClick={onClose}
-                className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition font-medium"
+                className="px-4 sm:px-6 py-2.5 sm:py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition font-medium text-sm sm:text-base"
               >
                 Đóng
               </button>

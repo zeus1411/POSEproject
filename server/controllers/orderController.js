@@ -286,17 +286,36 @@ const createOrder = async (req, res) => {
       console.log('Transaction committed - VNPay order');
 
       // ✅ Gửi notification ASYNC sau khi commit (không chặn response)
+      const vnpayOrderId = order[0]._id;
+      const vnpayOrderNumber = order[0].orderNumber;
+      const vnpayTotalPrice = totalPrice;
       setImmediate(async () => {
         try {
+          console.log('📧 Starting to send notifications for VNPay order:', vnpayOrderNumber);
+          
+          // Customer notification
           await Notification.createOrderNotification(
             userId,
-            order[0]._id,
+            vnpayOrderId,
             'PENDING',
-            `Đơn hàng ${order[0].orderNumber} đã được tạo thành công`
+            `Đơn hàng ${vnpayOrderNumber} đã được tạo thành công`
           );
-          console.log('✅ Notification sent (VNPay order)');
+          console.log('✅ Customer notification created (VNPay)');
+          
+          // Admin notifications
+          const user = await User.findById(userId);
+          console.log('👤 User found:', user?.username, 'Total price:', vnpayTotalPrice);
+          
+          const adminNotifications = await Notification.createNewOrderNotificationForAdmins(
+            vnpayOrderId,
+            vnpayOrderNumber,
+            user?.fullName || user?.username || 'Khách hàng',
+            vnpayTotalPrice
+          );
+          console.log('✅ Admin notifications created (VNPay):', adminNotifications.length);
         } catch (notifError) {
           console.error('❌ Notification failed (non-critical):', notifError.message);
+          console.error('Error stack:', notifError.stack);
         }
       });
 
@@ -349,17 +368,34 @@ const createOrder = async (req, res) => {
     // ✅ Gửi notification ASYNC sau khi commit (không chặn response)
     const orderId = order[0]._id;
     const orderNumber = order[0].orderNumber;
+    const codTotalPrice = totalPrice;
     setImmediate(async () => {
       try {
+        console.log('📧 Starting to send notifications for COD order:', orderNumber);
+        
+        // Customer notification
         await Notification.createOrderNotification(
           userId,
           orderId,
           'PENDING',
           `Đơn hàng ${orderNumber} đã được tạo thành công`
         );
-        console.log('✅ Notification sent (COD order)');
+        console.log('✅ Customer notification created (COD)');
+        
+        // Admin notifications
+        const user = await User.findById(userId);
+        console.log('👤 User found:', user?.username, 'Total price:', codTotalPrice);
+        
+        const adminNotifications = await Notification.createNewOrderNotificationForAdmins(
+          orderId,
+          orderNumber,
+          user?.fullName || user?.username || 'Khách hàng',
+          codTotalPrice
+        );
+        console.log('✅ Admin notifications created (COD):', adminNotifications.length);
       } catch (notifError) {
         console.error('❌ Notification failed (non-critical):', notifError.message);
+        console.error('Error stack:', notifError.stack);
       }
     });
 
