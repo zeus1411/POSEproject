@@ -66,7 +66,7 @@ router.get(
 // Xem trước đơn hàng (preview trước khi đặt) - ĐẶT TRƯỚC /
 router.get('/preview', authenticateUser, previewOrder);
 
-// Tạo đơn hàng mới
+// Tạo đơn hàng mới - RATE LIMIT nghiêm ngặt
 router.post('/', authenticateUser, createOrder);
 
 // Lấy danh sách đơn hàng của user

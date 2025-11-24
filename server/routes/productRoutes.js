@@ -18,7 +18,7 @@ import { upload } from '../middlewares/upload.js';
 
 const router = express.Router();
 
-// Public routes (no authentication required)
+// Public routes (no authentication required) - với rate limiting
 router.get('/', getProducts);
 router.get('/search', searchProducts);
 

@@ -39,8 +39,6 @@ app.use(cors({
 
 app.use(cookieParser(process.env.JWT_SECRET));
 
-
-
 // Routes - Sử dụng indexRoutes để gom tất cả routes
 app.use('/api/v1', indexRoutes);
 
