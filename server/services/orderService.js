@@ -7,6 +7,7 @@ import Notification from '../models/Notification.js';
 import mongoose from 'mongoose';
 import { BadRequestError, NotFoundError, UnauthorizedError } from '../utils/errorHandler.js';
 import { buildVNPayUrl, verifyVNPayReturn } from './vnpayService.js';
+import cacheService from './cacheService.js';
 
 /**
  * Order Service
@@ -417,6 +418,12 @@ class OrderService {
   async getUserOrders(userId, filters) {
     const { status, page = 1, limit = 10 } = filters;
 
+    // Thử lấy từ cache
+    const cachedOrders = await cacheService.getUserOrders(userId, filters);
+    if (cachedOrders) {
+      return cachedOrders;
+    }
+
     const query = { userId };
     if (status) {
       query.status = status;
@@ -431,7 +438,7 @@ class OrderService {
 
     const total = await Order.countDocuments(query);
 
-    return {
+    const result = {
       orders,
       pagination: {
         page: parseInt(page),
@@ -440,6 +447,11 @@ class OrderService {
         pages: Math.ceil(total / parseInt(limit))
       }
     };
+
+    // Lưu vào cache (TTL 2 phút)
+    await cacheService.setUserOrders(userId, filters, result, 120);
+
+    return result;
   }
 
   /**
@@ -450,6 +462,16 @@ class OrderService {
    * @returns {Promise<Object>} Order object
    */
   async getOrderById(orderId, userId, userRole) {
+    // Thử lấy từ cache
+    const cachedOrder = await cacheService.getOrder(orderId);
+    if (cachedOrder) {
+      // Vẫn phải kiểm tra quyền
+      if (userRole !== 'admin' && cachedOrder.userId._id.toString() !== userId) {
+        throw new UnauthorizedError('Bạn không có quyền xem đơn hàng này');
+      }
+      return cachedOrder;
+    }
+
     const order = await Order.findById(orderId)
       .populate('items.productId', 'name images sku')
       .populate('paymentId')
@@ -462,6 +484,9 @@ class OrderService {
     if (userRole !== 'admin' && order.userId._id.toString() !== userId) {
       throw new UnauthorizedError('Bạn không có quyền xem đơn hàng này');
     }
+
+    // Lưu vào cache (TTL 3 phút)
+    await cacheService.setOrder(orderId, order, 180);
 
     return order;
   }
@@ -538,6 +563,9 @@ class OrderService {
       }
 
       // await session.commitTransaction(); // Disabled for standalone MongoDB
+
+      // Xóa cache order
+      await cacheService.invalidateOrder(orderId);
 
       const populatedOrder = await Order.findById(orderId)
         .populate('items.productId', 'name price images')

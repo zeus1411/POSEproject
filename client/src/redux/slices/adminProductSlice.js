@@ -51,7 +51,7 @@ export const getProductByIdAdmin = createAsyncThunk(
   'adminProducts/getProductByIdAdmin',
   async (productId, thunkAPI) => {
     try {
-      return await productService.getProductById(productId);
+      return await productService.getProductByIdAdmin(productId);
     } catch (error) {
       const message =
         error.response?.data?.message ||

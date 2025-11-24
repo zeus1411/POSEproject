@@ -2,6 +2,7 @@ import Product from '../models/Product.js';
 import mongoose from 'mongoose';
 import { BadRequestError, NotFoundError } from '../utils/errorHandler.js';
 import { deleteFromCloudinary } from '../utils/cloudinaryUtils.js';
+import cacheService from './cacheService.js';
 
 /**
  * Product Service
@@ -88,6 +89,16 @@ class ProductService {
       throw new BadRequestError('ID không hợp lệ');
     }
 
+    // Thử lấy từ cache trước (chỉ cache cho user, không cache admin view)
+    if (!isAdmin && !includeInactive) {
+      const cachedProduct = await cacheService.getProduct(id);
+      if (cachedProduct) {
+        // Lazy update viewCount
+        Product.findByIdAndUpdate(id, { $inc: { viewCount: 1 } }).catch(() => {});
+        return cachedProduct;
+      }
+    }
+
     const product = await Product.findById(id).populate('categoryId', 'name _id');
     
     if (!product) {
@@ -103,6 +114,11 @@ class ProductService {
     // Admin không có includeInactive vẫn bị chặn xem inactive products
     if (isAdmin && !includeInactive && product.status !== 'ACTIVE') {
       throw new NotFoundError('Product not found');
+    }
+
+    // Lưu vào cache (chỉ cache cho user view, TTL 10 phút)
+    if (!isAdmin && !includeInactive && product.status === 'ACTIVE') {
+      await cacheService.setProduct(id, product, 600);
     }
 
     // Lazy update viewCount
@@ -127,6 +143,9 @@ class ProductService {
     if (!currentProduct) {
       throw new NotFoundError('Không tìm thấy sản phẩm');
     }
+
+    // Xóa cache của sản phẩm này
+    await cacheService.invalidateProduct(id);
 
     // Handle images update
     let finalImages = [];
@@ -236,6 +255,9 @@ class ProductService {
     }
 
     await Product.findByIdAndDelete(id);
+    
+    // Xóa cache của sản phẩm này
+    await cacheService.invalidateProduct(id);
     
     return { success: true, message: 'Xóa sản phẩm thành công' };
   }

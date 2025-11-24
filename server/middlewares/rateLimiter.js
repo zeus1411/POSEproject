@@ -25,7 +25,7 @@ export const strictLimiter = rateLimit({
   skipSuccessfulRequests: false, // Tính cả request thành công
 });
 
-// Rate limiter cho login - THEO EMAIL thay vì IP
+// Rate limiter cho login/register
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 phút
   max: 5, // Giới hạn 5 lần đăng nhập/đăng ký mỗi 15 phút
@@ -36,13 +36,6 @@ export const authLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   skipSuccessfulRequests: true, // Chỉ tính request thất bại
-  // ⭐ KEY: Sử dụng EMAIL thay vì IP để tracking
-  keyGenerator: (req) => {
-    // Ưu tiên lấy email từ request body (login/register)
-    return req.body.email || req.ip;
-  },
-  // Skip rate limit nếu không có email (để tránh block nhầm)
-  skip: (req) => !req.body.email
 });
 
 // Rate limiter cho tạo đơn hàng
