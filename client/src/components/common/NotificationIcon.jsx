@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   fetchNotifications,
   fetchUnreadCount,
@@ -10,6 +10,7 @@ import {
 
 const NotificationIcon = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { notifications, unreadCount } = useSelector((state) => state.notifications);
   const { user } = useSelector((state) => state.auth);
   const [isOpen, setIsOpen] = useState(false);
@@ -18,10 +19,12 @@ const NotificationIcon = () => {
   // Fetch unread count khi component mount
   useEffect(() => {
     if (user) {
+      // console.log('🔔 Fetching notifications for user:', user.username, 'Role:', user.role);
       dispatch(fetchUnreadCount());
       
       // Poll every 30 seconds
       const interval = setInterval(() => {
+        // console.log('🔄 Polling notifications...');
         dispatch(fetchUnreadCount());
       }, 30000);
 
@@ -53,6 +56,11 @@ const NotificationIcon = () => {
       await dispatch(markNotificationAsRead(notification._id));
     }
     setIsOpen(false);
+    
+    // Navigate to the action URL if exists
+    if (notification.actionUrl) {
+      navigate(notification.actionUrl);
+    }
   };
 
   const handleMarkAllAsRead = async () => {
@@ -69,6 +77,8 @@ const NotificationIcon = () => {
         return '❌';
       case 'PROMOTION':
         return '🎉';
+      case 'NEW_ORDER_ADMIN':
+        return '🛒';
       default:
         return '🔔';
     }
@@ -158,17 +168,16 @@ const NotificationIcon = () => {
               </div>
             ) : (
               notifications.map((notification) => (
-                <Link
+                <button
                   key={notification._id}
-                  to={notification.actionUrl || '#'}
                   onClick={() => handleNotificationClick(notification)}
-                  className={`block px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-100 ${
+                  className={`w-full text-left block px-4 py-3 hover:bg-gray-50 transition-colors border-b border-gray-100 ${
                     !notification.isRead ? 'bg-blue-50' : ''
                   }`}
                 >
                   <div className="flex items-start gap-3">
                     <span className="text-2xl flex-shrink-0">
-                      {getNotificationIcon(notification.type)}
+                      {notification.icon || getNotificationIcon(notification.type)}
                     </span>
                     <div className="flex-1 min-w-0">
                       <p
@@ -191,7 +200,7 @@ const NotificationIcon = () => {
                       <span className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0 mt-1.5"></span>
                     )}
                   </div>
-                </Link>
+                </button>
               ))
             )}
           </div>

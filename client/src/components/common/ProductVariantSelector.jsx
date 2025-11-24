@@ -54,18 +54,24 @@ const ProductVariantSelector = ({ product, selectedVariant, onVariantChange }) =
   const isOptionAvailable = (optionName, optionValue) => {
     // If this is the first option being selected, just check if any variant has it
     if (Object.keys(selectedOptions).length === 0 || !selectedOptions[optionName]) {
-      return product.variants.some(variant => {
-        if (!variant.isActive || variant.stock === 0) return false;
+      // Tìm các variants có option value này
+      const variantsWithOption = product.variants.filter(variant => {
+        if (!variant.isActive) return false;
         const variantOptions = variant.optionValues || {};
         return variantOptions[optionName] === optionValue;
       });
+      
+      // ❌ Nếu KHÔNG có variant nào -> DISABLE (không cho chọn)
+      // ✅ Nếu có variant -> chỉ disable nếu TẤT CẢ đều hết hàng
+      if (variantsWithOption.length === 0) return false;
+      return variantsWithOption.some(v => v.stock > 0);
     }
 
     // Otherwise, check if there's a variant matching the new selection
     const tempSelection = { ...selectedOptions, [optionName]: optionValue };
     
-    return product.variants.some(variant => {
-      if (!variant.isActive || variant.stock === 0) return false;
+    const matchingVariants = product.variants.filter(variant => {
+      if (!variant.isActive) return false;
       const variantOptions = variant.optionValues || {};
 
       // Must match all selected options
@@ -73,6 +79,11 @@ const ProductVariantSelector = ({ product, selectedVariant, onVariantChange }) =
         key => variantOptions[key] === tempSelection[key]
       );
     });
+    
+    // ❌ Nếu không tìm thấy variant khớp -> DISABLE
+    // ✅ Nếu tìm thấy -> chỉ disable nếu tất cả đều hết hàng
+    if (matchingVariants.length === 0) return false;
+    return matchingVariants.some(v => v.stock > 0);
   };
 
   return (

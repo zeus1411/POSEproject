@@ -125,8 +125,8 @@ const Header = () => {
                 </div>
               )}
               
-              {/* Icon thông báo - Ẩn với admin */}
-              {!isAdmin && <NotificationIcon />}
+              {/* Icon thông báo - Hiển thị cho cả user và admin */}
+              {user && <NotificationIcon />}
               
               {/* Nút Giỏ hàng - Ẩn với admin */}
               {!isAdmin && (

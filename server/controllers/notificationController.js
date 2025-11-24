@@ -8,6 +8,8 @@ import { NotFoundError } from '../utils/errorHandler.js';
 const getUserNotifications = async (req, res) => {
   const userId = req.user.userId;
   const { isRead, type, page = 1, limit = 20 } = req.query;
+  
+  // console.log('📋 Getting notifications for user:', userId, 'Filters:', { isRead, type, page, limit });
 
   const notifications = await Notification.getUserNotifications(userId, {
     isRead: isRead === 'true' ? true : isRead === 'false' ? false : undefined,
@@ -16,6 +18,8 @@ const getUserNotifications = async (req, res) => {
     limit: parseInt(limit)
   });
 
+  // console.log('📋 Found notifications:', notifications.length);
+  
   const total = await Notification.countDocuments({
     userId,
     ...(isRead !== undefined && { isRead: isRead === 'true' }),
@@ -41,7 +45,10 @@ const getUserNotifications = async (req, res) => {
 // @access  Private (User)
 const getUnreadCount = async (req, res) => {
   const userId = req.user.userId;
+  // console.log('📊 Getting unread count for user:', userId);
+  
   const count = await Notification.getUnreadCount(userId);
+  // console.log('📊 Unread count:', count);
 
   res.status(StatusCodes.OK).json({
     success: true,

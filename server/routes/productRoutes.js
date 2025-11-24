@@ -21,7 +21,16 @@ const router = express.Router();
 // Public routes (no authentication required)
 router.get('/', getProducts);
 router.get('/search', searchProducts);
-router.get('/:id', getProductById);
+
+// Get product by ID - optional authentication (cho admin xem inactive products)
+router.get('/:id', (req, res, next) => {
+  // Optional auth: Nếu có token thì authenticate, không có thì tiếp tục
+  const token = req.signedCookies.token || req.cookies.token;
+  if (token) {
+    return authenticateUser(req, res, next);
+  }
+  next();
+}, getProductById);
 
 // Admin-only: CRUD with image uploads
 router.post(

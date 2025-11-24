@@ -88,17 +88,36 @@ class ProductService {
       throw new BadRequestError('ID không hợp lệ');
     }
 
+    console.log('🔍 getProductById called:', { id, isAdmin, includeInactive });
+
     const product = await Product.findById(id).populate('categoryId', 'name _id');
     
     if (!product) {
+      console.log('❌ Product not found in database');
       throw new NotFoundError('Product not found');
     }
 
-    const canViewInactive = isAdmin && includeInactive;
-    
-    if (product.status !== 'ACTIVE' && !canViewInactive) {
+    console.log('📦 Product found:', { 
+      id: product._id, 
+      name: product.name, 
+      status: product.status,
+      hasVariants: product.hasVariants 
+    });
+
+    // Admin với includeInactive=true có thể xem mọi sản phẩm
+    // User thường chỉ xem được sản phẩm ACTIVE
+    if (!isAdmin && product.status !== 'ACTIVE') {
+      console.log('❌ Non-admin trying to access inactive product');
       throw new NotFoundError('Product not found');
     }
+    
+    // Admin không có includeInactive vẫn bị chặn xem inactive products
+    if (isAdmin && !includeInactive && product.status !== 'ACTIVE') {
+      console.log('❌ Admin without includeInactive trying to access inactive product');
+      throw new NotFoundError('Product not found');
+    }
+
+    console.log('✅ Product access allowed');
 
     // Lazy update viewCount
     Product.findByIdAndUpdate(id, { $inc: { viewCount: 1 } }).catch(() => {});
@@ -369,7 +388,40 @@ class ProductService {
 
     product.hasVariants = hasVariants;
     product.options = hasVariants ? options : [];
-    product.variants = hasVariants ? variants : [];
+    
+    // Xử lý variants: update nếu có _id, thêm mới nếu không
+    if (hasVariants && variants && variants.length > 0) {
+      const updatedVariants = [];
+      
+      for (const variantData of variants) {
+        if (variantData._id) {
+          // Variant có _id -> UPDATE
+          const existingIndex = product.variants.findIndex(
+            v => v._id.toString() === variantData._id.toString()
+          );
+          
+          if (existingIndex !== -1) {
+            // Merge data, giữ _id
+            product.variants[existingIndex] = {
+              ...product.variants[existingIndex].toObject(),
+              ...variantData,
+              _id: product.variants[existingIndex]._id
+            };
+            updatedVariants.push(product.variants[existingIndex]);
+          } else {
+            // _id không tồn tại -> thêm mới
+            updatedVariants.push(variantData);
+          }
+        } else {
+          // Không có _id -> Variant MỚI
+          updatedVariants.push(variantData);
+        }
+      }
+      
+      product.variants = updatedVariants;
+    } else {
+      product.variants = [];
+    }
 
     await product.save();
     return product;
