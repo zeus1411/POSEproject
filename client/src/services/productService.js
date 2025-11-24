@@ -13,12 +13,18 @@ const productService = {
     return response.data;
   },
 
-  // Get product by ID
+  // Get product by ID (for public/customer view - will use cache)
   getProductById: async (productId) => {
-    // Include includeInactive parameter to allow fetching inactive products
+    // Customer view - NO includeInactive parameter → cache will work
+    const response = await api.get(`/products/${productId}`);
+    return response.data;
+  },
+
+  // Get product by ID for admin (includes inactive products - no cache)
+  getProductByIdAdmin: async (productId) => {
     const response = await api.get(`/products/${productId}`, {
       params: {
-        includeInactive: 'true'  // Always include inactive for admin
+        includeInactive: 'true'  // Admin can see inactive products
       }
     });
     return response.data;

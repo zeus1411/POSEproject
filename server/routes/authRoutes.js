@@ -11,16 +11,17 @@ import {
 } from '../controllers/authController.js';
 import { googleAuth } from '../controllers/googleAuthController.js';
 import { authenticateUser } from '../utils/jwt.js';
+import { authLimiter } from '../middlewares/rateLimiter.js';
 
 const router = express.Router();
 
-// Public routes
-router.post('/register', register);
-router.post('/login', login);
-router.post('/google', googleAuth); // Google OAuth
-router.post('/forgot-password', sendOTP); // Step 1: Send OTP
-router.post('/resend-otp', resendOTP); // Step 1.1: Resend OTP (exception flow 5.1)
-router.post('/reset-password', resetPassword); // Step 2: Verify OTP and reset password
+// Public routes với rate limiting
+router.post('/register', authLimiter, register);
+router.post('/login', authLimiter, login);
+router.post('/google', authLimiter, googleAuth); // Google OAuth
+router.post('/forgot-password', authLimiter, sendOTP); // Step 1: Send OTP
+router.post('/resend-otp', authLimiter, resendOTP); // Step 1.1: Resend OTP (exception flow 5.1)
+router.post('/reset-password', authLimiter, resetPassword); // Step 2: Verify OTP and reset password
 
 // Protected routes
 router.get('/logout', authenticateUser, logout);

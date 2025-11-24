@@ -19,7 +19,6 @@ const ProductVariantsManager = ({ product, onUpdate }) => {
           : variant.optionValues || {}
       }));
       
-      console.log('📦 Loading variants:', normalizedVariants);
       setVariants(normalizedVariants);
     }
   }, [product]);
@@ -103,7 +102,6 @@ const ProductVariantsManager = ({ product, onUpdate }) => {
 
   // Update variant option value
   const updateVariantOption = (variantIndex, optionName, value) => {
-    console.log('✏️ Updating variant option:', { variantIndex, optionName, value });
     const newVariants = [...variants];
     // Deep clone variant để đảm bảo React detect change
     newVariants[variantIndex] = {
@@ -113,7 +111,6 @@ const ProductVariantsManager = ({ product, onUpdate }) => {
         [optionName]: value
       }
     };
-    console.log('✅ Updated variant:', newVariants[variantIndex]);
     setVariants(newVariants);
   };
 

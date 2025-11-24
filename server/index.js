@@ -6,6 +6,7 @@ import mongoose from 'mongoose';
 import indexRoutes from './routes/indexRoutes.js';
 import errorHandlerMiddleware from './middlewares/error.js';
 import cookieParser from 'cookie-parser';
+import { initRedis, closeRedis } from './config/redis.js';
 
 // Load environment variables
 dotenv.config();
@@ -39,28 +40,43 @@ app.use(cors({
 
 app.use(cookieParser(process.env.JWT_SECRET));
 
-
-
 // Routes - Sử dụng indexRoutes để gom tất cả routes
 app.use('/api/v1', indexRoutes);
 
 // Xử lý lỗi
 app.use(errorHandlerMiddleware);
 
-// Kết nối MongoDB và khởi động server
-mongoose
-    .connect(MONGODB_URL, {
+// Kết nối MongoDB và Redis, sau đó khởi động server
+Promise.all([
+    mongoose.connect(MONGODB_URL, {
         useNewUrlParser: true,
         useUnifiedTopology: true,
         dbName: DB_NAME,
-    })
-    .then(() => {
-        console.log('Đã kết nối tới MongoDB');
+    }),
+    initRedis() // Kết nối Redis (optional, app vẫn chạy nếu Redis fail)
+])
+    .then(([mongoConnection, redisClient]) => {
+        console.log('✅ Đã kết nối tới MongoDB');
+        if (redisClient) {
+            console.log('✅ Đã kết nối tới Redis - Cache đã bật');
+        } else {
+            console.log('⚠️  Redis không khả dụng - App chạy KHÔNG có cache');
+        }
+        
         app.listen(port, () => {
             console.log(`🚀 Server đang chạy tại http://localhost:${port}`);
         });
     })
     .catch((err) => {
-        console.error('Lỗi kết nối MongoDB:', err);
+        console.error('❌ Lỗi kết nối:', err);
         process.exit(1);
     });
+
+// Graceful shutdown
+process.on('SIGINT', async () => {
+    console.log('\n🛑 Đang tắt server...');
+    await closeRedis();
+    await mongoose.connection.close();
+    console.log('👋 Server đã tắt');
+    process.exit(0);
+});
