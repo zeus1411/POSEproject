@@ -485,8 +485,21 @@ const Checkout = () => {
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <h1 className="text-2xl font-bold text-gray-900">Xác nhận đơn hàng</h1>
-          <p className="text-gray-600 mt-1">Xác nhận thông tin đơn hàng, thông tin cá nhân và đặt hàng</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Xác nhận đơn hàng</h1>
+              <p className="text-gray-600 mt-1">Xác nhận thông tin đơn hàng, thông tin cá nhân và đặt hàng</p>
+            </div>
+            <button
+              onClick={() => navigate('/shop')}
+              className="hidden sm:flex items-center gap-2 px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              Tiếp tục mua sắm
+            </button>
+          </div>
         </div>
       </div>
 
@@ -610,13 +623,23 @@ const Checkout = () => {
             </div>
           </div>
 
-          {/* Submit Button */}
-          <div className="flex justify-end">
+          {/* Submit Buttons */}
+          <div className="flex flex-col sm:flex-row justify-between gap-3">
+            <button
+              onClick={() => navigate('/shop')}
+              className="px-6 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium shadow-sm flex items-center justify-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+              Tiếp tục mua sắm
+            </button>
+            
             <div className="relative group">
               <button 
                 onClick={handleSubmit}
                 disabled={submitting || items.length === 0 || !user?.address} 
-                className="px-6 py-3 text-white bg-gradient-to-r from-primary-600 to-purple-600 rounded-lg hover:from-primary-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-sm transition-all"
+                className="w-full sm:w-auto px-6 py-3 text-white bg-gradient-to-r from-primary-600 to-purple-600 rounded-lg hover:from-primary-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-sm transition-all"
               >
                 {submitting ? 'Đang tạo đơn hàng...' : 'Đặt hàng'}
               </button>

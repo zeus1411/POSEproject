@@ -210,15 +210,28 @@ const ProfilePage = () => {
   const validatePersonalInfo = () => {
     const newErrors = {};
     
-    // Full name validation
-    if (personalData.fullName && personalData.fullName.trim().length > 0) {
-      if (personalData.fullName.length > 100) {
-        newErrors.fullName = 'Họ tên không được vượt quá 100 ký tự';
-      }
+    // Username validation (REQUIRED)
+    if (!personalData.username || personalData.username.trim().length === 0) {
+      newErrors.username = 'Tên người dùng không được để trống';
+    } else if (personalData.username.length < 3) {
+      newErrors.username = 'Tên người dùng phải có ít nhất 3 ký tự';
+    } else if (personalData.username.length > 30) {
+      newErrors.username = 'Tên người dùng không được vượt quá 30 ký tự';
+    } else if (!/^[a-zA-Z0-9_]+$/.test(personalData.username)) {
+      newErrors.username = 'Tên người dùng chỉ chứa chữ cái, số và dấu gạch dưới';
     }
     
-    // Phone validation
-    if (personalData.phone && personalData.phone.trim().length > 0) {
+    // Full name validation (REQUIRED)
+    if (!personalData.fullName || personalData.fullName.trim().length === 0) {
+      newErrors.fullName = 'Họ tên không được để trống';
+    } else if (personalData.fullName.length > 100) {
+      newErrors.fullName = 'Họ tên không được vượt quá 100 ký tự';
+    }
+    
+    // Phone validation (REQUIRED)
+    if (!personalData.phone || personalData.phone.trim().length === 0) {
+      newErrors.phone = 'Số điện thoại không được để trống';
+    } else {
       const phoneRegex = /(84|0[3|5|7|8|9])+([0-9]{8})\b/;
       if (!phoneRegex.test(personalData.phone)) {
         newErrors.phone = 'Số điện thoại không hợp lệ (VD: 0912345678)';
@@ -737,20 +750,39 @@ const ProfilePage = () => {
           ) : (
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Tên người dùng</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Tên người dùng <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="text"
                   value={personalData.username}
-                  onChange={(e) => setPersonalData({...personalData, username: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  onChange={(e) => {
+                    setPersonalData({...personalData, username: e.target.value});
+                    if (errors.username) {
+                      setErrors({...errors, username: null});
+                    }
+                  }}
+                  className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 ${
+                    errors.username 
+                      ? 'border-red-500 focus:ring-red-500' 
+                      : 'border-gray-300 focus:ring-primary-500'
+                  }`}
                   placeholder="Tên người dùng"
                   minLength={3}
                   maxLength={30}
                 />
-                <p className="text-xs text-gray-500 mt-1">3-30 ký tự, chỉ chứa chữ cái, số và dấu gạch dưới</p>
+                {errors.username ? (
+                  <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                    <span>⚠️</span> {errors.username}
+                  </p>
+                ) : (
+                  <p className="text-xs text-gray-500 mt-1">3-30 ký tự, chỉ chứa chữ cái, số và dấu gạch dưới</p>
+                )}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Họ tên</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Họ tên <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="text"
                   value={personalData.fullName}
@@ -775,7 +807,9 @@ const ProfilePage = () => {
                 )}
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Số điện thoại</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Số điện thoại <span className="text-red-500">*</span>
+                </label>
                 <input
                   type="tel"
                   value={personalData.phone}
