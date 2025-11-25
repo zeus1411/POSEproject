@@ -1,6 +1,8 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { Provider } from 'react-redux';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import store from './redux/store';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/common/ProtectedRoute';
@@ -62,6 +64,20 @@ function App() {
           {/* Catch-all: mọi đường dẫn lạ → /shop */}
           <Route path="*" element={<Navigate to="/shop" replace />} />
         </Routes>
+        
+        {/* Toast Container - Hiển thị tất cả thông báo */}
+        <ToastContainer
+          position="top-right"
+          autoClose={3000}
+          hideProgressBar={false}
+          newestOnTop={true}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+          theme="light"
+        />
       </Router>
     </Provider>
   );

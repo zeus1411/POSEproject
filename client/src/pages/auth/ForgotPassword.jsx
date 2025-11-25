@@ -62,8 +62,21 @@ const ForgotPassword = () => {
       toast.success(response.message || 'Mã OTP đã được gửi đến email của bạn');
     } catch (error) {
       // Exception flow 4.1: Email không tồn tại
-      const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra. Vui lòng thử lại';
-      toast.error(errorMessage);
+      console.error('❌ Send OTP Error - Full:', error);
+      console.error('❌ Error Response:', error.response);
+      console.error('❌ Error Response Data:', error.response?.data);
+      
+      const errorMessage = error.response?.data?.message || error.message || 'Có lỗi xảy ra. Vui lòng thử lại';
+      console.error('❌ Final Error Message:', errorMessage);
+      
+      toast.error(errorMessage, {
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -78,8 +91,16 @@ const ForgotPassword = () => {
       setOtp(''); // Clear current OTP input
       toast.success(response.message || 'Mã OTP mới đã được gửi đến email của bạn');
     } catch (error) {
-      const errorMessage = error.response?.data?.message || 'Không thể gửi lại OTP. Vui lòng thử lại';
-      toast.error(errorMessage);
+      console.error('❌ Resend OTP Error:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Không thể gửi lại OTP. Vui lòng thử lại';
+      toast.error(errorMessage, {
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -116,8 +137,16 @@ const ForgotPassword = () => {
       }, 1500);
     } catch (error) {
       // Exception flow 5.1: OTP hết hạn hoặc không hợp lệ
-      const errorMessage = error.response?.data?.message || 'Không thể đặt lại mật khẩu';
-      toast.error(errorMessage);
+      console.error('❌ Reset Password Error:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Không thể đặt lại mật khẩu';
+      toast.error(errorMessage, {
+        position: "top-center",
+        autoClose: 5000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
       
       // If OTP expired, enable resend
       if (errorMessage.includes('hết hạn') || errorMessage.includes('expired')) {
