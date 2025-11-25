@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
+import { useSearchParams } from 'react-router-dom';
 import { searchProducts, setFilters, clearFilters } from '../../redux/slices/productSlice';
 import { getRootCategories } from '../../redux/slices/categorySlice';
 import { addToCart } from '../../redux/slices/cartSlice';
@@ -11,19 +12,28 @@ import ShopCarousel from '../../components/common/ShopCarousel';
 
 const Shop = () => {
   const dispatch = useDispatch();
+  const [searchParams] = useSearchParams();
   const { products, pagination, filters, isLoading } = useSelector((state) => state.products);
   const { rootCategories: categories } = useSelector((state) => state.categories);
   const { user } = useSelector((state) => state.auth);
   const [wishlistItems, setWishlistItems] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
 
+  const category = searchParams.get('category') || '';
+
   useEffect(() => {
     // Load categories
     dispatch(getRootCategories());
     
-    // Load products with current filters
-    dispatch(searchProducts({ ...filters, page: 1 }));
-  }, [dispatch]);
+    // Load products with category from URL
+    const initialFilters = { ...filters, categoryId: category };
+    dispatch(setFilters(initialFilters));
+    dispatch(searchProducts({ ...initialFilters, page: 1 }));
+  }, [dispatch, category]);
+
+  useEffect(() => {
+    setSelectedCategory(category || null);
+  }, [category]);
 
   const handleFiltersChange = (newFilters) => {
     dispatch(setFilters(newFilters));
