@@ -78,15 +78,15 @@ const Login = () => {
         {/* Hero Text - Left Side (animated fade-in from left) */}
         <div className="w-full lg:w-1/2 lg:flex-shrink-0 animate-fade-in-left">
           <div className="max-w-2xl space-y-6">
-            <p className="text-cyan-300 text-xs sm:text-sm font-bold tracking-[0.3em] uppercase">WELCOME TO</p>
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-white leading-tight">
-              EXPLORE<br />HORIZONS
+            <p className="text-cyan-300 text-xs sm:text-sm font-bold tracking-[0.3em] uppercase">CHÀO MỪNG ĐẾN VỚI</p>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-script text-white leading-tight drop-shadow-lg tracking-wide">
+              THỰC HIỆN<br />ƯỚC MƠ THỦY SINH
             </h1>
             <p className="text-lg sm:text-xl text-white/95 font-light leading-relaxed">
-              Dive into your aquatic dreams<br />and discover endless possibilities.
+              Đắm chìm vào giấc mơ thủy sinh<br />và khám phá vô vàn khả năng.
             </p>
             <p className="text-sm sm:text-base text-white/80 leading-relaxed max-w-md">
-              Your premium destination for aquatic life, tanks, and accessories. Bringing the ocean to your home.
+              Điểm đến cao cấp cho cuộc sống thủy sinh, bể cá và phụ kiện. Mang đại dương về nhà bạn.
             </p>
           </div>
         </div>
@@ -116,14 +116,14 @@ const Login = () => {
                 value={email}
                 onChange={onChange}
                 className="appearance-none block w-full px-4 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400/50 transition-all duration-300 text-sm"
-                placeholder="Enter your email"
+                placeholder="Nhập email của bạn"
               />
             </div>
 
             {/* Password Field */}
             <div>
               <label htmlFor="password" className="block text-sm font-semibold text-white mb-2 tracking-wide">
-                Password
+                Mật khẩu
               </label>
               <div className="relative">
                 <input
@@ -135,7 +135,7 @@ const Login = () => {
                   value={password}
                   onChange={onChange}
                   className="appearance-none block w-full px-4 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400/50 transition-all duration-300 text-sm"
-                  placeholder="Enter your password"
+                  placeholder="Nhập mật khẩu của bạn"
                 />
                 <button
                   type="button"
@@ -154,7 +154,7 @@ const Login = () => {
             {/* Forgot Password */}
             <div className="text-right">
               <Link to="/forgot-password" className="text-sm text-white/80 hover:text-cyan-300 hover:underline transition-all duration-300">
-                Forgot password?
+                Quên mật khẩu?
               </Link>
             </div>
 
@@ -171,10 +171,10 @@ const Login = () => {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    SIGNING IN...
+                    ĐANG ĐĂNG NHẬP...
                   </span>
                 ) : (
-                  'SIGN IN'
+                  'ĐĂNG NHẬP'
                 )}
               </button>
             </div>
@@ -205,7 +205,7 @@ const Login = () => {
                   <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                   <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                 </svg>
-                <span>SIGN IN WITH GOOGLE</span>
+                <span>ĐĂNG NHẬP VỚI GOOGLE</span>
               </button>
               <div className="hidden">
                 <GoogleLogin
@@ -218,12 +218,12 @@ const Login = () => {
 
             {/* Register Link */}
             <div className="mt-6 text-center">
-              <span className="text-sm text-white/80">Are you new? </span>
+              <span className="text-sm text-white/80">Bạn mới? </span>
               <Link
                 to="/register"
                 className="text-sm font-semibold text-cyan-300 hover:text-cyan-200 hover:underline transition-all duration-300"
               >
-                Create an Account
+                Tạo tài khoản
               </Link>
             </div>
           </form>

@@ -84,15 +84,15 @@ const Register = () => {
         {/* Hero Text - Left Side (animated fade-in from left) */}
         <div className="w-full lg:w-1/2 lg:flex-shrink-0 animate-fade-in-left">
           <div className="max-w-2xl space-y-6">
-            <p className="text-teal-300 text-xs sm:text-sm font-bold tracking-[0.3em] uppercase">JOIN US</p>
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-white leading-tight">
-              START YOUR<br />ADVENTURE
+            <p className="text-teal-300 text-xs sm:text-sm font-bold tracking-[0.3em] uppercase">THAM GIA VỚI CHÚNG TÔI</p>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-script text-white leading-tight drop-shadow-lg tracking-wide">
+              BƯỚC VÀO<br />HÀNH TRÌNH
             </h1>
             <p className="text-lg sm:text-xl text-white/95 font-light leading-relaxed">
-              Join the aquatic community<br />with thousands of quality products.
+              Tham gia cộng đồng thủy sinh<br />với hàng nghìn sản phẩm chất lượng.
             </p>
             <p className="text-sm sm:text-base text-white/80 leading-relaxed max-w-md">
-              Discover a world beneath the waves and bring the ocean home. Begin your journey today.
+              Khám phá thế giới dưới làn sóng và mang đại dương về nhà. Bắt đầu hành trình của bạn ngay hôm nay.
             </p>
           </div>
         </div>
@@ -113,7 +113,7 @@ const Register = () => {
             {/* Username Field */}
             <div>
               <label htmlFor="username" className="block text-sm font-semibold text-white mb-2 tracking-wide">
-                Username
+                Tên người dùng
               </label>
               <input
                 id="username"
@@ -124,7 +124,7 @@ const Register = () => {
                 value={username}
                 onChange={onChange}
                 className="appearance-none block w-full px-4 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400/50 transition-all duration-300 text-sm"
-                placeholder="Enter your username"
+                placeholder="Nhập tên người dùng"
               />
             </div>
 
@@ -142,14 +142,14 @@ const Register = () => {
                 value={email}
                 onChange={onChange}
                 className="appearance-none block w-full px-4 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400/50 transition-all duration-300 text-sm"
-                placeholder="Enter your email"
+                placeholder="Nhập email của bạn"
               />
             </div>
 
             {/* Password Field */}
             <div>
               <label htmlFor="password" className="block text-sm font-semibold text-white mb-2 tracking-wide">
-                Password
+                Mật khẩu
               </label>
               <div className="relative">
                 <input
@@ -161,7 +161,7 @@ const Register = () => {
                   value={password}
                   onChange={onChange}
                   className="appearance-none block w-full px-4 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400/50 transition-all duration-300 text-sm"
-                  placeholder="Create a password"
+                  placeholder="Tạo mật khẩu"
                 />
                 <button
                   type="button"
@@ -180,7 +180,7 @@ const Register = () => {
             {/* Confirm Password Field */}
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-semibold text-white mb-2 tracking-wide">
-                Confirm Password
+                Xác nhận mật khẩu
               </label>
               <div className="relative">
                 <input
@@ -192,7 +192,7 @@ const Register = () => {
                   value={confirmPassword}
                   onChange={onChange}
                   className="appearance-none block w-full px-4 py-3 bg-white/20 backdrop-blur-sm border border-white/30 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-cyan-400/50 focus:border-cyan-400/50 transition-all duration-300 text-sm"
-                  placeholder="Confirm your password"
+                  placeholder="Xác nhận mật khẩu của bạn"
                 />
                 <button
                   type="button"
@@ -219,10 +219,10 @@ const Register = () => {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
-                    CREATING ACCOUNT...
+                    ĐANG TẠO TÀI KHOẢN...
                   </span>
                 ) : (
-                  'CREATE ACCOUNT'
+                  'TẠO TÀI KHOẢN'
                 )}
               </button>
             </div>
@@ -253,7 +253,7 @@ const Register = () => {
                   <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                   <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                 </svg>
-                <span>SIGN UP WITH GOOGLE</span>
+                <span>ĐĂNG KÝ VỚI GOOGLE</span>
               </button>
               <div className="hidden">
                 <GoogleLogin
@@ -266,12 +266,12 @@ const Register = () => {
 
             {/* Login Link */}
             <div className="mt-6 text-center">
-              <span className="text-sm text-white/80">Already have an account? </span>
+              <span className="text-sm text-white/80">Đã có tài khoản? </span>
               <Link
                 to="/login"
                 className="text-sm font-semibold text-cyan-300 hover:text-cyan-200 hover:underline transition-all duration-300"
               >
-                Sign In
+                Đăng nhập
               </Link>
             </div>
           </form>

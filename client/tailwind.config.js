@@ -23,6 +23,7 @@ export default {
       fontFamily: {
         'serif': ['Playfair Display', 'Georgia', 'serif'],
         'sans': ['Inter', 'ui-sans-serif', 'system-ui'],
+        'script': ['Dancing Script', 'cursive'],
       },
       animation: {
         fadeIn: 'fadeIn 0.3s ease-in-out',

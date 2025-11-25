@@ -148,15 +148,15 @@ const ForgotPassword = () => {
         {/* Hero Text - Left Side (animated fade-in from left) */}
         <div className="w-full lg:w-1/2 lg:flex-shrink-0 animate-fade-in-left">
           <div className="max-w-2xl space-y-6">
-            <p className="text-cyan-300 text-xs sm:text-sm font-bold tracking-[0.3em] uppercase">RESET ACCESS</p>
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold text-white leading-tight">
-              DON'T LOSE<br />YOUR WAVES
+            <p className="text-cyan-300 text-xs sm:text-sm font-bold tracking-[0.3em] uppercase">NÃO CÁ VÀNG?</p>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-script text-white leading-tight drop-shadow-lg tracking-wide">
+              CHUYỆN NHỎ,<br />CHÚNG TÔI SẼ GIÚP BẠN BƠI VỀ NHÀ AN TOÀN
             </h1>
             <p className="text-lg sm:text-xl text-white/95 font-light leading-relaxed">
-              We'll help you get back<br />into your aquatic world.
+              Chúng tôi sẽ giúp bạn quay trở lại<br />thế giới thủy sinh.
             </p>
             <p className="text-sm sm:text-base text-white/80 leading-relaxed max-w-md">
-              Enter your email and we'll send you a verification code to reset your password safely.
+              Nhập email của bạn và chúng tôi sẽ gửi mã xác minh để đặt lại mật khẩu an toàn.
             </p>
           </div>
         </div>
