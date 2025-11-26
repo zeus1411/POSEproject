@@ -8,6 +8,7 @@ import mongoose from 'mongoose';
 import { BadRequestError, NotFoundError, UnauthorizedError } from '../utils/errorHandler.js';
 import { buildVNPayUrl, verifyVNPayReturn } from './vnpayService.js';
 import cacheService from './cacheService.js';
+import { storeTempOrder } from '../utils/tempOrderStorage.js';
 
 /**
  * Order Service
@@ -24,10 +25,6 @@ class OrderService {
    * @returns {Promise<Object>} Created order with payment info
    */
   async createOrder(userId, orderData, req) {
-    // NOTE: Transactions disabled for standalone MongoDB (Docker development)
-    // const session = await mongoose.startSession();
-    // session.startTransaction();
-
     try {
       const { 
         shippingAddress, 
@@ -127,34 +124,6 @@ class OrderService {
         
         orderItems.push(orderItem);
         subtotal += itemSubtotal;
-
-        // Update stock
-        if (product.hasVariants && selectedVariant) {
-          await Product.updateOne(
-            { 
-              _id: product._id,
-              'variants._id': selectedVariant._id
-            },
-            {
-              $inc: { 
-                'variants.$.stock': -item.quantity,
-                soldCount: item.quantity 
-              }
-            }
-            // { session } // Disabled for standalone MongoDB
-          );
-        } else {
-          await Product.updateOne(
-            { _id: product._id },
-            {
-              $inc: { 
-                stock: -item.quantity,
-                soldCount: item.quantity 
-              }
-            }
-            // { session } // Disabled for standalone MongoDB
-          );
-        }
       }
 
       // Calculate fees
@@ -187,6 +156,91 @@ class OrderService {
       const tax = 0;
       const totalPrice = subtotal + shippingFee + tax - discount;
 
+      // ==================== VNPay Flow: Store temp order data ====================
+      if (paymentMethod === 'VNPAY') {
+        console.log('🔵 VNPay Flow: Storing temporary order data (no database creation yet)...');
+        
+        const transactionId = `VNPAY-${Date.now()}`;
+        
+        // Store order data temporarily
+        const tempOrder = storeTempOrder(transactionId, {
+          userId,
+          items: orderItems,
+          subtotal,
+          shippingFee,
+          discount,
+          tax,
+          totalPrice,
+          shippingAddress,
+          promotionId,
+          promotionCode,
+          notes,
+          paymentMethod: 'VNPAY'
+        });
+        
+        // Generate VNPay URL
+        const vnpayUrl = await buildVNPayUrl({
+          order: {
+            totalPrice: totalPrice,
+            orderNumber: `TEMP-${transactionId}` // Temporary order number
+          },
+          payment: {
+            transactionId: transactionId
+          },
+          ipAddr: req.ip || req.headers['x-forwarded-for'] || '127.0.0.1'
+        });
+
+        console.log('🔵 Temporary order stored for VNPay payment');
+        console.log('===================\n');
+
+        return {
+          order: { _id: transactionId, orderNumber: `TEMP-${transactionId}`, totalPrice },
+          payment: { transactionId },
+          paymentUrl: vnpayUrl
+        };
+      }
+
+      // ==================== COD Flow: Direct order creation ====================
+      console.log('💵 COD Flow: Creating order directly...');
+
+      // Deduct stock for COD orders
+      for (const item of cart.items) {
+        const product = item.productId;
+        
+        if (!product) continue;
+
+        // Handle variant products
+        let selectedVariant = null;
+        if (product.hasVariants && item.variantId) {
+          selectedVariant = product.variants.find(v => v._id.toString() === item.variantId);
+        }
+
+        if (selectedVariant) {
+          await Product.updateOne(
+            { 
+              _id: product._id,
+              'variants._id': selectedVariant._id
+            },
+            {
+              $inc: { 
+                'variants.$.stock': -item.quantity,
+                soldCount: item.quantity 
+              }
+            }
+          );
+        } else {
+          await Product.updateOne(
+            { _id: product._id },
+            {
+              $inc: { 
+                stock: -item.quantity,
+                soldCount: item.quantity 
+              }
+            }
+          );
+        }
+      }
+      
       // Create order
       const order = await Order.create([{
         userId,
@@ -202,84 +256,51 @@ class OrderService {
         promotionCode,
         notes,
         isPaid: false
-      }]); // session disabled for standalone MongoDB
+      }]);
 
-      // Handle payment
+      // Handle payment for COD
       const payment = await Payment.create([{
         orderId: order[0]._id,
         userId,
-        method: paymentMethod,
-        status: 'PENDING_PAYMENT',
+        method: 'COD',
+        status: 'PROCESSING',
         amount: totalPrice,
-        currency: 'VND',
-        transactionId: paymentMethod === 'VNPAY' ? `VNPAY-${Date.now()}` : undefined
-      }]); // session disabled for standalone MongoDB
+        currency: 'VND'
+      }]);
 
       order[0].paymentId = payment[0]._id;
-      await order[0].save(); // session disabled for standalone MongoDB
+      await order[0].save();
 
-      // Clear cart
+      // Clear cart for COD orders
       await Cart.findOneAndUpdate(
         { userId },
         { $set: { items: [] } }
-        // { session } // Disabled for standalone MongoDB
       );
 
-      // Commit transaction
-      // await session.commitTransaction(); // Disabled for standalone MongoDB
-
-      // Send notification async
+      // Send notification async for COD orders
       setImmediate(async () => {
         try {
-          console.log('📧 Starting to send notifications for order:', order[0].orderNumber);
+          console.log('📧 Starting to send notifications for COD order:', order[0].orderNumber);
           
-          // ✅ Notification for customer
           await Notification.createOrderNotification(
             userId,
             order[0]._id,
             'PENDING',
             `Đơn hàng ${order[0].orderNumber} đã được tạo thành công`
           );
-          console.log('✅ Customer notification created');
           
-          // ✅ Notification for all admins
           const user = await User.findById(userId);
-          console.log('👤 User found:', user?.username, 'Total price:', totalPrice);
-          
-          const adminNotifications = await Notification.createNewOrderNotificationForAdmins(
+          await Notification.createNewOrderNotificationForAdmins(
             order[0]._id,
             order[0].orderNumber,
             user?.fullName || user?.username || 'Khách hàng',
             totalPrice
           );
-          console.log('✅ Admin notifications created:', adminNotifications.length);
+          console.log('✅ COD order notifications sent');
         } catch (notifError) {
-          console.error('❌ Notification failed (non-critical):', notifError);
-          console.error('Error stack:', notifError.stack);
+          console.error('❌ Notification failed:', notifError);
         }
       });
-
-      // Generate VNPay URL if needed
-      if (paymentMethod === 'VNPAY') {
-        const vnpayUrl = await buildVNPayUrl({
-          order: {
-            ...order[0].toObject(),
-            orderNumber: order[0].orderNumber,
-            totalPrice: order[0].totalPrice
-          },
-          payment: {
-            _id: payment[0]._id,
-            transactionId: payment[0].transactionId
-          },
-          ipAddr: req.ip || req.headers['x-forwarded-for'] || '127.0.0.1'
-        });
-
-        return {
-          order: order[0],
-          payment: payment[0],
-          paymentUrl: vnpayUrl
-        };
-      }
 
       return {
         order: order[0],
@@ -287,10 +308,7 @@ class OrderService {
       };
 
     } catch (error) {
-      // await session.abortTransaction(); // Disabled for standalone MongoDB
       throw error;
-    } finally {
-      // session.endSession(); // Disabled for standalone MongoDB
     }
   }
 

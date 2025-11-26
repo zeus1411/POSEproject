@@ -83,7 +83,6 @@ const orderSchema = new mongoose.Schema(
     status: {
       type: String,
       enum: [
-        'PENDING_PAYMENT', // ✅ Mới: Chờ thanh toán VNPay
         'PENDING',
         'CONFIRMED',
         'PROCESSING',

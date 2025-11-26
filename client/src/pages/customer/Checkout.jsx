@@ -50,11 +50,8 @@ const VNPayPaymentModal = ({ order, paymentData, onClose, onSuccess, onError }) 
     setPaymentStatus('processing');
     
     try {
-      // ✅ Call API to simulate VNPay payment success
-      await orderService.simulateVNPaySuccess(
-        order._id,
-        paymentData.payment.transactionId
-      );
+      // ✅ Call API to simulate VNPay payment success using transactionId
+      await orderService.simulateVNPaySuccess(paymentData.payment.transactionId);
       
       setPaymentStatus('success');
       setTimeout(() => {

@@ -53,14 +53,12 @@ export const cancelOrder = async (orderId) => {
 
 /**
  * Simulate VNPay payment success (for testing)
- * @param {string} orderId - The ID of the order
- * @param {string} transactionId - The transaction ID from payment
+ * @param {string} transactionId - The transaction ID from VNPay payment
  * @returns {Promise<Object>} The updated payment and order
  */
-export const simulateVNPaySuccess = async (orderId, transactionId) => {
+export const simulateVNPaySuccess = async (transactionId) => {
   try {
-    const response = await api.post(`/orders/${orderId}/payment/vnpay/simulate`, {
-      transactionId,
+    const response = await api.post(`/orders/${transactionId}/payment/vnpay/simulate`, {
       responseCode: '00' // Success code
     });
     return response.data?.data;
