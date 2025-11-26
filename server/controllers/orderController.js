@@ -212,31 +212,30 @@ const createOrder = async (req, res) => {
     
     console.log('Total price:', totalPrice);
 
-    // Tạo đơn hàng
-    console.log('Creating order...');
-    const order = await Order.create([{
-      userId,
-      items: orderItems,
-      subtotal,
-      shippingFee,
-      discount,
-      tax,
-      totalPrice,
-      status: 'PENDING',
-      shippingAddress,
-      promotionId,
-      promotionCode,
-      notes,
-      isPaid: false
-    }]); // session disabled for standalone MongoDB
-
-    console.log('Order created:', order[0]._id, order[0].orderNumber);
-
-    // Handle VNPay payment
+    // ==================== VNPAY PAYMENT - 2 PHASE APPROACH ====================
     if (paymentMethod === 'VNPAY') {
-      console.log('Processing VNPay payment...');
+      console.log('🔵 VNPay Flow: Creating PENDING_PAYMENT order (no stock deduction yet)...');
       
-      // Create a payment record
+      // ✅ Phase 1: Tạo Order với status PENDING_PAYMENT (chưa trừ stock, chưa xóa cart)
+      const order = await Order.create([{
+        userId,
+        items: orderItems,
+        subtotal,
+        shippingFee,
+        discount,
+        tax,
+        totalPrice,
+        status: 'PENDING_PAYMENT', // ⚠️ Đặc biệt: Chưa confirm
+        shippingAddress,
+        promotionId,
+        promotionCode,
+        notes,
+        isPaid: false
+      }]);
+
+      console.log('📦 Order draft created:', order[0]._id, order[0].orderNumber);
+
+      // Create payment record
       const payment = await Payment.create([{
         orderId: order[0]._id,
         userId,
@@ -245,12 +244,12 @@ const createOrder = async (req, res) => {
         amount: totalPrice,
         currency: 'VND',
         transactionId: `VNPAY-${Date.now()}`
-      }]); // session disabled for standalone MongoDB
+      }]);
 
-      console.log('Payment record created:', payment[0]._id);
+      console.log('💳 Payment record created:', payment[0]._id);
 
       // Generate VNPay URL
-      console.log('Building VNPay URL...');
+      console.log('🔗 Building VNPay URL...');
       const vnpayUrl = await buildVNPayUrl({
         order: {
           ...order[0].toObject(),
@@ -264,78 +263,88 @@ const createOrder = async (req, res) => {
         ipAddr: req.ip || req.headers['x-forwarded-for'] || '127.0.0.1'
       });
 
-      console.log('VNPay URL generated:', vnpayUrl);
+      console.log('✅ VNPay URL generated:', vnpayUrl);
 
       // Lưu payment vào order
       order[0].paymentId = payment[0]._id;
-      await order[0].save(); // session disabled for standalone MongoDB
+      await order[0].save();
 
-      // Xóa giỏ hàng
-      await Cart.findOneAndUpdate(
-        { userId },
-        { $set: { items: [] } }
-        // { session } // Disabled for standalone MongoDB
-      );
+      // ⚠️ KHÔNG xóa cart ở đây - giữ lại cho đến khi thanh toán thành công
+      console.log('🛒 Cart preserved (will be cleared after payment success)');
 
-      console.log('Cart cleared');
+      console.log('🔵 Transaction committed - VNPay order PENDING_PAYMENT');
 
-      // ✅ Commit transaction TRƯỚC - không chờ notification
-      // await session.commitTransaction(); // Disabled for standalone MongoDB
-      // session.endSession(); // Disabled for standalone MongoDB
-
-      console.log('Transaction committed - VNPay order');
-
-      // ✅ Gửi notification ASYNC sau khi commit (không chặn response)
-      const vnpayOrderId = order[0]._id;
-      const vnpayOrderNumber = order[0].orderNumber;
-      const vnpayTotalPrice = totalPrice;
-      setImmediate(async () => {
-        try {
-          console.log('📧 Starting to send notifications for VNPay order:', vnpayOrderNumber);
-          
-          // Customer notification
-          await Notification.createOrderNotification(
-            userId,
-            vnpayOrderId,
-            'PENDING',
-            `Đơn hàng ${vnpayOrderNumber} đã được tạo thành công`
-          );
-          console.log('✅ Customer notification created (VNPay)');
-          
-          // Admin notifications
-          const user = await User.findById(userId);
-          console.log('👤 User found:', user?.username, 'Total price:', vnpayTotalPrice);
-          
-          const adminNotifications = await Notification.createNewOrderNotificationForAdmins(
-            vnpayOrderId,
-            vnpayOrderNumber,
-            user?.fullName || user?.username || 'Khách hàng',
-            vnpayTotalPrice
-          );
-          console.log('✅ Admin notifications created (VNPay):', adminNotifications.length);
-        } catch (notifError) {
-          console.error('❌ Notification failed (non-critical):', notifError.message);
-          console.error('Error stack:', notifError.stack);
-        }
-      });
+      // ⚠️ KHÔNG gửi notification ở đây - chờ thanh toán thành công
+      // ⚠️ KHÔNG trừ stock ở đây - chờ thanh toán thành công
 
       console.log('===================\n');
 
       return res.status(StatusCodes.OK).json({
         success: true,
-        message: 'Đơn hàng đã được tạo. Chuyển hướng đến trang thanh toán VNPay',
+        message: 'Đơn hàng đã được tạo. Vui lòng thanh toán để hoàn tất',
         data: {
           order: order[0],
           payment: payment[0],
           paymentUrl: vnpayUrl
         }
       });
-
     }
 
-    // COD Payment
-    console.log('Processing COD payment...');
+    // ==================== COD PAYMENT - DIRECT CONFIRMATION ====================
+    console.log('🟢 COD Flow: Creating confirmed order with stock deduction...');
     
+    // ✅ Tạo Order với status PENDING (confirmed)
+    const order = await Order.create([{
+      userId,
+      items: orderItems,
+      subtotal,
+      shippingFee,
+      discount,
+      tax,
+      totalPrice,
+      status: 'PENDING', // ✅ COD confirmed ngay
+      shippingAddress,
+      promotionId,
+      promotionCode,
+      notes,
+      isPaid: false
+    }]);
+
+    console.log('📦 Order created:', order[0]._id, order[0].orderNumber);
+
+    // ✅ Trừ stock ngay khi tạo đơn COD
+    console.log('📉 Deducting stock for COD order...');
+    for (const item of cart.items) {
+      const product = item.productId;
+      
+      if (product.hasVariants && item.variantId) {
+        await Product.updateOne(
+          { 
+            _id: product._id,
+            'variants._id': item.variantId
+          },
+          {
+            $inc: { 
+              'variants.$.stock': -item.quantity,
+              soldCount: item.quantity 
+            }
+          }
+        );
+      } else {
+        await Product.updateOne(
+          { _id: product._id },
+          {
+            $inc: { 
+              stock: -item.quantity,
+              soldCount: item.quantity 
+            }
+          }
+        );
+      }
+      console.log(`✅ Stock updated for product: ${product.name}`);
+    }
+
+    // Create COD payment record
     const payment = await Payment.create([{
       orderId: order[0]._id,
       userId,
@@ -343,22 +352,21 @@ const createOrder = async (req, res) => {
       status: 'PENDING_PAYMENT',
       amount: totalPrice,
       currency: 'VND'
-    }]); // session disabled for standalone MongoDB
+    }]);
 
-    console.log('Payment record created:', payment[0]._id);
+    console.log('💳 Payment record created:', payment[0]._id);
 
-    // Cập nhật paymentId vào order
+    // Update paymentId in order
     order[0].paymentId = payment[0]._id;
-    await order[0].save(); // session disabled for standalone MongoDB
+    await order[0].save();
 
-    // Xóa giỏ hàng
+    // ✅ Xóa giỏ hàng sau khi tạo đơn thành công
     await Cart.findOneAndUpdate(
       { userId },
       { $set: { items: [] } }
-      // { session } // Disabled for standalone MongoDB
     );
 
-    console.log('Cart cleared');
+    console.log('🛒 Cart cleared');
 
     // ✅ Commit transaction TRƯỚC - không chờ notification
     // await session.commitTransaction(); // Disabled for standalone MongoDB
@@ -895,16 +903,13 @@ const vnpayReturn = async (req, res) => {
 
   // 1. Xác thực chữ ký VNPay trả về
   const verifyResult = verifyVNPayReturn(vnpParams);
-  const isValid = verifyResult?.isVerified !== false; // fallback true nếu lib trả true/false
+  const isValid = verifyResult?.isVerified !== false;
 
   // 2. Kiểm tra mã phản hồi
-  // VNPay chuẩn: vnp_ResponseCode === '00' nghĩa là thành công
   if (isValid && vnpParams.vnp_ResponseCode === '00') {
-
-    // Từ callback, ta lấy ra TxnRef. Ở trên ta set vnp_TxnRef = payment.transactionId || order.orderNumber
     const txnRef = vnpParams.vnp_TxnRef;
 
-    // Tìm payment theo transactionId hoặc theo orderNumber
+    // Tìm payment theo transactionId
     let payment = await Payment.findOne({
       $or: [
         { transactionId: txnRef },
@@ -912,7 +917,6 @@ const vnpayReturn = async (req, res) => {
       ]
     });
 
-    // Nếu chưa có, fallback: tìm theo orderNumber (vnp_TxnRef có thể là orderNumber)
     if (!payment && txnRef) {
       const orderByNumber = await Order.findOne({ orderNumber: txnRef });
       if (orderByNumber) {
@@ -921,9 +925,16 @@ const vnpayReturn = async (req, res) => {
     }
 
     if (payment) {
-      const order = await Order.findById(payment.orderId);
+      const order = await Order.findById(payment.orderId).populate('items.productId');
 
-      // Đánh dấu thanh toán thành công
+      if (!order) {
+        return res.redirect(`${process.env.CLIENT_URL}/orders?payment=failed&error=order_not_found`);
+      }
+
+      // ==================== PHASE 2: CONFIRM ORDER ====================
+      console.log('🟢 VNPay Success: Confirming order', order.orderNumber);
+
+      // ✅ 1. Đánh dấu thanh toán thành công
       await payment.markAsCompleted({
         transactionId: vnpParams.vnp_TransactionNo,
         vnpayDetails: {
@@ -937,24 +948,124 @@ const vnpayReturn = async (req, res) => {
         },
       });
 
-      // Gửi notification cho user
-      await Notification.createPaymentNotification(
-        order.userId,
-        order._id,
-        'COMPLETED',
-        `Thanh toán cho đơn hàng ${order.orderNumber} thành công`
+      console.log('💳 Payment marked as COMPLETED');
+
+      // ✅ 2. Chuyển Order từ PENDING_PAYMENT → PENDING (confirmed)
+      if (order.status === 'PENDING_PAYMENT') {
+        order.status = 'PENDING';
+        order.isPaid = true;
+        await order.save();
+        console.log('📦 Order status updated: PENDING_PAYMENT → PENDING');
+      }
+
+      // ✅ 3. Trừ stock cho các sản phẩm (Phase 2)
+      console.log('📉 Deducting stock after VNPay payment...');
+      const cart = await Cart.findOne({ userId: order.userId }).populate('items.productId');
+      
+      if (cart && cart.items.length > 0) {
+        for (const item of cart.items) {
+          const product = item.productId;
+          
+          if (!product) continue;
+          
+          if (product.hasVariants && item.variantId) {
+            await Product.updateOne(
+              { 
+                _id: product._id,
+                'variants._id': item.variantId
+              },
+              {
+                $inc: { 
+                  'variants.$.stock': -item.quantity,
+                  soldCount: item.quantity 
+                }
+              }
+            );
+          } else {
+            await Product.updateOne(
+              { _id: product._id },
+              {
+                $inc: { 
+                  stock: -item.quantity,
+                  soldCount: item.quantity 
+                }
+              }
+            );
+          }
+          console.log(`✅ Stock updated for product: ${product.name}`);
+        }
+      }
+
+      // ✅ 4. Xóa cart sau khi thanh toán thành công
+      await Cart.findOneAndUpdate(
+        { userId: order.userId },
+        { $set: { items: [] } }
       );
+      console.log('🛒 Cart cleared after VNPay payment');
+
+      // ✅ 5. Gửi notifications
+      setImmediate(async () => {
+        try {
+          // Customer notification
+          await Notification.createPaymentNotification(
+            order.userId,
+            order._id,
+            'COMPLETED',
+            `Thanh toán cho đơn hàng ${order.orderNumber} thành công`
+          );
+
+          await Notification.createOrderNotification(
+            order.userId,
+            order._id,
+            'PENDING',
+            `Đơn hàng ${order.orderNumber} đã được xác nhận`
+          );
+
+          // Admin notifications
+          const user = await User.findById(order.userId);
+          await Notification.createNewOrderNotificationForAdmins(
+            order._id,
+            order.orderNumber,
+            user?.fullName || user?.username || 'Khách hàng',
+            order.totalPrice
+          );
+
+          console.log('✅ Notifications sent for VNPay order');
+        } catch (notifError) {
+          console.error('❌ Notification failed:', notifError.message);
+        }
+      });
       
       // Redirect về FE: success
       return res.redirect(`${process.env.CLIENT_URL}/orders/${order._id}?payment=success`);
     }
 
-    // Nếu vì lý do nào đó không tìm được payment/order
     return res.redirect(`${process.env.CLIENT_URL}/orders?payment=unknown`);
   }
 
-  // Trường hợp chữ ký fail hoặc user cancel / lỗi thanh toán
-  return res.redirect(`${process.env.CLIENT_URL}/orders?payment=failed`);
+  // Trường hợp chữ ký fail hoặc user cancel
+  console.log('❌ VNPay payment failed or cancelled');
+  
+  // ⚠️ Tìm order và XÓA nếu là PENDING_PAYMENT
+  try {
+    const txnRef = vnpParams.vnp_TxnRef;
+    let payment = await Payment.findOne({ transactionId: txnRef });
+    
+    if (payment) {
+      const order = await Order.findById(payment.orderId);
+      
+      if (order && order.status === 'PENDING_PAYMENT') {
+        console.log('🗑️ Deleting PENDING_PAYMENT order:', order.orderNumber);
+        await Order.findByIdAndDelete(order._id);
+        await Payment.findByIdAndDelete(payment._id);
+        console.log('✅ Order and payment deleted');
+      }
+    }
+  } catch (cleanupError) {
+    console.error('❌ Cleanup failed:', cleanupError.message);
+  }
+  
+  return res.redirect(`${process.env.CLIENT_URL}/checkout?payment=failed`);
 };
 
 // @desc    Simulate VNPay payment success (for testing)
@@ -969,7 +1080,7 @@ const simulateVNPayPayment = async (req, res) => {
     console.log('🧪 Simulating VNPay payment for order:', orderId);
 
     // Find order and verify ownership
-    const order = await Order.findById(orderId);
+    const order = await Order.findById(orderId).populate('items.productId');
     if (!order) {
       throw new NotFoundError('Không tìm thấy đơn hàng');
     }
@@ -996,7 +1107,10 @@ const simulateVNPayPayment = async (req, res) => {
       });
     }
 
-    // ✅ Mark payment as completed
+    // ==================== PHASE 2: CONFIRM ORDER (SIMULATED) ====================
+    console.log('🟢 VNPay Simulation: Confirming order', order.orderNumber);
+
+    // ✅ 1. Mark payment as completed
     await payment.markAsCompleted({
       transactionId: `${transactionId}-SIMULATED`,
       vnpayDetails: {
@@ -1008,13 +1122,64 @@ const simulateVNPayPayment = async (req, res) => {
       }
     });
 
-    // ✅ Đơn hàng vẫn giữ trạng thái PENDING để admin xác nhận
-    // Không tự động chuyển sang CONFIRMED khi thanh toán thành công
-    console.log('✅ Payment simulated successfully - Order remains PENDING for admin confirmation');
+    console.log('💳 Payment marked as COMPLETED (simulated)');
+
+    // ✅ 2. Chuyển Order từ PENDING_PAYMENT → PENDING
+    if (order.status === 'PENDING_PAYMENT') {
+      order.status = 'PENDING';
+      order.isPaid = true;
+      await order.save();
+      console.log('📦 Order status updated: PENDING_PAYMENT → PENDING');
+    }
+
+    // ✅ 3. Trừ stock cho các sản phẩm
+    console.log('📉 Deducting stock after simulated VNPay payment...');
+    const cart = await Cart.findOne({ userId: order.userId }).populate('items.productId');
+    
+    if (cart && cart.items.length > 0) {
+      for (const item of cart.items) {
+        const product = item.productId;
+        
+        if (!product) continue;
+        
+        if (product.hasVariants && item.variantId) {
+          await Product.updateOne(
+            { 
+              _id: product._id,
+              'variants._id': item.variantId
+            },
+            {
+              $inc: { 
+                'variants.$.stock': -item.quantity,
+                soldCount: item.quantity 
+              }
+            }
+          );
+        } else {
+          await Product.updateOne(
+            { _id: product._id },
+            {
+              $inc: { 
+                stock: -item.quantity,
+                soldCount: item.quantity 
+              }
+            }
+          );
+        }
+        console.log(`✅ Stock updated for product: ${product.name}`);
+      }
+    }
+
+    // ✅ 4. Xóa cart sau khi thanh toán thành công
+    await Cart.findOneAndUpdate(
+      { userId },
+      { $set: { items: [] } }
+    );
+    console.log('🛒 Cart cleared after simulated VNPay payment');
 
     console.log('✅ Payment simulated successfully:', payment._id);
 
-    // Send notification asynchronously
+    // ✅ 5. Send notifications asynchronously
     setImmediate(async () => {
       try {
         await Notification.createPaymentNotification(
@@ -1023,7 +1188,23 @@ const simulateVNPayPayment = async (req, res) => {
           'COMPLETED',
           `Thanh toán cho đơn hàng ${order.orderNumber} thành công (Test)`
         );
-        console.log('✅ Notification sent for simulated payment');
+
+        await Notification.createOrderNotification(
+          userId,
+          order._id,
+          'PENDING',
+          `Đơn hàng ${order.orderNumber} đã được xác nhận`
+        );
+
+        const user = await User.findById(userId);
+        await Notification.createNewOrderNotificationForAdmins(
+          order._id,
+          order.orderNumber,
+          user?.fullName || user?.username || 'Khách hàng',
+          order.totalPrice
+        );
+
+        console.log('✅ Notifications sent for simulated payment');
       } catch (notifError) {
         console.error('❌ Notification failed (non-critical):', notifError.message);
       }

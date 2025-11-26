@@ -261,6 +261,16 @@ const Checkout = () => {
       return;
     }
     dispatch(fetchCart());
+
+    // ✅ Kiểm tra query params nếu redirect từ VNPay
+    const params = new URLSearchParams(window.location.search);
+    const paymentStatus = params.get('payment');
+    
+    if (paymentStatus === 'failed') {
+      toast.error('Thanh toán thất bại hoặc đã bị hủy. Vui lòng thử lại.');
+      // Xóa query params
+      window.history.replaceState({}, '', '/checkout');
+    }
   }, [user, dispatch, navigate]);
 
   useEffect(() => {
@@ -449,6 +459,7 @@ const Checkout = () => {
   };
 
   const handleVNPaySuccess = async () => {
+    // ✅ Chỉ reset cart sau khi thanh toán thành công
     await dispatch(resetCart());
     toast.success('Thanh toán thành công!');
     setShowVNPayModal(false);
@@ -456,8 +467,20 @@ const Checkout = () => {
   };
 
   const handleVNPayError = (error) => {
+    // ⚠️ KHÔNG reset cart khi lỗi - giữ nguyên để user thử lại
     toast.error(error);
     setShowVNPayModal(false);
+    // Reload cart để đảm bảo dữ liệu chính xác
+    dispatch(fetchCart());
+  };
+
+  const handleVNPayCancel = () => {
+    // ⚠️ KHÔNG reset cart khi user hủy - giữ nguyên
+    setShowVNPayModal(false);
+    setVnpayData(null);
+    toast.info('Bạn đã hủy thanh toán thành công');
+    // Reload cart để đảm bảo dữ liệu chính xác
+    dispatch(fetchCart());
   };
 
   const items = cart?.items || [];
@@ -485,20 +508,9 @@ const Checkout = () => {
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Xác nhận đơn hàng</h1>
-              <p className="text-gray-600 mt-1">Xác nhận thông tin đơn hàng, thông tin cá nhân và đặt hàng</p>
-            </div>
-            <button
-              onClick={() => navigate('/shop')}
-              className="hidden sm:flex items-center gap-2 px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              Tiếp tục mua sắm
-            </button>
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Xác nhận đơn hàng</h1>
+            <p className="text-gray-600 mt-1">Xác nhận thông tin đơn hàng, thông tin cá nhân và đặt hàng</p>
           </div>
         </div>
       </div>
@@ -627,7 +639,7 @@ const Checkout = () => {
           <div className="flex flex-col sm:flex-row justify-between gap-3">
             <button
               onClick={() => navigate('/shop')}
-              className="px-6 py-3 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition font-medium shadow-sm flex items-center justify-center gap-2"
+              className="px-6 py-3 text-white bg-gradient-to-r from-green-600 to-emerald-600 rounded-lg hover:from-green-700 hover:to-emerald-700 transition font-medium shadow-sm flex items-center justify-center gap-2"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -814,10 +826,7 @@ const Checkout = () => {
         <VNPayPaymentModal
           order={vnpayData.order}
           paymentData={vnpayData}
-          onClose={() => {
-            setShowVNPayModal(false);
-            setVnpayData(null);
-          }}
+          onClose={handleVNPayCancel}
           onSuccess={handleVNPaySuccess}
           onError={handleVNPayError}
         />
