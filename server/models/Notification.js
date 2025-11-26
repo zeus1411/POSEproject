@@ -19,7 +19,7 @@ const notificationSchema = new mongoose.Schema(
         'SYSTEM_ANNOUNCEMENT',
         'WELCOME',
         'PASSWORD_RESET',
-        'NEW_ORDER_ADMIN'  // ✅ Thêm type mới cho admin
+        'NEW_ORDER_ADMIN'
       ],
       required: true
     },
