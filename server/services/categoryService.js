@@ -15,7 +15,25 @@ class CategoryService {
    */
   async getAllCategories(includeInactive = false) {
     const filter = includeInactive ? {} : { isActive: true };
-    return await Category.find(filter).sort('order');
+    const categories = await Category.find(filter).sort('order');
+    
+    // ✅ Tính productCount thực tế từ collection Products
+    const Product = mongoose.model('Product');
+    
+    const categoriesWithCount = await Promise.all(
+      categories.map(async (category) => {
+        const count = await Product.countDocuments({
+          categoryId: category._id,
+          status: 'ACTIVE'
+        });
+        
+        const categoryObj = category.toObject();
+        categoryObj.productCount = count;
+        return categoryObj;
+      })
+    );
+    
+    return categoriesWithCount;
   }
 
   /**
@@ -52,7 +70,16 @@ class CategoryService {
       throw new NotFoundError('Không tìm thấy danh mục');
     }
 
-    return category;
+    // ✅ Tính productCount thực tế
+    const Product = mongoose.model('Product');
+    const count = await Product.countDocuments({
+      categoryId: category._id,
+      status: 'ACTIVE'
+    });
+    
+    const categoryObj = category.toObject();
+    categoryObj.productCount = count;
+    return categoryObj;
   }
 
   /**
@@ -68,7 +95,16 @@ class CategoryService {
       throw new NotFoundError('Không tìm thấy danh mục');
     }
 
-    return category;
+    // ✅ Tính productCount thực tế
+    const Product = mongoose.model('Product');
+    const count = await Product.countDocuments({
+      categoryId: category._id,
+      status: 'ACTIVE'
+    });
+    
+    const categoryObj = category.toObject();
+    categoryObj.productCount = count;
+    return categoryObj;
   }
 
   /**
