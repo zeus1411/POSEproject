@@ -104,12 +104,6 @@ const ShopCarousel = () => {
                 <p className="text-lg sm:text-xl text-gray-100 mb-6 drop-shadow-md max-w-lg">
                   {banner.subtitle}
                 </p>
-                <button
-                  onClick={() => window.location.href = banner.buttonLink}
-                  className="bg-teal-500 hover:bg-teal-600 text-white font-bold py-3 px-8 rounded-full transition-all duration-300 hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl"
-                >
-                  {banner.buttonText}
-                </button>
               </div>
             </div>
           </div>
