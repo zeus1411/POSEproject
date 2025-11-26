@@ -20,8 +20,12 @@ const productSchema = new mongoose.Schema(
     },
     price: {
       type: Number,
-      required: [true, 'Vui lòng nhập giá sản phẩm'],
-      min: [0, 'Giá sản phẩm phải lớn hơn 0']
+      required: function() {
+        // Chỉ bắt buộc khi KHÔNG có variants
+        return !this.hasVariants;
+      },
+      min: [0, 'Giá sản phẩm phải lớn hơn 0'],
+      default: 0
     },
     originalPrice: {
       type: Number,
@@ -47,7 +51,10 @@ const productSchema = new mongoose.Schema(
     },
     stock: {
       type: Number,
-      required: [true, 'Vui lòng nhập số lượng tồn kho'],
+      required: function() {
+        // Chỉ bắt buộc khi KHÔNG có variants
+        return !this.hasVariants;
+      },
       min: [0, 'Số lượng tồn kho không được âm'],
       default: 0
     },

@@ -9,7 +9,8 @@ import categoryService from '../services/categoryService.js';
 // Get all categories
 export const getCategories = async (req, res, next) => {
     try {
-        const categories = await categoryService.getAllCategories();
+        const includeInactive = req.query.includeInactive === 'true';
+        const categories = await categoryService.getAllCategories(includeInactive);
         res.status(200).json(categories);
     } catch (error) {
         next(error);
@@ -85,6 +86,18 @@ export const deleteCategory = async (req, res, next) => {
         const { id } = req.params;
         await categoryService.deleteCategory(id);
         res.status(200).json({ message: 'Xóa danh mục thành công' });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// Update category status (Admin only)
+export const updateCategoryStatus = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { isActive } = req.body;
+        const updatedCategory = await categoryService.updateCategoryStatus(id, isActive);
+        res.status(200).json(updatedCategory);
     } catch (error) {
         next(error);
     }

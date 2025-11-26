@@ -14,9 +14,9 @@ const initialState = {
 // Get all categories
 export const getCategories = createAsyncThunk(
   'categories/getCategories',
-  async (_, thunkAPI) => {
+  async (includeInactive = false, thunkAPI) => {
     try {
-      return await categoryService.getCategories();
+      return await categoryService.getCategories(includeInactive);
     } catch (error) {
       const message =
         error.response?.data?.message ||
@@ -68,6 +68,74 @@ export const getCategoryById = createAsyncThunk(
   async (categoryId, thunkAPI) => {
     try {
       return await categoryService.getCategoryById(categoryId);
+    } catch (error) {
+      const message =
+        error.response?.data?.message ||
+        error.response?.data?.msg ||
+        error.message ||
+        error.toString();
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
+// Create category (Admin)
+export const createCategory = createAsyncThunk(
+  'categories/createCategory',
+  async (categoryData, thunkAPI) => {
+    try {
+      return await categoryService.createCategory(categoryData);
+    } catch (error) {
+      const message =
+        error.response?.data?.message ||
+        error.response?.data?.msg ||
+        error.message ||
+        error.toString();
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
+// Update category (Admin)
+export const updateCategory = createAsyncThunk(
+  'categories/updateCategory',
+  async ({ categoryId, categoryData }, thunkAPI) => {
+    try {
+      return await categoryService.updateCategory(categoryId, categoryData);
+    } catch (error) {
+      const message =
+        error.response?.data?.message ||
+        error.response?.data?.msg ||
+        error.message ||
+        error.toString();
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
+// Delete category (Admin)
+export const deleteCategory = createAsyncThunk(
+  'categories/deleteCategory',
+  async (categoryId, thunkAPI) => {
+    try {
+      return await categoryService.deleteCategory(categoryId);
+    } catch (error) {
+      const message =
+        error.response?.data?.message ||
+        error.response?.data?.msg ||
+        error.message ||
+        error.toString();
+      return thunkAPI.rejectWithValue(message);
+    }
+  }
+);
+
+// Update category status (Admin)
+export const updateCategoryStatus = createAsyncThunk(
+  'categories/updateCategoryStatus',
+  async ({ categoryId, isActive }, thunkAPI) => {
+    try {
+      return await categoryService.updateCategoryStatus(categoryId, isActive);
     } catch (error) {
       const message =
         error.response?.data?.message ||
@@ -159,6 +227,72 @@ export const categorySlice = createSlice({
         state.isError = true;
         state.message = action.payload;
         state.currentCategory = null;
+      })
+      // Create category
+      .addCase(createCategory.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(createCategory.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.message = 'Tạo danh mục thành công';
+        state.categories.push(action.payload);
+      })
+      .addCase(createCategory.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+      })
+      // Update category
+      .addCase(updateCategory.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(updateCategory.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.message = 'Cập nhật danh mục thành công';
+        const index = state.categories.findIndex(cat => cat._id === action.payload._id);
+        if (index !== -1) {
+          state.categories[index] = action.payload;
+        }
+      })
+      .addCase(updateCategory.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+      })
+      // Delete category
+      .addCase(deleteCategory.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(deleteCategory.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.message = 'Xóa danh mục thành công';
+        state.categories = state.categories.filter(cat => cat._id !== action.meta.arg);
+      })
+      .addCase(deleteCategory.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
+      })
+      // Update category status
+      .addCase(updateCategoryStatus.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(updateCategoryStatus.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.message = `Đã ${action.payload.isActive ? 'kích hoạt' : 'vô hiệu hóa'} danh mục`;
+        const index = state.categories.findIndex(cat => cat._id === action.payload._id);
+        if (index !== -1) {
+          state.categories[index] = action.payload;
+        }
+      })
+      .addCase(updateCategoryStatus.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
       });
   },
 });

@@ -7,7 +7,8 @@ import {
   getCategoryBySlug,
   createCategory,
   updateCategory,
-  deleteCategory
+  deleteCategory,
+  updateCategoryStatus
 } from '../controllers/categoryController.js';
 import { authenticateUser, authorizeRoles } from '../middlewares/auth.js';
 
@@ -23,6 +24,7 @@ router.get('/:id', getCategoryById);
 // Admin routes
 router.post('/', authenticateUser, authorizeRoles('admin'), createCategory);
 router.put('/:id', authenticateUser, authorizeRoles('admin'), updateCategory);
+router.patch('/:id/status', authenticateUser, authorizeRoles('admin'), updateCategoryStatus);
 router.delete('/:id', authenticateUser, authorizeRoles('admin'), deleteCategory);
 
 export default router;

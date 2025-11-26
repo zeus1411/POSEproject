@@ -46,6 +46,10 @@ class ProductService {
           productData.variants = [];
         }
       }
+      
+      // ✅ Khi có variants, xóa price và stock khỏi productData để tránh validation error
+      delete productData.price;
+      delete productData.stock;
     } else {
       productData.hasVariants = false;
       productData.options = [];
@@ -193,6 +197,10 @@ class ProductService {
           updateData.variants = [];
         }
       }
+      
+      // ✅ Khi có variants, xóa price và stock khỏi updateData để tránh validation error
+      delete updateData.price;
+      delete updateData.stock;
     } else if (updateData.hasVariants === 'false' || updateData.hasVariants === false) {
       updateData.hasVariants = false;
       updateData.options = [];

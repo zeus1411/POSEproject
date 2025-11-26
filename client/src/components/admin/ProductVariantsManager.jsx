@@ -9,7 +9,13 @@ const ProductVariantsManager = ({ product, onUpdate }) => {
   useEffect(() => {
     if (product) {
       setHasVariants(product.hasVariants || false);
-      setOptions(product.options || []);
+      
+      // ✅ Clean options - remove _id, id fields from MongoDB
+      const cleanOptions = (product.options || []).map(option => ({
+        name: option.name || '',
+        values: Array.isArray(option.values) ? [...option.values] : []
+      }));
+      setOptions(cleanOptions);
       
       // ✅ Convert Map sang Object ngay khi load để có thể edit
       const normalizedVariants = (product.variants || []).map(variant => ({
@@ -61,31 +67,54 @@ const ProductVariantsManager = ({ product, onUpdate }) => {
 
   // Update option name
   const updateOptionName = (index, name) => {
-    const newOptions = [...options];
-    newOptions[index].name = name;
+    const newOptions = options.map((opt, idx) => {
+      if (idx === index) {
+        return { ...opt, name };
+      }
+      return opt;
+    });
     setOptions(newOptions);
   };
 
   // Add value to an option
   const addOptionValue = (optionIndex) => {
-    const newOptions = [...options];
-    newOptions[optionIndex].values.push('');
+    const newOptions = options.map((opt, idx) => {
+      if (idx === optionIndex) {
+        return { ...opt, values: [...opt.values, ''] };
+      }
+      return opt;
+    });
     setOptions(newOptions);
   };
 
   // Remove value from an option
   const removeOptionValue = (optionIndex, valueIndex) => {
-    const newOptions = [...options];
-    newOptions[optionIndex].values = newOptions[optionIndex].values.filter(
-      (_, i) => i !== valueIndex
-    );
+    const newOptions = options.map((opt, idx) => {
+      if (idx === optionIndex) {
+        return {
+          ...opt,
+          values: opt.values.filter((_, i) => i !== valueIndex)
+        };
+      }
+      return opt;
+    });
     setOptions(newOptions);
   };
 
   // Update option value
   const updateOptionValue = (optionIndex, valueIndex, value) => {
-    const newOptions = [...options];
-    newOptions[optionIndex].values[valueIndex] = value;
+    const newOptions = options.map((opt, idx) => {
+      if (idx === optionIndex) {
+        const newValues = opt.values.map((val, valIdx) => {
+          if (valIdx === valueIndex) {
+            return value;
+          }
+          return val;
+        });
+        return { ...opt, values: newValues };
+      }
+      return opt;
+    });
     setOptions(newOptions);
   };
 
@@ -93,7 +122,7 @@ const ProductVariantsManager = ({ product, onUpdate }) => {
   const addVariant = () => {
     const newVariant = {
       optionValues: {},
-      price: product.price || 0,
+      price: product?.price || 0,
       stock: 0,
       isActive: true
     };

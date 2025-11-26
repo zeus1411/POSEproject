@@ -9,11 +9,13 @@ import { BadRequestError, NotFoundError } from '../utils/errorHandler.js';
 
 class CategoryService {
   /**
-   * Get all active categories sorted by order
+   * Get all categories (for admin) or active categories (for public)
+   * @param {boolean} includeInactive - Include inactive categories
    * @returns {Promise<Array>} Array of categories
    */
-  async getAllCategories() {
-    return await Category.find({ isActive: true }).sort('order');
+  async getAllCategories(includeInactive = false) {
+    const filter = includeInactive ? {} : { isActive: true };
+    return await Category.find(filter).sort('order');
   }
 
   /**
@@ -124,6 +126,30 @@ class CategoryService {
     }
 
     return deletedCategory;
+  }
+
+  /**
+   * Update category status (Active/Inactive)
+   * @param {string} id - Category ID
+   * @param {boolean} isActive - New status
+   * @returns {Promise<Object>} Updated category
+   */
+  async updateCategoryStatus(id, isActive) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw new BadRequestError('ID không hợp lệ');
+    }
+
+    const updatedCategory = await Category.findByIdAndUpdate(
+      id,
+      { isActive },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedCategory) {
+      throw new NotFoundError('Không tìm thấy danh mục');
+    }
+
+    return updatedCategory;
   }
 }
 

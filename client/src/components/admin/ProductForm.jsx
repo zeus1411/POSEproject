@@ -86,10 +86,20 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
 
     if (!formData.name.trim()) newErrors.name = 'Tên sản phẩm là bắt buộc';
     if (!formData.sku.trim()) newErrors.sku = 'SKU là bắt buộc';
-    if (!formData.price) newErrors.price = 'Giá là bắt buộc';
-    if (formData.price < 0) newErrors.price = 'Giá không thể âm';
-    if (!formData.stock) newErrors.stock = 'Tồn kho là bắt buộc';
-    if (formData.stock < 0) newErrors.stock = 'Tồn kho không thể âm';
+    
+    // ✅ Chỉ validate price và stock khi KHÔNG có variants
+    if (!formData.hasVariants) {
+      if (!formData.price) newErrors.price = 'Giá là bắt buộc';
+      if (formData.price < 0) newErrors.price = 'Giá không thể âm';
+      if (!formData.stock) newErrors.stock = 'Tồn kho là bắt buộc';
+      if (formData.stock < 0) newErrors.stock = 'Tồn kho không thể âm';
+    } else {
+      // ✅ Validate variants khi có variants
+      if (!formData.variants || formData.variants.length === 0) {
+        newErrors.variants = 'Vui lòng thêm ít nhất một variant';
+      }
+    }
+    
     if (!formData.categoryId) newErrors.categoryId = 'Danh mục là bắt buộc';
     
     // ✅ Check total images (existing + new)
