@@ -89,7 +89,7 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Floating Navigation Sidebar */}
-      <nav className="hidden lg:block fixed left-8 top-1/2 -translate-y-1/2 z-40">
+      <nav className="hidden lg:block fixed left-8 top-1/2 -translate-y-1/2 z-30">
         <div className="bg-white/90 backdrop-blur-md rounded-2xl shadow-xl border border-gray-200 p-4">
           <div className="flex flex-col space-y-6">
             <button

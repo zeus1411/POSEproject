@@ -61,7 +61,7 @@ const Header = () => {
 
   return (
     <>
-      <header className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-700 shadow-lg fixed w-full z-10">
+      <header className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-700 shadow-lg fixed w-full z-50">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex items-center justify-between h-20">
             {/* Logo / Brand */}
