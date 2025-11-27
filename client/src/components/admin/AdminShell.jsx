@@ -2,6 +2,7 @@ import React from 'react';
 import { useSelector } from 'react-redux';
 import { Navigate, useLocation } from 'react-router-dom';
 import AdminSidebar from './AdminSidebar';
+import AdminChatPanel from './AdminChatPanel';
 
 const AdminShell = ({ children }) => {
   const { user } = useSelector((state) => state.auth);
@@ -23,6 +24,7 @@ const AdminShell = ({ children }) => {
       <main className="flex-1 overflow-auto p-6">
         {children}
       </main>
+      <AdminChatPanel />
     </div>
   );
 };

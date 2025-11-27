@@ -15,7 +15,6 @@ const ORDER_STATUSES = [
     { key: "SHIPPING", label: "Đang giao", color: "indigo" },
     { key: "COMPLETED", label: "Hoàn thành", color: "green" },
     { key: "CANCELLED", label: "Đã hủy", color: "red" },
-    { key: "FAILED", label: "Thất bại", color: "red" },
 ];
 
 // Status transition rules - ✅ Fixed logic
@@ -25,7 +24,6 @@ const validTransitions = {
     SHIPPING: ["COMPLETED", "CANCELLED"],
     COMPLETED: [], // ✅ Hoàn thành là trạng thái cuối (bỏ REFUNDED)
     CANCELLED: [],
-    FAILED: [],
 };
 
 // Vietnamese labels for status options in dropdown
@@ -35,7 +33,6 @@ const STATUS_LABELS = {
     SHIPPING: "Đang giao",
     COMPLETED: "Hoàn thành",
     CANCELLED: "Đã hủy",
-    FAILED: "Thất bại"
 };
 
 // Status badge colors
@@ -46,7 +43,6 @@ const statusColors = {
     SHIPPING: "bg-indigo-100 text-indigo-800",
     COMPLETED: "bg-green-100 text-green-800",
     CANCELLED: "bg-red-100 text-red-800",
-    FAILED: "bg-red-100 text-red-800",
 };
 
 const AdminOrdersPage = () => {

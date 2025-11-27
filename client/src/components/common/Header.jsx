@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
+import { resetChat } from '../../redux/slices/chatSlice'; // Import resetChat
 import { 
   ShoppingCartIcon, 
   UserCircleIcon,
@@ -48,7 +49,9 @@ const Header = () => {
   // Đăng xuất sau khi confirm
   const handleLogout = async () => {
     setIsLogoutConfirmOpen(false);
+    // Call logout API first (needs token), then clear chat state
     await dispatch(logoutAction());
+    dispatch(resetChat());
     setIsUserMenuOpen(false);
     navigate('/');
   };

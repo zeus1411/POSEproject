@@ -3,10 +3,12 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import mongoose from 'mongoose';
+import { createServer } from 'http';
 import indexRoutes from './routes/indexRoutes.js';
 import errorHandlerMiddleware from './middlewares/error.js';
 import cookieParser from 'cookie-parser';
 import { initRedis, closeRedis } from './config/redis.js';
+import { initializeSocket } from './config/socket.js';
 
 // Load environment variables
 dotenv.config();
@@ -21,6 +23,7 @@ if (missingVars.length > 0) {
 }
 
 const app = express();
+const httpServer = createServer(app);
 const port = process.env.PORT || 3000;
 const MONGODB_URL = process.env.MONGODB_URI;
 const DB_NAME = process.env.DATABASE_NAME;
@@ -63,8 +66,12 @@ Promise.all([
             console.log('⚠️  Redis không khả dụng - App chạy KHÔNG có cache');
         }
         
-        app.listen(port, () => {
+        // Initialize Socket.IO
+        initializeSocket(httpServer);
+        
+        httpServer.listen(port, () => {
             console.log(`🚀 Server đang chạy tại http://localhost:${port}`);
+            console.log(`🔌 WebSocket đang chạy tại ws://localhost:${port}`);
         });
     })
     .catch((err) => {

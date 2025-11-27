@@ -5,6 +5,9 @@ const register = async (userData) => {
   const response = await api.post('/auth/register', userData);
   if (response.data.success && response.data.user) {
     localStorage.setItem('user', JSON.stringify(response.data.user));
+    if (response.data.token) {
+      localStorage.setItem('token', response.data.token);
+    }
   }
   return response.data;
 };
@@ -14,6 +17,9 @@ const login = async (userData) => {
   const response = await api.post('/auth/login', userData);
   if (response.data.success && response.data.user) {
     localStorage.setItem('user', JSON.stringify(response.data.user));
+    if (response.data.token) {
+      localStorage.setItem('token', response.data.token);
+    }
   }
   return response.data;
 };
@@ -23,6 +29,9 @@ const googleLogin = async (credential) => {
   const response = await api.post('/auth/google', { credential });
   if (response.data.success && response.data.user) {
     localStorage.setItem('user', JSON.stringify(response.data.user));
+    if (response.data.token) {
+      localStorage.setItem('token', response.data.token);
+    }
   }
   return response.data;
 };
@@ -35,6 +44,7 @@ const logout = async () => {
     console.error('Logout error:', error);
   } finally {
     localStorage.removeItem('user');
+    localStorage.removeItem('token');
   }
 };
 
@@ -76,6 +86,9 @@ const resetPassword = async (email, otp, newPassword, confirmPassword) => {
   // If reset is successful and user is auto-logged in, store user info
   if (response.data.success && response.data.user) {
     localStorage.setItem('user', JSON.stringify(response.data.user));
+    if (response.data.token) {
+      localStorage.setItem('token', response.data.token);
+    }
   }
   
   return response.data;

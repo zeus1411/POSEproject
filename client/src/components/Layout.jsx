@@ -5,6 +5,7 @@ import { getCurrentUser } from '../redux/slices/authSlice';
 import Header from './common/Header';
 import Footer from './common/Footer';
 import Toast from './common/Toast';
+import ChatBubble from './common/ChatBubble';
 
 const Layout = () => {
   const { user } = useSelector((state) => state.auth);
@@ -48,6 +49,7 @@ const Layout = () => {
       </div>
       <Footer />
       <Toast />
+      <ChatBubble />
     </div>
   );
 };

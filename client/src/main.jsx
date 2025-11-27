@@ -8,7 +8,8 @@ import { AuthProvider } from './context/AuthContext'
 import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
-  <React.StrictMode>
+  // Temporarily disabled StrictMode to fix Socket.IO double connection issue
+  // <React.StrictMode>
     <GoogleOAuthProvider clientId="1041136174971-jqsg5dtr01c0rr556b4q2lpifuk3n11u.apps.googleusercontent.com">
       <Provider store={store}>
         <AuthProvider>
@@ -16,5 +17,5 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         </AuthProvider>
       </Provider>
     </GoogleOAuthProvider>
-  </React.StrictMode>,
+  // </React.StrictMode>,
 )
