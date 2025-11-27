@@ -199,7 +199,7 @@ const authSlice = createSlice({
         }
       })
       // Logout
-      .addCase(logout.fulfilled, (state) => {
+      .addCase(logout.fulfilled, (state, action) => {
         state.user = null;
         state.isSuccess = false;
         state.isError = false;

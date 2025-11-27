@@ -6,6 +6,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import store from './redux/store';
 import Layout from './components/Layout';
 import ProtectedRoute from './components/common/ProtectedRoute';
+import { SocketProvider } from './context/SocketContext';
 import Home from './pages/common/Home';
 import Statistics from './pages/admin/Statistics';
 import Products from './pages/admin/Products';
@@ -27,8 +28,9 @@ import AdminLayout from './components/admin/AdminLayout';
 function App() {
   return (
     <Provider store={store}>
-      <Router>
-        <Routes>
+      <SocketProvider>
+        <Router>
+          <Routes>
           {/* Auth Routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
@@ -78,7 +80,8 @@ function App() {
           pauseOnHover
           theme="light"
         />
-      </Router>
+        </Router>
+      </SocketProvider>
     </Provider>
   );
 }
