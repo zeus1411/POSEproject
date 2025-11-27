@@ -80,6 +80,19 @@ export const markAsRead = createAsyncThunk(
   }
 );
 
+// Delete chat (Admin only)
+export const deleteChat = createAsyncThunk(
+  'chat/deleteChat',
+  async (chatId, { rejectWithValue }) => {
+    try {
+      const response = await api.delete(`/chat/${chatId}`);
+      return { chatId, ...response.data };
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || 'Không thể xóa đoạn chat');
+    }
+  }
+);
+
 // Assign admin to chat
 export const assignAdmin = createAsyncThunk(
   'chat/assignAdmin',
@@ -272,6 +285,27 @@ const chatSlice = createSlice({
         if (index !== -1) {
           state.chats[index] = updatedChat;
         }
+      })
+      
+      // Delete chat
+      .addCase(deleteChat.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(deleteChat.fulfilled, (state, action) => {
+        state.isLoading = false;
+        const chatId = action.payload.chatId;
+        // Remove from chats list
+        state.chats = state.chats.filter(c => c._id !== chatId);
+        // Clear current chat if it was deleted
+        if (state.currentChat?._id === chatId) {
+          state.currentChat = null;
+          state.messages = [];
+        }
+      })
+      .addCase(deleteChat.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.error = action.payload;
       })
       
       // Get unread count

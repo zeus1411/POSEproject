@@ -8,10 +8,12 @@ import {
   UserGroupIcon,
   MagnifyingGlassIcon,
   CheckIcon,
-  ClockIcon
+  ClockIcon,
+  TrashIcon
 } from '@heroicons/react/24/outline';
-import { getAdminChats, assignAdmin, markAsRead } from '../../redux/slices/chatSlice';
+import { getAdminChats, assignAdmin, markAsRead, deleteChat } from '../../redux/slices/chatSlice';
 import { useSocket } from '../../context/SocketContext';
+import Swal from 'sweetalert2';
 
 const AdminChatPanel = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -20,6 +22,7 @@ const AdminChatPanel = () => {
   const [message, setMessage] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [contextMenu, setContextMenu] = useState(null); // { chatId, x, y }
   
   const dispatch = useDispatch();
   const { socket, isConnected } = useSocket();
@@ -29,6 +32,7 @@ const AdminChatPanel = () => {
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const hasJoinedChatRef = useRef(null); // Track if we've already joined this chat
+  const contextMenuRef = useRef(null);
 
   // Get selected chat
   const selectedChat = chats.find(c => c._id === selectedChatId);
@@ -175,6 +179,122 @@ const AdminChatPanel = () => {
     setIsMinimized(!isMinimized);
   };
 
+  // Handle right click on chat item
+  const handleContextMenu = (e, chatId) => {
+    e.preventDefault();
+    setContextMenu({
+      chatId,
+      x: e.clientX,
+      y: e.clientY
+    });
+  };
+
+  // Handle delete chat
+  const handleDeleteChat = async () => {
+    if (!contextMenu) return;
+    
+    const chatToDelete = chats.find(c => c._id === contextMenu.chatId);
+    const username = chatToDelete?.userId?.username || 'người dùng này';
+    const chatId = contextMenu.chatId;
+    
+    // Close context menu immediately
+    setContextMenu(null);
+    
+    // Show SweetAlert2 confirmation
+    const result = await Swal.fire({
+      title: 'Xóa đoạn chat?',
+      html: `
+        <div class="text-left">
+          <p class="text-gray-700 mb-3">Bạn có chắc chắn muốn xóa đoạn chat với:</p>
+          <div class="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-3">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold">
+                ${username.charAt(0).toUpperCase()}
+              </div>
+              <div>
+                <p class="font-semibold text-gray-900">${username}</p>
+                <p class="text-xs text-gray-500">Tất cả tin nhắn sẽ bị xóa vĩnh viễn</p>
+              </div>
+            </div>
+          </div>
+          <p class="text-sm text-red-600 font-medium">⚠️ Hành động này không thể hoàn tác!</p>
+        </div>
+      `,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#DC2626',
+      cancelButtonColor: '#6B7280',
+      confirmButtonText: '<i class="fas fa-trash"></i> Xóa đoạn chat',
+      cancelButtonText: 'Hủy bỏ',
+      reverseButtons: true,
+      focusCancel: true,
+      customClass: {
+        popup: 'rounded-2xl',
+        confirmButton: 'font-semibold px-6 py-2.5 rounded-lg',
+        cancelButton: 'font-semibold px-6 py-2.5 rounded-lg'
+      }
+    });
+    
+    if (result.isConfirmed) {
+      try {
+        // Show loading
+        Swal.fire({
+          title: 'Đang xóa...',
+          html: 'Vui lòng đợi trong giây lát',
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          didOpen: () => {
+            Swal.showLoading();
+          }
+        });
+        
+        await dispatch(deleteChat(chatId)).unwrap();
+        
+        // If deleted chat was selected, clear selection
+        if (selectedChatId === chatId) {
+          setSelectedChatId(null);
+        }
+        
+        // Notify via socket
+        if (socket) {
+          socket.emit('chat:deleted', { chatId });
+        }
+        
+        // Show success message
+        Swal.fire({
+          icon: 'success',
+          title: 'Đã xóa!',
+          text: `Đã xóa đoạn chat với ${username} thành công`,
+          timer: 2000,
+          showConfirmButton: false,
+          customClass: {
+            popup: 'rounded-2xl'
+          }
+        });
+      } catch (error) {
+        // Show error message
+        Swal.fire({
+          icon: 'error',
+          title: 'Lỗi!',
+          text: error.message || 'Không thể xóa đoạn chat. Vui lòng thử lại.',
+          confirmButtonColor: '#3B82F6',
+          customClass: {
+            popup: 'rounded-2xl'
+          }
+        });
+      }
+    }
+  };
+
+  // Close context menu when clicking outside
+  useEffect(() => {
+    const handleClick = () => setContextMenu(null);
+    if (contextMenu) {
+      document.addEventListener('click', handleClick);
+      return () => document.removeEventListener('click', handleClick);
+    }
+  }, [contextMenu]);
+
   // Filter chats by search query
   const filteredChats = chats.filter(chat => {
     if (!searchQuery) return true;
@@ -290,7 +410,8 @@ const AdminChatPanel = () => {
                         <button
                           key={chat._id}
                           onClick={() => handleSelectChat(chat._id)}
-                          className={`w-full p-4 border-b border-gray-200 hover:bg-white transition-colors text-left ${
+                          onContextMenu={(e) => handleContextMenu(e, chat._id)}
+                          className={`w-full p-4 border-b border-gray-200 hover:bg-white transition-colors text-left relative ${
                             isActive ? 'bg-white border-l-4 border-l-purple-600' : ''
                           }`}
                         >
@@ -320,25 +441,13 @@ const AdminChatPanel = () => {
                                 )}
                               </div>
                               {lastMessage && (
-                                <p className="text-sm text-gray-600 truncate">
+                                <p className={`text-sm truncate ${
+                                  unread > 0 ? 'font-bold text-gray-900' : 'text-gray-600'
+                                }`}>
                                   {lastMessage.senderRole === 'admin' ? 'Bạn: ' : ''}
                                   {lastMessage.message}
                                 </p>
                               )}
-                              <div className="flex items-center mt-1 space-x-2">
-                                {chat.status === 'PENDING' && (
-                                  <span className="inline-flex items-center text-xs text-orange-600 bg-orange-100 px-2 py-0.5 rounded-full">
-                                    <ClockIcon className="w-3 h-3 mr-1" />
-                                    Chờ
-                                  </span>
-                                )}
-                                {chat.status === 'ACTIVE' && chat.adminId && (
-                                  <span className="inline-flex items-center text-xs text-green-600 bg-green-100 px-2 py-0.5 rounded-full">
-                                    <CheckIcon className="w-3 h-3 mr-1" />
-                                    Đang xử lý
-                                  </span>
-                                )}
-                              </div>
                             </div>
                           </div>
                         </button>
@@ -456,6 +565,28 @@ const AdminChatPanel = () => {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Context Menu */}
+      {contextMenu && (
+        <div
+          ref={contextMenuRef}
+          style={{
+            position: 'fixed',
+            top: contextMenu.y,
+            left: contextMenu.x,
+            zIndex: 9999
+          }}
+          className="bg-white rounded-lg shadow-xl border border-gray-200 py-1 min-w-[180px]"
+        >
+          <button
+            onClick={handleDeleteChat}
+            className="w-full px-4 py-2 text-left text-red-600 hover:bg-red-50 transition-colors flex items-center space-x-2"
+          >
+            <TrashIcon className="w-4 h-4" />
+            <span>Xóa đoạn chat</span>
+          </button>
         </div>
       )}
     </>

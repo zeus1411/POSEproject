@@ -35,6 +35,25 @@ export const getAdminChats = async (req, res, next) => {
   }
 };
 
+// @desc    Delete chat
+// @route   DELETE /api/v1/chat/:chatId
+// @access  Private (Admin)
+export const deleteChat = async (req, res, next) => {
+  try {
+    const { chatId } = req.params;
+    const adminId = req.user.userId;
+
+    const result = await chatService.deleteChat(chatId, adminId);
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      ...result
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // @desc    Get chat by ID
 // @route   GET /api/v1/chat/:chatId
 // @access  Private

@@ -38,6 +38,20 @@ class ChatService {
     return chats;
   }
 
+  // Delete chat (admin only)
+  async deleteChat(chatId, adminId) {
+    const chat = await Chat.findById(chatId);
+    
+    if (!chat) {
+      throw new Error('Chat không tồn tại');
+    }
+
+    // Only admin can delete chat
+    await Chat.findByIdAndDelete(chatId);
+    
+    return { success: true, message: 'Đã xóa đoạn chat thành công' };
+  }
+
   // Send message
   async sendMessage(chatId, senderId, senderRole, message) {
     const chat = await Chat.findById(chatId);

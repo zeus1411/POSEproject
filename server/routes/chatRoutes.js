@@ -7,7 +7,8 @@ import {
   markAsRead, 
   assignAdmin, 
   closeChat,
-  getUnreadCount 
+  getUnreadCount,
+  deleteChat
 } from '../controllers/chatController.js';
 import { authenticateUser, authorizeRoles } from '../middlewares/auth.js';
 
@@ -22,6 +23,7 @@ router.get('/unread-count', getUnreadCount);
 
 // Admin routes
 router.get('/admin', authorizeRoles('admin'), getAdminChats);
+router.delete('/:chatId', authorizeRoles('admin'), deleteChat);
 
 // Shared routes (both user and admin)
 router.get('/:chatId', getChatById);
