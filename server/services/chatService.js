@@ -2,22 +2,24 @@ import Chat from '../models/Chat.js';
 import User from '../models/User.js';
 
 class ChatService {
-  // Get or create chat for user
-  async getOrCreateChat(userId) {
-    const user = await User.findById(userId);
+  // 🔑 Get or create chat for customer
+  async getOrCreateChat(customerId) {
+    const user = await User.findById(customerId);
     if (!user) {
       throw new Error('User không tồn tại');
     }
 
-    const chat = await Chat.getOrCreateChat(userId);
+    const chat = await Chat.getOrCreateChat(customerId);
     return chat;
   }
 
   // Get chat by ID
   async getChatById(chatId, userId, role) {
     const chat = await Chat.findById(chatId)
-      .populate('userId', 'username email avatar')
-      .populate('adminId', 'username email avatar')
+      .populate('customerId', 'username email avatar')
+      .populate('userId', 'username email avatar') // Backward compatibility
+      .populate('assignedTo', 'username email avatar')
+      .populate('adminId', 'username email avatar') // Backward compatibility
       .populate('messages.senderId', 'username avatar role');
 
     if (!chat) {
@@ -25,17 +27,25 @@ class ChatService {
     }
 
     // Check permission
-    if (role === 'user' && chat.userId._id.toString() !== userId.toString()) {
+    const chatCustomerId = (chat.customerId || chat.userId)._id.toString();
+    if (role === 'user' && chatCustomerId !== userId.toString()) {
       throw new Error('Bạn không có quyền truy cập chat này');
     }
 
     return chat;
   }
 
-  // Get all chats for admin
-  async getAdminChats(adminId = null) {
-    const chats = await Chat.getAdminChats(adminId);
+  // 🔑 Get ALL chats for admin (Shared Inbox - ALL admins see ALL chats)
+  async getAllChatsForAdmin(options = {}) {
+    // All admins can see all chats
+    const chats = await Chat.getAllChatsForAdmin(options);
     return chats;
+  }
+
+  // 🔑 DEPRECATED - Keep for backward compatibility
+  async getAdminChats(adminId = null) {
+    // Return ALL chats regardless of adminId (Shared Inbox)
+    return await this.getAllChatsForAdmin();
   }
 
   // Delete chat (admin only)
@@ -46,7 +56,6 @@ class ChatService {
       throw new Error('Chat không tồn tại');
     }
 
-    // Only admin can delete chat
     await Chat.findByIdAndDelete(chatId);
     
     return { success: true, message: 'Đã xóa đoạn chat thành công' };
@@ -61,21 +70,24 @@ class ChatService {
     }
 
     // Verify sender
-    if (senderRole === 'user' && chat.userId.toString() !== senderId.toString()) {
+    const chatCustomerId = chat.customerId || chat.userId;
+    if (senderRole === 'user' && chatCustomerId.toString() !== senderId.toString()) {
       throw new Error('Bạn không có quyền gửi tin nhắn trong chat này');
     }
 
     await chat.addMessage(senderId, senderRole, message);
     
     // Populate before returning
-    await chat.populate('userId', 'username email avatar');
-    await chat.populate('adminId', 'username email avatar');
+    await chat.populate('customerId', 'username email avatar');
+    await chat.populate('userId', 'username email avatar'); // Backward compatibility
+    await chat.populate('assignedTo', 'username email avatar');
+    await chat.populate('adminId', 'username email avatar'); // Backward compatibility
     await chat.populate('messages.senderId', 'username avatar role');
 
     return chat;
   }
 
-  // Mark messages as read
+  // 🔑 Mark messages as read (with admin tracking)
   async markAsRead(chatId, userId, role) {
     const chat = await Chat.findById(chatId);
     
@@ -84,21 +96,26 @@ class ChatService {
     }
 
     // Verify permission
-    if (role === 'user' && chat.userId.toString() !== userId.toString()) {
+    const chatCustomerId = chat.customerId || chat.userId;
+    if (role === 'user' && chatCustomerId.toString() !== userId.toString()) {
       throw new Error('Bạn không có quyền truy cập chat này');
     }
 
-    await chat.markAsRead(role);
+    // Pass adminId when admin is reading
+    const adminId = role === 'admin' ? userId : null;
+    await chat.markAsRead(role, adminId);
     
     // Populate before returning
-    await chat.populate('userId', 'username email avatar');
-    await chat.populate('adminId', 'username email avatar');
+    await chat.populate('customerId', 'username email avatar');
+    await chat.populate('userId', 'username email avatar'); // Backward compatibility
+    await chat.populate('assignedTo', 'username email avatar');
+    await chat.populate('adminId', 'username email avatar'); // Backward compatibility
     await chat.populate('messages.senderId', 'username avatar role');
 
     return chat;
   }
 
-  // Assign admin to chat (auto-assign or manual)
+  // 🔑 Assign admin to chat (or auto-assign)
   async assignAdmin(chatId, adminId) {
     const admin = await User.findById(adminId);
     if (!admin || admin.role !== 'admin') {
@@ -107,6 +124,34 @@ class ChatService {
 
     const chat = await Chat.assignAdmin(chatId, adminId);
     return chat;
+  }
+
+  // 🔑 Take over chat (admin reassignment)
+  async takeOverChat(chatId, newAdminId) {
+    const admin = await User.findById(newAdminId);
+    if (!admin || admin.role !== 'admin') {
+      throw new Error('Admin không tồn tại');
+    }
+
+    const chat = await Chat.takeOverChat(chatId, newAdminId);
+    return chat;
+  }
+
+  // 🔑 Unassign chat (return to pool)
+  async unassignChat(chatId, adminId) {
+    const chat = await Chat.findById(chatId);
+    
+    if (!chat) {
+      throw new Error('Chat không tồn tại');
+    }
+
+    // Only assigned admin can unassign
+    const assignedAdminId = chat.assignedTo || chat.adminId;
+    if (assignedAdminId && assignedAdminId.toString() !== adminId.toString()) {
+      throw new Error('Chỉ admin đang xử lý mới có thể bỏ nhận chat này');
+    }
+
+    return await Chat.unassignChat(chatId);
   }
 
   // Close chat
@@ -118,7 +163,8 @@ class ChatService {
     }
 
     // Only admin or chat owner can close
-    if (role === 'user' && chat.userId.toString() !== userId.toString()) {
+    const chatCustomerId = chat.customerId || chat.userId;
+    if (role === 'user' && chatCustomerId.toString() !== userId.toString()) {
       throw new Error('Bạn không có quyền đóng chat này');
     }
 
@@ -128,35 +174,69 @@ class ChatService {
     return chat;
   }
 
-  // Get unread count for user
-  async getUnreadCount(userId) {
+  // 🔑 Resolve chat (mark as resolved but keep visible)
+  async resolveChat(chatId, adminId) {
+    const chat = await Chat.findById(chatId);
+    
+    if (!chat) {
+      throw new Error('Chat không tồn tại');
+    }
+
+    chat.status = 'RESOLVED';
+    await chat.save();
+
+    return chat;
+  }
+
+  // Get unread count for customer
+  async getUnreadCount(customerId) {
     const chat = await Chat.findOne({ 
-      userId, 
-      status: { $ne: 'CLOSED' } 
+      customerId, 
+      status: { $nin: ['CLOSED'] } 
     });
 
     if (!chat) {
       return 0;
     }
 
-    return chat.unreadCount.user || 0;
+    return chat.unreadCount.customer || 0;
   }
 
-  // Get total unread count for admin (all chats)
+  // 🔑 Get total unread count for ALL admins (Shared Inbox)
   async getAdminUnreadCount(adminId = null) {
-    const query = { status: { $in: ['ACTIVE', 'PENDING'] } };
+    // All admins see the same unread count (total from all chats)
+    const chats = await Chat.find({ 
+      status: { $in: ['UNASSIGNED', 'ASSIGNED', 'RESOLVED'] } 
+    });
     
-    if (adminId) {
-      query.$or = [
-        { adminId: adminId },
-        { adminId: null, status: 'PENDING' }
-      ];
-    }
-
-    const chats = await Chat.find(query);
-    const totalUnread = chats.reduce((sum, chat) => sum + (chat.unreadCount.admin || 0), 0);
+    const totalUnread = chats.reduce((sum, chat) => sum + (chat.unreadCount.admins || 0), 0);
     
     return totalUnread;
+  }
+
+  // 🔑 Get chat statistics
+  async getChatStatistics() {
+    const [
+      totalChats,
+      unassignedChats,
+      assignedChats,
+      resolvedChats,
+      closedChats
+    ] = await Promise.all([
+      Chat.countDocuments(),
+      Chat.countDocuments({ status: 'UNASSIGNED' }),
+      Chat.countDocuments({ status: 'ASSIGNED' }),
+      Chat.countDocuments({ status: 'RESOLVED' }),
+      Chat.countDocuments({ status: 'CLOSED' })
+    ]);
+
+    return {
+      totalChats,
+      unassignedChats,
+      assignedChats,
+      resolvedChats,
+      closedChats
+    };
   }
 }
 

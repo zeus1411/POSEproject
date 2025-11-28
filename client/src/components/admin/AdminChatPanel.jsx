@@ -9,7 +9,13 @@ import {
   MagnifyingGlassIcon,
   CheckIcon,
   ClockIcon,
-  TrashIcon
+  TrashIcon,
+  UserIcon,
+  ArrowPathIcon,
+  FunnelIcon,
+  ExclamationCircleIcon,
+  ArrowRightOnRectangleIcon,
+  ChevronDownIcon
 } from '@heroicons/react/24/outline';
 import { getAdminChats, assignAdmin, markAsRead, deleteChat } from '../../redux/slices/chatSlice';
 import { useSocket } from '../../context/SocketContext';
@@ -23,6 +29,9 @@ const AdminChatPanel = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [contextMenu, setContextMenu] = useState(null); // { chatId, x, y }
+  const [statusFilter, setStatusFilter] = useState('ALL'); // ALL, UNASSIGNED, ASSIGNED, RESOLVED
+  const [showFilters, setShowFilters] = useState(false);
+  const [showAssignmentHistory, setShowAssignmentHistory] = useState(false);
   
   const dispatch = useDispatch();
   const { socket, isConnected } = useSocket();
@@ -60,7 +69,7 @@ const AdminChatPanel = () => {
     }
   }, [isOpen, user, dispatch, socket, isConnected]);
 
-  // Listen for new messages from users not in current chat list
+  // Listen for new messages and assignment events
   useEffect(() => {
     if (!socket || !user || user.role !== 'admin') return;
 
@@ -78,12 +87,69 @@ const AdminChatPanel = () => {
       dispatch(getAdminChats());
     };
 
+    const handleNewMessage = (data) => {
+      console.log('💬 New message in chat:', data);
+      
+      // Nếu tin nhắn mới trong chat đang mở và admin đang xem → tự động mark as read
+      if (data.message.chatId === selectedChatId) {
+        console.log('✅ Auto mark as read - admin is viewing this chat');
+        dispatch(markAsRead(data.message.chatId));
+        socket.emit('chat:mark-read', { chatId: data.message.chatId });
+      }
+      
+      // Reload chat list để cập nhật unread count
+      dispatch(getAdminChats());
+    };
+
+    const handleChatAssigned = (data) => {
+      console.log('✅ Chat assigned:', data);
+      dispatch(getAdminChats());
+    };
+
+    const handleChatTakenOver = (data) => {
+      console.log('🔄 Chat taken over:', data);
+      dispatch(getAdminChats());
+      
+      // Show notification
+      if (data.newAssignedTo !== user._id) {
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'info',
+          title: 'Chat đã được tiếp quản',
+          showConfirmButton: false,
+          timer: 3000,
+          timerProgressBar: true
+        });
+      }
+    };
+
+    const handleChatUnassigned = (data) => {
+      console.log('↩️ Chat unassigned:', data);
+      dispatch(getAdminChats());
+    };
+
+    const handleChatUpdated = (data) => {
+      console.log('🔄 Chat updated:', data);
+      dispatch(getAdminChats());
+    };
+
     socket.on('chat:new-message-notification', handleNewMessageNotification);
+    socket.on('chat:new-message', handleNewMessage);
+    socket.on('admin:chat-assigned', handleChatAssigned);
+    socket.on('admin:chat-taken-over', handleChatTakenOver);
+    socket.on('admin:chat-unassigned', handleChatUnassigned);
+    socket.on('chat:updated', handleChatUpdated);
 
     return () => {
       socket.off('chat:new-message-notification', handleNewMessageNotification);
+      socket.off('chat:new-message', handleNewMessage);
+      socket.off('admin:chat-assigned', handleChatAssigned);
+      socket.off('admin:chat-taken-over', handleChatTakenOver);
+      socket.off('admin:chat-unassigned', handleChatUnassigned);
+      socket.off('chat:updated', handleChatUpdated);
     };
-  }, [socket, user, dispatch]);
+  }, [socket, user, dispatch, selectedChatId]);
 
   // Listen for admin chats list
   useEffect(() => {
@@ -148,10 +214,34 @@ const AdminChatPanel = () => {
     
     if (!message.trim() || !socket || !selectedChat) return;
 
+    // Kiểm tra quyền nhắn tin
+    const assignedAdmin = selectedChat.assignedTo || selectedChat.adminId;
+    const isMyChat = assignedAdmin?._id === user?._id;
+    const isUnassigned = selectedChat.status === 'UNASSIGNED';
+
+    if (!isUnassigned && !isMyChat) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Không thể nhắn tin!',
+        html: `User này đang được xử lý bởi <strong>${assignedAdmin?.username || 'admin khác'}</strong>.<br/>Vui lòng chọn user khác hoặc nhấn "Tiếp quản" để tiếp nhận.`,
+        confirmButtonColor: '#7C3AED'
+      });
+      return;
+    }
+
     socket.emit('chat:send-message', {
       chatId: selectedChat._id,
       message: message.trim()
     });
+
+    // Mark as read sau khi gửi tin nhắn (clear unread badge)
+    dispatch(markAsRead(selectedChat._id));
+    socket.emit('chat:mark-read', { chatId: selectedChat._id });
+
+    // Reload chat list để cập nhật UI
+    setTimeout(() => {
+      dispatch(getAdminChats());
+    }, 500);
 
     setMessage('');
     setIsTyping(false);
@@ -160,13 +250,90 @@ const AdminChatPanel = () => {
   const handleSelectChat = (chatId) => {
     setSelectedChatId(chatId);
     
-    // If chat is PENDING, assign admin automatically
+    // If chat is UNASSIGNED, assign admin automatically
     const chat = chats.find(c => c._id === chatId);
-    if (chat && chat.status === 'PENDING' && !chat.adminId) {
+    if (chat && chat.status === 'UNASSIGNED' && !chat.assignedTo && !chat.adminId) {
       dispatch(assignAdmin(chatId));
       if (socket) {
         socket.emit('admin:assign-chat', { chatId });
       }
+    }
+  };
+
+  const handleTakeOverChat = async (chatId) => {
+    try {
+      const result = await Swal.fire({
+        title: 'Tiếp quản chat?',
+        text: 'Bạn muốn tiếp quản cuộc trò chuyện này từ admin khác?',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#7C3AED',
+        cancelButtonColor: '#6B7280',
+        confirmButtonText: 'Tiếp quản',
+        cancelButtonText: 'Hủy'
+      });
+
+      if (result.isConfirmed) {
+        if (socket) {
+          socket.emit('admin:takeover-chat', { chatId });
+        }
+        
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'success',
+          title: 'Đã tiếp quản chat!',
+          showConfirmButton: false,
+          timer: 2000
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Lỗi!',
+        text: 'Không thể tiếp quản chat. Vui lòng thử lại.',
+      });
+    }
+  };
+
+  const handleUnassignChat = async (chatId) => {
+    try {
+      const result = await Swal.fire({
+        title: 'Trả chat về pool?',
+        text: 'Chat sẽ được trả về danh sách chung để admin khác có thể xử lý.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#7C3AED',
+        cancelButtonColor: '#6B7280',
+        confirmButtonText: 'Trả về',
+        cancelButtonText: 'Hủy'
+      });
+
+      if (result.isConfirmed) {
+        if (socket) {
+          socket.emit('admin:unassign-chat', { chatId });
+        }
+        
+        // Clear selection if this was selected
+        if (selectedChatId === chatId) {
+          setSelectedChatId(null);
+        }
+        
+        Swal.fire({
+          toast: true,
+          position: 'top-end',
+          icon: 'success',
+          title: 'Đã trả chat về pool!',
+          showConfirmButton: false,
+          timer: 2000
+        });
+      }
+    } catch (error) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Lỗi!',
+        text: 'Không thể trả chat về pool. Vui lòng thử lại.',
+      });
     }
   };
 
@@ -295,16 +462,39 @@ const AdminChatPanel = () => {
     }
   }, [contextMenu]);
 
-  // Filter chats by search query
+  // Filter chats by search query and status
   const filteredChats = chats.filter(chat => {
-    if (!searchQuery) return true;
-    const username = chat.userId?.username?.toLowerCase() || '';
-    const email = chat.userId?.email?.toLowerCase() || '';
-    return username.includes(searchQuery.toLowerCase()) || email.includes(searchQuery.toLowerCase());
+    // Search filter
+    if (searchQuery) {
+      const username = (chat.userId?.username || chat.customerId?.username || '').toLowerCase();
+      const email = (chat.userId?.email || chat.customerId?.email || '').toLowerCase();
+      if (!username.includes(searchQuery.toLowerCase()) && !email.includes(searchQuery.toLowerCase())) {
+        return false;
+      }
+    }
+
+    // Status filter
+    if (statusFilter !== 'ALL') {
+      if (statusFilter === 'UNASSIGNED' && chat.status !== 'UNASSIGNED') return false;
+      if (statusFilter === 'ASSIGNED' && chat.status !== 'ASSIGNED') return false;
+      if (statusFilter === 'RESOLVED' && chat.status !== 'RESOLVED') return false;
+    }
+
+    return true;
   });
 
-  // Calculate total unread
-  const totalUnread = chats.reduce((sum, chat) => sum + (chat.unreadCount?.admin || 0), 0);
+  // Calculate total unread (use admins for new model, admin for old model)
+  const totalUnread = chats.reduce((sum, chat) => {
+    const unread = chat.unreadCount?.admins || chat.unreadCount?.admin || 0;
+    return sum + unread;
+  }, 0);
+
+  // Count by status
+  const unassignedCount = chats.filter(c => c.status === 'UNASSIGNED').length;
+  const assignedCount = chats.filter(c => c.status === 'ASSIGNED').length;
+  const myChatsCount = chats.filter(c => 
+    (c.assignedTo?._id || c.adminId?._id) === user?._id
+  ).length;
 
   // Don't show if user is not admin
   if (!user || user.role !== 'admin') {
@@ -350,7 +540,7 @@ const AdminChatPanel = () => {
               <div>
                 <h3 className="font-bold text-lg">Chat Hỗ trợ - Admin</h3>
                 <p className="text-xs text-purple-100">
-                  {chats.length} cuộc trò chuyện {totalUnread > 0 && `• ${totalUnread} chưa đọc`}
+                  {unassignedCount} chưa nhận • {myChatsCount} của tôi {totalUnread > 0 && `• ${totalUnread} chưa đọc`}
                 </p>
               </div>
             </div>
@@ -376,7 +566,7 @@ const AdminChatPanel = () => {
               {/* Chat List Sidebar */}
               <div className="w-80 border-r border-gray-200 flex flex-col bg-gray-50">
                 {/* Search */}
-                <div className="p-4 border-b border-gray-200">
+                <div className="p-4 border-b border-gray-200 space-y-3">
                   <div className="relative">
                     <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                     <input
@@ -386,6 +576,40 @@ const AdminChatPanel = () => {
                       placeholder="Tìm kiếm người dùng..."
                       className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                     />
+                  </div>
+
+                  {/* Filter Tabs */}
+                  <div className="flex items-center gap-1 bg-white rounded-lg p-1">
+                    <button
+                      onClick={() => setStatusFilter('ALL')}
+                      className={`flex-1 px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+                        statusFilter === 'ALL' 
+                          ? 'bg-purple-600 text-white' 
+                          : 'text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      Tất cả ({chats.length})
+                    </button>
+                    <button
+                      onClick={() => setStatusFilter('UNASSIGNED')}
+                      className={`flex-1 px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+                        statusFilter === 'UNASSIGNED' 
+                          ? 'bg-orange-500 text-white' 
+                          : 'text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      Chưa nhận ({unassignedCount})
+                    </button>
+                    <button
+                      onClick={() => setStatusFilter('ASSIGNED')}
+                      className={`flex-1 px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+                        statusFilter === 'ASSIGNED' 
+                          ? 'bg-green-500 text-white' 
+                          : 'text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      Đang xử lý ({assignedCount})
+                    </button>
                   </div>
                 </div>
 
@@ -403,8 +627,11 @@ const AdminChatPanel = () => {
                   ) : (
                     filteredChats.map((chat) => {
                       const lastMessage = chat.messages[chat.messages.length - 1];
-                      const unread = chat.unreadCount?.admin || 0;
+                      const unread = chat.unreadCount?.admins || chat.unreadCount?.admin || 0;
                       const isActive = chat._id === selectedChatId;
+                      const assignedAdmin = chat.assignedTo || chat.adminId;
+                      const isMyChat = assignedAdmin?._id === user?._id;
+                      const isUnassigned = chat.status === 'UNASSIGNED';
                       
                       return (
                         <button
@@ -418,7 +645,7 @@ const AdminChatPanel = () => {
                           <div className="flex items-start space-x-3">
                             <div className="relative flex-shrink-0">
                               <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-lg">
-                                {chat.userId?.username?.charAt(0).toUpperCase() || 'U'}
+                                {(chat.userId?.username || chat.customerId?.username || 'U').charAt(0).toUpperCase()}
                               </div>
                               {unread > 0 && (
                                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
@@ -429,7 +656,7 @@ const AdminChatPanel = () => {
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center justify-between mb-1">
                                 <h4 className="font-semibold text-gray-900 truncate">
-                                  {chat.userId?.username || 'Unknown User'}
+                                  {chat.userId?.username || chat.customerId?.username || 'Unknown User'}
                                 </h4>
                                 {lastMessage && (
                                   <span className="text-xs text-gray-500">
@@ -440,6 +667,31 @@ const AdminChatPanel = () => {
                                   </span>
                                 )}
                               </div>
+                              
+                              {/* Assignment Status */}
+                              {isUnassigned ? (
+                                <div className="flex items-center gap-1 mb-1">
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                    <ExclamationCircleIcon className="w-3 h-3 mr-1" />
+                                    Chờ xử lý
+                                  </span>
+                                </div>
+                              ) : isMyChat ? (
+                                <div className="flex items-center gap-1 mb-1">
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    <UserIcon className="w-3 h-3 mr-1" />
+                                    Đang xử lý
+                                  </span>
+                                </div>
+                              ) : assignedAdmin ? (
+                                <div className="flex items-center gap-1 mb-1">
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                    <UserIcon className="w-3 h-3 mr-1" />
+                                    {assignedAdmin.username} đang xử lý
+                                  </span>
+                                </div>
+                              ) : null}
+                              
                               {lastMessage && (
                                 <p className={`text-sm truncate ${
                                   unread > 0 ? 'font-bold text-gray-900' : 'text-gray-600'
@@ -463,19 +715,103 @@ const AdminChatPanel = () => {
                   <>
                     {/* Chat Header */}
                     <div className="p-4 border-b border-gray-200 bg-white">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold">
-                          {selectedChat.userId?.username?.charAt(0).toUpperCase() || 'U'}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold">
+                            {(selectedChat.userId?.username || selectedChat.customerId?.username || 'U').charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-gray-900">
+                              {selectedChat.userId?.username || selectedChat.customerId?.username || 'Unknown User'}
+                            </h4>
+                            <p className="text-xs text-gray-500">
+                              {selectedChat.userId?.email || selectedChat.customerId?.email || ''}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <h4 className="font-semibold text-gray-900">
-                            {selectedChat.userId?.username || 'Unknown User'}
-                          </h4>
-                          <p className="text-xs text-gray-500">
-                            {selectedChat.userId?.email || ''}
-                          </p>
+
+                        {/* Assignment Actions */}
+                        <div className="flex items-center gap-2">
+                          {(() => {
+                            const assignedAdmin = selectedChat.assignedTo || selectedChat.adminId;
+                            const isMyChat = assignedAdmin?._id === user?._id;
+                            const isUnassigned = selectedChat.status === 'UNASSIGNED';
+
+                            if (isUnassigned) {
+                              return (
+                                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                                  <ExclamationCircleIcon className="w-4 h-4 mr-1" />
+                                  Chưa có admin xử lý
+                                </span>
+                              );
+                            } else if (isMyChat) {
+                              return (
+                                <>
+                                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    <CheckIcon className="w-4 h-4 mr-1" />
+                                    Bạn đang xử lý
+                                  </span>
+                                  <button
+                                    onClick={() => handleUnassignChat(selectedChat._id)}
+                                    className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+                                  >
+                                    <ArrowRightOnRectangleIcon className="w-4 h-4 mr-1" />
+                                    Trả về
+                                  </button>
+                                </>
+                              );
+                            } else if (assignedAdmin) {
+                              return (
+                                <>
+                                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    <UserIcon className="w-4 h-4 mr-1" />
+                                    {assignedAdmin.username}
+                                  </span>
+                                  <button
+                                    onClick={() => handleTakeOverChat(selectedChat._id)}
+                                    className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium bg-purple-600 text-white hover:bg-purple-700 transition-colors"
+                                  >
+                                    <ArrowPathIcon className="w-4 h-4 mr-1" />
+                                    Tiếp quản
+                                  </button>
+                                </>
+                              );
+                            }
+                          })()}
                         </div>
                       </div>
+
+                      {/* Assignment History Toggle */}
+                      {selectedChat.assignmentHistory && selectedChat.assignmentHistory.length > 0 && (
+                        <button
+                          onClick={() => setShowAssignmentHistory(!showAssignmentHistory)}
+                          className="mt-2 text-xs text-purple-600 hover:text-purple-700 flex items-center gap-1"
+                        >
+                          <ClockIcon className="w-3 h-3" />
+                          {showAssignmentHistory ? 'Ẩn' : 'Xem'} lịch sử tiếp quản ({selectedChat.assignmentHistory.length})
+                          <ChevronDownIcon className={`w-3 h-3 transition-transform ${showAssignmentHistory ? 'rotate-180' : ''}`} />
+                        </button>
+                      )}
+
+                      {/* Assignment History */}
+                      {showAssignmentHistory && selectedChat.assignmentHistory && (
+                        <div className="mt-3 p-3 bg-gray-50 rounded-lg space-y-2 max-h-32 overflow-y-auto">
+                          {selectedChat.assignmentHistory.map((history, index) => (
+                            <div key={index} className="text-xs text-gray-600 flex items-center gap-2">
+                              <UserIcon className="w-3 h-3 text-gray-400" />
+                              <span className="font-medium">{history.adminId?.username || 'Unknown'}</span>
+                              <span>•</span>
+                              <span>{new Date(history.assignedAt).toLocaleString('vi-VN')}</span>
+                              {history.unassignedAt && (
+                                <>
+                                  <span>→</span>
+                                  <span>{new Date(history.unassignedAt).toLocaleString('vi-VN')}</span>
+                                </>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                     {/* Messages */}
@@ -532,27 +868,59 @@ const AdminChatPanel = () => {
                     </div>
 
                     {/* Input */}
-                    <form onSubmit={handleSendMessage} className="p-4 bg-white border-t border-gray-200">
-                      <div className="flex items-center space-x-2">
-                        <input
-                          type="text"
-                          value={message}
-                          onChange={(e) => {
-                            setMessage(e.target.value);
-                            handleTyping();
-                          }}
-                          placeholder="Nhập tin nhắn..."
-                          disabled={!isConnected}
-                          className="flex-1 px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-gray-100"
-                        />
-                        <button
-                          type="submit"
-                          disabled={!message.trim() || !isConnected}
-                          className="bg-purple-600 text-white p-3 rounded-full hover:bg-purple-700 transition-colors disabled:bg-gray-300 flex-shrink-0"
-                        >
-                          <PaperAirplaneIcon className="w-5 h-5" />
-                        </button>
-                      </div>
+                    <form onSubmit={handleSendMessage} className="bg-white border-t border-gray-200">
+                      {(() => {
+                        const assignedAdmin = selectedChat.assignedTo || selectedChat.adminId;
+                        const isMyChat = assignedAdmin?._id === user?._id;
+                        const isUnassigned = selectedChat.status === 'UNASSIGNED';
+                        const canSendMessage = isUnassigned || isMyChat;
+
+                        return (
+                          <>
+                            {/* Warning Banner khi admin khác đang xử lý */}
+                            {!canSendMessage && assignedAdmin && (
+                              <div className="px-4 pt-3 pb-2">
+                                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 flex items-start gap-3">
+                                  <ExclamationCircleIcon className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                                  <div className="flex-1">
+                                    <p className="text-sm font-medium text-yellow-800">
+                                      User đang được xử lý bởi <span className="font-bold">{assignedAdmin.username}</span>
+                                    </p>
+                                    <p className="text-xs text-yellow-700 mt-1">
+                                      Bạn không thể nhắn tin. Vui lòng nhấn "Tiếp quản" ở trên để tiếp nhận cuộc trò chuyện này.
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Input Area */}
+                            <div className="p-4">
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="text"
+                                  value={message}
+                                  onChange={(e) => {
+                                    setMessage(e.target.value);
+                                    handleTyping();
+                                  }}
+                                  placeholder={canSendMessage ? "Nhập tin nhắn..." : "Không thể nhắn tin - User đang được xử lý bởi admin khác"}
+                                  disabled={!isConnected || !canSendMessage}
+                                  className="flex-1 px-4 py-3 border border-gray-300 rounded-full focus:outline-none focus:ring-2 focus:ring-purple-500 disabled:bg-gray-100 disabled:text-gray-500"
+                                />
+                                <button
+                                  type="submit"
+                                  disabled={!message.trim() || !isConnected || !canSendMessage}
+                                  className="bg-purple-600 text-white p-3 rounded-full hover:bg-purple-700 transition-colors disabled:bg-gray-300 flex-shrink-0"
+                                  title={canSendMessage ? "Gửi tin nhắn" : "Không thể gửi - User đang được xử lý"}
+                                >
+                                  <PaperAirplaneIcon className="w-5 h-5" />
+                                </button>
+                              </div>
+                            </div>
+                          </>
+                        );
+                      })()}
                     </form>
                   </>
                 ) : (

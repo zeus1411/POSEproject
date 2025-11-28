@@ -18,13 +18,20 @@ export const getUserChat = async (req, res, next) => {
   }
 };
 
-// @desc    Get all chats for admin
+// @desc    Get all chats for admin (Shared Inbox - ALL chats)
 // @route   GET /api/v1/chat/admin
 // @access  Private (Admin)
 export const getAdminChats = async (req, res, next) => {
   try {
-    const adminId = req.user.userId;
-    const chats = await chatService.getAdminChats(adminId);
+    const { status, assignedTo, priority, tags } = req.query;
+    
+    const options = {};
+    if (status) options.status = status;
+    if (assignedTo) options.assignedTo = assignedTo;
+    if (priority) options.priority = priority;
+    if (tags) options.tags = tags.split(',');
+    
+    const chats = await chatService.getAllChatsForAdmin(options);
 
     res.status(StatusCodes.OK).json({
       success: true,
@@ -142,6 +149,46 @@ export const assignAdmin = async (req, res, next) => {
   }
 };
 
+// 🔑 @desc    Take over chat from another admin
+// @route   PUT /api/v1/chat/:chatId/takeover
+// @access  Private (Admin)
+export const takeOverChat = async (req, res, next) => {
+  try {
+    const { chatId } = req.params;
+    const newAdminId = req.user.userId;
+
+    const chat = await chatService.takeOverChat(chatId, newAdminId);
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      data: chat,
+      message: 'Đã tiếp quản chat thành công'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// 🔑 @desc    Unassign chat (return to pool)
+// @route   PUT /api/v1/chat/:chatId/unassign
+// @access  Private (Admin)
+export const unassignChat = async (req, res, next) => {
+  try {
+    const { chatId } = req.params;
+    const adminId = req.user.userId;
+
+    const chat = await chatService.unassignChat(chatId, adminId);
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      data: chat,
+      message: 'Đã trả chat về danh sách chung'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // @desc    Close chat
 // @route   PUT /api/v1/chat/:chatId/close
 // @access  Private
@@ -157,6 +204,26 @@ export const closeChat = async (req, res, next) => {
       success: true,
       data: chat,
       message: 'Đã đóng chat'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// 🔑 @desc    Resolve chat
+// @route   PUT /api/v1/chat/:chatId/resolve
+// @access  Private (Admin)
+export const resolveChat = async (req, res, next) => {
+  try {
+    const { chatId } = req.params;
+    const adminId = req.user.userId;
+
+    const chat = await chatService.resolveChat(chatId, adminId);
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      data: chat,
+      message: 'Đã đánh dấu chat đã giải quyết'
     });
   } catch (error) {
     next(error);
@@ -182,6 +249,22 @@ export const getUnreadCount = async (req, res, next) => {
     res.status(StatusCodes.OK).json({
       success: true,
       data: { unreadCount }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// 🔑 @desc    Get chat statistics
+// @route   GET /api/v1/chat/admin/statistics
+// @access  Private (Admin)
+export const getChatStatistics = async (req, res, next) => {
+  try {
+    const statistics = await chatService.getChatStatistics();
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      data: statistics
     });
   } catch (error) {
     next(error);

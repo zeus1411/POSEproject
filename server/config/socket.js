@@ -5,7 +5,7 @@ import Chat from '../models/Chat.js';
 let io = null;
 
 // Map để theo dõi user online và socket của họ
-const onlineUsers = new Map(); // userId -> socketId
+const onlineUsers = new Map(); // customerId -> socketId
 const adminSockets = new Map(); // adminId -> socketId
 
 export const initializeSocket = (server) => {
@@ -28,7 +28,7 @@ export const initializeSocket = (server) => {
       }
 
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      socket.userId = decoded.userId; // ✅ Fixed: was decoded.id, should be decoded.userId
+      socket.userId = decoded.userId;
       socket.userRole = decoded.role;
       
       console.log(`✅ Socket authenticated: ${socket.userId} (${socket.userRole})`);
@@ -45,26 +45,32 @@ export const initializeSocket = (server) => {
     // Đăng ký user vào map
     if (socket.userRole === 'admin') {
       adminSockets.set(socket.userId, socket.id);
-      console.log(`🔧 Admin ${socket.userId} online`);
+      console.log(`🔧 Admin ${socket.userId} online. Total admins: ${adminSockets.size}`);
       
       // Broadcast admin online status to other admins
-      socket.broadcast.emit('admin:online', { adminId: socket.userId });
+      socket.broadcast.to('admins-room').emit('admin:online', { 
+        adminId: socket.userId,
+        totalAdmins: adminSockets.size
+      });
+      
+      // Join admins room
+      socket.join('admins-room');
     } else {
       onlineUsers.set(socket.userId, socket.id);
-      console.log(`👤 User ${socket.userId} online`);
+      console.log(`👤 Customer ${socket.userId} online`);
       
-      // Notify all admins that user is online
-      adminSockets.forEach((adminSocketId) => {
-        io.to(adminSocketId).emit('user:online', { userId: socket.userId });
+      // 🔑 Notify ALL admins that customer is online
+      socket.broadcast.to('admins-room').emit('customer:online', { 
+        customerId: socket.userId 
       });
     }
 
     // Join user to their own room
     socket.join(`user:${socket.userId}`);
 
-    // ==================== USER EVENTS ====================
+    // ==================== CUSTOMER EVENTS ====================
 
-    // User joins chat room
+    // Customer joins chat room
     socket.on('chat:join', async (data) => {
       try {
         const { chatId } = data;
@@ -73,29 +79,27 @@ export const initializeSocket = (server) => {
 
         // Load chat and send to user
         const chat = await Chat.findById(chatId)
-          .populate('userId', 'username email avatar')
-          .populate('adminId', 'username email avatar')
+          .populate('customerId', 'username email avatar')
+          .populate('userId', 'username email avatar') // Backward compatibility
+          .populate('assignedTo', 'username email avatar')
+          .populate('adminId', 'username email avatar') // Backward compatibility
           .populate('messages.senderId', 'username avatar role');
 
         socket.emit('chat:joined', { chat });
 
-        // Notify admin if they're online
-        if (chat.adminId) {
-          const adminSocketId = adminSockets.get(chat.adminId._id.toString());
-          if (adminSocketId) {
-            io.to(adminSocketId).emit('user:chat-opened', { 
-              chatId, 
-              userId: socket.userId 
-            });
-          }
-        }
+        // 🔑 Notify ALL admins that customer opened chat
+        socket.broadcast.to('admins-room').emit('customer:chat-opened', { 
+          chatId, 
+          customerId: socket.userId,
+          assignedTo: chat.assignedTo || chat.adminId
+        });
       } catch (error) {
         console.error('Error joining chat:', error);
         socket.emit('error', { message: 'Không thể tham gia chat' });
       }
     });
 
-    // User sends message
+    // Customer sends message
     socket.on('chat:send-message', async (data) => {
       try {
         const { chatId, message } = data;
@@ -109,7 +113,9 @@ export const initializeSocket = (server) => {
         await chat.addMessage(socket.userId, socket.userRole, message);
         
         // Populate
+        await chat.populate('customerId', 'username email avatar');
         await chat.populate('userId', 'username email avatar');
+        await chat.populate('assignedTo', 'username email avatar');
         await chat.populate('adminId', 'username email avatar');
         await chat.populate('messages.senderId', 'username avatar role');
 
@@ -120,49 +126,48 @@ export const initializeSocket = (server) => {
           chat,
           message: {
             ...lastMessage.toObject(),
-            chatId: chatId // Add chatId to message
+            chatId: chatId
           }
         });
 
-        // Notify admin if they're not in the chat room
+        // 🔑 CUSTOMER MESSAGE - Notify ALL admins
         if (socket.userRole === 'user') {
-          if (chat.adminId) {
-            // Chat has assigned admin - notify that specific admin
-            const adminSocketId = adminSockets.get(chat.adminId._id.toString());
-            if (adminSocketId) {
-              io.to(adminSocketId).emit('chat:new-message-notification', {
-                chatId,
-                userId: socket.userId,
-                message,
-                unreadCount: chat.unreadCount.admin
-              });
-            }
-          } else {
-            // New user chat without admin - notify ALL online admins
-            console.log('🔔 New user message - broadcasting to all admins');
-            adminSockets.forEach((socketId, adminId) => {
-              io.to(socketId).emit('chat:new-message-notification', {
-                chatId,
-                userId: socket.userId,
-                message,
-                unreadCount: chat.unreadCount.admin,
-                isNewChat: true // Flag to indicate this is a new chat
-              });
-            });
-          }
+          const assignedAdminId = chat.assignedTo || chat.adminId;
+          
+          // Broadcast to ALL admins in admins room
+          socket.broadcast.to('admins-room').emit('chat:new-message-notification', {
+            chatId,
+            customerId: socket.userId,
+            message,
+            unreadCount: chat.unreadCount.admins,
+            isNewChat: !assignedAdminId, // Flag if unassigned
+            assignedTo: assignedAdminId,
+            status: chat.status,
+            priority: chat.priority
+          });
+          
+          console.log(`📨 Customer message broadcasted to ALL admins. Chat: ${chatId}`);
         }
 
-        // Notify user if admin sent message and user is not in chat room
+        // 🔑 ADMIN MESSAGE - Notify customer
         if (socket.userRole === 'admin') {
-          const userSocketId = onlineUsers.get(chat.userId._id.toString());
-          if (userSocketId) {
-            io.to(userSocketId).emit('chat:new-message-notification', {
+          const customerId = (chat.customerId || chat.userId)._id.toString();
+          const customerSocketId = onlineUsers.get(customerId);
+          
+          if (customerSocketId) {
+            io.to(customerSocketId).emit('chat:new-message-notification', {
               chatId,
               adminId: socket.userId,
               message,
-              unreadCount: chat.unreadCount.user
+              unreadCount: chat.unreadCount.customer
             });
           }
+          
+          // Also notify other admins about the update
+          socket.broadcast.to('admins-room').emit('chat:updated', {
+            chatId,
+            chat
+          });
         }
 
         console.log(`Message sent in chat ${chatId} by ${socket.userRole} ${socket.userId}`);
@@ -182,12 +187,15 @@ export const initializeSocket = (server) => {
           return socket.emit('error', { message: 'Chat không tồn tại' });
         }
 
-        await chat.markAsRead(socket.userRole);
+        // Pass adminId for tracking
+        const adminId = socket.userRole === 'admin' ? socket.userId : null;
+        await chat.markAsRead(socket.userRole, adminId);
 
         // Notify the other party that messages were read
         io.to(`chat:${chatId}`).emit('chat:messages-read', { 
           chatId, 
-          role: socket.userRole 
+          role: socket.userRole,
+          adminId: adminId
         });
 
         console.log(`Messages marked as read in chat ${chatId} by ${socket.userRole}`);
@@ -199,29 +207,34 @@ export const initializeSocket = (server) => {
 
     // ==================== ADMIN EVENTS ====================
 
-    // Admin requests all chats
-    socket.on('admin:get-chats', async () => {
+    // 🔑 Admin requests all chats (Shared Inbox)
+    socket.on('admin:get-chats', async (filters = {}) => {
       try {
         if (socket.userRole !== 'admin') {
           return socket.emit('error', { message: 'Unauthorized' });
         }
 
+        // Get ALL chats for shared inbox
         const chats = await Chat.find({ 
-          status: { $in: ['ACTIVE', 'PENDING'] } 
+          status: { $in: ['UNASSIGNED', 'ASSIGNED', 'RESOLVED'] } 
         })
+          .populate('customerId', 'username email avatar')
           .populate('userId', 'username email avatar')
+          .populate('assignedTo', 'username email avatar')
           .populate('adminId', 'username email avatar')
           .populate('messages.senderId', 'username avatar role')
           .sort('-lastMessageAt');
 
         socket.emit('admin:chats-list', { chats });
+        
+        console.log(`📋 Admin ${socket.userId} requested chat list: ${chats.length} chats`);
       } catch (error) {
         console.error('Error getting admin chats:', error);
         socket.emit('error', { message: 'Không thể tải danh sách chat' });
       }
     });
 
-    // Admin assigns themselves to a chat
+    // 🔑 Admin assigns themselves to a chat
     socket.on('admin:assign-chat', async (data) => {
       try {
         if (socket.userRole !== 'admin') {
@@ -234,28 +247,91 @@ export const initializeSocket = (server) => {
         // Join chat room
         socket.join(`chat:${chatId}`);
 
-        // Notify user
-        const userSocketId = onlineUsers.get(chat.userId._id.toString());
-        if (userSocketId) {
-          io.to(userSocketId).emit('chat:admin-assigned', { 
+        // Notify customer
+        const customerId = (chat.customerId || chat.userId)._id.toString();
+        const customerSocketId = onlineUsers.get(customerId);
+        if (customerSocketId) {
+          io.to(customerSocketId).emit('chat:admin-assigned', { 
             chatId, 
-            admin: chat.adminId 
+            admin: chat.assignedTo || chat.adminId
           });
         }
 
-        // Notify all admins
-        adminSockets.forEach((adminSocketId) => {
-          io.to(adminSocketId).emit('admin:chat-assigned', { chat });
+        // 🔑 Notify ALL admins about assignment
+        io.to('admins-room').emit('admin:chat-assigned', { 
+          chatId,
+          chat,
+          assignedTo: socket.userId
         });
 
-        console.log(`Admin ${socket.userId} assigned to chat ${chatId}`);
+        console.log(`✅ Admin ${socket.userId} assigned to chat ${chatId}`);
       } catch (error) {
         console.error('Error assigning admin:', error);
         socket.emit('error', { message: 'Không thể nhận chat' });
       }
     });
 
-    // Admin is typing
+    // 🔑 Admin takes over chat from another admin
+    socket.on('admin:takeover-chat', async (data) => {
+      try {
+        if (socket.userRole !== 'admin') {
+          return socket.emit('error', { message: 'Unauthorized' });
+        }
+
+        const { chatId } = data;
+        const chat = await Chat.takeOverChat(chatId, socket.userId);
+
+        // Join chat room
+        socket.join(`chat:${chatId}`);
+
+        // Notify customer
+        const customerId = (chat.customerId || chat.userId)._id.toString();
+        const customerSocketId = onlineUsers.get(customerId);
+        if (customerSocketId) {
+          io.to(customerSocketId).emit('chat:admin-changed', { 
+            chatId, 
+            newAdmin: chat.assignedTo || chat.adminId
+          });
+        }
+
+        // 🔑 Notify ALL admins about takeover
+        io.to('admins-room').emit('admin:chat-taken-over', { 
+          chatId,
+          chat,
+          newAssignedTo: socket.userId
+        });
+
+        console.log(`🔄 Admin ${socket.userId} took over chat ${chatId}`);
+      } catch (error) {
+        console.error('Error taking over chat:', error);
+        socket.emit('error', { message: 'Không thể tiếp quản chat' });
+      }
+    });
+
+    // 🔑 Admin unassigns chat (returns to pool)
+    socket.on('admin:unassign-chat', async (data) => {
+      try {
+        if (socket.userRole !== 'admin') {
+          return socket.emit('error', { message: 'Unauthorized' });
+        }
+
+        const { chatId } = data;
+        const chat = await Chat.unassignChat(chatId);
+
+        // 🔑 Notify ALL admins that chat is back in pool
+        io.to('admins-room').emit('admin:chat-unassigned', { 
+          chatId,
+          chat
+        });
+
+        console.log(`↩️ Chat ${chatId} returned to pool by admin ${socket.userId}`);
+      } catch (error) {
+        console.error('Error unassigning chat:', error);
+        socket.emit('error', { message: 'Không thể trả chat về pool' });
+      }
+    });
+
+    // Admin/Customer is typing
     socket.on('chat:typing', (data) => {
       const { chatId, isTyping } = data;
       socket.to(`chat:${chatId}`).emit('chat:user-typing', {
@@ -274,19 +350,24 @@ export const initializeSocket = (server) => {
         adminSockets.delete(socket.userId);
         
         // Broadcast admin offline status
-        socket.broadcast.emit('admin:offline', { adminId: socket.userId });
+        socket.broadcast.to('admins-room').emit('admin:offline', { 
+          adminId: socket.userId,
+          totalAdmins: adminSockets.size
+        });
+        
+        console.log(`🔧 Admin offline. Remaining: ${adminSockets.size}`);
       } else {
         onlineUsers.delete(socket.userId);
         
-        // Notify admins that user is offline
-        adminSockets.forEach((adminSocketId) => {
-          io.to(adminSocketId).emit('user:offline', { userId: socket.userId });
+        // Notify admins that customer is offline
+        socket.broadcast.to('admins-room').emit('customer:offline', { 
+          customerId: socket.userId 
         });
       }
     });
   });
 
-  console.log('✅ Socket.IO initialized');
+  console.log('✅ Socket.IO initialized with Shared Inbox support');
   return io;
 };
 
@@ -311,10 +392,20 @@ export const emitToAdmin = (adminId, event, data) => {
   }
 };
 
+// 🔑 Broadcast to ALL admins
 export const emitToAllAdmins = (event, data) => {
   if (io) {
-    adminSockets.forEach((socketId) => {
-      io.to(socketId).emit(event, data);
-    });
+    io.to('admins-room').emit(event, data);
+    console.log(`📢 Broadcasted to ALL admins: ${event}`);
   }
+};
+
+// 🔑 Get online admins count
+export const getOnlineAdminsCount = () => {
+  return adminSockets.size;
+};
+
+// 🔑 Get online customers count
+export const getOnlineCustomersCount = () => {
+  return onlineUsers.size;
 };
