@@ -629,6 +629,7 @@ const Checkout = () => {
             selectedCoupons={selectedCoupons}
             onCouponsChange={handleCouponsChange}
             isValidating={isValidatingCoupons}
+            cartTotal={summary.subtotal || 0}
           />
 
           {/* Payment Method */}
@@ -788,40 +789,44 @@ const Checkout = () => {
                 </div>
                 
                 {/* Display individual coupon discounts */}
-                {preview?.promotion?.promotions && preview.promotion.promotions.length > 0 ? (
+                {displayTotals.discount > 0 && (
                   <>
-                    {preview.promotion.promotions.map((promo, index) => (
-                      <div key={index} className="flex justify-between">
+                    {preview?.promotion?.promotions && preview.promotion.promotions.length > 0 ? (
+                      <>
+                        {preview.promotion.promotions.map((promo, index) => (
+                          <div key={index} className="flex justify-between">
+                            <span className="text-gray-600 flex items-center gap-1">
+                              <svg className="w-4 h-4 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                              </svg>
+                              <span className="text-xs">
+                                {promo.discountType === 'FREE_SHIPPING' ? 'Miễn phí ship' : 
+                                 promo.discountType === 'PERCENTAGE' ? `Giảm ${promo.discountValue}%` : 
+                                 `Giảm ${formatCurrency(promo.discountValue)}`}
+                                {' '}({promo.code})
+                              </span>
+                            </span>
+                            <span className="font-semibold text-green-600 text-sm">-{formatCurrency(promo.discountAmount)}</span>
+                          </div>
+                        ))}
+                      </>
+                    ) : (
+                      <div className="flex justify-between">
                         <span className="text-gray-600 flex items-center gap-1">
-                          <svg className="w-4 h-4 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                          </svg>
-                          <span className="text-xs">
-                            {promo.discountType === 'FREE_SHIPPING' ? 'Miễn phí ship' : 
-                             promo.discountType === 'PERCENTAGE' ? `Giảm ${promo.discountValue}%` : 
-                             `Giảm ${formatCurrency(promo.discountValue)}`}
-                            {' '}({promo.code})
-                          </span>
+                          {displayTotals.hasCoupons && (
+                            <svg className="w-4 h-4 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                            </svg>
+                          )}
+                          Giảm giá
+                          {displayTotals.selectedCoupons?.length > 0 && (
+                            <span className="text-xs">({displayTotals.selectedCoupons.length} mã)</span>
+                          )}
                         </span>
-                        <span className="font-semibold text-green-600 text-sm">-{formatCurrency(promo.discountAmount)}</span>
+                        <span className="font-semibold text-green-600">-{formatCurrency(displayTotals.discount)}</span>
                       </div>
-                    ))}
+                    )}
                   </>
-                ) : displayTotals.discount > 0 && (
-                  <div className="flex justify-between">
-                    <span className="text-gray-600 flex items-center gap-1">
-                      {displayTotals.hasCoupons && (
-                        <svg className="w-4 h-4 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                        </svg>
-                      )}
-                      Giảm giá
-                      {displayTotals.selectedCoupons?.length > 0 && (
-                        <span className="text-xs">({displayTotals.selectedCoupons.length} mã)</span>
-                      )}
-                    </span>
-                    <span className="font-semibold text-green-600">-{formatCurrency(displayTotals.discount)}</span>
-                  </div>
                 )}
                 
                 <div className="pt-3 mt-3 border-t flex justify-between text-base">
@@ -855,13 +860,26 @@ const Checkout = () => {
                   {displayTotals.shippingFee === 0 ? 'Miễn phí' : formatCurrency(displayTotals.shippingFee)}
                 </span>
               </div>
-              {(displayTotals.discount > 0 || displayTotals.couponDiscount > 0) && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">
-                    Giảm giá{displayTotals.couponDiscount > 0 && appliedCoupon?.code ? ` (${appliedCoupon.code})` : ''}:
-                  </span>
-                  <span className="font-semibold text-green-600">-{formatCurrency(displayTotals.discount + displayTotals.couponDiscount)}</span>
-                </div>
+              {displayTotals.discount > 0 && (
+                <>
+                  {preview?.promotion?.promotions && preview.promotion.promotions.length > 0 ? (
+                    <>
+                      {preview.promotion.promotions.map((promo, index) => (
+                        <div key={index} className="flex justify-between text-sm">
+                          <span className="text-gray-600">
+                            {promo.discountType === 'FREE_SHIPPING' ? 'Miễn phí ship' : 'Giảm giá'} ({promo.code}):
+                          </span>
+                          <span className="font-semibold text-green-600">-{formatCurrency(promo.discountAmount)}</span>
+                        </div>
+                      ))}
+                    </>
+                  ) : (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Giảm giá:</span>
+                      <span className="font-semibold text-green-600">-{formatCurrency(displayTotals.discount)}</span>
+                    </div>
+                  )}
+                </>
               )}
               <div className="pt-3 border-t flex justify-between">
                 <span className="font-semibold text-gray-900">Tổng tiền:</span>

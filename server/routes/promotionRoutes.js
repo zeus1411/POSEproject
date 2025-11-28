@@ -9,6 +9,7 @@ import {
   getAvailablePromotions,
   getAllActiveCoupons,
   getPromotionsForProduct,
+  checkCouponEligibility,
   validateCoupon,
   applyPromotions,
   applyPromotionsToCart,
@@ -22,6 +23,7 @@ const router = express.Router();
 router.get('/available', authenticateUser, getAvailablePromotions);
 router.get('/coupons/active', authenticateUser, getAllActiveCoupons);
 router.get('/product/:productId', getPromotionsForProduct);
+router.post('/check-eligibility', authenticateUser, checkCouponEligibility);
 router.post('/validate', authenticateUser, validateCoupon);
 router.post('/apply', authenticateUser, applyPromotions);
 router.post('/apply-to-cart', authenticateUser, applyPromotionsToCart);

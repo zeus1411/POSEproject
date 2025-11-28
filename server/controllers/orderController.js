@@ -31,6 +31,7 @@ const createOrder = async (req, res) => {
       shippingAddress, 
       paymentMethod = 'COD',
       promotionCode,
+      promotionCodes, // ✅ Extract promotionCodes array from frontend
       notes 
     } = req.body;
 
@@ -38,6 +39,7 @@ const createOrder = async (req, res) => {
     
     console.log('UserId:', userId);
     console.log('PaymentMethod:', paymentMethod);
+    console.log('PromotionCodes received:', promotionCodes);
 
     // Validate shipping address
     if (!shippingAddress) {
@@ -177,59 +179,25 @@ const createOrder = async (req, res) => {
     console.log('Order items prepared:', orderItems.length);
     console.log('Subtotal:', subtotal);
 
-    // Tính phí ship
-    let shippingFee = subtotal >= 500000 ? 0 : 30000;
-    console.log('Shipping fee:', shippingFee);
-
-    // Xử lý mã giảm giá (nếu có)
-    let discount = 0;
-    let promotionId = null;
+    // ✅ Removed duplicate discount calculation - orderService.createOrder() handles this
     
-    if (promotionCode) {
-      console.log('Processing promotion code:', promotionCode);
-      const Promotion = mongoose.model('Promotion');
-      const promotion = await Promotion.findOne({ 
-        code: promotionCode,
-        isActive: true,
-        startDate: { $lte: new Date() },
-        endDate: { $gte: new Date() }
-      });
-
-      if (promotion) {
-        const minOrderValue = promotion.conditions?.minOrderValue || 0;
-        
-        if (subtotal >= minOrderValue) {
-          if (promotion.discountType === 'PERCENTAGE') {
-            const maxDiscount = promotion.conditions?.maxDiscount || Infinity;
-            discount = Math.min(
-              (subtotal * promotion.discountValue) / 100,
-              maxDiscount
-            );
-          } else if (promotion.discountType === 'FIXED_AMOUNT') {
-            discount = promotion.discountValue;
-          } else if (promotion.discountType === 'FREE_SHIPPING') {
-            // For FREE_SHIPPING, the discount equals the shipping fee
-            discount = shippingFee;
-          }
-          
-          promotionId = promotion._id;
-          console.log('Promotion applied:', discount);
-        }
-      }
-    }
-
-    const tax = 0;
-    const totalPrice = subtotal + shippingFee + tax - discount;
-    
-    console.log('Total price:', totalPrice);
-
     // Use the order service to create the order
     const result = await orderService.createOrder(userId, {
       shippingAddress,
       paymentMethod,
-      promotionCode,
+      promotionCode: promotionCode, // Keep for backward compatibility
+      promotionCodes: promotionCodes || (promotionCode ? [promotionCode] : []), // ✅ Pass promotionCodes array
       notes
     }, req);
+
+    // ✅ Log result being sent to frontend
+    console.log('📤 Order result being sent to frontend:', {
+      orderId: result.order?._id,
+      orderNumber: result.order?.orderNumber,
+      totalPrice: result.order?.totalPrice,
+      discount: result.order?.discount,
+      hasPaymentUrl: !!result.paymentUrl
+    });
 
     return res.status(StatusCodes.CREATED).json({
       success: true,
@@ -858,6 +826,7 @@ const vnpayReturn = async (req, res) => {
       }
 
       // Create order
+      console.log('💾 Creating VNPay order with discount:', tempOrder.discount);
       const order = await Order.create([{
         userId: tempOrder.userId,
         items: tempOrder.items,
@@ -876,6 +845,12 @@ const vnpayReturn = async (req, res) => {
       }]);
 
       console.log('📦 Order created:', order[0].orderNumber);
+      console.log('✅ VNPay Order created with values:', {
+        orderId: order[0]._id,
+        subtotal: order[0].subtotal,
+        discount: order[0].discount,
+        totalPrice: order[0].totalPrice
+      });
 
       // Create payment record
       const payment = await Payment.create([{
@@ -902,6 +877,25 @@ const vnpayReturn = async (req, res) => {
       await order[0].save();
 
       console.log('💳 Payment record created');
+
+      // ✅ Record promotion usage for VNPay orders
+      if (tempOrder.promotionCode) {
+        console.log('📊 Recording promotion usage for VNPay order...');
+        const Promotion = mongoose.model('Promotion');
+        const codes = tempOrder.promotionCode.split(',');
+        
+        for (const code of codes) {
+          try {
+            const promotion = await Promotion.findOne({ code: code.trim().toUpperCase() });
+            if (promotion) {
+              await promotion.recordUsage(tempOrder.userId);
+              console.log(`✅ Recorded usage for promotion: ${code}`);
+            }
+          } catch (error) {
+            console.error(`❌ Failed to record usage for promotion ${code}:`, error);
+          }
+        }
+      }
 
       // Deduct stock from products
       console.log('📉 Deducting stock after VNPay payment...');
@@ -1104,6 +1098,25 @@ const simulateVNPayPayment = async (req, res) => {
     await order[0].save();
 
     console.log('💳 Payment record created (simulated)');
+
+    // ✅ Record promotion usage for simulated VNPay orders
+    if (tempOrder.promotionCode) {
+      console.log('📊 Recording promotion usage for simulated VNPay order...');
+      const Promotion = mongoose.model('Promotion');
+      const codes = tempOrder.promotionCode.split(',');
+      
+      for (const code of codes) {
+        try {
+          const promotion = await Promotion.findOne({ code: code.trim().toUpperCase() });
+          if (promotion) {
+            await promotion.recordUsage(tempOrder.userId);
+            console.log(`✅ Recorded usage for promotion: ${code}`);
+          }
+        } catch (error) {
+          console.error(`❌ Failed to record usage for promotion ${code}:`, error);
+        }
+      }
+    }
 
     // Deduct stock from products
     console.log('📉 Deducting stock after simulated VNPay payment...');

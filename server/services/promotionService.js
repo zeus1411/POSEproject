@@ -291,6 +291,60 @@ class PromotionService {
   }
 
   /**
+   * Check if user can use a specific coupon (for UI eligibility checks)
+   */
+  async checkCouponEligibility(code, userId, cartTotal = 0) {
+    try {
+      const promotion = await Promotion.findOne({ code: code.toUpperCase() });
+
+      if (!promotion) {
+        return { eligible: false, reason: 'Mã giảm giá không tồn tại' };
+      }
+
+      if (!promotion.isValid()) {
+        return { eligible: false, reason: 'Mã giảm giá đã hết hạn hoặc không còn khả dụng' };
+      }
+
+      // Check usage limit - total
+      if (promotion.usageLimit.total !== null && promotion.usageCount >= promotion.usageLimit.total) {
+        return { eligible: false, reason: 'Mã giảm giá đã hết lượt sử dụng' };
+      }
+
+      // Check usage limit - per user
+      if (promotion.usageLimit.perUser !== null && userId) {
+        const userUsage = promotion.usedBy.find(u => u.userId.toString() === userId.toString());
+        if (userUsage && userUsage.usedCount >= promotion.usageLimit.perUser) {
+          return { eligible: false, reason: 'Bạn đã sử dụng hết số lần cho mã này' };
+        }
+      }
+
+      // Check first order condition
+      if (promotion.conditions.firstOrderOnly && userId) {
+        const hasOrdered = await Order.exists({ userId, status: { $ne: 'CANCELLED' } });
+        if (hasOrdered) {
+          return { eligible: false, reason: 'Mã chỉ áp dụng cho đơn hàng đầu tiên' };
+        }
+      }
+
+      // Check min order value
+      if (promotion.conditions.minOrderValue > 0 && cartTotal > 0) {
+        if (cartTotal < promotion.conditions.minOrderValue) {
+          return { 
+            eligible: false, 
+            reason: `Đơn hàng phải đạt tối thiểu ${promotion.conditions.minOrderValue.toLocaleString('vi-VN')}đ`,
+            minOrderValue: promotion.conditions.minOrderValue
+          };
+        }
+      }
+
+      return { eligible: true, promotion };
+    } catch (error) {
+      console.error('Error checking coupon eligibility:', error);
+      return { eligible: false, reason: 'Lỗi kiểm tra mã giảm giá' };
+    }
+  }
+
+  /**
    * Calculate discount for cart
    */
   async calculateDiscount(cart, promotions = [], userId = null) {
