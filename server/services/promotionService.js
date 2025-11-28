@@ -471,8 +471,9 @@ class PromotionService {
     const minOrderValue = promotion.conditions?.minOrderValue || 0;
     
     if (cartTotal >= minOrderValue) {
-      // Return a standard shipping fee amount or the actual shipping fee from cart
-      return cart.shippingFee || 30000; // Default 30k VND shipping fee
+      // Calculate shipping fee as 14% of subtotal if not provided
+      const shippingFee = cart.shippingFee || Math.round(cartTotal * 0.14);
+      return shippingFee;
     }
 
     return 0;

@@ -91,7 +91,8 @@ const calculateSummary = (items) => {
     }
   });
   
-  const shippingFee = subtotal >= 500000 ? 0 : 30000;
+  // Shipping fee = 14% of subtotal (rounded)
+  const shippingFee = Math.round(subtotal * 0.14);
   return {
     totalItems,
     subtotal,
