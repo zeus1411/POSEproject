@@ -12,6 +12,7 @@ import adminOrdersReducer from './slices/adminOrderSlice';
 import adminUserReducer from './slices/adminUserSlice';
 import notificationReducer from './slices/notificationSlice';
 import chatReducer from './slices/chatSlice';
+import promotionReducer from './slices/promotionSlice';
 
 export const store = configureStore({
   reducer: {
@@ -28,6 +29,7 @@ export const store = configureStore({
     adminUsers: adminUserReducer,
     notifications: notificationReducer,
     chat: chatReducer,
+    promotions: promotionReducer,
   },
 });
 

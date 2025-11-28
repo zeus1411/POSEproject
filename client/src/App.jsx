@@ -23,6 +23,7 @@ import ProfilePage from './pages/customer/ProfilePage';
 import AdminOrders from './pages/admin/Orders';
 import AdminOrderDetail from './pages/admin/AdminOrderDetail';
 import AdminLayout from './components/admin/AdminLayout';
+import AdminPromotions from './pages/admin/Promotions';
 
 
 function App() {
@@ -60,6 +61,7 @@ function App() {
               <Route path="admin/orders" element={<AdminOrders />} />
               <Route path="/admin/orders/:id" element={<AdminOrderDetail />} />
               <Route path="/admin/my-orders" element={<AdminLayout> <MyOrders /> </AdminLayout>} />
+              <Route path="admin/promotions" element={<AdminPromotions />} />
             </Route>
         </Route>
 
