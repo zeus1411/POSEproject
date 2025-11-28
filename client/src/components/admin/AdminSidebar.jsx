@@ -7,7 +7,8 @@ import {
   UserGroupIcon,
   ArrowRightOnRectangleIcon,
   HomeModernIcon,
-  UsersIcon
+  UsersIcon,
+  TicketIcon
 } from '@heroicons/react/24/outline';
 
 const AdminSidebar = () => {
@@ -32,6 +33,15 @@ const AdminSidebar = () => {
       bg: 'bg-gradient-to-br from-emerald-50 to-teal-50',
       iconColor: 'text-emerald-600',
       
+    },
+    { 
+      name: 'Khuyến mãi', 
+      href: '/admin/promotions', 
+      icon: TicketIcon,
+      color: 'from-pink-500 to-rose-500',
+      bg: 'bg-gradient-to-br from-pink-50 to-rose-50',
+      iconColor: 'text-pink-600',
+   
     },
     { 
       name: 'Người dùng', 

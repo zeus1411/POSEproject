@@ -11,6 +11,7 @@ import reviewRoutes from './reviewRoutes.js';
 import notificationRoutes from './notificationRoutes.js';
 import cacheRoutes from './cacheRoutes.js';
 import chatRoutes from './chatRoutes.js';
+import promotionRoutes from './promotionRoutes.js';
 const router = express.Router();
 
 // Health check endpoint for Docker
@@ -35,4 +36,5 @@ router.use('/reviews', reviewRoutes);
 router.use('/notifications', notificationRoutes);
 router.use('/cache', cacheRoutes); // 🔍 Debug cache
 router.use('/chat', chatRoutes);
+router.use('/promotions', promotionRoutes);
 export default router;
