@@ -169,7 +169,7 @@ class CartService {
       const newQuantity = cart.items[existingItemIndex].quantity + quantity;
       
       if (newQuantity > availableStock) {
-        throw new BadRequestError(`Chỉ có thể thêm tối đa ${availableStock} sản phẩm`);
+        throw new BadRequestError(`Bạn đã đạt số lượng tối đa có thể mua. Vui lòng kiểm tra lại giỏ hàng.`);
       }
       
       cart.items[existingItemIndex].quantity = newQuantity;
