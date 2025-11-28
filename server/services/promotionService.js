@@ -7,31 +7,32 @@ class PromotionService {
   // ==================== ADMIN SERVICES ====================
   
   /**
-   * Create new promotion
+   * Create new coupon
    */
   async createPromotion(data, adminId) {
-    // Validate code uniqueness if provided
-    if (data.code) {
-      const existingPromotion = await Promotion.findOne({ code: data.code });
-      if (existingPromotion) {
-        throw new BadRequestError('Mã khuyến mãi đã tồn tại');
-      }
+    // Validate required fields for COUPON
+    if (!data.code) {
+      throw new BadRequestError('Mã giảm giá là bắt buộc');
     }
 
-    // Validate targets based on applyTo
-    if (data.applyTo === 'SPECIFIC_PRODUCTS' && (!data.targetProducts || data.targetProducts.length === 0)) {
-      throw new BadRequestError('Phải chọn ít nhất 1 sản phẩm');
+    // Validate code uniqueness
+    const existingPromotion = await Promotion.findOne({ code: data.code });
+    if (existingPromotion) {
+      throw new BadRequestError('Mã khuyến mãi đã tồn tại');
     }
-    
-    if (data.applyTo === 'CATEGORY' && (!data.targetCategories || data.targetCategories.length === 0)) {
-      throw new BadRequestError('Phải chọn ít nhất 1 danh mục');
-    }
+
+    // Force COUPON settings
+    const couponData = {
+      ...data,
+      promotionType: 'COUPON',
+      applyTo: 'ORDER',
+      targetProducts: [], // Empty for coupons
+      targetCategories: [], // Empty for coupons
+      createdBy: adminId
+    };
 
     // Create promotion
-    const promotion = await Promotion.create({
-      ...data,
-      createdBy: adminId
-    });
+    const promotion = await Promotion.create(couponData);
 
     return promotion;
   }
@@ -98,13 +99,13 @@ class PromotionService {
   }
 
   /**
-   * Update promotion
+   * Update coupon
    */
   async updatePromotion(promotionId, data, adminId) {
     const promotion = await Promotion.findById(promotionId);
     
     if (!promotion) {
-      throw new NotFoundError('Không tìm thấy chương trình khuyến mãi');
+      throw new NotFoundError('Không tìm thấy mã giảm giá');
     }
 
     // Check code uniqueness if changed
@@ -114,12 +115,21 @@ class PromotionService {
         _id: { $ne: promotionId }
       });
       if (existingPromotion) {
-        throw new BadRequestError('Mã khuyến mãi đã tồn tại');
+        throw new BadRequestError('Mã giảm giá đã tồn tại');
       }
     }
 
+    // Force COUPON settings
+    const couponData = {
+      ...data,
+      promotionType: 'COUPON',
+      applyTo: 'ORDER',
+      targetProducts: [], // Empty for coupons
+      targetCategories: [], // Empty for coupons
+    };
+
     // Update fields
-    Object.assign(promotion, data);
+    Object.assign(promotion, couponData);
     promotion.updatedBy = adminId;
     
     await promotion.save();
@@ -178,6 +188,36 @@ class PromotionService {
   }
 
   /**
+   * Get all active coupons grouped by type (for dropdown)
+   */
+  async getAllActiveCoupons() {
+    const coupons = await Promotion.find({
+      promotionType: 'COUPON',
+      isActive: true,
+      startDate: { $lte: new Date() },
+      endDate: { $gte: new Date() }
+    }).select('_id name code description discountType discountValue conditions')
+      .sort({ priority: -1, createdAt: -1 });
+
+    // Group coupons by discount type
+    const freeShipping = [];
+    const discount = [];
+
+    for (const coupon of coupons) {
+      if (coupon.discountType === 'FREE_SHIPPING') {
+        freeShipping.push(coupon);
+      } else {
+        discount.push(coupon);
+      }
+    }
+
+    return {
+      freeShipping,
+      discount
+    };
+  }
+
+  /**
    * Get promotions for specific product
    */
   async getPromotionsForProduct(productId) {
@@ -189,6 +229,16 @@ class PromotionService {
     const promotions = await Promotion.getPromotionsByProduct(productId, product.category);
 
     return promotions;
+  }
+
+  /**
+   * Get all applicable promotions for a cart
+   * Since we only have COUPONs now, this will return empty array as coupons require manual input
+   */
+  async getApplicablePromotions(cart, userId = null) {
+    // COUPONs are not automatically applicable - they require manual input via validateCoupon
+    // Return empty array since all promotions are now COUPON type
+    return [];
   }
 
   /**
@@ -247,12 +297,21 @@ class PromotionService {
     let totalDiscount = 0;
     const appliedPromotions = [];
 
+    // Calculate cart total first
+    const cartTotal = this.calculateCartTotal(cart);
+
     // Sort by priority
     const sortedPromotions = promotions.sort((a, b) => b.priority - a.priority);
 
     for (const promotion of sortedPromotions) {
+      // Check minimum order value condition
+      const minOrderValue = promotion.conditions?.minOrderValue || 0;
+      if (cartTotal < minOrderValue) {
+        continue;
+      }
+
       // Skip if already applied max discount
-      if (promotion.conditions.maxDiscount && totalDiscount >= promotion.conditions.maxDiscount) {
+      if (promotion.conditions?.maxDiscount && totalDiscount >= promotion.conditions.maxDiscount) {
         continue;
       }
 
@@ -271,9 +330,7 @@ class PromotionService {
           discount = this.calculateFreeShippingDiscount(cart, promotion);
           break;
         
-        case 'BUY_X_GET_Y':
-          discount = this.calculateBuyXGetYDiscount(cart, promotion);
-          break;
+
       }
 
       // Apply max discount limit
@@ -287,110 +344,91 @@ class PromotionService {
           promotionId: promotion._id,
           name: promotion.name,
           code: promotion.code,
+          promotionType: promotion.promotionType,
+          discountType: promotion.discountType,
           discountAmount: discount
         });
       }
     }
 
+    // Create breakdown by promotion type
+    const breakdown = {
+      productDiscounts: appliedPromotions.filter(p => p.promotionType === 'PRODUCT_DISCOUNT'),
+      orderDiscounts: appliedPromotions.filter(p => p.promotionType === 'ORDER_DISCOUNT'),
+      conditionalDiscounts: appliedPromotions.filter(p => p.promotionType === 'CONDITIONAL_DISCOUNT'),
+      couponDiscounts: appliedPromotions.filter(p => p.promotionType === 'COUPON')
+    };
+
     return {
       totalDiscount,
-      appliedPromotions
+      appliedPromotions,
+      breakdown
     };
   }
 
   // ==================== HELPER METHODS ====================
 
   calculateCartTotal(cart) {
-    return cart.items.reduce((sum, item) => {
-      const price = item.selectedVariant?.price || item.productId.salePrice || item.productId.price;
-      return sum + (price * item.quantity);
+    // If cart has subtotal already calculated, use it
+    if (cart.subtotal) {
+      return cart.subtotal;
+    }
+    
+    // Otherwise calculate from items
+    if (!cart.items || cart.items.length === 0) {
+      return 0;
+    }
+    
+    const total = cart.items.reduce((sum, item) => {
+      // Priority: explicit price in item > selectedVariant.price > variant price > product price
+      let price = item.price;
+      
+      if (!price && item.selectedVariant?.price) {
+        price = item.selectedVariant.price;
+      }
+      
+      if (!price && item.productId) {
+        if (typeof item.productId === 'object') {
+          price = item.productId.salePrice || item.productId.price;
+        }
+      }
+      
+      const itemTotal = price * item.quantity;
+      return sum + itemTotal;
     }, 0);
+    
+    return total;
   }
 
   calculatePercentageDiscount(cart, promotion) {
-    let discount = 0;
-
-    if (promotion.applyTo === 'ORDER') {
-      const cartTotal = this.calculateCartTotal(cart);
-      discount = (cartTotal * promotion.discountValue) / 100;
-    } else {
-      // Apply to specific products/categories
-      cart.items.forEach(item => {
-        if (this.isItemEligible(item, promotion)) {
-          const price = item.selectedVariant?.price || item.productId.salePrice || item.productId.price;
-          discount += (price * item.quantity * promotion.discountValue) / 100;
-        }
-      });
-    }
-
-    return discount;
+    // For COUPON, always apply to ORDER total
+    const cartTotal = this.calculateCartTotal(cart);
+    return (cartTotal * promotion.discountValue) / 100;
   }
 
   calculateFixedDiscount(cart, promotion) {
-    if (promotion.applyTo === 'ORDER') {
-      return promotion.discountValue;
-    }
-
-    // For products, apply fixed discount per item
-    let discount = 0;
-    cart.items.forEach(item => {
-      if (this.isItemEligible(item, promotion)) {
-        discount += promotion.discountValue * item.quantity;
-      }
-    });
-
-    return discount;
+    // For COUPON, always apply fixed amount to ORDER
+    return promotion.discountValue;
   }
 
   calculateFreeShippingDiscount(cart, promotion) {
+    // For COUPON free shipping, check min order value if set
     const cartTotal = this.calculateCartTotal(cart);
+    const minOrderValue = promotion.conditions?.minOrderValue || 0;
     
-    if (cartTotal >= promotion.conditions.minOrderValue) {
-      return cart.shippingFee || 0;
+    if (cartTotal >= minOrderValue) {
+      // Return a standard shipping fee amount or the actual shipping fee from cart
+      return cart.shippingFee || 30000; // Default 30k VND shipping fee
     }
 
     return 0;
   }
 
-  calculateBuyXGetYDiscount(cart, promotion) {
-    let discount = 0;
 
-    cart.items.forEach(item => {
-      if (this.isItemEligible(item, promotion)) {
-        const buyQty = promotion.conditions.buyQuantity;
-        const getQty = promotion.conditions.getQuantity;
-        
-        const sets = Math.floor(item.quantity / buyQty);
-        const freeItems = sets * getQty;
-        
-        if (freeItems > 0) {
-          const price = item.selectedVariant?.price || item.productId.salePrice || item.productId.price;
-          discount += price * freeItems;
-        }
-      }
-    });
-
-    return discount;
-  }
 
   isItemEligible(item, promotion) {
-    if (promotion.applyTo === 'ALL_PRODUCTS') {
-      return true;
-    }
-
-    if (promotion.applyTo === 'SPECIFIC_PRODUCTS') {
-      return promotion.targetProducts.some(
-        pid => pid.toString() === item.productId._id.toString()
-      );
-    }
-
-    if (promotion.applyTo === 'CATEGORY') {
-      return promotion.targetCategories.some(
-        cid => cid.toString() === item.productId.category.toString()
-      );
-    }
-
-    return false;
+    // For COUPON type, all items are eligible since it applies to ORDER
+    return true;
   }
 }
 

@@ -13,38 +13,42 @@ const promotionSchema = new mongoose.Schema({
     trim: true,
     maxlength: [1000, 'Mô tả không được vượt quá 1000 ký tự']
   },
+  // COUPON code is required
   code: {
     type: String,
+    required: [true, 'Mã giảm giá là bắt buộc'],
     uppercase: true,
     trim: true,
-    sparse: true, // Allow null but must be unique if exists
+    unique: true,
     index: true
   },
 
-  // Promotion Type
+  // Promotion Type - COUPON only
   promotionType: {
     type: String,
-    enum: ['PRODUCT_DISCOUNT', 'ORDER_DISCOUNT', 'CONDITIONAL_DISCOUNT', 'COUPON'],
-    required: true
+    enum: ['COUPON'],
+    required: true,
+    default: 'COUPON'
   },
 
   // Discount Type & Value
   discountType: {
     type: String,
-    enum: ['PERCENTAGE', 'FIXED_AMOUNT', 'FREE_SHIPPING', 'BUY_X_GET_Y'],
+    enum: ['PERCENTAGE', 'FIXED_AMOUNT', 'FREE_SHIPPING'],
     required: true
   },
   discountValue: {
     type: Number,
     required: true,
-    min: [0, 'Giá trị giảm giá phải lớn hơn 0']
+    min: [0, 'Giá trị giảm giá phải lớn hơn hoặc bằng 0']
   },
 
-  // Apply To
+  // Apply To - COUPON always applies to ORDER
   applyTo: {
     type: String,
-    enum: ['ALL_PRODUCTS', 'SPECIFIC_PRODUCTS', 'CATEGORY', 'ORDER'],
-    required: true
+    enum: ['ORDER'],
+    required: true,
+    default: 'ORDER'
   },
   targetProducts: [{
     type: mongoose.Schema.Types.ObjectId,

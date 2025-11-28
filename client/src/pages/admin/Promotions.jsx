@@ -15,6 +15,11 @@ import { getCategories } from '../../redux/slices/categorySlice';
 import { toast } from 'react-toastify';
 import { FaPlus, FaEdit, FaTrash, FaToggleOn, FaToggleOff, FaPercent, FaDollarSign, FaShippingFast, FaGift, FaTags, FaShoppingCart, FaFilter, FaCreditCard } from 'react-icons/fa';
 
+// Helper function to generate coupon code
+const generateCouponCode = () => {
+  return 'AQUA' + Math.random().toString(36).substring(2, 8).toUpperCase();
+};
+
 const AdminPromotions = () => {
   const dispatch = useDispatch();
   const { promotions, isLoading, isError, error, message, pagination } = useSelector(state => state.promotions);
@@ -44,17 +49,17 @@ const AdminPromotions = () => {
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentPromotionId, setCurrentPromotionId] = useState(null);
 
-  // ==================== 4 RADIO BUTTON OPTIONS ====================
-  const [selectedPromotionType, setSelectedPromotionType] = useState('PRODUCT_DISCOUNT');
+  // ==================== COUPON ONLY ====================
+  const [selectedPromotionType, setSelectedPromotionType] = useState('COUPON');
 
-  // Form data
+  // Form data - COUPON only
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    promotionType: 'PRODUCT_DISCOUNT',
+    promotionType: 'COUPON',
     discountType: 'PERCENTAGE',
     discountValue: '',
-    applyTo: 'ALL_PRODUCTS',
+    applyTo: 'ORDER',
     applicableProducts: [],
     applicableCategories: [],
     conditions: {
@@ -72,7 +77,7 @@ const AdminPromotions = () => {
     startDate: '',
     endDate: '',
     isActive: true,
-    code: ''
+    code: generateCouponCode()
   });
 
   // Pagination & Filters
@@ -117,16 +122,15 @@ const AdminPromotions = () => {
     }
   }, [error, message, dispatch]);
 
-  // Handle promotion type change (RADIO BUTTON)
-  const handlePromotionTypeChange = (type) => {
-    setSelectedPromotionType(type);
-    
-    // Reset form khi đổi type
-    let resetData = {
-      ...formData,
-      promotionType: type,
+  // Reset form for COUPON creation
+  const resetFormData = () => {
+    setFormData({
+      name: '',
+      description: '',
+      promotionType: 'COUPON',
       discountType: 'PERCENTAGE',
-      applyTo: 'ALL_PRODUCTS',
+      discountValue: '',
+      applyTo: 'ORDER',
       applicableProducts: [],
       applicableCategories: [],
       conditions: {
@@ -137,35 +141,18 @@ const AdminPromotions = () => {
         buyQuantity: '',
         getQuantity: ''
       },
-      code: ''
-    };
-
-    // Set defaults theo type
-    switch(type) {
-      case 'PRODUCT_DISCOUNT':
-        resetData.applyTo = 'ALL_PRODUCTS';
-        break;
-      case 'ORDER_DISCOUNT':
-        resetData.applyTo = 'ORDER';
-        break;
-      case 'CONDITIONAL_DISCOUNT':
-        resetData.applyTo = 'ORDER';
-        break;
-      case 'COUPON':
-        resetData.applyTo = 'ORDER';
-        resetData.code = generateCouponCode();
-        break;
-      default:
-        break;
-    }
-
-    setFormData(resetData);
+      usageLimit: {
+        total: '',
+        perUser: ''
+      },
+      startDate: '',
+      endDate: '',
+      isActive: true,
+      code: generateCouponCode()
+    });
   };
 
-  // Generate random coupon code
-  const generateCouponCode = () => {
-    return 'AQUA' + Math.random().toString(36).substring(2, 8).toUpperCase();
-  };
+
 
   // Handle input change
   const handleInputChange = (e) => {
@@ -205,33 +192,8 @@ const AdminPromotions = () => {
   const handleOpenCreateModal = () => {
     setIsEditMode(false);
     setCurrentPromotionId(null);
-    setSelectedPromotionType('PRODUCT_DISCOUNT');
-    setFormData({
-      name: '',
-      description: '',
-      promotionType: 'PRODUCT_DISCOUNT',
-      discountType: 'PERCENTAGE',
-      discountValue: '',
-      applyTo: 'ALL_PRODUCTS',
-      applicableProducts: [],
-      applicableCategories: [],
-      conditions: {
-        minOrderValue: '',
-        minQuantity: '',
-        maxDiscount: '',
-        firstOrderOnly: false,
-        buyQuantity: '',
-        getQuantity: ''
-      },
-      usageLimit: {
-        total: '',
-        perUser: ''
-      },
-      startDate: '',
-      endDate: '',
-      isActive: true,
-      code: ''
-    });
+    setSelectedPromotionType('COUPON');
+    resetFormData();
     setShowModal(true);
   };
 
@@ -282,8 +244,14 @@ const AdminPromotions = () => {
     e.preventDefault();
 
     // Validation
-    if (!formData.name || !formData.discountValue) {
-      toast.error('Vui lòng điền đầy đủ thông tin bắt buộc');
+    if (!formData.name) {
+      toast.error('Vui lòng nhập tên chương trình');
+      return;
+    }
+    
+    // Validate discountValue only if not FREE_SHIPPING
+    if (formData.discountType !== 'FREE_SHIPPING' && !formData.discountValue) {
+      toast.error('Vui lòng nhập giá trị giảm');
       return;
     }
 
@@ -300,7 +268,8 @@ const AdminPromotions = () => {
       // Map frontend field names to backend field names
       targetProducts: formData.applicableProducts,
       targetCategories: formData.applicableCategories,
-      discountValue: Number(formData.discountValue),
+      // Set discountValue to 0 for FREE_SHIPPING, otherwise convert to Number
+      discountValue: formData.discountType === 'FREE_SHIPPING' ? 0 : Number(formData.discountValue),
       // Convert local datetime to UTC ISO string
       startDate: convertLocalToUTC(formData.startDate),
       endDate: convertLocalToUTC(formData.endDate),
@@ -309,8 +278,9 @@ const AdminPromotions = () => {
         minQuantity: formData.conditions.minQuantity ? Number(formData.conditions.minQuantity) : undefined,
         maxDiscount: formData.conditions.maxDiscount ? Number(formData.conditions.maxDiscount) : undefined,
         firstOrderOnly: formData.conditions.firstOrderOnly,
-        buyQuantity: formData.conditions.buyQuantity ? Number(formData.conditions.buyQuantity) : undefined,
-        getQuantity: formData.conditions.getQuantity ? Number(formData.conditions.getQuantity) : undefined
+        // Remove buyQuantity and getQuantity since we removed BUY_X_GET_Y
+        buyQuantity: undefined,
+        getQuantity: undefined
       },
       usageLimit: {
         total: formData.usageLimit.total ? Number(formData.usageLimit.total) : undefined,
@@ -372,10 +342,9 @@ const AdminPromotions = () => {
     } else if (promotion.discountType === 'FIXED_AMOUNT') {
       return formatCurrency(promotion.discountValue);
     } else if (promotion.discountType === 'FREE_SHIPPING') {
-      return 'Miễn phí ship';
-    } else {
-      return `Mua ${promotion.conditions?.buyQuantity} tặng ${promotion.conditions?.getQuantity}`;
+      return 'Miễn phí vận chuyển';
     }
+    return '-';
   };
 
   return (
@@ -384,14 +353,14 @@ const AdminPromotions = () => {
         {/* Header */}
         <div className="mb-6 flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">Quản lý Khuyến mãi</h1>
-          <p className="text-gray-600 mt-1">Tạo và quản lý các chương trình giảm giá</p>
+          <h1 className="text-3xl font-bold text-gray-800">Quản lý Mã giảm giá</h1>
+          <p className="text-gray-600 mt-1">Tạo và quản lý các mã giảm giá (Coupon) cho khách hàng</p>
         </div>
         <button
           onClick={handleOpenCreateModal}
-          className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-3 rounded-lg hover:shadow-lg transition-all duration-200 flex items-center gap-2 font-semibold"
+          className="bg-gradient-to-r from-pink-500 to-pink-600 text-white px-6 py-3 rounded-lg hover:shadow-lg transition-all duration-200 flex items-center gap-2 font-semibold"
         >
-          <FaPlus /> Tạo khuyến mãi mới
+          <FaPlus /> Tạo mã giảm giá mới
         </button>
       </div>
 
@@ -404,20 +373,6 @@ const AdminPromotions = () => {
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
         />
-        <select
-          className="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          value={filters.promotionType}
-          onChange={(e) => {
-            setFilters({ ...filters, promotionType: e.target.value });
-            setCurrentPage(1); // Reset to page 1 when filter changes
-          }}
-        >
-          <option value="">Tất cả loại</option>
-          <option value="PRODUCT_DISCOUNT">Giảm giá sản phẩm</option>
-          <option value="ORDER_DISCOUNT">Giảm giá đơn hàng</option>
-          <option value="CONDITIONAL_DISCOUNT">Giảm giá có điều kiện</option>
-          <option value="COUPON">Mã giảm giá</option>
-        </select>
         <select
           className="border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           value={filters.isActive}
@@ -438,10 +393,11 @@ const AdminPromotions = () => {
           <div className="flex justify-center items-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
           </div>
-        ) : promotions.length === 0 ? (
+          ) : promotions.length === 0 ? (
           <div className="text-center py-12">
-            <FaTags className="mx-auto text-gray-400 text-6xl mb-4" />
-            <p className="text-gray-500 text-lg">Chưa có chương trình khuyến mãi nào</p>
+            <FaCreditCard className="mx-auto text-pink-400 text-6xl mb-4" />
+            <p className="text-gray-500 text-lg">Chưa có mã giảm giá nào</p>
+            <p className="text-gray-400 text-sm mt-2">Tạo mã giảm giá đầu tiên để thu hút khách hàng</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -449,7 +405,7 @@ const AdminPromotions = () => {
               <thead className="bg-gray-100 border-b">
                 <tr>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase">Tên chương trình</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase">Loại</th>
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase">Loại khuyến mãi</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase">Giảm giá</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase">Mã</th>
                   <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase">Thời gian</th>
@@ -467,16 +423,8 @@ const AdminPromotions = () => {
                       )}
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                        promotion.promotionType === 'PRODUCT_DISCOUNT' ? 'bg-purple-100 text-purple-700' :
-                        promotion.promotionType === 'ORDER_DISCOUNT' ? 'bg-blue-100 text-blue-700' :
-                        promotion.promotionType === 'CONDITIONAL_DISCOUNT' ? 'bg-orange-100 text-orange-700' :
-                        'bg-pink-100 text-pink-700'
-                      }`}>
-                        {promotion.promotionType === 'PRODUCT_DISCOUNT' ? '🏷️ Sản phẩm' :
-                         promotion.promotionType === 'ORDER_DISCOUNT' ? '🛒 Đơn hàng' :
-                         promotion.promotionType === 'CONDITIONAL_DISCOUNT' ? '📊 Có điều kiện' :
-                         '🎫 Mã giảm giá'}
+                      <span className="px-3 py-1 rounded-full text-xs font-medium bg-pink-100 text-pink-700">
+                        🎫 Mã giảm giá
                       </span>
                     </td>
                     <td className="px-6 py-4">
@@ -586,111 +534,14 @@ const AdminPromotions = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="p-6 space-y-6">
-              {/* ==================== 4 RADIO BUTTON OPTIONS ==================== */}
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-xl border-2 border-blue-200">
-                <label className="block text-lg font-bold text-gray-800 mb-4">
-                  🎯 Chọn loại chương trình khuyến mãi <span className="text-red-500">*</span>
-                </label>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Option 1: Product Discount */}
-                  <label className={`relative flex items-start p-5 border-2 rounded-xl cursor-pointer transition-all ${
-                    selectedPromotionType === 'PRODUCT_DISCOUNT' 
-                      ? 'border-purple-500 bg-purple-50 shadow-lg scale-105' 
-                      : 'border-gray-300 bg-white hover:border-purple-300 hover:shadow-md'
-                  }`}>
-                    <input
-                      type="radio"
-                      name="promotionType"
-                      value="PRODUCT_DISCOUNT"
-                      checked={selectedPromotionType === 'PRODUCT_DISCOUNT'}
-                      onChange={(e) => handlePromotionTypeChange(e.target.value)}
-                      className="mt-1 h-5 w-5 text-purple-600 focus:ring-purple-500"
-                    />
-                    <div className="ml-4 flex-1">
-                      <div className="flex items-center gap-2">
-                        <FaTags className="text-purple-600 text-xl" />
-                        <span className="font-bold text-gray-800">Giảm giá sản phẩm</span>
-                      </div>
-                      <p className="text-sm text-gray-600 mt-2">
-                        Áp dụng giảm giá cho toàn bộ hoặc một số sản phẩm cụ thể. Khách hàng tự động nhận ưu đãi khi mua.
-                      </p>
-                    </div>
-                  </label>
-
-                  {/* Option 2: Order Discount */}
-                  <label className={`relative flex items-start p-5 border-2 rounded-xl cursor-pointer transition-all ${
-                    selectedPromotionType === 'ORDER_DISCOUNT' 
-                      ? 'border-blue-500 bg-blue-50 shadow-lg scale-105' 
-                      : 'border-gray-300 bg-white hover:border-blue-300 hover:shadow-md'
-                  }`}>
-                    <input
-                      type="radio"
-                      name="promotionType"
-                      value="ORDER_DISCOUNT"
-                      checked={selectedPromotionType === 'ORDER_DISCOUNT'}
-                      onChange={(e) => handlePromotionTypeChange(e.target.value)}
-                      className="mt-1 h-5 w-5 text-blue-600 focus:ring-blue-500"
-                    />
-                    <div className="ml-4 flex-1">
-                      <div className="flex items-center gap-2">
-                        <FaShoppingCart className="text-blue-600 text-xl" />
-                        <span className="font-bold text-gray-800">Giảm giá đơn hàng</span>
-                      </div>
-                      <p className="text-sm text-gray-600 mt-2">
-                        Giảm giá cho toàn bộ đơn hàng. Tự động áp dụng cho mọi khách hàng khi thanh toán.
-                      </p>
-                    </div>
-                  </label>
-
-                  {/* Option 3: Conditional Discount */}
-                  <label className={`relative flex items-start p-5 border-2 rounded-xl cursor-pointer transition-all ${
-                    selectedPromotionType === 'CONDITIONAL_DISCOUNT' 
-                      ? 'border-orange-500 bg-orange-50 shadow-lg scale-105' 
-                      : 'border-gray-300 bg-white hover:border-orange-300 hover:shadow-md'
-                  }`}>
-                    <input
-                      type="radio"
-                      name="promotionType"
-                      value="CONDITIONAL_DISCOUNT"
-                      checked={selectedPromotionType === 'CONDITIONAL_DISCOUNT'}
-                      onChange={(e) => handlePromotionTypeChange(e.target.value)}
-                      className="mt-1 h-5 w-5 text-orange-600 focus:ring-orange-500"
-                    />
-                    <div className="ml-4 flex-1">
-                      <div className="flex items-center gap-2">
-                        <FaFilter className="text-orange-600 text-xl" />
-                        <span className="font-bold text-gray-800">Giảm giá có điều kiện</span>
-                      </div>
-                      <p className="text-sm text-gray-600 mt-2">
-                        Giảm giá khi đáp ứng điều kiện (giá trị đơn tối thiểu, số lượng...). Tự động áp dụng.
-                      </p>
-                    </div>
-                  </label>
-
-                  {/* Option 4: Coupon */}
-                  <label className={`relative flex items-start p-5 border-2 rounded-xl cursor-pointer transition-all ${
-                    selectedPromotionType === 'COUPON' 
-                      ? 'border-pink-500 bg-pink-50 shadow-lg scale-105' 
-                      : 'border-gray-300 bg-white hover:border-pink-300 hover:shadow-md'
-                  }`}>
-                    <input
-                      type="radio"
-                      name="promotionType"
-                      value="COUPON"
-                      checked={selectedPromotionType === 'COUPON'}
-                      onChange={(e) => handlePromotionTypeChange(e.target.value)}
-                      className="mt-1 h-5 w-5 text-pink-600 focus:ring-pink-500"
-                    />
-                    <div className="ml-4 flex-1">
-                      <div className="flex items-center gap-2">
-                        <FaCreditCard className="text-pink-600 text-xl" />
-                        <span className="font-bold text-gray-800">Mã giảm giá (Coupon)</span>
-                      </div>
-                      <p className="text-sm text-gray-600 mt-2">
-                        Khách hàng phải nhập mã để nhận ưu đãi. Có thể giới hạn số lần sử dụng và người dùng.
-                      </p>
-                    </div>
-                  </label>
+              {/* ==================== COUPON TYPE ONLY ==================== */}
+              <div className="bg-gradient-to-br from-pink-50 to-rose-50 p-6 rounded-xl border-2 border-pink-200">
+                <div className="flex items-center gap-3 mb-4">
+                  <FaCreditCard className="text-pink-600 text-2xl" />
+                  <div>
+                    <h3 className="text-lg font-bold text-gray-800">Tạo Mã giảm giá (Coupon)</h3>
+                    <p className="text-sm text-gray-600">Khách hàng phải nhập mã để nhận ưu đãi. Có thể giới hạn số lần sử dụng và người dùng.</p>
+                  </div>
                 </div>
               </div>
 
@@ -711,31 +562,29 @@ const AdminPromotions = () => {
                   />
                 </div>
 
-                {selectedPromotionType === 'COUPON' && (
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Mã giảm giá <span className="text-red-500">*</span>
-                    </label>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        name="code"
-                        value={formData.code}
-                        onChange={handleInputChange}
-                        className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono"
-                        placeholder="AQUA12345"
-                        required={selectedPromotionType === 'COUPON'}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setFormData({ ...formData, code: generateCouponCode() })}
-                        className="bg-gray-200 hover:bg-gray-300 px-4 py-2 rounded-lg font-medium"
-                      >
-                        Tạo mã
-                      </button>
-                    </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Mã giảm giá <span className="text-red-500">*</span>
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      name="code"
+                      value={formData.code}
+                      onChange={handleInputChange}
+                      className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-pink-500 focus:border-transparent font-mono"
+                      placeholder="AQUA12345"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, code: generateCouponCode() })}
+                      className="bg-pink-200 hover:bg-pink-300 px-4 py-2 rounded-lg font-medium text-pink-800"
+                    >
+                      Tạo mã
+                    </button>
                   </div>
-                )}
+                </div>
               </div>
 
               <div>
@@ -760,16 +609,15 @@ const AdminPromotions = () => {
                     name="discountType"
                     value={formData.discountType}
                     onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                   >
                     <option value="PERCENTAGE">Giảm theo phần trăm (%)</option>
                     <option value="FIXED_AMOUNT">Giảm số tiền cố định (VND)</option>
                     <option value="FREE_SHIPPING">Miễn phí vận chuyển</option>
-                    <option value="BUY_X_GET_Y">Mua X tặng Y</option>
                   </select>
                 </div>
 
-                {formData.discountType !== 'BUY_X_GET_Y' && formData.discountType !== 'FREE_SHIPPING' && (
+                {formData.discountType !== 'FREE_SHIPPING' && (
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
                       Giá trị giảm <span className="text-red-500">*</span>
@@ -780,7 +628,7 @@ const AdminPromotions = () => {
                         name="discountValue"
                         value={formData.discountValue}
                         onChange={handleInputChange}
-                        className="w-full border border-gray-300 rounded-lg px-4 py-2 pr-12 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full border border-gray-300 rounded-lg px-4 py-2 pr-12 focus:ring-2 focus:ring-pink-500 focus:border-transparent"
                         placeholder={formData.discountType === 'PERCENTAGE' ? '10' : '50000'}
                         min="0"
                         required
@@ -793,99 +641,37 @@ const AdminPromotions = () => {
                 )}
               </div>
 
-              {/* Buy X Get Y */}
-              {formData.discountType === 'BUY_X_GET_Y' && (
-                <div className="grid grid-cols-2 gap-4 bg-green-50 p-4 rounded-lg">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Mua số lượng (X) <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      name="conditions.buyQuantity"
-                      value={formData.conditions.buyQuantity}
-                      onChange={handleInputChange}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500"
-                      min="1"
-                      required
-                    />
+              {formData.discountType === 'FREE_SHIPPING' && (
+                <div className="bg-green-50 p-4 rounded-lg border-2 border-green-200">
+                  <div className="flex items-center gap-2 text-green-700">
+                    <FaShippingFast className="text-lg" />
+                    <span className="font-semibold">Miễn phí vận chuyển</span>
                   </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Tặng số lượng (Y) <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="number"
-                      name="conditions.getQuantity"
-                      value={formData.conditions.getQuantity}
-                      onChange={handleInputChange}
-                      className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500"
-                      min="1"
-                      required
-                    />
-                  </div>
+                  <p className="text-sm text-green-600 mt-1">
+                    Khách hàng sẽ được miễn phí vận chuyển khi sử dụng mã này. Bạn có thể đặt giới hạn giảm tối đa bên dưới.
+                  </p>
                 </div>
               )}
 
-              {/* Apply To (for PRODUCT_DISCOUNT) */}
-              {selectedPromotionType === 'PRODUCT_DISCOUNT' && (
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Áp dụng cho <span className="text-red-500">*</span>
-                  </label>
-                  <select
-                    name="applyTo"
-                    value={formData.applyTo}
-                    onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="ALL_PRODUCTS">Tất cả sản phẩm</option>
-                    <option value="SPECIFIC_PRODUCTS">Sản phẩm cụ thể</option>
-                    <option value="CATEGORY">Theo danh mục</option>
-                  </select>
 
-                  {formData.applyTo === 'SPECIFIC_PRODUCTS' && (
-                    <div className="mt-4 max-h-60 overflow-y-auto border border-gray-300 rounded-lg p-3">
-                      <p className="text-sm text-gray-600 mb-2">Chọn sản phẩm áp dụng:</p>
-                      {products?.map(product => (
-                        <label key={product._id} className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded">
-                          <input
-                            type="checkbox"
-                            checked={formData.applicableProducts.includes(product._id)}
-                            onChange={() => handleMultiSelect('applicableProducts', product._id)}
-                            className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-                          />
-                          <span className="text-sm">{product.name}</span>
-                        </label>
-                      ))}
-                    </div>
-                  )}
 
-                  {formData.applyTo === 'CATEGORY' && (
-                    <div className="mt-4 border border-gray-300 rounded-lg p-3">
-                      <p className="text-sm text-gray-600 mb-2">Chọn danh mục:</p>
-                      {categories?.map(category => (
-                        <label key={category._id} className="flex items-center gap-2 p-2 hover:bg-gray-50 rounded">
-                          <input
-                            type="checkbox"
-                            checked={formData.applicableCategories.includes(category._id)}
-                            onChange={() => handleMultiSelect('applicableCategories', category._id)}
-                            className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-                          />
-                          <span className="text-sm">{category.name}</span>
-                        </label>
-                      ))}
-                    </div>
-                  )}
+              {/* Coupon applies to entire order by default */}
+              <div className="bg-pink-50 p-4 rounded-lg">
+                <div className="flex items-center gap-2 text-pink-700">
+                  <FaShoppingCart className="text-lg" />
+                  <span className="font-semibold">Phạm vi áp dụng</span>
                 </div>
-              )}
+                <p className="text-sm text-pink-600 mt-1">
+                  Mã giảm giá này sẽ được áp dụng cho toàn bộ đơn hàng khi khách hàng nhập mã tại checkout.
+                </p>
+              </div>
 
               {/* Conditions */}
               <div className="bg-yellow-50 p-4 rounded-lg space-y-4">
                 <h3 className="font-bold text-gray-800 mb-3">📋 Điều kiện áp dụng (Tùy chọn)</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Giá trị đơn tối thiểu</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Giá trị đơn tối thiểu (VND)</label>
                     <input
                       type="number"
                       name="conditions.minOrderValue"
@@ -897,7 +683,7 @@ const AdminPromotions = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Số lượng tối thiểu</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Số lượng sản phẩm tối thiểu</label>
                     <input
                       type="number"
                       name="conditions.minQuantity"
@@ -908,18 +694,28 @@ const AdminPromotions = () => {
                       min="0"
                     />
                   </div>
-                  {formData.discountType === 'PERCENTAGE' && (
+                  {(formData.discountType === 'PERCENTAGE' || formData.discountType === 'FREE_SHIPPING') && (
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Giảm tối đa (VND)</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Giảm tối đa (VND)
+                        {formData.discountType === 'FREE_SHIPPING' && (
+                          <span className="text-xs text-gray-500 ml-2">(Áp dụng cho phí ship)</span>
+                        )}
+                      </label>
                       <input
                         type="number"
                         name="conditions.maxDiscount"
                         value={formData.conditions.maxDiscount}
                         onChange={handleInputChange}
                         className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-yellow-500"
-                        placeholder="0"
+                        placeholder="Không giới hạn"
                         min="0"
                       />
+                      {formData.discountType === 'FREE_SHIPPING' && (
+                        <p className="text-xs text-gray-500 mt-1">
+                          VD: Nhập 50000 để chỉ miễn phí tối đa 50,000đ phí ship
+                        </p>
+                      )}
                     </div>
                   )}
                 </div>
@@ -929,37 +725,42 @@ const AdminPromotions = () => {
                     name="conditions.firstOrderOnly"
                     checked={formData.conditions.firstOrderOnly}
                     onChange={handleInputChange}
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 rounded"
+                    className="h-4 w-4 text-pink-600 focus:ring-pink-500 rounded"
                   />
-                  <span className="text-sm text-gray-700">Chỉ áp dụng cho đơn hàng đầu tiên</span>
+                  <span className="text-sm text-gray-700">Chỉ áp dụng cho đơn hàng đầu tiên của khách hàng</span>
                 </label>
               </div>
 
               {/* Usage Limit */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Giới hạn tổng số lần sử dụng</label>
-                  <input
-                    type="number"
-                    name="usageLimit.total"
-                    value={formData.usageLimit.total}
-                    onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
-                    placeholder="Không giới hạn"
-                    min="1"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Giới hạn mỗi người dùng</label>
-                  <input
-                    type="number"
-                    name="usageLimit.perUser"
-                    value={formData.usageLimit.perUser}
-                    onChange={handleInputChange}
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
-                    placeholder="Không giới hạn"
-                    min="1"
-                  />
+              <div className="bg-blue-50 p-4 rounded-lg">
+                <h3 className="font-bold text-gray-800 mb-3">🎯 Giới hạn sử dụng</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Tổng số lần sử dụng</label>
+                    <input
+                      type="number"
+                      name="usageLimit.total"
+                      value={formData.usageLimit.total}
+                      onChange={handleInputChange}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
+                      placeholder="Không giới hạn"
+                      min="1"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Để trống nếu không muốn giới hạn</p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Giới hạn mỗi khách hàng</label>
+                    <input
+                      type="number"
+                      name="usageLimit.perUser"
+                      value={formData.usageLimit.perUser}
+                      onChange={handleInputChange}
+                      className="w-full border border-gray-300 rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
+                      placeholder="Không giới hạn"
+                      min="1"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">Mỗi khách hàng có thể sử dụng bao nhiều lần</p>
+                  </div>
                 </div>
               </div>
 
@@ -1020,9 +821,9 @@ const AdminPromotions = () => {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="px-6 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:shadow-lg transition-all font-semibold disabled:opacity-50"
+                  className="px-6 py-2 bg-gradient-to-r from-pink-500 to-pink-600 text-white rounded-lg hover:shadow-lg transition-all font-semibold disabled:opacity-50"
                 >
-                  {isLoading ? 'Đang xử lý...' : isEditMode ? 'Cập nhật' : 'Tạo mới'}
+                  {isLoading ? 'Đang xử lý...' : isEditMode ? 'Cập nhật mã giảm giá' : 'Tạo mã giảm giá'}
                 </button>
               </div>
             </form>

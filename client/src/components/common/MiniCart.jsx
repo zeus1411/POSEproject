@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
-import { XMarkIcon, TrashIcon, MinusIcon, PlusIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, TrashIcon, MinusIcon, PlusIcon, TagIcon } from '@heroicons/react/24/outline';
 import { 
   updateCartItem, 
   removeFromCart, 
@@ -9,6 +9,7 @@ import {
   optimisticRemoveItem,
   fetchCart 
 } from '../../redux/slices/cartSlice';
+import api from '../../services/api';
 
 // Debounce utility
 const useDebounce = (callback, delay) => {
@@ -29,6 +30,10 @@ const MiniCart = ({ isOpen, onClose }) => {
   const { cart, summary, loading, isUpdating } = useSelector((state) => state.cart);
   const miniCartRef = useRef(null);
   const [pendingUpdates, setPendingUpdates] = useState(new Map());
+  const [promotionDiscount, setPromotionDiscount] = useState({
+    totalDiscount: 0,
+    appliedPromotions: []
+  });
 
   // Close mini cart when clicking outside
   useEffect(() => {
@@ -46,6 +51,44 @@ const MiniCart = ({ isOpen, onClose }) => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [isOpen, onClose]);
+
+  // Auto-apply promotions when cart changes
+  useEffect(() => {
+    const applyPromotions = async () => {
+      if (cart && cart.items && cart.items.length > 0) {
+        try {
+          const response = await api.post('/promotions/apply-to-cart', {
+            cart: {
+              items: cart.items,
+              subtotal: summary.subtotal
+            }
+          });
+          
+          if (response.data.success) {
+            setPromotionDiscount({
+              totalDiscount: response.data.data.totalDiscount || 0,
+              appliedPromotions: response.data.data.appliedPromotions || []
+            });
+          }
+        } catch (error) {
+          console.error('Error applying promotions:', error);
+          // Reset on error
+          setPromotionDiscount({
+            totalDiscount: 0,
+            appliedPromotions: []
+          });
+        }
+      } else {
+        // Reset when cart is empty
+        setPromotionDiscount({
+          totalDiscount: 0,
+          appliedPromotions: []
+        });
+      }
+    };
+
+    applyPromotions();
+  }, [cart, summary.subtotal]);
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat('vi-VN', {
@@ -334,6 +377,29 @@ const MiniCart = ({ isOpen, onClose }) => {
                 </span>
               </div>
 
+              {/* Promotion Discount */}
+              {promotionDiscount.totalDiscount > 0 && (
+                <div className="space-y-1">
+                  <div className="flex justify-between text-sm">
+                    <div className="flex items-center gap-1.5 text-green-600">
+                      <TagIcon className="w-4 h-4" />
+                      <span className="font-medium">Giảm giá:</span>
+                    </div>
+                    <span className="font-medium text-green-600">
+                      -{formatPrice(promotionDiscount.totalDiscount)}
+                    </span>
+                  </div>
+                  {/* Show applied promotion names */}
+                  {promotionDiscount.appliedPromotions.length > 0 && (
+                    <div className="text-xs text-gray-500 pl-5">
+                      {promotionDiscount.appliedPromotions.map((promo, index) => (
+                        <div key={index}>• {promo.name}</div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Shipping */}
               <div className="flex justify-between text-sm">
                 <span className="text-gray-600">Phí vận chuyển:</span>
@@ -350,7 +416,7 @@ const MiniCart = ({ isOpen, onClose }) => {
               <div className="flex justify-between text-base pt-3 border-t border-gray-200">
                 <span className="font-semibold text-gray-900">Tổng cộng:</span>
                 <span className="font-bold text-primary-600 text-lg">
-                  {formatPrice(summary.total)}
+                  {formatPrice(Math.max(0, summary.total - promotionDiscount.totalDiscount))}
                 </span>
               </div>
 

@@ -13,17 +13,24 @@ export const getOrderById = async (id) => {
   return response.data?.data?.order;
 };
 
-export const previewOrder = async (promotionCode) => {
-  const response = await api.get('/orders/preview', { params: promotionCode ? { promotionCode } : {} });
+export const previewOrder = async (promotionCode, promotionCodes) => {
+  const params = {};
+  if (promotionCodes && promotionCodes.length > 0) {
+    params.promotionCodes = promotionCodes.join(',');
+  } else if (promotionCode) {
+    params.promotionCode = promotionCode;
+  }
+  const response = await api.get('/orders/preview', { params });
   return response.data?.data;
 };
 
-export const createOrder = async ({ shippingAddress, paymentMethod = 'COD', promotionCode, notes }) => {
+export const createOrder = async ({ shippingAddress, paymentMethod = 'COD', promotionCode, promotionCodes, notes }) => {
   try {
     const response = await api.post('/orders', { 
       shippingAddress, 
       paymentMethod, 
-      promotionCode, 
+      promotionCode: promotionCodes && promotionCodes.length > 0 ? undefined : promotionCode,
+      promotionCodes: promotionCodes && promotionCodes.length > 0 ? promotionCodes : undefined,
       notes 
     });
     

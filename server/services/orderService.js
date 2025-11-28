@@ -30,6 +30,7 @@ class OrderService {
         shippingAddress, 
         paymentMethod = 'COD',
         promotionCode,
+        promotionCodes,
         notes 
       } = orderData;
 
@@ -126,12 +127,49 @@ class OrderService {
         subtotal += itemSubtotal;
       }
 
-      // Calculate fees
-      const shippingFee = subtotal >= 500000 ? 0 : 30000;
+      // Calculate fees - 14% of subtotal
+      const shippingFee = Math.round(subtotal * 0.14);
       let discount = 0;
       let promotionId = null;
+      let promotionIds = [];
+      const appliedCodes = [];
       
-      if (promotionCode) {
+      // Handle multiple promotion codes (priority)
+      if (promotionCodes && Array.isArray(promotionCodes) && promotionCodes.length > 0) {
+        const Promotion = mongoose.model('Promotion');
+        
+        for (const code of promotionCodes) {
+          const promotion = await Promotion.findOne({ 
+            code: code.trim().toUpperCase(),
+            isActive: true,
+            startDate: { $lte: new Date() },
+            endDate: { $gte: new Date() }
+          });
+
+          if (promotion) {
+            const minOrderValue = promotion.conditions?.minOrderValue || 0;
+            const maxDiscount = promotion.conditions?.maxDiscount || null;
+            
+            if (subtotal >= minOrderValue) {
+              if (promotion.discountType === 'PERCENTAGE') {
+                discount += Math.min(
+                  (subtotal * promotion.discountValue) / 100,
+                  maxDiscount || Infinity
+                );
+              } else if (promotion.discountType === 'FIXED_AMOUNT') {
+                discount += promotion.discountValue;
+              } else if (promotion.discountType === 'FREE_SHIPPING') {
+                // Apply maxDiscount for FREE_SHIPPING
+                discount += Math.min(shippingFee, maxDiscount || Infinity);
+              }
+              promotionIds.push(promotion._id);
+              appliedCodes.push(code.trim().toUpperCase());
+            }
+          }
+        }
+        promotionId = promotionIds.length > 0 ? promotionIds[0] : null; // For backward compatibility
+      } else if (promotionCode) {
+        // Single promotion code (backward compatibility)
         const Promotion = mongoose.model('Promotion');
         const promotion = await Promotion.findOne({ 
           code: promotionCode,
@@ -140,16 +178,25 @@ class OrderService {
           endDate: { $gte: new Date() }
         });
 
-        if (promotion && subtotal >= promotion.minPurchase) {
-          if (promotion.discountType === 'PERCENTAGE') {
-            discount = Math.min(
-              (subtotal * promotion.discountValue) / 100,
-              promotion.maxDiscount || Infinity
-            );
-          } else {
-            discount = promotion.discountValue;
+        if (promotion) {
+          const minOrderValue = promotion.conditions?.minOrderValue || 0;
+          const maxDiscount = promotion.conditions?.maxDiscount || null;
+          
+          if (subtotal >= minOrderValue) {
+            if (promotion.discountType === 'PERCENTAGE') {
+              discount = Math.min(
+                (subtotal * promotion.discountValue) / 100,
+                maxDiscount || Infinity
+              );
+            } else if (promotion.discountType === 'FIXED_AMOUNT') {
+              discount = promotion.discountValue;
+            } else if (promotion.discountType === 'FREE_SHIPPING') {
+              // For FREE_SHIPPING, apply maxDiscount if set
+              discount = Math.min(shippingFee, maxDiscount || Infinity);
+            }
+            promotionId = promotion._id;
+            appliedCodes.push(promotionCode);
           }
-          promotionId = promotion._id;
         }
       }
 
@@ -173,7 +220,7 @@ class OrderService {
           totalPrice,
           shippingAddress,
           promotionId,
-          promotionCode,
+          promotionCode: appliedCodes.length > 0 ? appliedCodes.join(',') : undefined,
           notes,
           paymentMethod: 'VNPAY'
         });
@@ -253,7 +300,7 @@ class OrderService {
         status: 'PENDING',
         shippingAddress,
         promotionId,
-        promotionCode,
+        promotionCode: appliedCodes.length > 0 ? appliedCodes.join(',') : undefined,
         notes,
         isPaid: false
       }]);
@@ -328,7 +375,7 @@ class OrderService {
 
     const cart = await Cart.findOne({ userId }).populate({
       path: 'items.productId',
-      select: 'name price salePrice discount images sku stock status'
+      select: 'name price salePrice discount images sku stock status hasVariants variants'
     });
 
     if (!cart || cart.items.length === 0) {
@@ -345,7 +392,20 @@ class OrderService {
         continue;
       }
 
-      const itemPrice = product.salePrice || product.price;
+      // ✅ Get correct price: selectedVariant.price > product.salePrice > product.price
+      let itemPrice = product.salePrice || product.price;
+      
+      // Check if item has selectedVariant with price
+      if (item.selectedVariant && item.selectedVariant.price) {
+        itemPrice = item.selectedVariant.price;
+      } else if (product.hasVariants && item.variantId) {
+        // Find variant by variantId if not already in selectedVariant
+        const variant = product.variants?.find(v => v._id.toString() === item.variantId.toString());
+        if (variant && variant.price) {
+          itemPrice = variant.price;
+        }
+      }
+      
       const itemDiscount = product.discount || 0;
       const itemSubtotal = itemPrice * item.quantity * (1 - itemDiscount / 100);
 
@@ -368,7 +428,7 @@ class OrderService {
       subtotal += itemSubtotal;
     }
 
-    const shippingFee = subtotal >= 500000 ? 0 : 30000;
+    const shippingFee = Math.round(subtotal * 0.14); // 14% of subtotal
     let discount = 0;
     let promotionDetails = null;
 
@@ -382,24 +442,32 @@ class OrderService {
       });
 
       if (promotion) {
-        if (subtotal >= promotion.minPurchase) {
+        const minOrderValue = promotion.conditions?.minOrderValue || 0;
+        const maxDiscount = promotion.conditions?.maxDiscount || null;
+        
+        if (subtotal >= minOrderValue) {
           if (promotion.discountType === 'PERCENTAGE') {
             discount = Math.min(
               (subtotal * promotion.discountValue) / 100,
-              promotion.maxDiscount || Infinity
+              maxDiscount || Infinity
             );
-          } else {
+          } else if (promotion.discountType === 'FIXED_AMOUNT') {
             discount = promotion.discountValue;
+          } else if (promotion.discountType === 'FREE_SHIPPING') {
+            // For FREE_SHIPPING, apply maxDiscount if set
+            discount = Math.min(shippingFee, maxDiscount || Infinity);
           }
+          
           promotionDetails = {
             code: promotion.code,
             description: promotion.description,
             discountValue: promotion.discountValue,
-            discountType: promotion.discountType
+            discountType: promotion.discountType,
+            discountAmount: discount
           };
         } else {
           promotionDetails = {
-            error: `Đơn hàng tối thiểu ${promotion.minPurchase.toLocaleString('vi-VN')}₫ để áp dụng mã`
+            error: `Đơn hàng tối thiểu ${minOrderValue.toLocaleString('vi-VN')}₫ để áp dụng mã`
           };
         }
       } else {

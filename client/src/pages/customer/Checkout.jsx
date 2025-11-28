@@ -3,8 +3,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { fetchCart, resetCart } from '../../redux/slices/cartSlice';
 import * as orderService from '../../services/orderService';
+import api from '../../services/api';
 import { toast } from 'react-toastify';
 import Swal from 'sweetalert2';
+import CouponDropdown from '../../components/checkout/CouponDropdown';
 
 // ==================== VNPay Payment Modal Component ====================
 const VNPayPaymentModal = ({ order, paymentData, onClose, onSuccess, onError }) => {
@@ -251,6 +253,10 @@ const Checkout = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showVNPayModal, setShowVNPayModal] = useState(false);
   const [vnpayData, setVnpayData] = useState(null);
+  
+  // Coupon state - updated for multiple coupons
+  const [selectedCoupons, setSelectedCoupons] = useState([]);
+  const [isValidatingCoupons, setIsValidatingCoupons] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -273,15 +279,26 @@ const Checkout = () => {
   useEffect(() => {
     const loadPreview = async () => {
       try {
-        const res = await orderService.previewOrder();
-        setPreview(res);
+        if (selectedCoupons.length > 0) {
+          const promotionCodes = selectedCoupons.map(c => c.code);
+          const res = await orderService.previewOrder(null, promotionCodes);
+          setPreview(res);
+        } else {
+          const res = await orderService.previewOrder();
+          setPreview(res);
+        }
       } catch (e) {
         console.error('Preview error:', e);
         setPreview(null);
       }
     };
     loadPreview();
-  }, []);
+  }, [selectedCoupons]);
+
+  // Handle multiple coupons selection
+  const handleCouponsChange = (coupons) => {
+    setSelectedCoupons(coupons);
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -403,6 +420,7 @@ const Checkout = () => {
           postalCode: addr.postalCode || ''
         },
         paymentMethod: paymentMethod === 'VNPAY' ? 'VNPAY' : 'COD',
+        promotionCodes: selectedCoupons.map(c => c.code),
         notes: ''
       };
       
@@ -426,6 +444,9 @@ const Checkout = () => {
         }
       } else {
         await dispatch(resetCart());
+        // Clear selected coupons after successful order
+        setSelectedCoupons([]);
+        
         // ✅ Hiển thị SweetAlert2 thông báo thành công
         await Swal.fire({
           icon: 'success',
@@ -481,15 +502,23 @@ const Checkout = () => {
   };
 
   const items = cart?.items || [];
+  
+  // Calculate discount for multiple coupons
+  const hasCoupons = selectedCoupons.length > 0;
+  
   const displayTotals = preview ? {
     subtotal: preview.subtotal,
     shippingFee: preview.shippingFee,
-    discount: preview.discount,
+    discount: preview.discount, // Already includes coupon discount if promotionCodes was sent
+    hasCoupons: hasCoupons,
+    selectedCoupons: selectedCoupons,
     total: preview.totalPrice,
   } : {
     subtotal: summary.subtotal,
-    shippingFee: summary.shippingFee,
+    shippingFee: Math.round(summary.subtotal * 0.14), // 14% of subtotal
     discount: 0,
+    hasCoupons: hasCoupons,
+    selectedCoupons: selectedCoupons,
     total: summary.total,
   };
 
@@ -594,6 +623,13 @@ const Checkout = () => {
               </div>
             )}
           </div>
+
+          {/* Mã giảm giá */}
+          <CouponDropdown
+            selectedCoupons={selectedCoupons}
+            onCouponsChange={handleCouponsChange}
+            isValidating={isValidatingCoupons}
+          />
 
           {/* Payment Method */}
           <div className="bg-white rounded-lg border border-gray-200 p-6">
@@ -750,12 +786,44 @@ const Checkout = () => {
                     {displayTotals.shippingFee === 0 ? <span className="text-green-600">Miễn phí</span> : formatCurrency(displayTotals.shippingFee)}
                   </span>
                 </div>
-                {displayTotals.discount > 0 && (
+                
+                {/* Display individual coupon discounts */}
+                {preview?.promotion?.promotions && preview.promotion.promotions.length > 0 ? (
+                  <>
+                    {preview.promotion.promotions.map((promo, index) => (
+                      <div key={index} className="flex justify-between">
+                        <span className="text-gray-600 flex items-center gap-1">
+                          <svg className="w-4 h-4 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                          </svg>
+                          <span className="text-xs">
+                            {promo.discountType === 'FREE_SHIPPING' ? 'Miễn phí ship' : 
+                             promo.discountType === 'PERCENTAGE' ? `Giảm ${promo.discountValue}%` : 
+                             `Giảm ${formatCurrency(promo.discountValue)}`}
+                            {' '}({promo.code})
+                          </span>
+                        </span>
+                        <span className="font-semibold text-green-600 text-sm">-{formatCurrency(promo.discountAmount)}</span>
+                      </div>
+                    ))}
+                  </>
+                ) : displayTotals.discount > 0 && (
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Giảm giá</span>
-                    <span className="font-medium text-green-600">-{formatCurrency(displayTotals.discount)}</span>
+                    <span className="text-gray-600 flex items-center gap-1">
+                      {displayTotals.hasCoupons && (
+                        <svg className="w-4 h-4 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                        </svg>
+                      )}
+                      Giảm giá
+                      {displayTotals.selectedCoupons?.length > 0 && (
+                        <span className="text-xs">({displayTotals.selectedCoupons.length} mã)</span>
+                      )}
+                    </span>
+                    <span className="font-semibold text-green-600">-{formatCurrency(displayTotals.discount)}</span>
                   </div>
                 )}
+                
                 <div className="pt-3 mt-3 border-t flex justify-between text-base">
                   <span className="font-semibold text-gray-900">Tổng cộng</span>
                   <span className="font-bold text-primary-600 text-lg">{formatCurrency(displayTotals.total)}</span>
@@ -778,14 +846,32 @@ const Checkout = () => {
             <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">Xác nhận đơn hàng</h3>
             <div className="space-y-3 mb-6 bg-gray-50 p-4 rounded-lg">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">Tổng tiền:</span>
-                <span className="font-semibold text-gray-900">{formatCurrency(displayTotals.total)}</span>
+                <span className="text-gray-600">Tạm tính:</span>
+                <span className="font-medium text-gray-900">{formatCurrency(displayTotals.subtotal)}</span>
               </div>
               <div className="flex justify-between text-sm">
+                <span className="text-gray-600">Phí vận chuyển:</span>
+                <span className="font-medium text-gray-900">
+                  {displayTotals.shippingFee === 0 ? 'Miễn phí' : formatCurrency(displayTotals.shippingFee)}
+                </span>
+              </div>
+              {(displayTotals.discount > 0 || displayTotals.couponDiscount > 0) && (
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">
+                    Giảm giá{displayTotals.couponDiscount > 0 && appliedCoupon?.code ? ` (${appliedCoupon.code})` : ''}:
+                  </span>
+                  <span className="font-semibold text-green-600">-{formatCurrency(displayTotals.discount + displayTotals.couponDiscount)}</span>
+                </div>
+              )}
+              <div className="pt-3 border-t flex justify-between">
+                <span className="font-semibold text-gray-900">Tổng tiền:</span>
+                <span className="font-bold text-primary-600 text-lg">{formatCurrency(displayTotals.total)}</span>
+              </div>
+              <div className="flex justify-between text-sm pt-2 border-t">
                 <span className="text-gray-600">Phương thức:</span>
                 <span className="font-medium text-gray-900">{paymentMethod === 'COD' ? 'Thanh toán khi nhận hàng' : 'VNPay'}</span>
               </div>
-              <div className="text-sm">
+              <div className="text-sm pt-2 border-t">
                 <span className="text-gray-600">Địa chỉ:</span>
                 <p className="font-medium text-gray-900 mt-1">{formatAddress()}</p>
               </div>

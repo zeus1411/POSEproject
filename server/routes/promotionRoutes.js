@@ -7,9 +7,11 @@ import {
   deletePromotion,
   togglePromotionStatus,
   getAvailablePromotions,
+  getAllActiveCoupons,
   getPromotionsForProduct,
   validateCoupon,
   applyPromotions,
+  applyPromotionsToCart,
   getPromotionStatistics
 } from '../controllers/promotionController.js';
 import { authenticateUser, authorizeRoles } from '../middlewares/auth.js';
@@ -18,9 +20,11 @@ const router = express.Router();
 
 // ==================== USER ROUTES ====================
 router.get('/available', authenticateUser, getAvailablePromotions);
+router.get('/coupons/active', authenticateUser, getAllActiveCoupons);
 router.get('/product/:productId', getPromotionsForProduct);
 router.post('/validate', authenticateUser, validateCoupon);
 router.post('/apply', authenticateUser, applyPromotions);
+router.post('/apply-to-cart', authenticateUser, applyPromotionsToCart);
 
 // ==================== ADMIN ROUTES ====================
 router.use(authenticateUser); // All routes below require authentication

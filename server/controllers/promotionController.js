@@ -23,22 +23,22 @@ export const createPromotion = async (req, res, next) => {
 };
 
 /**
- * @desc    Get all promotions
+ * @desc    Get all coupons
  * @route   GET /api/v1/promotions
  * @access  Private/Admin
  */
 export const getAllPromotions = async (req, res, next) => {
   try {
-    const { page = 1, limit = 20, isActive, promotionType, search } = req.query;
+    const { page = 1, limit = 20, isActive, search } = req.query;
 
     const filters = {};
     // Only add filters if they have actual values (not empty strings)
     if (isActive !== undefined && isActive !== '') {
       filters.isActive = isActive === 'true';
     }
-    if (promotionType && promotionType !== '') {
-      filters.promotionType = promotionType;
-    }
+    // Always filter for COUPON type only
+    filters.promotionType = 'COUPON';
+    
     if (search && search.trim() !== '') {
       filters.search = search.trim();
     }
@@ -153,6 +153,24 @@ export const getAvailablePromotions = async (req, res, next) => {
 };
 
 /**
+ * @desc    Get all active coupons for dropdown (grouped by type)
+ * @route   GET /api/v1/promotions/coupons/active
+ * @access  Private
+ */
+export const getAllActiveCoupons = async (req, res, next) => {
+  try {
+    const coupons = await promotionService.getAllActiveCoupons();
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      data: coupons
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * @desc    Get promotions for specific product
  * @route   GET /api/v1/promotions/product/:productId
  * @access  Public
@@ -258,6 +276,47 @@ export const getPromotionStatistics = async (req, res, next) => {
       success: true,
       data: {
         message: 'Statistics endpoint - to be implemented'
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Auto-apply all applicable promotions to cart
+ * @route   POST /api/v1/promotions/apply-to-cart
+ * @access  Private
+ */
+export const applyPromotionsToCart = async (req, res, next) => {
+  try {
+    const { cart } = req.body;
+    const userId = req.user.userId;
+
+    if (!cart || !cart.items || cart.items.length === 0) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: 'Giỏ hàng trống'
+      });
+    }
+
+    // Get all active promotions applicable to this cart
+    const applicablePromotions = await promotionService.getApplicablePromotions(cart, userId);
+
+    // Calculate total discount
+    const { totalDiscount, appliedPromotions, breakdown } = await promotionService.calculateDiscount(
+      cart,
+      applicablePromotions,
+      userId
+    );
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      data: {
+        totalDiscount,
+        appliedPromotions,
+        breakdown,
+        availablePromotions: applicablePromotions.length
       }
     });
   } catch (error) {

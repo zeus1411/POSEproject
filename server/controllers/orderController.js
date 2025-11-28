@@ -178,7 +178,7 @@ const createOrder = async (req, res) => {
     console.log('Subtotal:', subtotal);
 
     // Tính phí ship
-    const shippingFee = subtotal >= 500000 ? 0 : 30000;
+    let shippingFee = subtotal >= 500000 ? 0 : 30000;
     console.log('Shipping fee:', shippingFee);
 
     // Xử lý mã giảm giá (nếu có)
@@ -195,17 +195,26 @@ const createOrder = async (req, res) => {
         endDate: { $gte: new Date() }
       });
 
-      if (promotion && subtotal >= promotion.minPurchase) {
-        if (promotion.discountType === 'PERCENTAGE') {
-          discount = Math.min(
-            (subtotal * promotion.discountValue) / 100,
-            promotion.maxDiscount || Infinity
-          );
-        } else {
-          discount = promotion.discountValue;
+      if (promotion) {
+        const minOrderValue = promotion.conditions?.minOrderValue || 0;
+        
+        if (subtotal >= minOrderValue) {
+          if (promotion.discountType === 'PERCENTAGE') {
+            const maxDiscount = promotion.conditions?.maxDiscount || Infinity;
+            discount = Math.min(
+              (subtotal * promotion.discountValue) / 100,
+              maxDiscount
+            );
+          } else if (promotion.discountType === 'FIXED_AMOUNT') {
+            discount = promotion.discountValue;
+          } else if (promotion.discountType === 'FREE_SHIPPING') {
+            // For FREE_SHIPPING, the discount equals the shipping fee
+            discount = shippingFee;
+          }
+          
+          promotionId = promotion._id;
+          console.log('Promotion applied:', discount);
         }
-        promotionId = promotion._id;
-        console.log('Promotion applied:', discount);
       }
     }
 
@@ -240,7 +249,7 @@ const createOrder = async (req, res) => {
 // @access  Private (User)
 const previewOrder = async (req, res) => {
   const userId = req.user.userId;
-  const { promotionCode } = req.query;
+  const { promotionCode, promotionCodes } = req.query;
 
   // Lấy thông tin user
   const user = await User.findById(userId).select('username email phone defaultAddress');
@@ -252,7 +261,7 @@ const previewOrder = async (req, res) => {
   // Lấy giỏ hàng
   const cart = await Cart.findOne({ userId }).populate({
     path: 'items.productId',
-    select: 'name price salePrice discount images sku stock status'
+    select: 'name price salePrice discount images sku stock status hasVariants variants'
   });
 
   if (!cart || cart.items.length === 0) {
@@ -270,7 +279,20 @@ const previewOrder = async (req, res) => {
       continue;
     }
 
-    const itemPrice = product.salePrice || product.price;
+    // ✅ Get correct price: selectedVariant.price > product.salePrice > product.price
+    let itemPrice = product.salePrice || product.price;
+    
+    // Check if item has selectedVariant with price
+    if (item.selectedVariant && item.selectedVariant.price) {
+      itemPrice = item.selectedVariant.price;
+    } else if (product.hasVariants && item.variantId) {
+      // Find variant by variantId if not already in selectedVariant
+      const variant = product.variants?.find(v => v._id.toString() === item.variantId.toString());
+      if (variant && variant.price) {
+        itemPrice = variant.price;
+      }
+    }
+    
     const itemDiscount = product.discount || 0;
     const itemSubtotal = itemPrice * item.quantity * (1 - itemDiscount / 100);
 
@@ -293,13 +315,85 @@ const previewOrder = async (req, res) => {
     subtotal += itemSubtotal;
   }
 
-  const shippingFee = subtotal >= 500000 ? 0 : 30000;
+  let shippingFee = Math.round(subtotal * 0.14); // 14% of subtotal
 
   // Xử lý mã giảm giá
   let discount = 0;
   let promotionDetails = null;
+  let appliedPromotions = [];
 
-  if (promotionCode) {
+  // Handle multiple promotion codes (priority over single code)
+  if (promotionCodes) {
+    try {
+      const codes = typeof promotionCodes === 'string' ? promotionCodes.split(',') : promotionCodes;
+      const Promotion = mongoose.model('Promotion');
+      
+      let freeShippingCount = 0;
+      let discountCount = 0;
+      
+      for (const code of codes) {
+        const promotion = await Promotion.findOne({ 
+          code: code.trim().toUpperCase(),
+          isActive: true,
+          startDate: { $lte: new Date() },
+          endDate: { $gte: new Date() }
+        });
+
+        if (promotion) {
+          const minOrderValue = promotion.conditions?.minOrderValue || 0;
+          const maxDiscount = promotion.conditions?.maxDiscount || null;
+          
+          if (subtotal >= minOrderValue) {
+            let promotionDiscount = 0;
+            
+            if (promotion.discountType === 'PERCENTAGE') {
+              promotionDiscount = Math.min(
+                (subtotal * promotion.discountValue) / 100,
+                maxDiscount || Infinity
+              );
+              discountCount++;
+            } else if (promotion.discountType === 'FIXED_AMOUNT') {
+              promotionDiscount = promotion.discountValue;
+              discountCount++;
+            } else if (promotion.discountType === 'FREE_SHIPPING') {
+              // Apply maxDiscount for FREE_SHIPPING if set
+              promotionDiscount = Math.min(shippingFee, maxDiscount || Infinity);
+              freeShippingCount++;
+            }
+            
+            discount += promotionDiscount;
+            appliedPromotions.push({
+              code: promotion.code,
+              description: promotion.description,
+              discountType: promotion.discountType,
+              discountValue: promotion.discountValue,
+              discountAmount: promotionDiscount
+            });
+          }
+        }
+      }
+      
+      // Check validation
+      if (freeShippingCount > 1) {
+        throw new Error('Chỉ có thể sử dụng một mã miễn phí vận chuyển');
+      }
+      if (discountCount > 1) {
+        throw new Error('Chỉ có thể sử dụng một mã giảm giá');
+      }
+      
+      promotionDetails = {
+        promotions: appliedPromotions,
+        totalDiscount: discount,
+        freeShippingApplied: freeShippingCount > 0
+      };
+    } catch (error) {
+      promotionDetails = {
+        error: error.message
+      };
+      discount = 0;
+    }
+  } else if (promotionCode) {
+    // Single promotion code (backward compatibility)
     const Promotion = mongoose.model('Promotion');
     const promotion = await Promotion.findOne({ 
       code: promotionCode,
@@ -309,24 +403,32 @@ const previewOrder = async (req, res) => {
     });
 
     if (promotion) {
-      if (subtotal >= promotion.minPurchase) {
+      const minOrderValue = promotion.conditions?.minOrderValue || 0;
+      const maxDiscount = promotion.conditions?.maxDiscount || null;
+      
+      if (subtotal >= minOrderValue) {
         if (promotion.discountType === 'PERCENTAGE') {
           discount = Math.min(
             (subtotal * promotion.discountValue) / 100,
-            promotion.maxDiscount || Infinity
+            maxDiscount || Infinity
           );
-        } else {
+        } else if (promotion.discountType === 'FIXED_AMOUNT') {
           discount = promotion.discountValue;
+        } else if (promotion.discountType === 'FREE_SHIPPING') {
+          // For FREE_SHIPPING, apply maxDiscount if set
+          discount = Math.min(shippingFee, maxDiscount || Infinity);
         }
+        
         promotionDetails = {
           code: promotion.code,
           description: promotion.description,
           discountValue: promotion.discountValue,
-          discountType: promotion.discountType
+          discountType: promotion.discountType,
+          discountAmount: discount
         };
       } else {
         promotionDetails = {
-          error: `Đơn hàng tối thiểu ${promotion.minPurchase.toLocaleString('vi-VN')}₫ để áp dụng mã`
+          error: `Đơn hàng tối thiểu ${minOrderValue.toLocaleString('vi-VN')}₫ để áp dụng mã`
         };
       }
     } else {

@@ -30,7 +30,8 @@
     "rechart": "^0.0.1",
     "recharts": "^3.4.1",
     "socket.io-client": "^4.8.1",
-    "sweetalert2": "^11.26.3"
+    "sweetalert2": "^11.26.3",
+    "swiper": "^12.0.3"
   },
   "devDependencies": {
     "@types/react": "^18.2.43",
