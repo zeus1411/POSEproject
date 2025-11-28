@@ -67,6 +67,22 @@ const ProductDetail = () => {
     }
   }, [shouldShowReviewForm, orderIdFromUrl]);
 
+  useEffect(() => {
+    if (!currentProduct || !currentProduct.hasVariants) return;
+
+    if (selectedVariant) return;
+
+    const firstAvailable = currentProduct.variants.find(
+      v => v.isActive && Number(v.stock) > 0
+    );
+
+    if (firstAvailable) {
+      setSelectedVariant(firstAvailable);
+    } else {
+      setSelectedVariant(null);
+    }
+  }, [currentProduct]);
+
   const formatPrice = (price) => {
     return new Intl.NumberFormat('vi-VN', {
       style: 'currency',
