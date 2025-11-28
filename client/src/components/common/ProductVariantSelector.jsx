@@ -64,7 +64,7 @@ const ProductVariantSelector = ({ product, selectedVariant, onVariantChange }) =
       // ❌ Nếu KHÔNG có variant nào -> DISABLE (không cho chọn)
       // ✅ Nếu có variant -> chỉ disable nếu TẤT CẢ đều hết hàng
       if (variantsWithOption.length === 0) return false;
-      return variantsWithOption.some(v => v.stock > 0);
+      return variantsWithOption.some(v => Number(v.stock) > 0);
     }
 
     // Otherwise, check if there's a variant matching the new selection
@@ -101,8 +101,8 @@ const ProductVariantSelector = ({ product, selectedVariant, onVariantChange }) =
               return (
                 <button
                   key={valueIndex}
-                  onClick={() => handleOptionSelect(option.name, value)}
                   disabled={!isAvailable}
+                  onClick={() => isAvailable && handleOptionSelect(option.name, value)}
                   className={`px-4 py-2 border rounded-lg font-medium transition-all ${
                     isSelected
                       ? 'border-primary-600 bg-primary-50 text-primary-700 ring-2 ring-primary-600'

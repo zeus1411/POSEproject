@@ -63,6 +63,7 @@ class ProductService {
     };
 
     const product = new Product(payload);
+    await product.validate(); // ép chạy validation rõ ràng hơn
     return await product.save();
   }
 

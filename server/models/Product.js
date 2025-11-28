@@ -329,14 +329,38 @@ productSchema.methods.isInStock = function (quantity = 1) {
 };
 
 // Method to decrease stock
-productSchema.methods.decreaseStock = async function (quantity) {
-  if (!this.isInStock(quantity)) {
-    throw new Error('Sản phẩm không đủ số lượng trong kho');
+// productSchema.methods.decreaseStock = async function (quantity) {
+//   if (!this.isInStock(quantity)) {
+//     throw new Error('Sản phẩm không đủ số lượng trong kho');
+//   }
+  
+//   this.stock -= quantity;
+//   this.soldCount += quantity;
+  
+//   await this.save();
+// };
+productSchema.methods.decreaseStock = async function (quantity, variantId = null) {
+  if (this.hasVariants) {
+    // Tìm variant
+    const variant = this.variants.id(variantId);
+    if (!variant) throw new Error('Variant không tồn tại');
+
+    if (variant.stock < quantity) {
+      throw new Error('Variant không đủ hàng');
+    }
+
+    variant.stock -= quantity;
+    this.soldCount += quantity;
+
+  } else {
+    if (!this.isInStock(quantity)) {
+      throw new Error('Sản phẩm không đủ hàng');
+    }
+
+    this.stock -= quantity;
+    this.soldCount += quantity;
   }
-  
-  this.stock -= quantity;
-  this.soldCount += quantity;
-  
+
   await this.save();
 };
 
