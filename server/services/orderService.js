@@ -34,6 +34,14 @@ class OrderService {
         notes 
       } = orderData;
 
+      // ✅ Log promotion codes for debugging
+      console.log('🏷️  Promotion codes received:', {
+        promotionCode,
+        promotionCodes,
+        isArray: Array.isArray(promotionCodes),
+        length: promotionCodes?.length
+      });
+
       // Validate shipping address
       if (!shippingAddress) {
         throw new BadRequestError('Thiếu thông tin địa chỉ giao hàng');
@@ -135,6 +143,10 @@ class OrderService {
       const appliedCodes = [];
       
       // Handle multiple promotion codes (priority)
+      const appliedPromotions = []; // Track applied promotions for usage recording
+      
+      console.log('🔍 Processing promotion codes...', promotionCodes);
+      
       if (promotionCodes && Array.isArray(promotionCodes) && promotionCodes.length > 0) {
         const Promotion = mongoose.model('Promotion');
         
@@ -147,23 +159,43 @@ class OrderService {
           });
 
           if (promotion) {
+            // ✅ Check usage limits before applying
+            if (promotion.usageLimit.total !== null && promotion.usageCount >= promotion.usageLimit.total) {
+              console.log(`❌ Promotion ${code} has reached total usage limit`);
+              continue; // Skip this promotion
+            }
+
+            // Check per-user limit
+            if (promotion.usageLimit.perUser !== null) {
+              const userUsage = promotion.usedBy.find(u => u.userId.toString() === userId.toString());
+              if (userUsage && userUsage.usedCount >= promotion.usageLimit.perUser) {
+                console.log(`❌ User has reached usage limit for promotion ${code}`);
+                continue; // Skip this promotion
+              }
+            }
+
             const minOrderValue = promotion.conditions?.minOrderValue || 0;
             const maxDiscount = promotion.conditions?.maxDiscount || null;
             
             if (subtotal >= minOrderValue) {
+              let promoDiscount = 0;
+              
               if (promotion.discountType === 'PERCENTAGE') {
-                discount += Math.min(
+                promoDiscount = Math.min(
                   (subtotal * promotion.discountValue) / 100,
                   maxDiscount || Infinity
                 );
               } else if (promotion.discountType === 'FIXED_AMOUNT') {
-                discount += promotion.discountValue;
+                promoDiscount = promotion.discountValue;
               } else if (promotion.discountType === 'FREE_SHIPPING') {
                 // Apply maxDiscount for FREE_SHIPPING
-                discount += Math.min(shippingFee, maxDiscount || Infinity);
+                promoDiscount = Math.min(shippingFee, maxDiscount || Infinity);
               }
+              
+              discount += promoDiscount;
               promotionIds.push(promotion._id);
               appliedCodes.push(code.trim().toUpperCase());
+              appliedPromotions.push(promotion); // Store for usage recording
             }
           }
         }
@@ -179,6 +211,19 @@ class OrderService {
         });
 
         if (promotion) {
+          // ✅ Check usage limits before applying
+          if (promotion.usageLimit.total !== null && promotion.usageCount >= promotion.usageLimit.total) {
+            throw new BadRequestError(`Mã giảm giá ${promotionCode} đã hết lượt sử dụng`);
+          }
+
+          // Check per-user limit
+          if (promotion.usageLimit.perUser !== null) {
+            const userUsage = promotion.usedBy.find(u => u.userId.toString() === userId.toString());
+            if (userUsage && userUsage.usedCount >= promotion.usageLimit.perUser) {
+              throw new BadRequestError(`Bạn đã sử dụng hết số lần cho mã ${promotionCode}`);
+            }
+          }
+
           const minOrderValue = promotion.conditions?.minOrderValue || 0;
           const maxDiscount = promotion.conditions?.maxDiscount || null;
           
@@ -196,12 +241,25 @@ class OrderService {
             }
             promotionId = promotion._id;
             appliedCodes.push(promotionCode);
+            appliedPromotions.push(promotion); // Store for usage recording
+          } else {
+            throw new BadRequestError(`Đơn hàng phải đạt tối thiểu ${minOrderValue.toLocaleString('vi-VN')}đ để áp dụng mã ${promotionCode}`);
           }
         }
       }
 
       const tax = 0;
       const totalPrice = subtotal + shippingFee + tax - discount;
+
+      // ✅ Log order totals for debugging
+      console.log('📊 Order Totals:', {
+        subtotal,
+        shippingFee,
+        discount,
+        tax,
+        totalPrice,
+        appliedPromotions: appliedCodes
+      });
 
       // ==================== VNPay Flow: Store temp order data ====================
       if (paymentMethod === 'VNPAY') {
@@ -289,6 +347,7 @@ class OrderService {
       }
       
       // Create order
+      console.log('💾 Creating COD order with discount:', discount);
       const order = await Order.create([{
         userId,
         items: orderItems,
@@ -304,6 +363,12 @@ class OrderService {
         notes,
         isPaid: false
       }]);
+      console.log('✅ COD Order created with values:', {
+        orderId: order[0]._id,
+        subtotal: order[0].subtotal,
+        discount: order[0].discount,
+        totalPrice: order[0].totalPrice
+      });
 
       // Handle payment for COD
       const payment = await Payment.create([{
@@ -317,6 +382,19 @@ class OrderService {
 
       order[0].paymentId = payment[0]._id;
       await order[0].save();
+
+      // ✅ Record promotion usage for COD orders
+      if (appliedPromotions.length > 0) {
+        console.log('📊 Recording promotion usage for COD order...');
+        for (const promotion of appliedPromotions) {
+          try {
+            await promotion.recordUsage(userId);
+            console.log(`✅ Recorded usage for promotion: ${promotion.code}`);
+          } catch (error) {
+            console.error(`❌ Failed to record usage for promotion ${promotion.code}:`, error);
+          }
+        }
+      }
 
       // Clear cart for COD orders
       await Cart.findOneAndUpdate(

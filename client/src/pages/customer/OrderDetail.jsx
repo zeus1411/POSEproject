@@ -108,18 +108,24 @@ const OrderDetail = () => {
     shippingAddress = {},
     paymentMethod = 'COD', 
     paymentStatus = 'unpaid',
-    subTotal = items?.reduce((sum, item) => {
-      const price = item.price || item.unitPrice || 0;
-      const quantity = item.quantity || 1;
-      return sum + (price * quantity);
-    }, 0) || 0,
+    subtotal: orderSubtotal,
     shippingFee = 0, 
-    discount = 0, 
-    total = (() => {
-      const calculatedTotal = subTotal + (shippingFee || 0) - (discount || 0);
-      return calculatedTotal > 0 ? calculatedTotal : 0;
-    })()
+    discount = 0,
+    totalPrice: orderTotal
   } = orderDetail || {};
+
+  // Use order's subtotal if available, otherwise calculate from items
+  const subTotal = orderSubtotal !== undefined ? orderSubtotal : items?.reduce((sum, item) => {
+    const price = item.price || item.unitPrice || 0;
+    const quantity = item.quantity || 1;
+    return sum + (price * quantity);
+  }, 0) || 0;
+
+  // Use order's totalPrice if available, otherwise calculate
+  const total = orderTotal !== undefined ? orderTotal : (() => {
+    const calculatedTotal = subTotal + (shippingFee || 0) - (discount || 0);
+    return calculatedTotal > 0 ? calculatedTotal : 0;
+  })();
 
   // Derive payment info from populated paymentId (backend)
   const derivedPaymentMethod = orderDetail?.paymentId?.method || paymentMethod;

@@ -189,6 +189,37 @@ export const getPromotionsForProduct = async (req, res, next) => {
 };
 
 /**
+ * @desc    Check coupon eligibility (without applying)
+ * @route   POST /api/v1/promotions/check-eligibility
+ * @access  Private
+ */
+export const checkCouponEligibility = async (req, res, next) => {
+  try {
+    const { code, cartTotal } = req.body;
+
+    if (!code) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: 'Vui lòng nhập mã giảm giá'
+      });
+    }
+
+    const result = await promotionService.checkCouponEligibility(
+      code,
+      req.user?.userId,
+      cartTotal || 0
+    );
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      data: result
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * @desc    Validate coupon code
  * @route   POST /api/v1/promotions/validate
  * @access  Private

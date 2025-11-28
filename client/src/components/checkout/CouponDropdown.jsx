@@ -7,14 +7,16 @@ const formatCurrency = (v) => new Intl.NumberFormat('vi-VN', { style: 'currency'
 const CouponDropdown = ({ 
   selectedCoupons = [], 
   onCouponsChange,
-  isValidating = false 
+  isValidating = false,
+  cartTotal = 0 // Add cartTotal prop to check eligibility
 }) => {
   const [availableCoupons, setAvailableCoupons] = useState({ freeShipping: [], discount: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [eligibilityStatus, setEligibilityStatus] = useState({}); // Track eligibility for each coupon
 
-  // Load available coupons
+  // Load available coupons and check eligibility
   useEffect(() => {
     const loadCoupons = async () => {
       try {
@@ -22,7 +24,29 @@ const CouponDropdown = ({
         setError(null);
         
         const response = await api.get('/promotions/coupons/active');
-        setAvailableCoupons(response.data.data || { freeShipping: [], discount: [] });
+        const coupons = response.data.data || { freeShipping: [], discount: [] };
+        setAvailableCoupons(coupons);
+        
+        // Check eligibility for each coupon if we have cartTotal
+        if (cartTotal > 0) {
+          const allCoupons = [...coupons.freeShipping, ...coupons.discount];
+          const eligibilityChecks = {};
+          
+          for (const coupon of allCoupons) {
+            try {
+              const eligRes = await api.post('/promotions/check-eligibility', {
+                code: coupon.code,
+                cartTotal
+              });
+              eligibilityChecks[coupon.code] = eligRes.data.data;
+            } catch (err) {
+              console.error(`Error checking eligibility for ${coupon.code}:`, err);
+              eligibilityChecks[coupon.code] = { eligible: false, reason: 'Lỗi kiểm tra' };
+            }
+          }
+          
+          setEligibilityStatus(eligibilityChecks);
+        }
       } catch (err) {
         console.error('Error loading coupons:', err);
         setError('Không thể tải danh sách mã giảm giá');
@@ -32,7 +56,7 @@ const CouponDropdown = ({
     };
 
     loadCoupons();
-  }, []);
+  }, [cartTotal]); // Re-check when cart total changes
 
   const handleCouponToggle = (coupon) => {
     const isSelected = selectedCoupons.some(c => c.code === coupon.code);
@@ -74,6 +98,10 @@ const CouponDropdown = ({
   };
 
   const CouponItem = ({ coupon, isSelected }) => {
+    const eligibility = eligibilityStatus[coupon.code];
+    const isEligible = eligibility?.eligible !== false;
+    const eligibilityReason = eligibility?.reason;
+
     const getDiscountDisplay = () => {
       if (coupon.discountType === 'FREE_SHIPPING') {
         return 'Miễn phí vận chuyển';
@@ -97,37 +125,62 @@ const CouponDropdown = ({
 
     return (
       <div
-        onClick={() => handleCouponToggle(coupon)}
-        className={`p-3 border rounded-lg cursor-pointer transition-all hover:shadow-md ${
-          isSelected 
-            ? 'border-pink-500 bg-pink-50' 
-            : 'border-gray-200 hover:border-gray-300'
+        onClick={() => isEligible && handleCouponToggle(coupon)}
+        className={`p-3 border rounded-lg transition-all ${
+          !isEligible 
+            ? 'opacity-60 cursor-not-allowed bg-gray-50 border-gray-300' 
+            : isSelected 
+              ? 'border-pink-500 bg-pink-50 cursor-pointer hover:shadow-md' 
+              : 'border-gray-200 hover:border-gray-300 cursor-pointer hover:shadow-md'
         }`}
       >
         <div className="flex items-center justify-between">
           <div className="flex-1">
             <div className="flex items-center gap-3">
               <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                isSelected ? 'border-pink-500 bg-pink-500' : 'border-gray-300'
+                !isEligible 
+                  ? 'border-gray-400 bg-gray-200'
+                  : isSelected 
+                    ? 'border-pink-500 bg-pink-500' 
+                    : 'border-gray-300'
               }`}>
-                {isSelected && (
+                {isSelected && isEligible && (
                   <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                   </svg>
                 )}
+                {!isEligible && (
+                  <svg className="w-3 h-3 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clipRule="evenodd" />
+                  </svg>
+                )}
               </div>
               <div>
-                <div className="font-semibold text-gray-900">{coupon.code}</div>
+                <div className={`font-semibold ${isEligible ? 'text-gray-900' : 'text-gray-500'}`}>
+                  {coupon.code}
+                </div>
                 {coupon.description && (
                   <div className="text-xs text-gray-600 mt-0.5">{coupon.description}</div>
+                )}
+                {!isEligible && eligibilityReason && (
+                  <div className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    {eligibilityReason}
+                  </div>
                 )}
               </div>
             </div>
           </div>
           <div className="text-right ml-3">
-            <div className="font-semibold text-pink-600 text-sm">{getDiscountDisplay()}</div>
+            <div className={`font-semibold text-sm ${isEligible ? 'text-pink-600' : 'text-gray-500'}`}>
+              {getDiscountDisplay()}
+            </div>
             {getConditionDisplay() && (
-              <div className="text-xs text-orange-600 mt-0.5">{getConditionDisplay()}</div>
+              <div className={`text-xs mt-0.5 ${isEligible ? 'text-orange-600' : 'text-gray-500'}`}>
+                {getConditionDisplay()}
+              </div>
             )}
           </div>
         </div>
