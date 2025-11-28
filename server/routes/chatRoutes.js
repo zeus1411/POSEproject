@@ -5,10 +5,14 @@ import {
   getChatById, 
   sendMessage, 
   markAsRead, 
-  assignAdmin, 
+  assignAdmin,
+  takeOverChat,
+  unassignChat,
   closeChat,
+  resolveChat,
   getUnreadCount,
-  deleteChat
+  deleteChat,
+  getChatStatistics
 } from '../controllers/chatController.js';
 import { authenticateUser, authorizeRoles } from '../middlewares/auth.js';
 
@@ -23,6 +27,7 @@ router.get('/unread-count', getUnreadCount);
 
 // Admin routes
 router.get('/admin', authorizeRoles('admin'), getAdminChats);
+router.get('/admin/statistics', authorizeRoles('admin'), getChatStatistics);
 router.delete('/:chatId', authorizeRoles('admin'), deleteChat);
 
 // Shared routes (both user and admin)
@@ -31,7 +36,10 @@ router.post('/:chatId/message', sendMessage);
 router.put('/:chatId/read', markAsRead);
 router.put('/:chatId/close', closeChat);
 
-// Admin only routes
+// Admin only routes - Chat management
 router.put('/:chatId/assign', authorizeRoles('admin'), assignAdmin);
+router.put('/:chatId/takeover', authorizeRoles('admin'), takeOverChat);
+router.put('/:chatId/unassign', authorizeRoles('admin'), unassignChat);
+router.put('/:chatId/resolve', authorizeRoles('admin'), resolveChat);
 
 export default router;

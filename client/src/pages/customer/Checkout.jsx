@@ -2,11 +2,325 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { fetchCart, resetCart } from '../../redux/slices/cartSlice';
+import { setUser } from '../../redux/slices/authSlice';
 import * as orderService from '../../services/orderService';
+import userService from '../../services/userService';
+import addressService from '../../services/addressService';
 import api from '../../services/api';
 import { toast } from 'react-toastify';
 import Swal from 'sweetalert2';
 import CouponDropdown from '../../components/checkout/CouponDropdown';
+
+// ==================== Edit Address Modal Component ====================
+const EditAddressModal = ({ isOpen, onClose, currentAddress, onSuccess }) => {
+  const [formData, setFormData] = useState({
+    street: '',
+    ward: '',
+    wardCode: '',
+    district: '',
+    districtId: '',
+    city: '',
+    cityId: '',
+  });
+
+  const [provinces, setProvinces] = useState([]);
+  const [districts, setDistricts] = useState([]);
+  const [wards, setWards] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [loadingLocation, setLoadingLocation] = useState(false);
+  const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    if (isOpen) {
+      loadProvinces();
+      
+      // Load current address data
+      if (currentAddress) {
+        setFormData({
+          street: currentAddress.street || '',
+          ward: currentAddress.ward || '',
+          wardCode: currentAddress.wardCode || '',
+          district: currentAddress.district || '',
+          districtId: currentAddress.districtId || '',
+          city: currentAddress.city || '',
+          cityId: currentAddress.cityId || '',
+        });
+
+        if (currentAddress.cityId) {
+          loadDistricts(currentAddress.cityId);
+        }
+        if (currentAddress.districtId) {
+          loadWards(currentAddress.districtId);
+        }
+      }
+    }
+  }, [isOpen, currentAddress]);
+
+  const loadProvinces = async () => {
+    try {
+      setLoadingLocation(true);
+      const response = await addressService.getProvinces();
+      setProvinces(response.data.provinces || []);
+    } catch (error) {
+      console.error('Error loading provinces:', error);
+      toast.error('Không thể tải danh sách tỉnh/thành phố');
+    } finally {
+      setLoadingLocation(false);
+    }
+  };
+
+  const loadDistricts = async (provinceId) => {
+    try {
+      setLoadingLocation(true);
+      const response = await addressService.getDistricts(provinceId);
+      setDistricts(response.data.districts || []);
+      setWards([]);
+    } catch (error) {
+      console.error('Error loading districts:', error);
+      toast.error('Không thể tải danh sách quận/huyện');
+    } finally {
+      setLoadingLocation(false);
+    }
+  };
+
+  const loadWards = async (districtId) => {
+    try {
+      setLoadingLocation(true);
+      const response = await addressService.getWards(districtId);
+      setWards(response.data.wards || []);
+    } catch (error) {
+      console.error('Error loading wards:', error);
+      toast.error('Không thể tải danh sách phường/xã');
+    } finally {
+      setLoadingLocation(false);
+    }
+  };
+
+  const handleProvinceChange = (e) => {
+    const selectedId = e.target.value;
+    const selectedProvince = provinces.find(p => p.id === parseInt(selectedId));
+    
+    if (selectedProvince) {
+      setFormData(prev => ({
+        ...prev,
+        cityId: selectedProvince.id,
+        city: selectedProvince.name,
+        districtId: '',
+        district: '',
+        wardCode: '',
+        ward: ''
+      }));
+      loadDistricts(selectedProvince.id);
+      setWards([]);
+    }
+  };
+
+  const handleDistrictChange = (e) => {
+    const selectedId = e.target.value;
+    const selectedDistrict = districts.find(d => d.id === parseInt(selectedId));
+    
+    if (selectedDistrict) {
+      setFormData(prev => ({
+        ...prev,
+        districtId: selectedDistrict.id,
+        district: selectedDistrict.name,
+        wardCode: '',
+        ward: ''
+      }));
+      loadWards(selectedDistrict.id);
+    }
+  };
+
+  const handleWardChange = (e) => {
+    const selectedId = e.target.value;
+    const selectedWard = wards.find(w => w.id === parseInt(selectedId));
+    
+    if (selectedWard) {
+      setFormData(prev => ({
+        ...prev,
+        wardCode: selectedWard.id,
+        ward: selectedWard.name
+      }));
+    }
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!formData.street.trim()) newErrors.street = 'Vui lòng nhập địa chỉ cụ thể';
+    if (!formData.city) newErrors.city = 'Vui lòng chọn tỉnh/thành phố';
+    if (!formData.district) newErrors.district = 'Vui lòng chọn quận/huyện';
+    if (!formData.ward) newErrors.ward = 'Vui lòng chọn phường/xã';
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async () => {
+    if (!validateForm()) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
+      // Update user profile with new address
+      const response = await userService.updateProfile({
+        address: formData
+      });
+      
+      toast.success('Cập nhật địa chỉ thành công!');
+      onSuccess?.(response.data.user);
+      onClose();
+    } catch (error) {
+      console.error('Error updating address:', error);
+      toast.error(error.response?.data?.message || 'Có lỗi xảy ra khi cập nhật địa chỉ');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-white">
+          <h2 className="text-xl font-bold text-gray-900">Cập nhật địa chỉ giao hàng</h2>
+          <button
+            onClick={onClose}
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        <div className="p-6 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Tỉnh/Thành phố *
+            </label>
+            <select
+              value={formData.cityId}
+              onChange={handleProvinceChange}
+              disabled={loadingLocation}
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+                errors.city ? 'border-red-500' : 'border-gray-300'
+              }`}
+            >
+              <option value="">-- Chọn tỉnh/thành phố --</option>
+              {provinces.map(province => (
+                <option key={province.id} value={province.id}>
+                  {province.name}
+                </option>
+              ))}
+            </select>
+            {errors.city && (
+              <p className="text-red-500 text-xs mt-1">{errors.city}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Quận/Huyện *
+            </label>
+            <select
+              value={formData.districtId}
+              onChange={handleDistrictChange}
+              disabled={!formData.cityId || loadingLocation}
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+                errors.district ? 'border-red-500' : 'border-gray-300'
+              }`}
+            >
+              <option value="">-- Chọn quận/huyện --</option>
+              {districts.map(district => (
+                <option key={district.id} value={district.id}>
+                  {district.name}
+                </option>
+              ))}
+            </select>
+            {errors.district && (
+              <p className="text-red-500 text-xs mt-1">{errors.district}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Phường/Xã *
+            </label>
+            <select
+              value={formData.wardCode}
+              onChange={handleWardChange}
+              disabled={!formData.districtId || loadingLocation}
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+                errors.ward ? 'border-red-500' : 'border-gray-300'
+              }`}
+            >
+              <option value="">-- Chọn phường/xã --</option>
+              {wards.map(ward => (
+                <option key={ward.id} value={ward.id}>
+                  {ward.name}
+                </option>
+              ))}
+            </select>
+            {errors.ward && (
+              <p className="text-red-500 text-xs mt-1">{errors.ward}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Địa chỉ cụ thể (số nhà, tên đường) *
+            </label>
+            <input
+              type="text"
+              name="street"
+              value={formData.street}
+              onChange={handleChange}
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 ${
+                errors.street ? 'border-red-500' : 'border-gray-300'
+              }`}
+              placeholder="Số 123, Đường Nguyễn Văn Linh"
+            />
+            {errors.street && (
+              <p className="text-red-500 text-xs mt-1">{errors.street}</p>
+            )}
+          </div>
+
+          <div className="flex gap-3 pt-4 border-t">
+            <button
+              onClick={onClose}
+              disabled={loading}
+              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+            >
+              Hủy
+            </button>
+            <button
+              onClick={handleSubmit}
+              disabled={loading}
+              className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:bg-gray-400 transition-colors"
+            >
+              {loading ? 'Đang lưu...' : 'Cập nhật địa chỉ'}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // ==================== VNPay Payment Modal Component ====================
 const VNPayPaymentModal = ({ order, paymentData, onClose, onSuccess, onError }) => {
@@ -253,6 +567,7 @@ const Checkout = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showVNPayModal, setShowVNPayModal] = useState(false);
   const [vnpayData, setVnpayData] = useState(null);
+  const [showEditAddressModal, setShowEditAddressModal] = useState(false);
   
   // Coupon state - updated for multiple coupons
   const [selectedCoupons, setSelectedCoupons] = useState([]);
@@ -298,6 +613,13 @@ const Checkout = () => {
   // Handle multiple coupons selection
   const handleCouponsChange = (coupons) => {
     setSelectedCoupons(coupons);
+  };
+
+  // Handle address update
+  const handleAddressUpdate = (updatedUser) => {
+    // Update Redux store with new user data
+    dispatch(setUser(updatedUser));
+    setShowEditAddressModal(false);
   };
 
   const handleSubmit = async (e) => {
@@ -590,10 +912,13 @@ const Checkout = () => {
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-gray-900">Địa chỉ giao hàng</h2>
               <button
-                onClick={() => navigate('/profile')}
-                className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+                onClick={() => setShowEditAddressModal(true)}
+                className="text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1"
               >
-                Cập nhật địa chỉ
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+                Chỉnh sửa
               </button>
             </div>
             
@@ -612,14 +937,8 @@ const Checkout = () => {
             ) : (
               <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
                 <p className="text-sm text-amber-800">
-                  Bạn chưa cập nhật địa chỉ. Vui lòng cập nhật địa chỉ trong trang Thông tin cá nhân để tiếp tục đặt hàng.
+                  Bạn chưa cập nhật địa chỉ. Vui lòng nhấn nút "Chỉnh sửa" ở trên để thêm địa chỉ giao hàng.
                 </p>
-                <button
-                  onClick={() => navigate('/profile')}
-                  className="mt-2 text-sm font-medium text-amber-900 hover:text-amber-700"
-                >
-                  Cập nhật ngay →
-                </button>
               </div>
             )}
           </div>
@@ -914,6 +1233,14 @@ const Checkout = () => {
           onError={handleVNPayError}
         />
       )}
+
+      {/* Edit Address Modal */}
+      <EditAddressModal
+        isOpen={showEditAddressModal}
+        onClose={() => setShowEditAddressModal(false)}
+        currentAddress={user?.address}
+        onSuccess={handleAddressUpdate}
+      />
     </div>
   );
 };

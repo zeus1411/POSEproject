@@ -23,155 +23,327 @@ const messageSchema = new mongoose.Schema({
   },
   readAt: {
     type: Date
-  }
+  },
+  readBy: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }]
 }, {
   timestamps: true
 });
 
 const chatSchema = new mongoose.Schema({
-  userId: {
+  // 🔑 Customer ID - Required
+  customerId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true,
     index: true
   },
-  adminId: {
+  
+  // 🔑 Assigned Admin - Nullable (null = unassigned)
+  assignedTo: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    default: null // Null nghĩa là chưa có admin nào nhận chat này
+    default: null,
+    index: true
   },
-  messages: [messageSchema],
+  
+  // 🔑 Assignment History - Track who handled this chat
+  assignmentHistory: [{
+    adminId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    assignedAt: {
+      type: Date,
+      default: Date.now
+    },
+    unassignedAt: {
+      type: Date
+    }
+  }],
+  
+  // 🔑 Status - Enhanced with more states
   status: {
     type: String,
-    enum: ['ACTIVE', 'CLOSED', 'PENDING'],
-    default: 'PENDING' // PENDING: User mới tạo, chưa có admin trả lời
+    enum: ['UNASSIGNED', 'ASSIGNED', 'RESOLVED', 'CLOSED'],
+    default: 'UNASSIGNED',
+    index: true
   },
+  
+  // 🔑 Priority
+  priority: {
+    type: String,
+    enum: ['LOW', 'MEDIUM', 'HIGH', 'URGENT'],
+    default: 'MEDIUM'
+  },
+  
+  // Messages
+  messages: [messageSchema],
+  
+  // Timestamps
   lastMessageAt: {
     type: Date,
-    default: Date.now
+    default: Date.now,
+    index: true
   },
+  
+  // 🔑 Unread count per role
   unreadCount: {
-    user: { type: Number, default: 0 }, // Số tin nhắn chưa đọc của user
-    admin: { type: Number, default: 0 } // Số tin nhắn chưa đọc của admin
+    customer: { type: Number, default: 0 },
+    admins: { type: Number, default: 0 } // All admins can see this
+  },
+  
+  // 🔑 Tags for categorization
+  tags: [String],
+  
+  // 🔑 Internal notes (only visible to admins)
+  notes: {
+    type: String,
+    default: ''
+  },
+  
+  // 🔑 Metadata
+  metadata: {
+    firstResponseTime: Date, // Time when first admin replied
+    averageResponseTime: Number, // In seconds
+    totalMessages: { type: Number, default: 0 },
+    customerSatisfaction: Number // 1-5 rating
+  },
+  
+  // DEPRECATED - Keep for backward compatibility
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  adminId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
   }
 }, {
   timestamps: true
 });
 
 // Indexes for performance
-chatSchema.index({ userId: 1, status: 1 });
-chatSchema.index({ adminId: 1, status: 1 });
-chatSchema.index({ lastMessageAt: -1 });
+chatSchema.index({ customerId: 1, status: 1 });
+chatSchema.index({ assignedTo: 1, status: 1 });
+chatSchema.index({ status: 1, lastMessageAt: -1 });
+chatSchema.index({ priority: 1, status: 1 });
 
-// Update lastMessageAt before saving
+// Sync old fields with new fields for backward compatibility
 chatSchema.pre('save', function(next) {
+  // Sync userId with customerId
+  if (this.userId && !this.customerId) {
+    this.customerId = this.userId;
+  } else if (this.customerId && !this.userId) {
+    this.userId = this.customerId;
+  }
+  
+  // Sync adminId with assignedTo
+  if (this.adminId && !this.assignedTo) {
+    this.assignedTo = this.adminId;
+  } else if (this.assignedTo && !this.adminId) {
+    this.adminId = this.assignedTo;
+  }
+  
+  // Update lastMessageAt
   if (this.messages && this.messages.length > 0) {
     this.lastMessageAt = this.messages[this.messages.length - 1].createdAt;
   }
+  
+  // Update metadata
+  this.metadata.totalMessages = this.messages.length;
+  
   next();
 });
 
-// Method to add message
+// 🔑 Method to add message with enhanced tracking
 chatSchema.methods.addMessage = async function(senderId, senderRole, message) {
-  this.messages.push({
+  const newMessage = {
     senderId,
     senderRole,
     message,
-    isRead: false
-  });
+    isRead: false,
+    readBy: []
+  };
   
+  this.messages.push(newMessage);
   this.lastMessageAt = new Date();
   
   // Update unread count
   if (senderRole === 'admin') {
-    this.unreadCount.user += 1;
+    this.unreadCount.customer += 1;
+    
+    // Track first response time
+    if (!this.metadata.firstResponseTime) {
+      this.metadata.firstResponseTime = new Date();
+    }
   } else {
-    this.unreadCount.admin += 1;
+    this.unreadCount.admins += 1;
   }
   
-  // Update status to ACTIVE if it was PENDING
-  if (this.status === 'PENDING' && senderRole === 'admin') {
-    this.status = 'ACTIVE';
+  // Auto-assign status when admin first replies
+  if (this.status === 'UNASSIGNED' && senderRole === 'admin' && this.assignedTo) {
+    this.status = 'ASSIGNED';
   }
   
   await this.save();
   return this;
 };
 
-// Method to mark messages as read
-chatSchema.methods.markAsRead = async function(role) {
+// 🔑 Method to mark messages as read (with multi-admin support)
+chatSchema.methods.markAsRead = async function(role, adminId = null) {
   const now = new Date();
   
   this.messages.forEach(msg => {
-    // Mark messages from the other role as read
     if (role === 'admin' && msg.senderRole === 'user' && !msg.isRead) {
       msg.isRead = true;
       msg.readAt = now;
+      if (adminId && !msg.readBy.includes(adminId)) {
+        msg.readBy.push(adminId);
+      }
     } else if (role === 'user' && msg.senderRole === 'admin' && !msg.isRead) {
       msg.isRead = true;
       msg.readAt = now;
     }
   });
   
-  // Reset unread count for this role
+  // Reset unread count
   if (role === 'admin') {
-    this.unreadCount.admin = 0;
+    this.unreadCount.admins = 0;
   } else {
-    this.unreadCount.user = 0;
+    this.unreadCount.customer = 0;
   }
   
   await this.save();
   return this;
 };
 
-// Static method to get or create chat for user
-chatSchema.statics.getOrCreateChat = async function(userId) {
-  let chat = await this.findOne({ userId, status: { $ne: 'CLOSED' } })
-    .populate('userId', 'username email avatar')
-    .populate('adminId', 'username email avatar')
+// 🔑 Static method to get or create chat for customer
+chatSchema.statics.getOrCreateChat = async function(customerId) {
+  let chat = await this.findOne({ 
+    customerId, 
+    status: { $nin: ['CLOSED'] } 
+  })
+    .populate('customerId', 'username email avatar')
+    .populate('assignedTo', 'username email avatar')
     .populate('messages.senderId', 'username avatar role');
   
   if (!chat) {
-    chat = await this.create({ userId, messages: [], status: 'PENDING' });
-    chat = await chat.populate('userId', 'username email avatar');
+    chat = await this.create({ 
+      customerId,
+      userId: customerId, // Backward compatibility
+      messages: [], 
+      status: 'UNASSIGNED' 
+    });
+    chat = await chat.populate('customerId', 'username email avatar');
   }
   
   return chat;
 };
 
-// Static method to get all active chats for admin
-chatSchema.statics.getAdminChats = async function(adminId = null) {
-  const query = { status: { $in: ['ACTIVE', 'PENDING'] } };
+// 🔑 Static method to get ALL chats for admin dashboard (Shared Inbox)
+chatSchema.statics.getAllChatsForAdmin = async function(options = {}) {
+  const { 
+    status,
+    assignedTo, 
+    priority,
+    tags,
+    limit = 100,
+    skip = 0 
+  } = options;
   
-  // If adminId provided, filter by admin's chats or unassigned chats
-  if (adminId) {
-    query.$or = [
-      { adminId: adminId },
-      { adminId: null, status: 'PENDING' }
-    ];
-  }
+  const query = { 
+    status: { $in: ['UNASSIGNED', 'ASSIGNED', 'RESOLVED'] } 
+  };
+  
+  if (status) query.status = status;
+  if (assignedTo) query.assignedTo = assignedTo;
+  if (priority) query.priority = priority;
+  if (tags && tags.length > 0) query.tags = { $in: tags };
   
   const chats = await this.find(query)
-    .populate('userId', 'username email avatar')
-    .populate('adminId', 'username email avatar')
+    .populate('customerId', 'username email avatar')
+    .populate('assignedTo', 'username email avatar')
     .populate('messages.senderId', 'username avatar role')
-    .sort('-lastMessageAt');
+    .sort('-lastMessageAt')
+    .limit(limit)
+    .skip(skip);
   
   return chats;
 };
 
-// Static method to assign admin to chat
+// 🔑 Static method to assign admin to chat
 chatSchema.statics.assignAdmin = async function(chatId, adminId) {
-  const chat = await this.findByIdAndUpdate(
-    chatId,
-    { adminId, status: 'ACTIVE' },
-    { new: true }
-  )
-    .populate('userId', 'username email avatar')
-    .populate('adminId', 'username email avatar')
-    .populate('messages.senderId', 'username avatar role');
+  const chat = await this.findById(chatId);
   
-  return chat;
+  if (!chat) {
+    throw new Error('Chat không tồn tại');
+  }
+  
+  // If chat was assigned to another admin, close that assignment
+  if (chat.assignedTo && chat.assignedTo.toString() !== adminId.toString()) {
+    // Update assignment history
+    const currentAssignment = chat.assignmentHistory.find(
+      h => h.adminId.toString() === chat.assignedTo.toString() && !h.unassignedAt
+    );
+    if (currentAssignment) {
+      currentAssignment.unassignedAt = new Date();
+    }
+  }
+  
+  // Assign new admin
+  chat.assignedTo = adminId;
+  chat.adminId = adminId; // Backward compatibility
+  chat.status = 'ASSIGNED';
+  
+  // Add to assignment history
+  chat.assignmentHistory.push({
+    adminId,
+    assignedAt: new Date()
+  });
+  
+  await chat.save();
+  
+  return await this.findById(chatId)
+    .populate('customerId', 'username email avatar')
+    .populate('assignedTo', 'username email avatar')
+    .populate('messages.senderId', 'username avatar role');
+};
+
+// 🔑 Static method to take over a chat (admin reassignment)
+chatSchema.statics.takeOverChat = async function(chatId, newAdminId) {
+  return await this.assignAdmin(chatId, newAdminId);
+};
+
+// 🔑 Static method to unassign chat (return to pool)
+chatSchema.statics.unassignChat = async function(chatId) {
+  const chat = await this.findById(chatId);
+  
+  if (!chat) {
+    throw new Error('Chat không tồn tại');
+  }
+  
+  // Close current assignment
+  if (chat.assignedTo) {
+    const currentAssignment = chat.assignmentHistory.find(
+      h => h.adminId.toString() === chat.assignedTo.toString() && !h.unassignedAt
+    );
+    if (currentAssignment) {
+      currentAssignment.unassignedAt = new Date();
+    }
+  }
+  
+  chat.assignedTo = null;
+  chat.adminId = null;
+  chat.status = 'UNASSIGNED';
+  
+  await chat.save();
+  
+  return await this.findById(chatId)
+    .populate('customerId', 'username email avatar')
+    .populate('messages.senderId', 'username avatar role');
 };
 
 const Chat = mongoose.model('Chat', chatSchema);
