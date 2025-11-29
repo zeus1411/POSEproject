@@ -471,8 +471,8 @@ class PromotionService {
     const minOrderValue = promotion.conditions?.minOrderValue || 0;
     
     if (cartTotal >= minOrderValue) {
-      // Calculate shipping fee as 14% of subtotal if not provided
-      const shippingFee = cart.shippingFee || Math.round(cartTotal * 0.14);
+      // Calculate shipping fee theo bậc thang if not provided
+      const shippingFee = cart.shippingFee || calculateShippingFee(cartTotal);
       return shippingFee;
     }
 

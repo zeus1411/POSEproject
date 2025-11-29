@@ -1,5 +1,6 @@
 import Cart from '../models/Cart.js';
 import Product from '../models/Product.js';
+import { calculateShippingFee } from '../utils/shippingCalculator.js';
 import { BadRequestError, NotFoundError } from '../utils/errorHandler.js';
 
 /**
@@ -37,8 +38,8 @@ class CartService {
       }
     });
     
-    // Shipping fee = 14% of subtotal (rounded)
-    const shippingFee = Math.round(subtotal * 0.14);
+    // Shipping fee theo bậc thang (14%, 8%, 5%, 3%, 1.8%)
+    const shippingFee = calculateShippingFee(subtotal);
     
     return {
       totalItems,

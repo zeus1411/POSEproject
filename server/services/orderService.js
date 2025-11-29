@@ -9,6 +9,7 @@ import { BadRequestError, NotFoundError, UnauthorizedError } from '../utils/erro
 import { buildVNPayUrl, verifyVNPayReturn } from './vnpayService.js';
 import cacheService from './cacheService.js';
 import { storeTempOrder } from '../utils/tempOrderStorage.js';
+import { calculateShippingFee } from '../utils/shippingCalculator.js';
 
 /**
  * Order Service
@@ -135,8 +136,8 @@ class OrderService {
         subtotal += itemSubtotal;
       }
 
-      // Calculate fees - 14% of subtotal
-      const shippingFee = Math.round(subtotal * 0.14);
+      // Calculate shipping fee theo bậc thang (14%, 8%, 5%, 3%, 1.8%)
+      const shippingFee = calculateShippingFee(subtotal);
       let discount = 0;
       let promotionId = null;
       let promotionIds = [];
@@ -506,7 +507,7 @@ class OrderService {
       subtotal += itemSubtotal;
     }
 
-    const shippingFee = Math.round(subtotal * 0.14); // 14% of subtotal
+    const shippingFee = calculateShippingFee(subtotal); // Bậc thang: 14%, 8%, 5%, 3%, 1.8%
     let discount = 0;
     let promotionDetails = null;
 

@@ -9,6 +9,7 @@ import addressService from '../../services/addressService';
 import api from '../../services/api';
 import { toast } from 'react-toastify';
 import Swal from 'sweetalert2';
+import { calculateShippingFee } from '../../utils/shippingCalculator';
 import CouponDropdown from '../../components/checkout/CouponDropdown';
 
 // ==================== Edit Address Modal Component ====================
@@ -837,7 +838,7 @@ const Checkout = () => {
     total: preview.totalPrice,
   } : {
     subtotal: summary.subtotal,
-    shippingFee: Math.round(summary.subtotal * 0.14), // 14% of subtotal
+    shippingFee: calculateShippingFee(summary.subtotal), // Bậc thang: 14%, 8%, 5%, 3%, 1.8%
     discount: 0,
     hasCoupons: hasCoupons,
     selectedCoupons: selectedCoupons,
