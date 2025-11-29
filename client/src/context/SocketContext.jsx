@@ -10,6 +10,8 @@ import {
   setUserOnline,
   setUserOffline
 } from '../redux/slices/chatSlice';
+import PromotionToast from '../components/common/PromotionToast';
+import { getUnviewedPromotions } from '../services/promotionService';
 
 const SocketContext = createContext(null);
 
@@ -24,10 +26,13 @@ export const useSocket = () => {
 export const SocketProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [promotionToast, setPromotionToast] = useState(null); // State cho promotion toast
+  const [promotionQueue, setPromotionQueue] = useState([]); // Queue cho nhiều promotions
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const socketRef = useRef(null);
   const isInitializedRef = useRef(false); // Track if socket has been initialized
+  const hasLoadedUnviewedRef = useRef(false); // Track if đã load unviewed promotions
 
   useEffect(() => {
     // Get user ID (could be userId or _id depending on source)
@@ -41,9 +46,12 @@ export const SocketProvider = ({ children }) => {
         socketRef.current.disconnect();
         socketRef.current = null;
         isInitializedRef.current = false;
+        hasLoadedUnviewedRef.current = false; // 🎁 Reset flag khi logout
       }
       setSocket(null);
       setIsConnected(false);
+      setPromotionToast(null); // Clear toast hiện tại
+      setPromotionQueue([]); // Clear queue
       dispatch(setConnected(false));
       return;
     }
@@ -53,6 +61,9 @@ export const SocketProvider = ({ children }) => {
       console.log('✅ Socket already initialized, reusing existing connection');
       return;
     }
+
+    // 🎁 Reset flag khi user mới login
+    hasLoadedUnviewedRef.current = false;
 
     // Get token from localStorage
     const token = localStorage.getItem('token');
@@ -82,6 +93,15 @@ export const SocketProvider = ({ children }) => {
       console.log('🆔 Socket ID:', newSocket.id);
       setIsConnected(true);
       dispatch(setConnected(true));
+      
+      // 🎁 Load unviewed promotions SAU KHI socket connect (chỉ cho customers)
+      if (user?.role !== 'admin' && !hasLoadedUnviewedRef.current) {
+        console.log('🎁 Triggering loadUnviewedPromotions after socket connect...');
+        setTimeout(() => {
+          loadUnviewedPromotions();
+        }, 500); // Delay 500ms để đảm bảo auth đã hoàn tất
+        hasLoadedUnviewedRef.current = true;
+      }
     });
 
     newSocket.on('disconnect', (reason) => {
@@ -148,6 +168,20 @@ export const SocketProvider = ({ children }) => {
       console.error('Socket error:', data.message);
     });
 
+    // 🎁 Promotion events - Luôn lắng nghe, nhưng chỉ hiển thị cho customers
+    newSocket.on('promotion:created', (data) => {
+      console.log('🎉 Promotion event received:', data.promotion);
+      console.log('👤 Current user role:', user?.role);
+      
+      // Chỉ hiển thị toast cho customers (không phải admin)
+      if (user?.role !== 'admin') {
+        console.log('✅ Showing promotion toast to customer');
+        setPromotionToast(data.promotion);
+      } else {
+        console.log('⏭️ Skipping promotion toast for admin');
+      }
+    });
+
     // Store socket reference
     socketRef.current = newSocket;
     setSocket(newSocket);
@@ -171,8 +205,42 @@ export const SocketProvider = ({ children }) => {
         socketRef.current = null;
         isInitializedRef.current = false;
       }
+      hasLoadedUnviewedRef.current = false; // Reset khi unmount
     };
   }, []);
+
+  // 🎁 Function: Load unviewed promotions từ backend
+  const loadUnviewedPromotions = async () => {
+    try {
+      console.log('📥 Loading unviewed promotions...');
+      console.log('👤 Current user:', user);
+      console.log('🔐 Token exists:', !!localStorage.getItem('token'));
+      
+      const promotions = await getUnviewedPromotions();
+      
+      console.log('📦 API Response:', promotions);
+      
+      if (promotions && promotions.length > 0) {
+        console.log(`✅ Found ${promotions.length} unviewed promotion(s):`, promotions);
+        setPromotionQueue(promotions);
+      } else {
+        console.log('ℹ️ No unviewed promotions');
+      }
+    } catch (error) {
+      console.error('❌ Error loading unviewed promotions:', error);
+      console.error('❌ Error details:', error.response?.data || error.message);
+    }
+  };
+
+  // 🎁 Auto-display promotions từ queue
+  useEffect(() => {
+    if (promotionQueue.length > 0 && !promotionToast) {
+      // Lấy promotion đầu tiên trong queue
+      const nextPromotion = promotionQueue[0];
+      setPromotionToast(nextPromotion);
+      setPromotionQueue(prev => prev.slice(1)); // Remove từ queue
+    }
+  }, [promotionQueue, promotionToast]);
 
   const value = {
     socket,
@@ -182,6 +250,14 @@ export const SocketProvider = ({ children }) => {
   return (
     <SocketContext.Provider value={value}>
       {children}
+      
+      {/* Promotion Toast - Hiển thị góc dưới trái */}
+      {promotionToast && (
+        <PromotionToast
+          promotion={promotionToast}
+          onClose={() => setPromotionToast(null)}
+        />
+      )}
     </SocketContext.Provider>
   );
 };

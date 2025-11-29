@@ -29,8 +29,8 @@ import AdminPromotions from './pages/admin/Promotions';
 function App() {
   return (
     <Provider store={store}>
-      <SocketProvider>
-        <Router>
+      <Router>
+        <SocketProvider>
           <Routes>
           {/* Auth Routes */}
           <Route path="/login" element={<Login />} />
@@ -82,8 +82,8 @@ function App() {
           pauseOnHover
           theme="light"
         />
-        </Router>
-      </SocketProvider>
+        </SocketProvider>
+      </Router>
     </Provider>
   );
 }

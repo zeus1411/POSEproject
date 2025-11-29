@@ -29,9 +29,23 @@ export const applyPromotionsToCart = async (cart) => {
   return response.data?.data;
 };
 
+// 🎁 Get unviewed promotions for current user
+export const getUnviewedPromotions = async () => {
+  const response = await api.get('/promotions/unviewed');
+  return response.data?.data;
+};
+
+// 🎁 Mark promotion as viewed
+export const markPromotionAsViewed = async (promotionId) => {
+  const response = await api.post(`/promotions/${promotionId}/mark-viewed`);
+  return response.data;
+};
+
 export default {
   getAvailablePromotions,
   getPromotionsForProduct,
   validateCoupon,
-  applyPromotionsToCart
+  applyPromotionsToCart,
+  getUnviewedPromotions,
+  markPromotionAsViewed
 };

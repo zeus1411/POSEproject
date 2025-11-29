@@ -409,3 +409,15 @@ export const getOnlineAdminsCount = () => {
 export const getOnlineCustomersCount = () => {
   return onlineUsers.size;
 };
+
+// 🎁 Broadcast promotion to all connected users (customers)
+export const broadcastPromotionToCustomers = (promotion) => {
+  if (!io) {
+    console.error('❌ Socket.io not initialized');
+    return;
+  }
+
+  // Emit to all connected sockets except admins
+  io.emit('promotion:created', { promotion });
+  console.log(`🎉 Broadcasted promotion "${promotion.name}" to all users`);
+};

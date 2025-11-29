@@ -1,5 +1,8 @@
 import promotionService from '../services/promotionService.js';
 import { StatusCodes } from 'http-status-codes';
+import { broadcastPromotionToCustomers } from '../config/socket.js';
+import User from '../models/User.js';
+import Promotion from '../models/Promotion.js';
 
 // ==================== ADMIN CONTROLLERS ====================
 
@@ -11,6 +14,11 @@ import { StatusCodes } from 'http-status-codes';
 export const createPromotion = async (req, res, next) => {
   try {
     const promotion = await promotionService.createPromotion(req.body, req.user.userId);
+
+    // 🎁 Broadcast promotion to all customers via Socket.io
+    if (promotion.isActive && promotion.promotionType === 'COUPON') {
+      broadcastPromotionToCustomers(promotion);
+    }
 
     res.status(StatusCodes.CREATED).json({
       success: true,
@@ -349,6 +357,81 @@ export const applyPromotionsToCart = async (req, res, next) => {
         breakdown,
         availablePromotions: applicablePromotions.length
       }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Get unviewed promotions for current user
+ * @route   GET /api/v1/promotions/unviewed
+ * @access  Private (Customer only)
+ */
+export const getUnviewedPromotions = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+
+    // Lấy danh sách promotions đã xem của user
+    const user = await User.findById(userId).select('viewedPromotions');
+    const viewedIds = user?.viewedPromotions || [];
+
+    // Lấy các promotions active, chưa xem, trong vòng 7 ngày gần đây
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const unviewedPromotions = await Promotion.find({
+      _id: { $nin: viewedIds }, // Chưa xem
+      isActive: true,
+      promotionType: 'COUPON',
+      createdAt: { $gte: sevenDaysAgo }, // Chỉ lấy promotions trong 7 ngày gần đây
+      $or: [
+        { endDate: { $exists: false } }, // Không có endDate
+        { endDate: { $gte: new Date() } } // Hoặc chưa hết hạn
+      ]
+    })
+      .sort({ createdAt: -1 })
+      .limit(5); // Giới hạn 5 promotions mới nhất
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      data: unviewedPromotions,
+      count: unviewedPromotions.length
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Mark promotion as viewed
+ * @route   POST /api/v1/promotions/:id/mark-viewed
+ * @access  Private (Customer only)
+ */
+export const markPromotionAsViewed = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+    const promotionId = req.params.id;
+
+    // Kiểm tra promotion có tồn tại không
+    const promotion = await Promotion.findById(promotionId);
+    if (!promotion) {
+      return res.status(StatusCodes.NOT_FOUND).json({
+        success: false,
+        message: 'Không tìm thấy khuyến mãi'
+      });
+    }
+
+    // Thêm promotion vào danh sách đã xem (nếu chưa có)
+    await User.findByIdAndUpdate(
+      userId,
+      { $addToSet: { viewedPromotions: promotionId } }, // $addToSet tránh duplicate
+      { new: true }
+    );
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: 'Đã đánh dấu đã xem'
     });
   } catch (error) {
     next(error);
