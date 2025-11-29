@@ -36,7 +36,7 @@ services:
     container_name: pose_backend
     restart: unless-stopped
     ports:
-      - "3001:3000"  # Map host 3001 -> container 3000 (tránh conflict với local server)
+      - "3002:3000"  # Map host 3001 -> container 3000 (tránh conflict với local server)
     env_file:
       - ./server/.env.docker
     volumes:
