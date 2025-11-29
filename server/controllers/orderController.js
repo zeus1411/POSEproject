@@ -1355,11 +1355,12 @@ const getOrderStatistics = async (req, res) => {
 
   const stats = await Order.getStatistics(start, end);
 
-  // Thống kê theo trạng thái
+  // Thống kê theo trạng thái (loại bỏ REFUNDED)
   const statusStats = await Order.aggregate([
     {
       $match: {
-        createdAt: { $gte: start, $lte: end }
+        createdAt: { $gte: start, $lte: end },
+        status: { $ne: 'REFUNDED' } // Loại bỏ REFUNDED
       }
     },
     {

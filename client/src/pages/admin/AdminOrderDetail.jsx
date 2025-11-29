@@ -222,11 +222,11 @@ const AdminOrderDetail = () => {
             <h3 className="text-lg leading-6 font-medium text-gray-900">
               Tình trạng đơn hàng
             </h3>
-            <p className="mt-1 max-w-2xl text-sm text-gray-500">
+            <p className="mt-1 text-sm text-gray-500">
               {currentStatus.description}
             </p>
           </div>
-          <div className="px-4 py-5 sm:p-6">
+          <div className="px-4 py-5 sm:p-6 lg:px-8 lg:py-8">
             <div className="flow-root">
               <ul className="-mb-8">
                 {statusSteps.map((step, stepIdx) => {
@@ -292,6 +292,17 @@ const AdminOrderDetail = () => {
                         </div>
                         <div className="min-w-0 flex-1 pt-1.5">
                           <p className="text-sm font-medium text-gray-900">Đã hủy đơn hàng</p>
+                          {orderDetail?.cancelledAt && (
+                            <p className="text-sm text-gray-500 mt-1">
+                              Ngày hủy: {formatDateTime(orderDetail.cancelledAt)}
+                            </p>
+                          )}
+                          {orderDetail?.cancelReason && (
+                            <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                              <p className="text-xs font-semibold text-red-800 mb-1">Lý do hủy:</p>
+                              <p className="text-sm text-red-700">{orderDetail.cancelReason}</p>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>

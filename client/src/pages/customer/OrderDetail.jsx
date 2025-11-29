@@ -5,6 +5,7 @@ import { fetchOrderById, cancelOrder } from '../../redux/slices/orderSlice';
 import { checkOrderReviewStatus } from '../../services/reviewService';
 import { FiArrowLeft, FiPackage, FiTruck, FiCheckCircle, FiXCircle, FiClock, FiDollarSign, FiMapPin, FiX, FiAlertCircle, FiTrash2, FiStar } from 'react-icons/fi';
 import { toast } from 'react-toastify';
+import CancelOrderDialog from '../../components/order/CancelOrderDialog';
 
 const formatCurrency = (v) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(v || 0);
 
@@ -153,15 +154,20 @@ const OrderDetail = () => {
     setShowCancelDialog(true);
   };
 
-  // Confirm from dialog
-  const handleConfirmCancel = async () => {
+  // Confirm from dialog với lý do
+  const handleConfirmCancel = async (reason) => {
     try {
       setIsCancelling(true);
       setCancelError('');
-      await dispatch(cancelOrder(id)).unwrap();
+      
+      // Gọi API với lý do
+      await dispatch(cancelOrder({ orderId: id, reason })).unwrap();
+      
       setShowCancelDialog(false);
+      
       // Show success message
       toast.success('Đã hủy đơn hàng thành công');
+      
     } catch (error) {
       console.error('Error cancelling order:', error);
       setCancelError(error?.message || 'Có lỗi xảy ra khi hủy đơn hàng');
@@ -265,11 +271,11 @@ const OrderDetail = () => {
             <h3 className="text-lg leading-6 font-medium text-gray-900">
               Tình trạng đơn hàng
             </h3>
-            <p className="mt-1 max-w-2xl text-sm text-gray-500">
+            <p className="mt-1 text-sm text-gray-500">
               {currentStatus.description}
             </p>
           </div>
-          <div className="px-4 py-5 sm:p-6">
+          <div className="px-4 py-5 sm:p-6 lg:px-8 lg:py-8">
             <div className="flow-root">
               <ul className="-mb-8">
                 {statusSteps.map((step, stepIdx) => {
@@ -356,6 +362,29 @@ const OrderDetail = () => {
                                 Lý do: {orderDetail.cancelReason}
                               </p>
                             )}
+                            {/* Thông báo tích cực cho đơn hàng đã hủy */}
+                            <div className="mt-3 p-4 bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-lg">
+                              <div className="flex items-start gap-2">
+                                <FiCheckCircle className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                                <div className="flex-1">
+                                  <p className="text-sm font-semibold text-green-800 mb-1">
+                                    ✓ Đơn hàng đã được hủy thành công
+                                  </p>
+                                  <p className="text-xs text-green-700 mb-2">
+                                    {orderDetail?.paymentId?.method === 'VNPAY' && orderDetail?.paymentId?.status === 'COMPLETED' 
+                                      ? 'Admin đã xử lý hoàn tiền và huỷ đơn hàng của bạn thành công. '
+                                      : 'Đơn hàng của bạn đã được hủy. Cảm ơn bạn đã thông báo!'
+                                    }
+                                  </p>
+                                  <button
+                                    onClick={() => navigate('/products')}
+                                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded-md transition-colors"
+                                  >
+                                    🛍️ Khám phá sản phẩm khác
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -609,46 +638,16 @@ const OrderDetail = () => {
         </div>
       </div>
 
-      {/* Cancel Confirmation Dialog */}
-      {showCancelDialog && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="flex-shrink-0 w-12 h-12 rounded-full bg-red-100 flex items-center justify-center">
-                <FiAlertCircle className="w-6 h-6 text-red-600" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900">Xác nhận hủy đơn hàng</h3>
-            </div>
-            
-            <p className="text-sm text-gray-600 mb-4">
-              Bạn có chắc chắn muốn hủy đơn hàng này? Hành động này không thể hoàn tác.
-            </p>
-
-            {cancelError && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md">
-                <p className="text-sm text-red-600">{cancelError}</p>
-              </div>
-            )}
-
-            <div className="flex gap-3">
-              <button
-                onClick={handleCloseDialog}
-                disabled={isCancelling}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 disabled:opacity-50"
-              >
-                Không, giữ đơn hàng
-              </button>
-              <button
-                onClick={handleConfirmCancel}
-                disabled={isCancelling}
-                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 disabled:opacity-50"
-              >
-                {isCancelling ? 'Đang hủy...' : 'Có, hủy đơn'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Cancel Order Dialog - Sử dụng component mới */}
+      <CancelOrderDialog
+        isOpen={showCancelDialog}
+        onClose={handleCloseDialog}
+        onConfirm={handleConfirmCancel}
+        isLoading={isCancelling}
+        error={cancelError}
+        paymentMethod={derivedPaymentMethod}
+        orderNumber={orderNumber}
+      />
     </div>
   );
 };

@@ -20,8 +20,11 @@ export async function buildVNPayUrl({ order, payment, ipAddr }) {
     const createDate = new Date();
     const expireDate = new Date(createDate.getTime() + 15 * 60 * 1000); // 15 phút
 
-    // Get return URL from environment or use default
-    const returnUrl = `${process.env.SERVER_PUBLIC_URL || process.env.CLIENT_URL || 'http://localhost:3000'}/api/v1/orders/payment/vnpay/return`;
+    // Get return URL - MUST point to backend server, not client
+    // If SERVER_PUBLIC_URL is set, use it (production)
+    // Otherwise use backend port directly (development)
+    const baseUrl = process.env.SERVER_PUBLIC_URL || `http://localhost:${process.env.PORT || 3001}`;
+    const returnUrl = `${baseUrl}/api/v1/orders/payment/vnpay/return`;
 
     console.log('Building VNPay URL with params:', {
       amount: order.totalPrice,

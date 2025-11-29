@@ -82,7 +82,6 @@ const AdminUserFilters = ({ filters, onFilterChange, onSearch, onReset }) => {
             <option value="createdAt">Ngày tạo</option>
             <option value="username">Tên người dùng</option>
             <option value="email">Email</option>
-            <option value="lastLogin">Đăng nhập gần đây</option>
           </select>
         </div>
 
@@ -93,8 +92,17 @@ const AdminUserFilters = ({ filters, onFilterChange, onSearch, onReset }) => {
             onChange={(e) => handleFilterChange('sortOrder', e.target.value)}
             className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
           >
-            <option value="desc">Mới nhất</option>
-            <option value="asc">Cũ nhất</option>
+            {(filters.sortBy === 'username' || filters.sortBy === 'email') ? (
+              <>
+                <option value="asc">A → Z</option>
+                <option value="desc">Z → A</option>
+              </>
+            ) : (
+              <>
+                <option value="desc">Mới nhất</option>
+                <option value="asc">Cũ nhất</option>
+              </>
+            )}
           </select>
         </div>
 
