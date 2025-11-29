@@ -8,6 +8,7 @@ import { StatusCodes } from 'http-status-codes';
 import { BadRequestError, NotFoundError, UnauthorizedError } from '../utils/errorHandler.js';
 import mongoose from 'mongoose';
 import Stripe from 'stripe';
+import { calculateShippingFee } from '../utils/shippingCalculator.js';
 
 import { buildVNPayUrl, verifyVNPayReturn } from '../services/vnpayService.js';
 import { getTempOrder, removeTempOrder } from '../utils/tempOrderStorage.js';
@@ -283,7 +284,7 @@ const previewOrder = async (req, res) => {
     subtotal += itemSubtotal;
   }
 
-  let shippingFee = Math.round(subtotal * 0.14); // 14% of subtotal
+  let shippingFee = calculateShippingFee(subtotal); // Bậc thang: 14%, 8%, 5%, 3%, 1.8%
 
   // Xử lý mã giảm giá
   let discount = 0;

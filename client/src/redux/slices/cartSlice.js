@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import * as cartService from '../../services/cartService';
+import { calculateShippingFee } from '../../utils/shippingCalculator';
 import { logout } from './authSlice'; // Import logout action từ authSlice
 
 // Async thunks
@@ -91,8 +92,8 @@ const calculateSummary = (items) => {
     }
   });
   
-  // Shipping fee = 14% of subtotal (rounded)
-  const shippingFee = Math.round(subtotal * 0.14);
+  // Shipping fee theo bậc thang (14%, 8%, 5%, 3%, 1.8%)
+  const shippingFee = calculateShippingFee(subtotal);
   return {
     totalItems,
     subtotal,
