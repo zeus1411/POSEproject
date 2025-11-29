@@ -42,9 +42,7 @@ coverage/
 *.bak
 *.tmp
 
-QUICKSTART.md
-README.Docker.md
 CHECKOUT_COUPON_TEST_CHECKLIST.md
 PROMOTION_CHECKOUT_GUIDE.md
-TEST_PROMOTIONS.md
-test-redis-cache.md
+SERVER_GUIDE.md
+README.Docker.md

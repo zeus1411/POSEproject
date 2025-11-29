@@ -200,7 +200,7 @@ const Home = () => {
             <div className="hero-image relative order-1 lg:order-2">
               <div className="relative rounded-3xl overflow-hidden shadow-2xl">
                 <img
-                  src="https://images.unsplash.com/photo-1579967327980-2a4117da0e4a?q=80&w=1149&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                  src="/images/FirstImage.jpg"
                   alt="Beautiful Aquascape Layout - Thiết kế thủy sinh đẹp"
                   loading="eager"
                   className="w-full h-[300px] sm:h-[400px] lg:h-[500px] object-cover"
@@ -244,7 +244,7 @@ const Home = () => {
               <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-green-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
               <div className="relative h-48 overflow-hidden">
                 <img 
-                  src="https://images.unsplash.com/photo-1636045466232-539c7bd7817e?q=80&w=1171&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                  src="https://www.ugaoo.com/cdn/shop/articles/0e338c1b09.jpg?v=1698991765"
                   alt="Cây thủy sinh"
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                 />
@@ -314,7 +314,7 @@ const Home = () => {
               <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-sky-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
               <div className="relative h-48 overflow-hidden">
                 <img 
-                  src="https://i.pinimg.com/1200x/18/ce/64/18ce6442bd59de955405bec7fa9b7c75.jpg"
+                  src="https://becathuysinhmini.com/wp-content/uploads/2023/05/phu-kien-be-ca.jpg"
                   alt="Phụ kiện thủy sinh"
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                 />
@@ -348,13 +348,61 @@ const Home = () => {
       </section>
 
       {/* Showcase Gallery Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-20 bg-gradient-to-br from-blue-600 via-teal-500 to-emerald-400 relative overflow-hidden">
+        {/* Ocean depth background layers */}
+        <div className="absolute inset-0">
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-800/30 to-teal-800/50"></div>
+          <div className="absolute inset-0 bg-gradient-to-r from-cyan-600/20 to-emerald-600/20"></div>
+        </div>
+
+        {/* Dynamic underwater elements */}
+        <div className="absolute inset-0 opacity-30">
+          <div className="absolute top-16 left-16 w-80 h-80 bg-gradient-to-br from-cyan-300/60 to-blue-400/60 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute top-40 right-24 w-96 h-96 bg-gradient-to-br from-emerald-300/50 to-teal-400/50 rounded-full blur-3xl animate-pulse" style={{animationDelay: '1.5s'}}></div>
+          <div className="absolute bottom-24 left-1/3 w-72 h-72 bg-gradient-to-br from-blue-300/40 to-cyan-400/40 rounded-full blur-3xl animate-pulse" style={{animationDelay: '3s'}}></div>
+          <div className="absolute top-1/2 right-1/3 w-64 h-64 bg-gradient-to-br from-teal-300/35 to-emerald-400/35 rounded-full blur-2xl animate-pulse" style={{animationDelay: '4.5s'}}></div>
+        </div>
+
+        {/* Enhanced aquatic decorations */}
+        <div className="absolute inset-0 pointer-events-none opacity-25">
+          <div className="absolute top-1/4 left-20 animate-float">
+            <svg width="80" height="80" viewBox="0 0 80 80" fill="none" className="text-white">
+              <path d="M40 10C45 20 35 30 40 45C45 30 35 20 40 10Z" fill="currentColor" opacity="0.7"/>
+              <path d="M25 35C30 40 20 45 25 55C30 45 20 40 25 35Z" fill="currentColor" opacity="0.5"/>
+              <circle cx="40" cy="60" r="12" fill="currentColor" opacity="0.4"/>
+              <circle cx="25" cy="65" r="8" fill="currentColor" opacity="0.3"/>
+            </svg>
+          </div>
+          <div className="absolute top-2/3 right-32 animate-float-delayed">
+            <svg width="100" height="50" viewBox="0 0 100 50" fill="none" className="text-white">
+              <ellipse cx="20" cy="25" rx="18" ry="10" fill="currentColor" opacity="0.6"/>
+              <ellipse cx="45" cy="25" rx="15" ry="8" fill="currentColor" opacity="0.5"/>
+              <ellipse cx="70" cy="25" rx="12" ry="6" fill="currentColor" opacity="0.4"/>
+              <ellipse cx="85" cy="25" rx="8" ry="4" fill="currentColor" opacity="0.3"/>
+            </svg>
+          </div>
+          <div className="absolute bottom-1/4 left-1/4 animate-float">
+            <svg width="70" height="70" viewBox="0 0 70 70" fill="none" className="text-white">
+              <circle cx="35" cy="35" r="25" stroke="currentColor" strokeWidth="3" fill="none" opacity="0.6"/>
+              <circle cx="35" cy="35" r="15" stroke="currentColor" strokeWidth="2" fill="none" opacity="0.4"/>
+              <circle cx="35" cy="35" r="8" fill="currentColor" opacity="0.3"/>
+              <circle cx="35" cy="35" r="3" fill="currentColor" opacity="0.8"/>
+            </svg>
+          </div>
+          <div className="absolute top-1/3 right-1/4 animate-float-delayed">
+            <svg width="60" height="60" viewBox="0 0 60 60" fill="none" className="text-white">
+              <path d="M15 45Q30 35 45 45Q30 25 15 45Z" fill="currentColor" opacity="0.5"/>
+              <path d="M20 40Q30 32 40 40Q30 28 20 40Z" fill="currentColor" opacity="0.3"/>
+            </svg>
+          </div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center mb-16 animate-on-scroll">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 drop-shadow-lg">
               Gallery Layout Thủy Sinh
             </h2>
-            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+            <p className="text-lg text-blue-50 max-w-3xl mx-auto drop-shadow-md">
               Khám phá những bể thủy sinh đẹp mắt được setup bởi cộng đồng
             </p>
           </div>
@@ -365,7 +413,7 @@ const Home = () => {
             <div className="animate-on-scroll group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500">
               <div className="aspect-[4/3] overflow-hidden">
                 <img 
-                  src="https://images.unsplash.com/photo-1755146742008-12a28d182a60?q=80&w=686&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                  src="/images/nature-style.jpg"
                   alt="Nature Aquascape"
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                 />
@@ -384,7 +432,7 @@ const Home = () => {
             <div className="animate-on-scroll group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500">
               <div className="aspect-[4/3] overflow-hidden">
                 <img 
-                  src="https://images.unsplash.com/photo-1751228056003-93af358be08b?q=80&w=687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                  src="/images/dutch-style.jpg"
                   alt="Dutch Style"
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                 />
@@ -403,7 +451,7 @@ const Home = () => {
             <div className="animate-on-scroll group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500">
               <div className="aspect-[4/3] overflow-hidden">
                 <img 
-                  src="https://images.unsplash.com/photo-1691387824643-227cc84127cf?q=80&w=702&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                  src="/images/planted-tank.jpg"
                   alt="Planted Tank"
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                 />
@@ -422,7 +470,7 @@ const Home = () => {
             <div className="animate-on-scroll group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500">
               <div className="aspect-[4/3] overflow-hidden">
                 <img 
-                  src="https://images.unsplash.com/photo-1584295774110-d6ea075fa245?q=80&w=743&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                  src="/images/iwagumi.jpg"
                   alt="Iwagumi Layout"
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                 />
@@ -441,7 +489,7 @@ const Home = () => {
             <div className="animate-on-scroll group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500">
               <div className="aspect-[4/3] overflow-hidden">
                 <img 
-                  src="https://images.unsplash.com/photo-1720001586147-0bfee9e5dba2?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                  src="/images/community-tank.jpg"
                   alt="Community Tank"
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                 />
@@ -460,7 +508,7 @@ const Home = () => {
             <div className="animate-on-scroll group relative overflow-hidden rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500">
               <div className="aspect-[4/3] overflow-hidden">
                 <img 
-                  src="https://images.unsplash.com/photo-1579967327980-2a4117da0e4a?q=80&w=1200&auto=format&fit=crop"
+                  src="/images/biotope.jpg"
                   alt="Biotope Aquascape"
                   className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                 />
@@ -597,7 +645,7 @@ const Home = () => {
             <div className="animate-on-scroll relative">
               <div className="relative rounded-3xl overflow-hidden shadow-2xl border-4 border-white/10">
                 <img 
-                  src="https://i.pinimg.com/1200x/bd/72/65/bd726553b0a2180b1f38c621026ba6d0.jpg"
+                  src="/images/OverviewTank.jpg"
                   alt="Beautiful Aquascape"
                   className="w-full h-[400px] object-cover"
                 />
@@ -739,7 +787,7 @@ const Home = () => {
             <div className="group animate-on-scroll">
               <div className="relative overflow-hidden rounded-2xl shadow-xl">
                 <img 
-                  src="https://i.pinimg.com/736x/13/b2/cb/13b2cb803e21ec76f7567d7eafb65b96.jpg"
+                  src="/images/AIimage.jpg"
                   alt="Customer aquascape 1"
                   className="w-full h-72 object-cover group-hover:scale-110 transition-transform duration-700"
                 />
@@ -768,7 +816,7 @@ const Home = () => {
             <div className="group animate-on-scroll">
               <div className="relative overflow-hidden rounded-2xl shadow-xl">
                 <img 
-                  src="https://i.pinimg.com/736x/a9/85/86/a98586ae68550c67fd7a99b1f6f43bcd.jpg"
+                  src="/images/kingfish.jpg"
                   alt="Customer aquascape 2"
                   className="w-full h-72 object-cover group-hover:scale-110 transition-transform duration-700"
                 />
@@ -797,7 +845,7 @@ const Home = () => {
             <div className="group animate-on-scroll">
               <div className="relative overflow-hidden rounded-2xl shadow-xl">
                 <img 
-                  src="https://i.pinimg.com/1200x/61/15/be/6115bea9afa85afa4118413001f661d6.jpg"
+                  src="/images/beeshrimp.jpg"
                   alt="Customer aquascape 3"
                   className="w-full h-72 object-cover group-hover:scale-110 transition-transform duration-700"
                 />
