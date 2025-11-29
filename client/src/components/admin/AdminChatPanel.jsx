@@ -299,7 +299,7 @@ const AdminChatPanel = () => {
   const handleUnassignChat = async (chatId) => {
     try {
       const result = await Swal.fire({
-        title: 'Trả chat về pool?',
+        title: 'Bạn có thực sự muốn trả chat?',
         text: 'Chat sẽ được trả về danh sách chung để admin khác có thể xử lý.',
         icon: 'question',
         showCancelButton: true,
@@ -756,7 +756,7 @@ const AdminChatPanel = () => {
                                     className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
                                   >
                                     <ArrowRightOnRectangleIcon className="w-4 h-4 mr-1" />
-                                    Trả về
+                                    Trả chat
                                   </button>
                                 </>
                               );
