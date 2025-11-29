@@ -44,13 +44,14 @@ export const createOrder = async ({ shippingAddress, paymentMethod = 'COD', prom
 };
 
 /**
- * Cancel an order
- * @param {string} orderId - The ID of the order to cancel
+ * Cancel an order with reason
+ * @param {string} orderId - The order ID to cancel
+ * @param {string} reason - The reason for cancellation
  * @returns {Promise<Object>} The updated order
  */
-export const cancelOrder = async (orderId) => {
+export const cancelOrder = async (orderId, reason = 'Không có lý do') => {
   try {
-    const response = await api.patch(`/orders/${orderId}/cancel`);
+    const response = await api.patch(`/orders/${orderId}/cancel`, { reason });
     return response.data?.data?.order || response.data?.data || response.data;
   } catch (error) {
     console.error('Error cancelling order:', error);

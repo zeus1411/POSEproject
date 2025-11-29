@@ -3,9 +3,9 @@ import * as orderService from '../../services/orderService';
 
 export const cancelOrder = createAsyncThunk(
   'orders/cancelOrder',
-  async (orderId, { rejectWithValue, getState, dispatch }) => {
+  async ({ orderId, reason }, { rejectWithValue, getState, dispatch }) => {
     try {
-      const updatedOrder = await orderService.cancelOrder(orderId);
+      const updatedOrder = await orderService.cancelOrder(orderId, reason);
       
       // Sau khi cancel thành công, dispatch action để update list
       // Điều này sẽ được xử lý trong reducer

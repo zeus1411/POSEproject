@@ -54,6 +54,10 @@ const NotificationIcon = () => {
   const handleNotificationClick = async (notification) => {
     if (!notification.isRead) {
       await dispatch(markNotificationAsRead(notification._id));
+      // Fetch lại unread count để cập nhật badge chính xác
+      dispatch(fetchUnreadCount());
+      // Fetch lại notifications list để cập nhật UI
+      dispatch(fetchNotifications({ limit: 10 }));
     }
     setIsOpen(false);
     
@@ -65,6 +69,10 @@ const NotificationIcon = () => {
 
   const handleMarkAllAsRead = async () => {
     await dispatch(markAllNotificationsAsRead());
+    // Fetch lại unread count để cập nhật badge
+    dispatch(fetchUnreadCount());
+    // Fetch lại notifications list để cập nhật UI
+    dispatch(fetchNotifications({ limit: 10 }));
   };
 
   const getNotificationIcon = (type) => {

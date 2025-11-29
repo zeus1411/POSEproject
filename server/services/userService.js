@@ -196,7 +196,7 @@ class UserService {
     const pageSize = Math.min(parseInt(limit, 10) || 10, 100);
     const skip = (pageNumber - 1) * pageSize;
 
-    const sortFieldWhitelist = ['createdAt', 'updatedAt', 'lastLogin', 'username', 'email'];
+    const sortFieldWhitelist = ['createdAt', 'updatedAt', 'username', 'email'];
     const field = sortFieldWhitelist.includes(sortBy) ? sortBy : 'createdAt';
     const direction = sortOrder === 'asc' ? 1 : -1;
     const sort = { [field]: direction };
