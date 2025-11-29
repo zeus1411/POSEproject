@@ -207,7 +207,8 @@ const ProductDetail = () => {
 
   const currentPrice = getCurrentPrice();
   const currentStock = getCurrentStock();
-  const availableStock = getAvailableStock(); // Available stock after cart quantity
+  // const availableStock = getAvailableStock(); // Available stock after cart quantity
+  const availableStock = getCurrentStock();
 
   const discountPercentage = currentProduct?.originalPrice && currentPrice 
     ? Math.round(((currentProduct.originalPrice - currentPrice) / currentProduct.originalPrice) * 100)
@@ -379,7 +380,7 @@ const ProductDetail = () => {
                   </span>
                   <button
                     onClick={() => handleQuantityChange(1)}
-                    disabled={quantity >= availableStock}
+                    disabled={quantity >= currentStock}
                     className="p-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <PlusIcon className="w-4 h-4" />
