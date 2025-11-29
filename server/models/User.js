@@ -125,6 +125,11 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false
     },
+    // ========== PROMOTION TRACKING ==========
+    viewedPromotions: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Promotion'
+    }],
     resetPasswordOTP: {
       code: String,
       expires: Date,

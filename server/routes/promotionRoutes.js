@@ -13,7 +13,9 @@ import {
   validateCoupon,
   applyPromotions,
   applyPromotionsToCart,
-  getPromotionStatistics
+  getPromotionStatistics,
+  getUnviewedPromotions,
+  markPromotionAsViewed
 } from '../controllers/promotionController.js';
 import { authenticateUser, authorizeRoles } from '../middlewares/auth.js';
 
@@ -22,6 +24,8 @@ const router = express.Router();
 // ==================== USER ROUTES ====================
 router.get('/available', authenticateUser, getAvailablePromotions);
 router.get('/coupons/active', authenticateUser, getAllActiveCoupons);
+router.get('/unviewed', authenticateUser, getUnviewedPromotions); // 🎁 Mới: Lấy promotions chưa xem
+router.post('/:id/mark-viewed', authenticateUser, markPromotionAsViewed); // 🎁 Mới: Đánh dấu đã xem
 router.get('/product/:productId', getPromotionsForProduct);
 router.post('/check-eligibility', authenticateUser, checkCouponEligibility);
 router.post('/validate', authenticateUser, validateCoupon);
