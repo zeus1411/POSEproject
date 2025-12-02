@@ -1,11 +1,9 @@
 import React from 'react';
-import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import {
   ShoppingBagIcon,
   ChartBarIcon,
   CubeIcon,
-  UserGroupIcon,
-  ArrowRightOnRectangleIcon,
   HomeModernIcon,
   UsersIcon,
   TicketIcon
@@ -13,7 +11,6 @@ import {
 
 const AdminSidebar = () => {
   const location = useLocation();
-  const navigate = useNavigate();
   
   const navigation = [
     { 
@@ -63,11 +60,6 @@ const AdminSidebar = () => {
     }
   ];
 
-  const handleLogout = () => {
-    console.log('Logging out...');
-    navigate('/login');
-  };
-
   return (
     <div className="hidden md:flex md:flex-shrink-0">
       <div className="flex flex-col w-64 bg-white border-r border-gray-100 h-screen shadow-sm">
@@ -116,15 +108,7 @@ const AdminSidebar = () => {
         
         {/* Bottom Section */}
         <div className="p-4 border-t border-gray-100">
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center justify-center space-x-2 px-4 py-3 text-sm font-medium text-gray-700 hover:bg-gray-50 rounded-lg transition-colors group"
-          >
-            <ArrowRightOnRectangleIcon className="h-5 w-5 text-gray-400 group-hover:text-red-500 transition-colors" />
-            <span>Đăng xuất</span>
-          </button>
-          
-          <div className="mt-3 text-center">
+          <div className="text-center">
             <p className="text-xs text-gray-400">
               Phiên bản 1.0.0
             </p>

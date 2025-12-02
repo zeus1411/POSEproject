@@ -6,17 +6,29 @@ const API = "/orders/admin";
 // Lấy toàn bộ đơn hàng (admin)
 export const fetchAdminOrders = createAsyncThunk(
     "adminOrders/fetchAll",
-    async (_, { rejectWithValue }) => {
+    async (params = {}, { rejectWithValue }) => {
         try {
-            const res = await api.get(`${API}/all`, { withCredentials: true });
+            const queryParams = new URLSearchParams();
+            if (params.page) queryParams.append('page', params.page);
+            if (params.limit) queryParams.append('limit', params.limit);
+            if (params.status && params.status !== 'ALL') queryParams.append('status', params.status);
+            if (params.search) queryParams.append('search', params.search);
+
+            const res = await api.get(`${API}/all?${queryParams.toString()}`, { withCredentials: true });
 
             const raw = res.data;
 
-            if (Array.isArray(raw)) return raw;
-            if (Array.isArray(raw.orders)) return raw.orders;
-            if (Array.isArray(raw.data?.orders)) return raw.data.orders;
+            // Return both orders and pagination
+            if (raw.data?.orders) {
+                return {
+                    orders: raw.data.orders,
+                    pagination: raw.data.pagination
+                };
+            }
+            if (Array.isArray(raw)) return { orders: raw, pagination: null };
+            if (Array.isArray(raw.orders)) return { orders: raw.orders, pagination: null };
 
-            return [];
+            return { orders: [], pagination: null };
         } catch (err) {
             return rejectWithValue(err.response?.data?.message);
         }
@@ -80,11 +92,37 @@ const adminOrderSlice = createSlice({
         error: null,
         currentOrder: null, // ✅ Thêm state để lưu chi tiết
         loadingDetail: false, // ✅ Thêm state loading riêng cho chi tiết
+        filters: {
+            status: 'ALL',
+            search: '',
+            page: 1,
+            limit: 10
+        },
+        pagination: {
+            total: 0,
+            pages: 1,
+            page: 1,
+            limit: 10
+        }
     },
     reducers: {
         clearCurrentOrder: (state) => {
             state.currentOrder = null;
             state.error = null;
+        },
+        setFilters: (state, action) => {
+            state.filters = {
+                ...state.filters,
+                ...action.payload
+            };
+        },
+        clearFilters: (state) => {
+            state.filters = {
+                status: 'ALL',
+                search: '',
+                page: 1,
+                limit: 10
+            };
         }
     },
     extraReducers: (builder) => {
@@ -94,7 +132,10 @@ const adminOrderSlice = createSlice({
             })
             .addCase(fetchAdminOrders.fulfilled, (state, action) => {
                 state.loading = false;
-                state.list = action.payload;
+                state.list = action.payload.orders || action.payload;
+                if (action.payload.pagination) {
+                    state.pagination = action.payload.pagination;
+                }
             })
             .addCase(fetchAdminOrders.rejected, (state, action) => {
                 state.loading = false;
@@ -145,5 +186,5 @@ const adminOrderSlice = createSlice({
             });
     },
 });
-export const { clearCurrentOrder } = adminOrderSlice.actions;
+export const { clearCurrentOrder, setFilters, clearFilters } = adminOrderSlice.actions;
 export default adminOrderSlice.reducer;

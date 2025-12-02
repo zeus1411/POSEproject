@@ -183,8 +183,8 @@ const ManageUsers = () => {
         </div>
 
         {/* Pagination */}
-        {pagination.totalPages > 1 && (
-          <div className="flex justify-between items-center px-6 py-4 bg-white border-t border-gray-200 rounded-b-lg">
+        {pagination.totalPages >= 1 && (
+          <div className="flex justify-between items-center px-6 py-4 bg-white border-t border-gray-200 rounded-b-lg shadow-sm">
             <div className="text-sm text-gray-600">
               Hiển thị <span className="font-medium">{users.length}</span> trong tổng số{' '}
               <span className="font-medium">{pagination.totalUsers}</span> người dùng

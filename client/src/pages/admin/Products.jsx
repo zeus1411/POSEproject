@@ -109,15 +109,11 @@ const Products = () => {
         setEditingCategory(null);
         dispatch(getCategories(true)); // Reload with inactive categories
       }
-    }
-  }, [categorySuccess, categoryMessage, dispatch, showCategoryForm]);
-
-  useEffect(() => {
-    if (categoryError && categoryMessage) {
+    } else if (categoryError && categoryMessage) {
       toast.error(categoryMessage);
       dispatch(resetCategory());
     }
-  }, [categoryError, categoryMessage, dispatch]);
+  }, [categorySuccess, categoryError, categoryMessage, dispatch, showCategoryForm]);
 
   // Handle filter changes
   const handleFilterChange = (updates) => {

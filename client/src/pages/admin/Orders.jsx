@@ -3,9 +3,11 @@ import { useDispatch, useSelector } from "react-redux";
 import {
     fetchAdminOrders,
     updateAdminOrderStatus,
+    setFilters,
 } from "../../redux/slices/adminOrderSlice";
 import AdminLayout from "../../components/admin/AdminLayout";
 import { CheckCircleIcon } from "@heroicons/react/24/outline";
+import Pagination from "../../components/common/Pagination";
 
 // Status definitions with Vietnamese labels
 const ORDER_STATUSES = [
@@ -47,23 +49,26 @@ const statusColors = {
 
 const AdminOrdersPage = () => {
     const dispatch = useDispatch();
-    const { list, loading, error } = useSelector((state) => state.adminOrders);
-    const [selectedStatus, setSelectedStatus] = useState("ALL");
+    const { list, loading, error, filters, pagination } = useSelector((state) => state.adminOrders);
     const [confirmingOrder, setConfirmingOrder] = useState(null);
     const [confirmingStatus, setConfirmingStatus] = useState(null);
 
     useEffect(() => {
-        dispatch(fetchAdminOrders());
-    }, [dispatch]);
+        dispatch(fetchAdminOrders(filters));
+    }, [dispatch, filters]);
 
-    // Filter orders by selected status
-    const filteredOrders =
-        selectedStatus === "ALL"
-            ? list
-            : list.filter((order) => order.status === selectedStatus);
+    // Handle status filter change
+    const handleStatusChange = (status) => {
+        dispatch(setFilters({ status, page: 1 }));
+    };
 
-    // Handle status change with confirmation
-    const handleStatusChange = (orderId, currentStatus, newStatus) => {
+    // Handle page change
+    const handlePageChange = (page) => {
+        dispatch(setFilters({ page }));
+    };
+
+    // Handle order status change with confirmation
+    const handleOrderStatusChange = (orderId, currentStatus, newStatus) => {
         setConfirmingOrder(orderId);
         setConfirmingStatus(newStatus);
     };
@@ -109,8 +114,8 @@ const AdminOrdersPage = () => {
                     {ORDER_STATUSES.map((status) => (
                         <button
                             key={status.key}
-                            onClick={() => setSelectedStatus(status.key)}
-                            className={`px-4 py-2 rounded-full font-medium transition-all ${selectedStatus === status.key
+                            onClick={() => handleStatusChange(status.key)}
+                            className={`px-4 py-2 rounded-full font-medium transition-all ${filters.status === status.key
                                     ? "bg-blue-600 text-white shadow-md"
                                     : "bg-white text-gray-700 border border-gray-300 hover:border-blue-500"
                                 }`}
@@ -129,34 +134,35 @@ const AdminOrdersPage = () => {
                     <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
                         Lỗi: {error}
                     </div>
-                ) : filteredOrders.length === 0 ? (
+                ) : list.length === 0 ? (
                     <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center text-gray-600">
                         Không có đơn hàng nào
                     </div>
                 ) : (
-                    <div className="bg-white shadow-md rounded-lg overflow-hidden">
-                        <table className="w-full">
-                            <thead className="bg-gray-100 border-b">
-                                <tr>
-                                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                                        Mã Đơn
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                                        Khách hàng
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                                        Tổng tiền
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                                        Trạng thái
-                                    </th>
-                                    <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                                        Hành động
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody className="divide-y">
-                                {filteredOrders.map((order) => {
+                    <>
+                        <div className="bg-white shadow-md rounded-lg overflow-hidden">
+                            <table className="w-full">
+                                <thead className="bg-gray-100 border-b">
+                                    <tr>
+                                        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
+                                            Mã Đơn
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
+                                            Khách hàng
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
+                                            Tổng tiền
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
+                                            Trạng thái
+                                        </th>
+                                        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
+                                            Hành động
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y">
+                                    {list.map((order) => {
                                     const nextStatuses = getNextStatuses(order.status);
                                     // Kiểm tra xem có phải trạng thái cuối cùng không
                                     const isFinalStatus = nextStatuses.length === 0;
@@ -196,7 +202,7 @@ const AdminOrdersPage = () => {
                                                     <select
                                                         value={order.status}
                                                         onChange={(e) =>
-                                                            handleStatusChange(
+                                                            handleOrderStatusChange(
                                                                 order._id,
                                                                 order.status,
                                                                 e.target.value
@@ -231,10 +237,22 @@ const AdminOrdersPage = () => {
                                             </td>
                                         </tr>
                                     );
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* Pagination */}
+                        {pagination.pages > 1 && (
+                            <div className="mt-6">
+                                <Pagination
+                                    currentPage={pagination.page}
+                                    totalPages={pagination.pages}
+                                    onPageChange={handlePageChange}
+                                />
+                            </div>
+                        )}
+                    </>
                 )}
 
                 {/* Confirmation Dialog */}

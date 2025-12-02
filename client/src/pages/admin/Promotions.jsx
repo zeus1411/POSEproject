@@ -107,7 +107,7 @@ const AdminPromotions = () => {
 
   // Load promotions when page changes
   useEffect(() => {
-    dispatch(getAllPromotions({ page: currentPage, limit: 20, filters }));
+    dispatch(getAllPromotions({ page: currentPage, limit: 10, filters }));
   }, [dispatch, currentPage, filters]);
 
   // Handle messages
@@ -302,7 +302,7 @@ const AdminPromotions = () => {
         await dispatch(createPromotion(submitData)).unwrap();
       }
       setShowModal(false);
-      dispatch(getAllPromotions({ page: currentPage, limit: 20, filters }));
+      dispatch(getAllPromotions({ page: currentPage, limit: 10, filters }));
     } catch (err) {
       console.error('Submit error:', err);
     }
@@ -313,7 +313,7 @@ const AdminPromotions = () => {
     if (window.confirm('Bạn có chắc muốn xóa khuyến mãi này?')) {
       try {
         await dispatch(deletePromotion(id)).unwrap();
-        dispatch(getAllPromotions({ page: currentPage, limit: 20, filters }));
+        dispatch(getAllPromotions({ page: currentPage, limit: 10, filters }));
       } catch (err) {
         console.error('Delete error:', err);
       }
@@ -324,7 +324,7 @@ const AdminPromotions = () => {
   const handleToggleStatus = async (id) => {
     try {
       await dispatch(togglePromotionStatus(id)).unwrap();
-      dispatch(getAllPromotions({ page: currentPage, limit: 20, filters }));
+      dispatch(getAllPromotions({ page: currentPage, limit: 10, filters }));
     } catch (err) {
       console.error('Toggle error:', err);
     }
@@ -499,21 +499,66 @@ const AdminPromotions = () => {
       </div>
 
       {/* Pagination */}
-      {pagination.totalPages > 1 && (
-        <div className="mt-6 flex justify-center gap-2">
-          {[...Array(pagination.totalPages)].map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setCurrentPage(i + 1)}
-              className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                currentPage === i + 1
-                  ? 'bg-blue-500 text-white shadow-md'
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
-              }`}
-            >
-              {i + 1}
-            </button>
-          ))}
+      {pagination.totalPages >= 1 && (
+        <div className="mt-6 bg-white rounded-lg shadow-sm p-4">
+          <div className="flex justify-between items-center">
+            <div className="text-sm text-gray-600">
+              Hiển thị <span className="font-medium">{promotions.length}</span> trong tổng số{' '}
+              <span className="font-medium">{pagination.total || 0}</span> khuyến mãi
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                disabled={currentPage === 1}
+                className={`px-3 py-1 border rounded-md text-sm ${
+                  currentPage === 1
+                    ? 'text-gray-400 border-gray-200 cursor-not-allowed'
+                    : 'text-gray-700 border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                Trước
+              </button>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                  let pageNum;
+                  if (pagination.totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (currentPage <= 3) {
+                    pageNum = i + 1;
+                  } else if (currentPage > pagination.totalPages - 3) {
+                    pageNum = pagination.totalPages - 4 + i;
+                  } else {
+                    pageNum = currentPage - 2 + i;
+                  }
+
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => setCurrentPage(pageNum)}
+                      className={`w-8 h-8 rounded-md text-sm ${
+                        currentPage === pageNum
+                          ? 'bg-blue-600 text-white'
+                          : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+              </div>
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(pagination.totalPages, prev + 1))}
+                disabled={currentPage === pagination.totalPages}
+                className={`px-3 py-1 border rounded-md text-sm ${
+                  currentPage === pagination.totalPages
+                    ? 'text-gray-400 border-gray-200 cursor-not-allowed'
+                    : 'text-gray-700 border-gray-300 hover:bg-gray-50'
+                }`}
+              >
+                Tiếp
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

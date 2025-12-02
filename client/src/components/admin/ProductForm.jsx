@@ -86,6 +86,7 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
 
     if (!formData.name.trim()) newErrors.name = 'Tên sản phẩm là bắt buộc';
     if (!formData.sku.trim()) newErrors.sku = 'SKU là bắt buộc';
+    if (!formData.description.trim()) newErrors.description = 'Mô tả sản phẩm là bắt buộc';
     
     // ✅ Chỉ validate price và stock khi KHÔNG có variants
     if (!formData.hasVariants) {
@@ -97,6 +98,28 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
       // ✅ Validate variants khi có variants
       if (!formData.variants || formData.variants.length === 0) {
         newErrors.variants = 'Vui lòng thêm ít nhất một variant';
+      } else {
+        // ✅ Check for duplicate variants
+        const variantKeys = new Set();
+        let hasDuplicate = false;
+        
+        formData.variants.forEach((variant, idx) => {
+          if (variant.optionValues) {
+            const key = JSON.stringify(
+              Object.entries(variant.optionValues).sort()
+            );
+            
+            if (variantKeys.has(key)) {
+              hasDuplicate = true;
+            } else {
+              variantKeys.add(key);
+            }
+          }
+        });
+        
+        if (hasDuplicate) {
+          newErrors.variants = 'Có variant trùng lặp. Vui lòng kiểm tra và sửa các variant có cùng giá trị tùy chọn.';
+        }
       }
     }
     
@@ -293,16 +316,21 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
           {/* Description */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Mô tả
+              Mô tả <span className="text-red-500">*</span>
             </label>
             <textarea
               name="description"
               value={formData.description}
               onChange={handleInputChange}
               rows="4"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                errors.description ? 'border-red-500' : 'border-gray-300'
+              }`}
               placeholder="Nhập mô tả sản phẩm"
             />
+            {errors.description && (
+              <p className="mt-1 text-sm text-red-500">{errors.description}</p>
+            )}
           </div>
 
           {/* Status */}
@@ -407,6 +435,11 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
             product={product} 
             onUpdate={handleVariantsUpdate}
           />
+          {errors.variants && (
+            <div className="p-3 bg-red-50 border border-red-300 rounded-lg">
+              <p className="text-red-700 text-sm font-medium">{errors.variants}</p>
+            </div>
+          )}
 
           {/* Buttons */}
           <div className="flex gap-3 justify-end pt-6 border-t">
