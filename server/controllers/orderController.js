@@ -529,6 +529,11 @@ const cancelOrder = async (req, res) => {
       )
     );
     await Promise.all(productUpdates);
+    
+    // ✅ Invalidate product cache after restoring stock
+    const cacheService = (await import('../services/cacheService.js')).default;
+    await Promise.all(order.items.map(item => cacheService.invalidateProduct(item.productId)));
+    
     console.timeEnd('cancelOrder:updateProducts');
 
     // Update payment status if exists
@@ -899,6 +904,11 @@ const vnpayReturn = async (req, res) => {
             }
           );
         }
+        
+        // ✅ Invalidate product cache after stock update
+        const cacheService = (await import('../services/cacheService.js')).default;
+        await cacheService.invalidateProduct(product._id);
+        
         console.log(`✅ Stock updated for product: ${product.name}`);
       }
 
@@ -1089,41 +1099,44 @@ const simulateVNPayPayment = async (req, res) => {
       }
     }
 
-    // Deduct stock from products
-    console.log('📉 Deducting stock after simulated VNPay payment...');
-    for (const item of cart.items) {
-      const product = item.productId;
-      
-      if (!product) continue;
-      
-      if (product.hasVariants && item.variantId) {
-        await Product.updateOne(
-          { 
-            _id: product._id,
-            'variants._id': item.variantId
-          },
-          {
-            $inc: { 
-              'variants.$.stock': -item.quantity,
-              soldCount: item.quantity 
+      // Deduct stock from products
+      console.log('📉 Deducting stock after simulated VNPay payment...');
+      for (const item of cart.items) {
+        const product = item.productId;
+        
+        if (!product) continue;
+        
+        if (product.hasVariants && item.variantId) {
+          await Product.updateOne(
+            { 
+              _id: product._id,
+              'variants._id': item.variantId
+            },
+            {
+              $inc: { 
+                'variants.$.stock': -item.quantity,
+                soldCount: item.quantity 
+              }
             }
-          }
-        );
-      } else {
-        await Product.updateOne(
-          { _id: product._id },
-          {
-            $inc: { 
-              stock: -item.quantity,
-              soldCount: item.quantity 
+          );
+        } else {
+          await Product.updateOne(
+            { _id: product._id },
+            {
+              $inc: { 
+                stock: -item.quantity,
+                soldCount: item.quantity 
+              }
             }
-          }
-        );
-      }
-      console.log(`✅ Stock updated for product: ${product.name}`);
-    }
-
-    // Clear cart
+          );
+        }
+        
+        // ✅ Invalidate product cache after stock update
+        const cacheService = (await import('../services/cacheService.js')).default;
+        await cacheService.invalidateProduct(product._id);
+        
+        console.log(`✅ Stock updated for product: ${product.name}`);
+      }    // Clear cart
     await Cart.findOneAndUpdate(
       { userId: tempOrder.userId },
       { $set: { items: [] } }
