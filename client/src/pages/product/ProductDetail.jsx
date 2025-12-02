@@ -72,6 +72,7 @@ const ProductDetail = () => {
 
     if (selectedVariant) return;
 
+    // Try to find first available variant with stock
     const firstAvailable = currentProduct.variants.find(
       v => v.isActive && Number(v.stock) > 0
     );
@@ -79,7 +80,9 @@ const ProductDetail = () => {
     if (firstAvailable) {
       setSelectedVariant(firstAvailable);
     } else {
-      setSelectedVariant(null);
+      // If all variants are out of stock, select first active variant to show price
+      const firstActive = currentProduct.variants.find(v => v.isActive);
+      setSelectedVariant(firstActive || null);
     }
   }, [currentProduct]);
 
