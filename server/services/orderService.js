@@ -345,6 +345,9 @@ class OrderService {
             }
           );
         }
+        
+        // ✅ Invalidate product cache after stock update
+        await cacheService.invalidateProduct(product._id);
       }
       
       // Create order
