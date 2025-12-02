@@ -6,6 +6,10 @@ COPY package*.json ./
 RUN npm ci
 
 COPY . .
+
+# Copy environment file for Docker build
+COPY .env.docker .env
+
 RUN npm run build
 
 # Production stage with Nginx

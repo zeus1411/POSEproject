@@ -11,7 +11,12 @@ const adminSockets = new Map(); // adminId -> socketId
 export const initializeSocket = (server) => {
   io = new Server(server, {
     cors: {
-      origin: process.env.CLIENT_URL,
+      origin: [
+        process.env.CLIENT_URL,
+        'http://localhost:5173', // Vite dev server
+        'http://localhost', // Production nginx
+        'http://localhost:80' // Production nginx explicit
+      ],
       methods: ['GET', 'POST'],
       credentials: true
     }
