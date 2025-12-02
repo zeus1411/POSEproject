@@ -179,36 +179,58 @@ const ProductDetail = () => {
   };
   
   // Get available stock (stock - quantity in cart)
-  const getAvailableStock = () => {
-    let currentStock = getCurrentStock();
+  // const getAvailableStock = () => {
+  //   let currentStock = getCurrentStock();
     
-    // Find matching item in cart
-    if (cart && cart.items && Array.isArray(cart.items)) {
-      const cartItem = cart.items.find(item => {
-        // ✅ Check if item and productId exist
-        if (!item || !item.productId || !currentProduct) return false;
-        if (item.productId._id !== currentProduct._id) return false;
+  //   // Find matching item in cart
+  //   if (cart && cart.items && Array.isArray(cart.items)) {
+  //     const cartItem = cart.items.find(item => {
+  //       // ✅ Check if item and productId exist
+  //       if (!item || !item.productId || !currentProduct) return false;
+  //       if (item.productId._id !== currentProduct._id) return false;
         
-        // If has variants, must match variant too
-        if (currentProduct?.hasVariants && selectedVariant) {
-          return item.variantId === selectedVariant._id;
-        }
+  //       // If has variants, must match variant too
+  //       if (currentProduct?.hasVariants && selectedVariant) {
+  //         return item.variantId === selectedVariant._id;
+  //       }
         
-        return true;
-      });
+  //       return true;
+  //     });
       
-      if (cartItem) {
-        currentStock -= cartItem.quantity;
-      }
-    }
+  //     if (cartItem) {
+  //       currentStock -= cartItem.quantity;
+  //     }
+  //   }
     
-    return Math.max(0, currentStock);
-  };
+  //   return Math.max(0, currentStock);
+  // };
+
+  const getAvailableStock = () => {
+  let currentStock = getCurrentStock();
+
+  if (cart?.items?.length) {
+    const cartItem = cart.items.find(item => {
+      if (!item?.productId || !currentProduct) return false;
+      if (item.productId._id !== currentProduct._id) return false;
+
+      if (currentProduct?.hasVariants && selectedVariant) {
+        return (item.variantId?._id || item.variantId) === selectedVariant._id;
+      }
+
+      return true;
+    });
+
+    if (cartItem) currentStock -= cartItem.quantity;
+  }
+
+  return Math.max(0, currentStock);
+};
+
 
   const currentPrice = getCurrentPrice();
   const currentStock = getCurrentStock();
-  // const availableStock = getAvailableStock(); // Available stock after cart quantity
-  const availableStock = getCurrentStock();
+  const availableStock = getAvailableStock();
+  // const availableStock = getCurrentStock();
 
   const discountPercentage = currentProduct?.originalPrice && currentPrice 
     ? Math.round(((currentProduct.originalPrice - currentPrice) / currentProduct.originalPrice) * 100)
