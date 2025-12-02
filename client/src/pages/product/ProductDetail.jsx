@@ -9,6 +9,7 @@ import ReviewCard from '../../components/review/ReviewCard';
 import ReviewList from '../../components/review/ReviewList';
 import { checkReviewStatus } from "../../redux/slices/reviewSlice";
 import ProductVariantSelector from '../../components/common/ProductVariantSelector';
+import Swal from 'sweetalert2';
 
 import { 
   StarIcon, 
@@ -138,7 +139,12 @@ const ProductDetail = () => {
 
     // Check if product has variants and user selected one
     if (currentProduct?.hasVariants && !selectedVariant) {
-      alert('Vui lòng chọn biến thể sản phẩm');
+      Swal.fire({
+        icon: 'warning',
+        title: 'Chưa chọn biến thể',
+        text: 'Vui lòng chọn biến thể sản phẩm trước khi thêm vào giỏ hàng',
+        confirmButtonColor: '#3b82f6'
+      });
       return;
     }
 
@@ -157,7 +163,12 @@ const ProductDetail = () => {
       // Reset quantity after successful add
       setQuantity(1);
     } catch (error) {
-      alert(error || 'Không thể thêm sản phẩm vào giỏ hàng');
+      Swal.fire({
+        icon: 'error',
+        title: 'Không thể thêm vào giỏ hàng',
+        text: error || 'Đã có lỗi xảy ra. Vui lòng thử lại sau.',
+        confirmButtonColor: '#3b82f6'
+      });
     }
   };
 
