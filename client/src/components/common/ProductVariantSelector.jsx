@@ -50,21 +50,17 @@ const ProductVariantSelector = ({ product, selectedVariant, onVariantChange }) =
     }
   };
 
-  // Check if option value is available (has at least one variant with this value)
-  const isOptionAvailable = (optionName, optionValue) => {
+  // Check if option value exists (has at least one variant with this value)
+  const isOptionExists = (optionName, optionValue) => {
     // If this is the first option being selected, just check if any variant has it
     if (Object.keys(selectedOptions).length === 0 || !selectedOptions[optionName]) {
-      // Tìm các variants có option value này
       const variantsWithOption = product.variants.filter(variant => {
         if (!variant.isActive) return false;
         const variantOptions = variant.optionValues || {};
         return variantOptions[optionName] === optionValue;
       });
       
-      // ❌ Nếu KHÔNG có variant nào -> DISABLE (không cho chọn)
-      // ✅ Nếu có variant -> chỉ disable nếu TẤT CẢ đều hết hàng
-      if (variantsWithOption.length === 0) return false;
-      return variantsWithOption.some(v => Number(v.stock) > 0);
+      return variantsWithOption.length > 0;
     }
 
     // Otherwise, check if there's a variant matching the new selection
@@ -80,10 +76,35 @@ const ProductVariantSelector = ({ product, selectedVariant, onVariantChange }) =
       );
     });
     
-    // ❌ Nếu không tìm thấy variant khớp -> DISABLE
-    // ✅ Nếu tìm thấy -> chỉ disable nếu tất cả đều hết hàng
-    if (matchingVariants.length === 0) return false;
-    return matchingVariants.some(v => v.stock > 0);
+    return matchingVariants.length > 0;
+  };
+
+  // Check if option value has stock available
+  const isOptionInStock = (optionName, optionValue) => {
+    // If this is the first option being selected
+    if (Object.keys(selectedOptions).length === 0 || !selectedOptions[optionName]) {
+      const variantsWithOption = product.variants.filter(variant => {
+        if (!variant.isActive) return false;
+        const variantOptions = variant.optionValues || {};
+        return variantOptions[optionName] === optionValue;
+      });
+      
+      return variantsWithOption.some(v => Number(v.stock) > 0);
+    }
+
+    // Otherwise, check if there's a variant with stock matching the new selection
+    const tempSelection = { ...selectedOptions, [optionName]: optionValue };
+    
+    const matchingVariants = product.variants.filter(variant => {
+      if (!variant.isActive) return false;
+      const variantOptions = variant.optionValues || {};
+
+      return Object.keys(tempSelection).every(
+        key => variantOptions[key] === tempSelection[key]
+      );
+    });
+    
+    return matchingVariants.some(v => Number(v.stock) > 0);
   };
 
   return (
@@ -96,22 +117,32 @@ const ProductVariantSelector = ({ product, selectedVariant, onVariantChange }) =
           <div className="flex flex-wrap gap-2">
             {option.values.map((value, valueIndex) => {
               const isSelected = selectedOptions[option.name] === value;
-              const isAvailable = isOptionAvailable(option.name, value);
+              const exists = isOptionExists(option.name, value);
+              const inStock = isOptionInStock(option.name, value);
+              
+              // Don't render if variant doesn't exist at all
+              if (!exists) return null;
               
               return (
                 <button
                   key={valueIndex}
-                  disabled={!isAvailable}
-                  onClick={() => isAvailable && handleOptionSelect(option.name, value)}
-                  className={`px-4 py-2 border rounded-lg font-medium transition-all ${
+                  onClick={() => handleOptionSelect(option.name, value)}
+                  className={`relative px-4 py-2 border rounded-lg font-medium transition-all ${
                     isSelected
-                      ? 'border-primary-600 bg-primary-50 text-primary-700 ring-2 ring-primary-600'
-                      : isAvailable
+                      ? inStock
+                        ? 'border-primary-600 bg-primary-50 text-primary-700 ring-2 ring-primary-600'
+                        : 'border-red-400 bg-red-50 text-red-700 ring-2 ring-red-400'
+                      : inStock
                       ? 'border-gray-300 hover:border-gray-400 text-gray-700 hover:bg-gray-50'
-                      : 'border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed line-through'
+                      : 'border-gray-300 bg-gray-50 text-gray-500 opacity-60 hover:opacity-80'
                   }`}
                 >
                   {value}
+                  {!inStock && (
+                    <span className="absolute -top-2 -right-2 px-1.5 py-0.5 bg-red-500 text-white text-xs rounded-full">
+                      Hết
+                    </span>
+                  )}
                 </button>
               );
             })}
