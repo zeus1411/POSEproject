@@ -9,6 +9,7 @@ import SearchFilter from '../../components/common/SearchFilter';
 import CategorySidebar from '../../components/common/CategorySidebar';
 import Pagination from '../../components/common/Pagination';
 import ShopCarousel from '../../components/common/ShopCarousel';
+import Swal from 'sweetalert2';
 
 const Shop = () => {
   const dispatch = useDispatch();
@@ -53,14 +54,31 @@ const Shop = () => {
 
   const handleAddToCart = async (product) => {
     if (!user) {
-      alert('Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng');
+      Swal.fire({
+        icon: 'warning',
+        title: 'Chưa đăng nhập',
+        text: 'Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng',
+        showCancelButton: true,
+        confirmButtonText: 'Đăng nhập',
+        cancelButtonText: 'Hủy',
+        confirmButtonColor: '#3b82f6'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.href = '/login';
+        }
+      });
       return;
     }
 
     try {
       await dispatch(addToCart({ productId: product._id, quantity: 1 })).unwrap();
     } catch (error) {
-      alert(error || 'Không thể thêm sản phẩm vào giỏ hàng');
+      Swal.fire({
+        icon: 'error',
+        title: 'Không thể thêm vào giỏ hàng',
+        text: error || 'Đã có lỗi xảy ra. Vui lòng thử lại sau.',
+        confirmButtonColor: '#3b82f6'
+      });
     }
   };
 

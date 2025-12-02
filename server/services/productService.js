@@ -301,6 +301,7 @@ class ProductService {
     }
 
     const query = {};
+    const andConditions = []; // Dùng để kết hợp nhiều điều kiện $or
     const isAdmin = user?.role === 'admin';
     const includeInactive = filters.includeInactive === 'true';
     
@@ -315,11 +316,13 @@ class ProductService {
     // Keyword search
     if (searchTerm) {
       const keyword = searchTerm.trim();
-      query.$or = [
-        { name: { $regex: keyword, $options: 'i' } },
-        { description: { $regex: keyword, $options: 'i' } },
-        { tags: { $in: [new RegExp(keyword, 'i')] } }
-      ];
+      andConditions.push({
+        $or: [
+          { name: { $regex: keyword, $options: 'i' } },
+          { description: { $regex: keyword, $options: 'i' } },
+          { tags: { $in: [new RegExp(keyword, 'i')] } }
+        ]
+      });
     }
 
     // Category filter
@@ -337,10 +340,55 @@ class ProductService {
     // Stock filter
     if (typeof inStock !== 'undefined') {
       if (inStock === 'true') {
-        query.stock = { $gt: 0 };
+        // Còn hàng
+        andConditions.push({
+          $or: [
+            // Case 1: Sản phẩm KHÔNG có variant (hasVariants != true) và stock > 0
+            { 
+              hasVariants: { $ne: true },
+              stock: { $gt: 0 }
+            },
+            // Case 2: Sản phẩm CÓ variant và có ít nhất 1 variant còn hàng
+            { 
+              hasVariants: true,
+              variants: {
+                $elemMatch: {
+                  stock: { $gt: 0 },
+                  isActive: true
+                }
+              }
+            }
+          ]
+        });
       } else if (inStock === 'false') {
-        query.stock = { $lte: 0 };
+        // Hết hàng
+        andConditions.push({
+          $or: [
+            // Case 1: Sản phẩm KHÔNG có variant (hasVariants != true) và stock <= 0
+            { 
+              hasVariants: { $ne: true },
+              stock: { $lte: 0 }
+            },
+            // Case 2: Sản phẩm CÓ variant nhưng TẤT CẢ variants đều hết hàng hoặc inactive
+            { 
+              hasVariants: true,
+              $nor: [{
+                variants: {
+                  $elemMatch: {
+                    stock: { $gt: 0 },
+                    isActive: true
+                  }
+                }
+              }]
+            }
+          ]
+        });
       }
+    }
+
+    // Kết hợp tất cả điều kiện $or vào $and nếu có
+    if (andConditions.length > 0) {
+      query.$and = andConditions;
     }
 
     // Pagination
