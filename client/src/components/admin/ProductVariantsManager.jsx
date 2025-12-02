@@ -129,6 +129,27 @@ const ProductVariantsManager = ({ product, onUpdate }) => {
     setVariants([...variants, newVariant]);
   };
 
+  // Check if variant with same optionValues exists
+  const isVariantDuplicate = (variantIndex) => {
+    const currentVariant = variants[variantIndex];
+    if (!currentVariant?.optionValues) return false;
+
+    const currentValues = JSON.stringify(
+      Object.entries(currentVariant.optionValues).sort()
+    );
+
+    return variants.some((v, idx) => {
+      if (idx === variantIndex) return false; // Skip self
+      if (!v?.optionValues) return false;
+      
+      const compareValues = JSON.stringify(
+        Object.entries(v.optionValues).sort()
+      );
+      
+      return currentValues === compareValues;
+    });
+  };
+
   // Update variant option value
   const updateVariantOption = (variantIndex, optionName, value) => {
     const newVariants = [...variants];
@@ -309,34 +330,50 @@ const ProductVariantsManager = ({ product, onUpdate }) => {
               
             {variants.length > 0 && (
               <div className="space-y-3 max-h-96 overflow-y-auto">
-                {variants.map((variant, idx) => (
-                  <div key={idx} className="p-4 border border-gray-200 rounded-lg bg-white">
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="col-span-2">
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Tùy chọn
-                        </label>
-                        <div className="space-y-2">
-                          {options.map((option, optIdx) => (
-                            <div key={optIdx} className="flex items-center gap-2">
-                              <label className="w-32 text-sm text-gray-600">{option.name}:</label>
-                              <select
-                                value={variant.optionValues?.[option.name] || ''}
-                                onChange={(e) => updateVariantOption(idx, option.name, e.target.value)}
-                                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              >
-                                <option value="">-- Chọn {option.name} --</option>
-                                {option.values.map((val, valIdx) => (
-                                  <option key={valIdx} value={val}>{val}</option>
-                                ))}
-                              </select>
-                            </div>
-                          ))}
-                          {options.length === 0 && (
-                            <p className="text-xs text-gray-500">Chưa định nghĩa tùy chọn</p>
-                          )}
+                {variants.map((variant, idx) => {
+                  const isDuplicate = isVariantDuplicate(idx);
+                  
+                  return (
+                    <div 
+                      key={idx} 
+                      className={`p-4 border rounded-lg ${
+                        isDuplicate 
+                          ? 'border-red-400 bg-red-50' 
+                          : 'border-gray-200 bg-white'
+                      }`}
+                    >
+                      {isDuplicate && (
+                        <div className="mb-3 p-2 bg-red-100 border border-red-300 rounded text-red-700 text-sm flex items-center gap-2">
+                          <span className="font-semibold">⚠️ Cảnh báo:</span>
+                          <span>Variant này trùng với variant khác. Vui lòng thay đổi giá trị tùy chọn.</span>
                         </div>
-                      </div>
+                      )}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="col-span-2">
+                          <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Tùy chọn
+                          </label>
+                          <div className="space-y-2">
+                            {options.map((option, optIdx) => (
+                              <div key={optIdx} className="flex items-center gap-2">
+                                <label className="w-32 text-sm text-gray-600">{option.name}:</label>
+                                <select
+                                  value={variant.optionValues?.[option.name] || ''}
+                                  onChange={(e) => updateVariantOption(idx, option.name, e.target.value)}
+                                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                                  <option value="">-- Chọn {option.name} --</option>
+                                  {option.values.map((val, valIdx) => (
+                                    <option key={valIdx} value={val}>{val}</option>
+                                  ))}
+                                </select>
+                              </div>
+                            ))}
+                            {options.length === 0 && (
+                              <p className="text-xs text-gray-500">Chưa định nghĩa tùy chọn</p>
+                            )}
+                          </div>
+                        </div>
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -381,10 +418,11 @@ const ProductVariantsManager = ({ product, onUpdate }) => {
                           <Trash2 size={16} className="inline mr-1" />
                           Xóa
                         </button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

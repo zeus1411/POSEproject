@@ -9,7 +9,7 @@ const initialState = {
   totalDiscount: 0,
   pagination: {
     page: 1,
-    limit: 20,
+    limit: 10,
     total: 0,
     totalPages: 0
   },
@@ -24,7 +24,7 @@ const initialState = {
 // Get all promotions (Admin)
 export const getAllPromotions = createAsyncThunk(
   'promotions/getAllPromotions',
-  async ({ page = 1, limit = 20, filters = {} }, { rejectWithValue }) => {
+  async ({ page = 1, limit = 10, filters = {} }, { rejectWithValue }) => {
     try {
       // Filter out empty values
       const cleanFilters = Object.fromEntries(
@@ -190,7 +190,7 @@ const promotionSlice = createSlice({
         state.promotions = action.payload.promotions || [];
         state.pagination = action.payload.pagination || {
           page: 1,
-          limit: 20,
+          limit: 10,
           total: 0,
           totalPages: 0
         };
