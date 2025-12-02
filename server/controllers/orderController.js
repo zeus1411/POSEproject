@@ -144,37 +144,7 @@ const createOrder = async (req, res) => {
 
       subtotal += itemSubtotal;
 
-      // *** FIX: Cập nhật stock bằng updateOne để tránh validation ***
-      if (product.hasVariants && selectedVariant) {
-        // Update variant stock
-        await Product.updateOne(
-          { 
-            _id: product._id,
-            'variants._id': selectedVariant._id
-          },
-          {
-            $inc: { 
-              'variants.$.stock': -item.quantity,
-              soldCount: item.quantity 
-            }
-          }
-          // { session } // Disabled for standalone MongoDB
-        );
-      } else {
-        // Update product stock
-        await Product.updateOne(
-          { _id: product._id },
-          {
-            $inc: { 
-              stock: -item.quantity,
-              soldCount: item.quantity 
-            }
-          }
-          // { session } // Disabled for standalone MongoDB
-        );
-      }
-      
-      console.log(`Product ${product.name} stock updated`);
+     
     }
 
     console.log('Order items prepared:', orderItems.length);
