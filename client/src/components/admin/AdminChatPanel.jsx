@@ -323,7 +323,7 @@ const AdminChatPanel = () => {
           toast: true,
           position: 'top-end',
           icon: 'success',
-          title: 'Đã trả chat về pool!',
+          title: 'Đã trả chat thành công!',
           showConfirmButton: false,
           timer: 2000
         });

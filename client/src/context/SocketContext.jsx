@@ -75,11 +75,29 @@ export const SocketProvider = ({ children }) => {
     }
 
     console.log('🔌 Initializing WebSocket connection...');
-    console.log('📍 Socket URL:', import.meta.env.VITE_API_URL?.replace('/api/v1', '') || 'http://localhost:3001');
+    
+    // Determine socket URL based on environment
+    let socketUrl;
+    const apiUrl = import.meta.env.VITE_API_URL;
+    
+    if (apiUrl) {
+      // Remove /api/v1 suffix to get base URL for socket connection
+      socketUrl = apiUrl.replace('/api/v1', '');
+      
+      // If VITE_API_URL is relative path (production), use window.location.origin
+      if (socketUrl.startsWith('/')) {
+        socketUrl = window.location.origin;
+      }
+    } else {
+      // Fallback if VITE_API_URL is not set
+      socketUrl = window.location.origin;
+    }
+    
+    console.log('📍 Socket URL:', socketUrl);
     console.log('👤 User ID:', userIdValue);
 
     // Create socket connection
-    const newSocket = io(import.meta.env.VITE_API_URL?.replace('/api/v1', '') || 'http://localhost:3001', {
+    const newSocket = io(socketUrl, {
       auth: { token },
       reconnection: true,
       reconnectionDelay: 1000,
