@@ -1,7 +1,7 @@
 import { OAuth2Client } from 'google-auth-library';
 import { StatusCodes } from 'http-status-codes';
 import User from '../models/User.js';
-import { attachCookiesToResponse } from '../utils/jwt.js';
+import { attachCookiesToResponse } from '../middlewares/auth.js';
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 

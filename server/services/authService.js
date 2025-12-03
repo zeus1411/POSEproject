@@ -1,6 +1,6 @@
 import User from '../models/User.js';
 import { BadRequestError, UnauthenticatedError } from '../utils/errorHandler.js';
-import { attachCookiesToResponse, createTokenUser } from '../utils/jwt.js';
+import { attachCookiesToResponse, createTokenUser } from '../middlewares/auth.js';
 import sendEmail from '../utils/sendEmail.js';
 
 /**

@@ -10,7 +10,7 @@ import {
     resetPassword
 } from '../controllers/authController.js';
 import { googleAuth } from '../controllers/googleAuthController.js';
-import { authenticateUser } from '../utils/jwt.js';
+import { authenticateUser } from '../middlewares/auth.js';
 import { authLimiter } from '../middlewares/rateLimiter.js';
 
 const router = express.Router();

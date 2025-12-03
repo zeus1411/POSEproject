@@ -2,32 +2,97 @@ import jwt from 'jsonwebtoken';
 import { StatusCodes } from 'http-status-codes';
 import { UnauthenticatedError, UnauthorizedError } from '../utils/errorHandler.js';
 
+// ============================================
+// JWT UTILITY FUNCTIONS
+// ============================================
+
+/**
+ * Generate JWT token
+ * @param {Object} payload - Token payload
+ * @returns {string} JWT token
+ */
+const generateToken = (payload) => {
+    return jwt.sign(
+        payload,
+        process.env.JWT_SECRET,
+        { expiresIn: process.env.JWT_LIFETIME || '1d' }
+    );
+};
+
+/**
+ * Verify JWT token
+ * @param {string} token - JWT token
+ * @returns {Object} Decoded token payload
+ */
+const verifyToken = (token) => {
+    if (!token) {
+        throw new UnauthenticatedError('No token provided');
+    }
+    return jwt.verify(token, process.env.JWT_SECRET);
+};
+
+/**
+ * Create token user object from user data
+ * @param {Object} user - User object from database
+ * @returns {Object} Token user object
+ */
+const createTokenUser = (user) => {
+    return {
+        userId: user._id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        fullName: user.fullName,
+        phone: user.phone,
+        dateOfBirth: user.dateOfBirth,
+        gender: user.gender,
+        address: user.address,
+        avatar: user.avatar
+    };
+};
+
+/**
+ * Attach JWT token to cookies
+ * @param {Object} res - Express response object
+ * @param {Object} user - User object
+ * @returns {Object} { token, tokenUser }
+ */
+const attachCookiesToResponse = (res, user) => {
+    const tokenUser = createTokenUser(user);
+    const token = generateToken(tokenUser);
+    
+    const oneDay = 1000 * 60 * 60 * 24; // 1 day
+    
+    res.cookie('token', token, {
+        httpOnly: true,
+        expires: new Date(Date.now() + oneDay),
+        secure: process.env.NODE_ENV === 'production',
+        signed: true,
+        sameSite: 'strict'
+    });
+
+    // Return both the token and tokenUser
+    return { token, tokenUser };
+};
+
+// ============================================
+// AUTHENTICATION & AUTHORIZATION MIDDLEWARES
+// ============================================
+
 // Authentication middleware
 const authenticateUser = async (req, res, next) => {
     try {
-        // Log để debug
-        // console.log('=== AUTH MIDDLEWARE ===');
-        // console.log('Request URL:', req.method, req.originalUrl);
-        // console.log('Cookies:', req.cookies);
-        // console.log('Signed Cookies:', req.signedCookies);
-        // console.log('Authorization Header:', req.headers.authorization);
-        
-        // Check for token in cookies first, then in Authorization header
         const token = req.signedCookies.token || 
                      (req.headers.authorization && req.headers.authorization.startsWith('Bearer ') 
                         ? req.headers.authorization.split(' ')[1] 
                         : null);
-
-        // console.log('Token found:', token ? 'Yes' : 'No');
 
         if (!token) {
             throw new UnauthenticatedError('Xác thực không thành công. Vui lòng đăng nhập lại.');
         }
 
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        
-        // console.log('Token decoded:', decoded);
-        
+                
         // Attach user to request object
         req.user = {
             userId: decoded.userId,
@@ -36,14 +101,9 @@ const authenticateUser = async (req, res, next) => {
             role: (decoded.role || '').toLowerCase()
         };
         
-        // console.log('User authenticated:', req.user);
-        // console.log('======================\n');
-        
+
         next();
     } catch (error) {
-        // console.error('Auth error:', error.message);
-        // console.error('======================\n');
-        
         // Handle different JWT errors
         if (error.name === 'TokenExpiredError') {
             throw new UnauthenticatedError('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.');
@@ -65,24 +125,17 @@ const authenticateUser = async (req, res, next) => {
 // Authorization middleware for roles
 const authorizeRoles = (...roles) => {
     return (req, res, next) => {
-        // console.log('=== AUTHORIZE ROLES ===');
-        // console.log('Required roles:', roles);
-        // console.log('User role:', req.user?.role);
         
         if (!req.user) {
             throw new UnauthenticatedError('Bạn cần đăng nhập để thực hiện thao tác này');
         }
         
         if (!roles.includes(req.user.role)) {
-            // console.log('Authorization failed: Role not allowed');
-            // console.log('=======================\n');
             throw new UnauthorizedError(
                 `Chức năng này chỉ dành cho người dùng có quyền: ${roles.join(', ')}`
             );
         }
         
-        // console.log('Authorization successful');
-        // console.log('=======================\n');
         
         next();
     };
@@ -91,17 +144,11 @@ const authorizeRoles = (...roles) => {
 // Check if user is the owner of the resource
 const checkOwnership = (modelName = 'user', paramName = 'id') => {
     return async (req, res, next) => {
-        try {
-            // console.log('=== CHECK OWNERSHIP ===');
-            // console.log('Model:', modelName);
-            // console.log('Param:', paramName);
-            
+        try {           
             const Model = require(`../models/${modelName}.js`);
             const resourceId = req.params[paramName];
             const userId = req.user.userId;
-            
-            // console.log('Resource ID:', resourceId);
-            // console.log('User ID:', userId);
+
             
             const resource = await Model.findById(resourceId);
             
@@ -111,8 +158,6 @@ const checkOwnership = (modelName = 'user', paramName = 'id') => {
             
             // If user is admin, bypass ownership check
             if (req.user.role === 'admin') {
-                // console.log('Admin user - ownership check bypassed');
-                // console.log('=======================\n');
                 return next();
             }
             
@@ -126,19 +171,20 @@ const checkOwnership = (modelName = 'user', paramName = 'id') => {
                 throw new UnauthorizedError('Bạn không có quyền truy cập tài nguyên này');
             }
             
-            // console.log('Ownership verified');
-            // console.log('=======================\n');
-            
             next();
         } catch (error) {
-            // console.error('Ownership check error:', error.message);
-            // console.error('=======================\n');
             throw error;
         }
     };
 };
 
 export { 
+    // JWT Utilities
+    generateToken,
+    verifyToken,
+    createTokenUser,
+    attachCookiesToResponse,
+    // Middlewares
     authenticateUser, 
     authorizeRoles, 
     checkOwnership 

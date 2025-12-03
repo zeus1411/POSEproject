@@ -3,7 +3,7 @@ import { StatusCodes } from 'http-status-codes';
 import authService from '../services/authService.js';
 import { 
     attachCookiesToResponse,
-} from '../utils/jwt.js';
+} from '../middlewares/auth.js';
 
 const register = async (req, res) => {
     const { email, password, username } = req.body;

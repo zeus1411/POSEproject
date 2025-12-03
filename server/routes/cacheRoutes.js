@@ -11,9 +11,6 @@ import { authenticateUser, authorizeRoles } from '../middlewares/auth.js';
 
 const router = express.Router();
 
-// ⚠️ CHỈ DÙNG CHO DEVELOPMENT - Cần authentication admin
-// Trong production nên tắt hoặc bảo vệ cẩn thận
-
 // Lấy thống kê cache (dễ nhìn nhất)
 router.get('/stats', authenticateUser, authorizeRoles('admin'), getCacheStats);
 
