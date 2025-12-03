@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchOrderById, cancelOrder } from '../../redux/slices/orderSlice';
 import { checkOrderReviewStatus } from '../../services/reviewService';
 import { FiArrowLeft, FiPackage, FiTruck, FiCheckCircle, FiXCircle, FiClock, FiDollarSign, FiMapPin, FiX, FiAlertCircle, FiTrash2, FiStar } from 'react-icons/fi';
 import { toast } from 'react-toastify';
+import Swal from 'sweetalert2';
 import CancelOrderDialog from '../../components/order/CancelOrderDialog';
 
 const formatCurrency = (v) => new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(v || 0);
@@ -67,6 +68,7 @@ const OrderDetail = () => {
   const { id } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   
   const { orderDetail, orderDetailLoading, orderDetailError } = useSelector((state) => state.orders);
   const { user } = useSelector((state) => state.auth);
@@ -82,6 +84,59 @@ const OrderDetail = () => {
       dispatch(fetchOrderById(id));
     }
   }, [dispatch, id]);
+
+  // ✅ Handle VNPay payment callback
+  useEffect(() => {
+    const paymentStatus = searchParams.get('payment');
+    const error = searchParams.get('error');
+    
+    if (paymentStatus === 'success') {
+      // Show success notification
+      Swal.fire({
+        icon: 'success',
+        title: '🎉 Thanh toán thành công!',
+        html: `
+          <p class="text-gray-700 mb-2">Đơn hàng của bạn đã được thanh toán thành công qua VNPay.</p>
+          <p class="text-gray-600 text-sm">Cảm ơn bạn đã mua hàng!</p>
+        `,
+        confirmButtonText: 'Đóng',
+        confirmButtonColor: '#10B981',
+        timer: 5000,
+        timerProgressBar: true
+      });
+      
+      // Clear query params
+      setSearchParams({});
+    } else if (paymentStatus === 'failed') {
+      Swal.fire({
+        icon: 'error',
+        title: '❌ Thanh toán thất bại',
+        html: error 
+          ? `<p class="text-gray-700">${decodeURIComponent(error)}</p>`
+          : '<p class="text-gray-700">Thanh toán VNPay không thành công. Vui lòng thử lại.</p>',
+        confirmButtonText: 'Đóng',
+        confirmButtonColor: '#EF4444'
+      });
+      
+      // Clear query params and redirect to checkout
+      setSearchParams({});
+      setTimeout(() => {
+        navigate('/checkout');
+      }, 2000);
+    } else if (paymentStatus === 'expired') {
+      Swal.fire({
+        icon: 'warning',
+        title: '⏰ Phiên thanh toán hết hạn',
+        text: 'Dữ liệu đơn hàng đã hết hạn. Vui lòng đặt hàng lại.',
+        confirmButtonText: 'Về trang thanh toán',
+        confirmButtonColor: '#F59E0B'
+      }).then(() => {
+        navigate('/checkout');
+      });
+      
+      setSearchParams({});
+    }
+  }, [searchParams, setSearchParams, navigate]);
 
   // Fetch review status when order is loaded and completed
   useEffect(() => {

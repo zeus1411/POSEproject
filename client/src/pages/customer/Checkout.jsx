@@ -328,6 +328,7 @@ const VNPayPaymentModal = ({ order, paymentData, onClose, onSuccess, onError }) 
   const [paymentStatus, setPaymentStatus] = useState('pending');
   const [qrCodeUrl, setQrCodeUrl] = useState('');
   const [countdown, setCountdown] = useState(600);
+  const [isRedirecting, setIsRedirecting] = useState(false);
   
   useEffect(() => {
     if (paymentData?.paymentUrl) {
@@ -383,7 +384,12 @@ const VNPayPaymentModal = ({ order, paymentData, onClose, onSuccess, onError }) 
   
   const openVNPayWindow = () => {
     if (paymentData?.paymentUrl) {
-      window.open(paymentData.paymentUrl, 'vnpay', 'width=800,height=600');
+      setIsRedirecting(true);
+      // ✅ Redirect toàn bộ trang thay vì mở popup
+      // VNPay sẽ redirect về đúng localhost sau khi thanh toán xong
+      setTimeout(() => {
+        window.location.href = paymentData.paymentUrl;
+      }, 500);
     }
   };
 
@@ -466,28 +472,38 @@ const VNPayPaymentModal = ({ order, paymentData, onClose, onSuccess, onError }) 
               <div className="space-y-2 sm:space-y-3">
                 <button
                   onClick={openVNPayWindow}
-                  className="w-full px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition font-medium shadow-md text-sm sm:text-base"
+                  disabled={isRedirecting}
+                  className="w-full px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition font-medium shadow-md text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  Mở cổng thanh toán VNPay
+                  {isRedirecting ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                      <span>Đang chuyển hướng...</span>
+                    </>
+                  ) : (
+                    'Thanh toán ngay qua VNPay'
+                  )}
                 </button>
                 
                 <button
                   onClick={handleTestPayment}
-                  className="w-full px-4 sm:px-6 py-2.5 sm:py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium text-sm sm:text-base"
+                  disabled={isRedirecting}
+                  className="w-full px-4 sm:px-6 py-2.5 sm:py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   ✓ Test: Giả lập thanh toán thành công
                 </button>
                 
                 <button
                   onClick={onClose}
-                  className="w-full px-4 sm:px-6 py-2.5 sm:py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium text-sm sm:text-base"
+                  disabled={isRedirecting}
+                  className="w-full px-4 sm:px-6 py-2.5 sm:py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Hủy thanh toán
                 </button>
               </div>
               
               <p className="text-xs text-gray-500 text-center mt-3 sm:mt-4">
-                Lưu ý: Vui lòng không tắt cửa sổ này cho đến khi hoàn tất thanh toán
+                Lưu ý: Bạn sẽ được chuyển đến trang thanh toán VNPay. Sau khi thanh toán xong, bạn sẽ được tự động chuyển về trang đơn hàng.
               </p>
             </>
           )}
