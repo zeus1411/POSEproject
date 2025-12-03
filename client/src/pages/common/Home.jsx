@@ -748,7 +748,7 @@ const Home = () => {
               <p className="text-gray-600 leading-relaxed">
                 Đội ngũ chuyên gia hỗ trợ setup layout và giải đáp mọi thắc mắc về thủy sinh
               </p>
-              <span className="inline-block mt-2 text-xs text-emerald-600 font-semibold bg-emerald-50 px-3 py-1 rounded-full">Coming Soon</span>
+             
             </div>
 
             <div className="text-center animate-on-scroll group">
@@ -764,7 +764,7 @@ const Home = () => {
               <p className="text-gray-600 leading-relaxed">
                 Hướng dẫn chi tiết setup bể từ A-Z, đặc biệt hỗ trợ người mới bắt đầu
               </p>
-              <span className="inline-block mt-2 text-xs text-emerald-600 font-semibold bg-emerald-50 px-3 py-1 rounded-full">Coming Soon</span>
+             
             </div>
           </div>
         </div>
