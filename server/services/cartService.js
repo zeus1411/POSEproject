@@ -204,13 +204,6 @@ class CartService {
     return { cart, summary };
   }
 
-  /**
-   * Update cart item quantity
-   * @param {string} userId - User ID
-   * @param {string} productId - Product ID
-   * @param {Object} updateData - { quantity, variantId }
-   * @returns {Promise<Object>} Updated cart with summary
-   */
   async updateCartItem(userId, productId, updateData) {
     const { quantity, variantId } = updateData;
     
@@ -268,13 +261,6 @@ class CartService {
     return { cart: updatedCart, summary };
   }
 
-  /**
-   * Remove item from cart
-   * @param {string} userId - User ID
-   * @param {string} productId - Product ID
-   * @param {string} variantId - Variant ID (optional)
-   * @returns {Promise<Object>} Updated cart with summary
-   */
   async removeFromCart(userId, productId, variantId = null) {
     const cart = await Cart.findOne({ userId });
     

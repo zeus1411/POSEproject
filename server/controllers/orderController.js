@@ -7,21 +7,16 @@ import Notification from '../models/Notification.js';
 import { StatusCodes } from 'http-status-codes';
 import { BadRequestError, NotFoundError, UnauthorizedError } from '../utils/errorHandler.js';
 import mongoose from 'mongoose';
-import Stripe from 'stripe';
 import { calculateShippingFee } from '../utils/shippingCalculator.js';
 
 import { buildVNPayUrl, verifyVNPayReturn } from '../services/vnpayService.js';
 import { getTempOrder, removeTempOrder } from '../utils/tempOrderStorage.js';
 import orderService from '../services/orderService.js';
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
 // @desc    Tạo đơn hàng mới từ giỏ hàng
 // @route   POST /api/orders
 // @access  Private (User)
 const createOrder = async (req, res) => {
-  // NOTE: Transactions disabled for standalone MongoDB (Docker development)
-  // const session = await mongoose.startSession();
-  // session.startTransaction();
 
   try {
     console.log('=== CREATE ORDER ===');
@@ -586,167 +581,6 @@ const cancelOrder = async (req, res) => {
   }
 };
 
-// @desc    Xử lý thanh toán Stripe
-// @route   POST /api/orders/:id/payment/stripe
-// @access  Private (User)
-const processStripePayment = async (req, res) => {
-  const { id } = req.params;
-  const userId = req.user.userId;
-
-  const order = await Order.findById(id);
-
-  if (!order) {
-    throw new NotFoundError('Không tìm thấy đơn hàng');
-  }
-
-  if (order.userId.toString() !== userId) {
-    throw new UnauthorizedError('Bạn không có quyền thanh toán đơn hàng này');
-  }
-
-  if (order.isPaid) {
-    throw new BadRequestError('Đơn hàng đã được thanh toán');
-  }
-
-  const payment = await Payment.findById(order.paymentId);
-
-  if (!payment || payment.method !== 'STRIPE') {
-    throw new BadRequestError('Phương thức thanh toán không hợp lệ');
-  }
-
-  try {
-    // Tạo Payment Intent với Stripe
-    const paymentIntent = await stripe.paymentIntents.create({
-      amount: Math.round(order.totalPrice * 100), // Stripe tính bằng cents
-      currency: 'vnd',
-      metadata: {
-        orderId: order._id.toString(),
-        orderNumber: order.orderNumber,
-        userId: userId
-      }
-    });
-
-    res.status(StatusCodes.OK).json({
-      success: true,
-      data: {
-        clientSecret: paymentIntent.client_secret,
-        paymentIntentId: paymentIntent.id
-      }
-    });
-
-  } catch (error) {
-    throw new BadRequestError('Không thể tạo thanh toán: ' + error.message);
-  }
-};
-
-// @desc    Xác nhận thanh toán Stripe (webhook)
-// @route   POST /api/orders/payment/stripe/webhook
-// @access  Public (Stripe webhook)
-const stripeWebhook = async (req, res) => {
-  const sig = req.headers['stripe-signature'];
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-
-  let event;
-
-  try {
-    event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
-  } catch (err) {
-    console.log(`⚠️  Webhook signature verification failed.`, err.message);
-    return res.status(400).send(`Webhook Error: ${err.message}`);
-  }
-
-  // Xử lý các event
-  if (event.type === 'payment_intent.succeeded') {
-    const paymentIntent = event.data.object;
-    const orderId = paymentIntent.metadata.orderId;
-
-    const order = await Order.findById(orderId);
-    const payment = await Payment.findById(order.paymentId);
-
-    if (payment) {
-      await payment.markAsCompleted({
-        transactionId: paymentIntent.id,
-        stripeDetails: {
-          paymentIntentId: paymentIntent.id,
-          chargeId: paymentIntent.charges.data[0]?.id
-        }
-      });
-
-      // Tạo thông báo
-      await Notification.createPaymentNotification(
-        order.userId,
-        order._id,
-        'COMPLETED',
-        `Thanh toán cho đơn hàng ${order.orderNumber} thành công`
-      );
-    }
-  } else if (event.type === 'payment_intent.payment_failed') {
-    const paymentIntent = event.data.object;
-    const orderId = paymentIntent.metadata.orderId;
-
-    const order = await Order.findById(orderId);
-    const payment = await Payment.findById(order.paymentId);
-
-    if (payment) {
-      await payment.markAsFailed('Thanh toán thất bại');
-
-      await Notification.createPaymentNotification(
-        order.userId,
-        order._id,
-        'FAILED',
-        `Thanh toán cho đơn hàng ${order.orderNumber} thất bại`
-      );
-    }
-  }
-
-  res.json({ received: true });
-};
-
-// @desc    Tạo URL thanh toán VNPay cho 1 order
-// @route   POST /api/v1/orders/:id/payment/vnpay
-// @access  Private (User)
-const createVNPayPayment = async (req, res) => {
-  const { id } = req.params;           // order id
-  const userId = req.user.userId;
-
-  // 1. Lấy order
-  const order = await Order.findById(id);
-  if (!order) {
-    throw new NotFoundError('Không tìm thấy đơn hàng');
-  }
-  if (order.userId.toString() !== userId) {
-    throw new UnauthorizedError('Bạn không có quyền thanh toán đơn hàng này');
-  }
-  if (order.isPaid) {
-    throw new BadRequestError('Đơn hàng đã được thanh toán');
-  }
-
-  // 2. Lấy payment tương ứng
-  const payment = await Payment.findById(order.paymentId);
-  if (!payment) {
-    throw new BadRequestError('Không tìm thấy thông tin thanh toán');
-  }
-  if (payment.method !== 'VNPAY') {
-    throw new BadRequestError('Phương thức thanh toán không hợp lệ (không phải VNPay)');
-  }
-
-  // 3. Gọi service để build URL thanh toán VNPay đúng chuẩn, có ký hash
-  const vnpayResponse = await buildVNPayUrl({
-    order,
-    payment,
-    ipAddr: req.ip || req.headers['x-forwarded-for'] || '127.0.0.1',
-  });
-
-  // vnpayResponse thường sẽ có dạng { redirectUrl: "...", ... }
-  // tuỳ lib, có thể là string url luôn. Ta chuẩn hoá trả ra client.
-  res.status(StatusCodes.OK).json({
-    success: true,
-    data: {
-      paymentUrl: vnpayResponse, 
-      // nếu vnpayResponse.redirectUrl tồn tại thì có thể trả redirectUrl thay vì cả object
-    }
-  });
-};
-
 // @desc    VNPay redirect về backend sau khi thanh toán
 // @route   GET /api/v1/orders/payment/vnpay/return
 // @access  Public
@@ -1210,7 +1044,7 @@ const simulateVNPayPayment = async (req, res) => {
 // @route   GET /api/orders/admin/all
 // @access  Private (Admin)
 const getAllOrders = async (req, res) => {
-  const { status, page = 1, limit = 20, search } = req.query;
+  const { status, page = 1, limit = 10, search } = req.query;
 
   const query = {};
   if (status) {
@@ -1339,12 +1173,12 @@ const getOrderStatistics = async (req, res) => {
 
   const stats = await Order.getStatistics(start, end);
 
-  // Thống kê theo trạng thái (loại bỏ REFUNDED)
+  // Thống kê theo trạng thái
   const statusStats = await Order.aggregate([
     {
       $match: {
         createdAt: { $gte: start, $lte: end },
-        status: { $ne: 'REFUNDED' } // Loại bỏ REFUNDED
+        status: { $ne: 'REFUNDED' }
       }
     },
     {
@@ -1470,9 +1304,6 @@ export {
   getUserOrders,
   getOrderById,
   cancelOrder,
-  processStripePayment,
-  stripeWebhook,
-  createVNPayPayment,
   vnpayReturn,
   simulateVNPayPayment,
   getAllOrders,

@@ -1,9 +1,6 @@
 import cartService from '../services/cartService.js';
 import { StatusCodes } from 'http-status-codes';
 
-// @desc    Lấy giỏ hàng của user
-// @route   GET /api/v1/cart
-// @access  Private
 export const getCart = async (req, res) => {
   const userId = req.user.userId;
   
@@ -15,9 +12,6 @@ export const getCart = async (req, res) => {
   });
 };
 
-// @desc    Lấy chỉ summary của giỏ hàng (OPTIMIZED - không trả về full items)
-// @route   GET /api/v1/cart/summary
-// @access  Private
 export const getCartSummary = async (req, res) => {
   const userId = req.user.userId;
   
@@ -29,9 +23,6 @@ export const getCartSummary = async (req, res) => {
   });
 };
 
-// @desc    Thêm sản phẩm vào giỏ hàng
-// @route   POST /api/v1/cart/items
-// @access  Private
 export const addToCart = async (req, res) => {
   const userId = req.user.userId;
   const { productId, quantity = 1, variantId } = req.body;
@@ -45,9 +36,6 @@ export const addToCart = async (req, res) => {
   });
 };
 
-// @desc    Cập nhật số lượng sản phẩm trong giỏ hàng (OPTIMIZED)
-// @route   PATCH /api/v1/cart/items/:productId
-// @access  Private
 export const updateCartItem = async (req, res) => {
   const userId = req.user.userId;
   const { productId } = req.params;
@@ -61,9 +49,6 @@ export const updateCartItem = async (req, res) => {
   });
 };
 
-// @desc    Xóa sản phẩm khỏi giỏ hàng
-// @route   DELETE /api/v1/cart/items/:productId
-// @access  Private
 export const removeFromCart = async (req, res) => {
   const userId = req.user.userId;
   const { productId } = req.params;
@@ -78,9 +63,6 @@ export const removeFromCart = async (req, res) => {
   });
 };
 
-// @desc    Xóa toàn bộ giỏ hàng
-// @route   DELETE /api/v1/cart
-// @access  Private
 export const clearCart = async (req, res) => {
   const userId = req.user.userId;
   
@@ -93,9 +75,6 @@ export const clearCart = async (req, res) => {
   });
 };
 
-// @desc    Validate giỏ hàng trước khi checkout
-// @route   POST /api/v1/cart/validate
-// @access  Private
 export const validateCart = async (req, res) => {
   const userId = req.user.userId;
   
