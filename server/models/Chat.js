@@ -195,29 +195,46 @@ chatSchema.methods.addMessage = async function(senderId, senderRole, message) {
 // 🔑 Method to mark messages as read (with multi-admin support)
 chatSchema.methods.markAsRead = async function(role, adminId = null) {
   const now = new Date();
+  const Chat = this.constructor;
   
-  this.messages.forEach(msg => {
+  // ✅ Use atomic update to avoid version conflicts
+  const updateQuery = {
+    $set: {}
+  };
+  
+  // Build atomic update for messages
+  this.messages.forEach((msg, index) => {
     if (role === 'admin' && msg.senderRole === 'user' && !msg.isRead) {
-      msg.isRead = true;
-      msg.readAt = now;
+      updateQuery.$set[`messages.${index}.isRead`] = true;
+      updateQuery.$set[`messages.${index}.readAt`] = now;
       if (adminId && !msg.readBy.includes(adminId)) {
-        msg.readBy.push(adminId);
+        if (!updateQuery.$addToSet) updateQuery.$addToSet = {};
+        updateQuery.$addToSet[`messages.${index}.readBy`] = adminId;
       }
     } else if (role === 'user' && msg.senderRole === 'admin' && !msg.isRead) {
-      msg.isRead = true;
-      msg.readAt = now;
+      updateQuery.$set[`messages.${index}.isRead`] = true;
+      updateQuery.$set[`messages.${index}.readAt`] = now;
     }
   });
   
   // Reset unread count
   if (role === 'admin') {
-    this.unreadCount.admins = 0;
+    updateQuery.$set['unreadCount.admins'] = 0;
   } else {
-    this.unreadCount.customer = 0;
+    updateQuery.$set['unreadCount.customer'] = 0;
   }
   
-  await this.save();
-  return this;
+  // ✅ Atomic update without version check
+  const updatedChat = await Chat.findByIdAndUpdate(
+    this._id,
+    updateQuery,
+    { new: true, runValidators: false }
+  )
+    .populate('customerId', 'username email avatar')
+    .populate('assignedTo', 'username email avatar')
+    .populate('messages.senderId', 'username avatar role');
+  
+  return updatedChat || this;
 };
 
 // 🔑 Static method to get or create chat for customer
