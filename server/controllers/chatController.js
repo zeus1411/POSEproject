@@ -189,48 +189,7 @@ export const unassignChat = async (req, res, next) => {
   }
 };
 
-// @desc    Close chat
-// @route   PUT /api/v1/chat/:chatId/close
-// @access  Private
-export const closeChat = async (req, res, next) => {
-  try {
-    const { chatId } = req.params;
-    const userId = req.user.userId;
-    const role = req.user.role;
-
-    const chat = await chatService.closeChat(chatId, userId, role);
-
-    res.status(StatusCodes.OK).json({
-      success: true,
-      data: chat,
-      message: 'Đã đóng chat'
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// 🔑 @desc    Resolve chat
-// @route   PUT /api/v1/chat/:chatId/resolve
-// @access  Private (Admin)
-export const resolveChat = async (req, res, next) => {
-  try {
-    const { chatId } = req.params;
-    const adminId = req.user.userId;
-
-    const chat = await chatService.resolveChat(chatId, adminId);
-
-    res.status(StatusCodes.OK).json({
-      success: true,
-      data: chat,
-      message: 'Đã đánh dấu chat đã giải quyết'
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// @desc    Get unread count
+// 🔑 @desc    Resolve chatt
 // @route   GET /api/v1/chat/unread-count
 // @access  Private
 export const getUnreadCount = async (req, res, next) => {
@@ -255,18 +214,4 @@ export const getUnreadCount = async (req, res, next) => {
   }
 };
 
-// 🔑 @desc    Get chat statistics
-// @route   GET /api/v1/chat/admin/statistics
-// @access  Private (Admin)
-export const getChatStatistics = async (req, res, next) => {
-  try {
-    const statistics = await chatService.getChatStatistics();
 
-    res.status(StatusCodes.OK).json({
-      success: true,
-      data: statistics
-    });
-  } catch (error) {
-    next(error);
-  }
-};

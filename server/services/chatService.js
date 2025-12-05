@@ -154,41 +154,7 @@ class ChatService {
     return await Chat.unassignChat(chatId);
   }
 
-  // Close chat
-  async closeChat(chatId, userId, role) {
-    const chat = await Chat.findById(chatId);
-    
-    if (!chat) {
-      throw new Error('Chat không tồn tại');
-    }
-
-    // Only admin or chat owner can close
-    const chatCustomerId = chat.customerId || chat.userId;
-    if (role === 'user' && chatCustomerId.toString() !== userId.toString()) {
-      throw new Error('Bạn không có quyền đóng chat này');
-    }
-
-    chat.status = 'CLOSED';
-    await chat.save();
-
-    return chat;
-  }
-
   // 🔑 Resolve chat (mark as resolved but keep visible)
-  async resolveChat(chatId, adminId) {
-    const chat = await Chat.findById(chatId);
-    
-    if (!chat) {
-      throw new Error('Chat không tồn tại');
-    }
-
-    chat.status = 'RESOLVED';
-    await chat.save();
-
-    return chat;
-  }
-
-  // Get unread count for customer
   async getUnreadCount(customerId) {
     const chat = await Chat.findOne({ 
       customerId, 
@@ -212,31 +178,6 @@ class ChatService {
     const totalUnread = chats.reduce((sum, chat) => sum + (chat.unreadCount.admins || 0), 0);
     
     return totalUnread;
-  }
-
-  // 🔑 Get chat statistics
-  async getChatStatistics() {
-    const [
-      totalChats,
-      unassignedChats,
-      assignedChats,
-      resolvedChats,
-      closedChats
-    ] = await Promise.all([
-      Chat.countDocuments(),
-      Chat.countDocuments({ status: 'UNASSIGNED' }),
-      Chat.countDocuments({ status: 'ASSIGNED' }),
-      Chat.countDocuments({ status: 'RESOLVED' }),
-      Chat.countDocuments({ status: 'CLOSED' })
-    ]);
-
-    return {
-      totalChats,
-      unassignedChats,
-      assignedChats,
-      resolvedChats,
-      closedChats
-    };
   }
 }
 

@@ -18,7 +18,7 @@ const router = express.Router();
 router.get('/', getCategories);
 router.get('/tree', getCategoryTree);
 router.get('/root', getRootCategories);
-router.get('/slug/:slug', getCategoryBySlug);
+router.get('/slug/:slug', getCategoryBySlug); //Hiện tại chưa dùng đến
 router.get('/:id', getCategoryById);
 
 // Admin routes

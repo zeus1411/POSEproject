@@ -50,18 +50,6 @@ export const markAllNotificationsAsRead = createAsyncThunk(
   }
 );
 
-export const deleteNotification = createAsyncThunk(
-  'notifications/deleteNotification',
-  async (notificationId, { rejectWithValue }) => {
-    try {
-      await notificationService.deleteNotification(notificationId);
-      return notificationId;
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Không thể xóa thông báo');
-    }
-  }
-);
-
 const notificationSlice = createSlice({
   name: 'notifications',
   initialState: {
@@ -141,17 +129,6 @@ const notificationSlice = createSlice({
           notification.readAt = new Date().toISOString();
         });
         state.unreadCount = 0;
-      })
-
-      // Delete notification
-      .addCase(deleteNotification.fulfilled, (state, action) => {
-        const notificationId = action.payload;
-        const notification = state.notifications.find(n => n._id === notificationId);
-        if (notification && !notification.isRead && state.unreadCount > 0) {
-          state.unreadCount -= 1;
-        }
-        state.notifications = state.notifications.filter(n => n._id !== notificationId);
-        state.pagination.total -= 1;
       });
   }
 });

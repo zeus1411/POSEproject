@@ -23,12 +23,6 @@ export const notificationService = {
   markAllAsRead: async () => {
     const response = await api.patch('/notifications/mark-all-read');
     return response.data;
-  },
-
-  // Xóa thông báo
-  deleteNotification: async (notificationId) => {
-    const response = await api.delete(`/notifications/${notificationId}`);
-    return response.data;
   }
 };
 
