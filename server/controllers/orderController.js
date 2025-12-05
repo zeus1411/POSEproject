@@ -185,211 +185,11 @@ const previewOrder = async (req, res) => {
   const userId = req.user.userId;
   const { promotionCode, promotionCodes } = req.query;
 
-  // Lấy thông tin user
-  const user = await User.findById(userId).select('username email phone defaultAddress');
-  
-  if (!user) {
-    throw new NotFoundError('Không tìm thấy thông tin người dùng');
-  }
-
-  // Lấy giỏ hàng
-  const cart = await Cart.findOne({ userId }).populate({
-    path: 'items.productId',
-    select: 'name price salePrice discount images sku stock status hasVariants variants'
-  });
-
-  if (!cart || cart.items.length === 0) {
-    throw new BadRequestError('Giỏ hàng trống');
-  }
-
-  // Tính toán
-  let subtotal = 0;
-  const items = [];
-
-  for (const item of cart.items) {
-    const product = item.productId;
-    
-    if (!product || product.status !== 'ACTIVE') {
-      continue;
-    }
-
-    // ✅ Get correct price: selectedVariant.price > product.salePrice > product.price
-    let itemPrice = product.salePrice || product.price;
-    
-    // Check if item has selectedVariant with price
-    if (item.selectedVariant && item.selectedVariant.price) {
-      itemPrice = item.selectedVariant.price;
-    } else if (product.hasVariants && item.variantId) {
-      // Find variant by variantId if not already in selectedVariant
-      const variant = product.variants?.find(v => v._id.toString() === item.variantId.toString());
-      if (variant && variant.price) {
-        itemPrice = variant.price;
-      }
-    }
-    
-    const itemDiscount = product.discount || 0;
-    const itemSubtotal = itemPrice * item.quantity * (1 - itemDiscount / 100);
-
-    const firstImage = Array.isArray(product.images) && product.images.length > 0
-      ? (typeof product.images[0] === 'string' ? product.images[0] : (product.images[0].url || ''))
-      : '';
-
-    items.push({
-      productId: product._id,
-      productName: product.name,
-      productImage: firstImage,
-      sku: product.sku,
-      quantity: item.quantity,
-      price: itemPrice,
-      discount: itemDiscount,
-      subtotal: itemSubtotal,
-      stock: product.stock
-    });
-
-    subtotal += itemSubtotal;
-  }
-
-  let shippingFee = calculateShippingFee(subtotal); // Bậc thang: 14%, 8%, 5%, 3%, 1.8%
-
-  // Xử lý mã giảm giá
-  let discount = 0;
-  let promotionDetails = null;
-  let appliedPromotions = [];
-
-  // Handle multiple promotion codes (priority over single code)
-  if (promotionCodes) {
-    try {
-      const codes = typeof promotionCodes === 'string' ? promotionCodes.split(',') : promotionCodes;
-      const Promotion = mongoose.model('Promotion');
-      
-      let freeShippingCount = 0;
-      let discountCount = 0;
-      
-      for (const code of codes) {
-        const promotion = await Promotion.findOne({ 
-          code: code.trim().toUpperCase(),
-          isActive: true,
-          startDate: { $lte: new Date() },
-          endDate: { $gte: new Date() }
-        });
-
-        if (promotion) {
-          const minOrderValue = promotion.conditions?.minOrderValue || 0;
-          const maxDiscount = promotion.conditions?.maxDiscount || null;
-          
-          if (subtotal >= minOrderValue) {
-            let promotionDiscount = 0;
-            
-            if (promotion.discountType === 'PERCENTAGE') {
-              promotionDiscount = Math.min(
-                (subtotal * promotion.discountValue) / 100,
-                maxDiscount || Infinity
-              );
-              discountCount++;
-            } else if (promotion.discountType === 'FIXED_AMOUNT') {
-              promotionDiscount = promotion.discountValue;
-              discountCount++;
-            } else if (promotion.discountType === 'FREE_SHIPPING') {
-              // Apply maxDiscount for FREE_SHIPPING if set
-              promotionDiscount = Math.min(shippingFee, maxDiscount || Infinity);
-              freeShippingCount++;
-            }
-            
-            discount += promotionDiscount;
-            appliedPromotions.push({
-              code: promotion.code,
-              description: promotion.description,
-              discountType: promotion.discountType,
-              discountValue: promotion.discountValue,
-              discountAmount: promotionDiscount
-            });
-          }
-        }
-      }
-      
-      // Check validation
-      if (freeShippingCount > 1) {
-        throw new Error('Chỉ có thể sử dụng một mã miễn phí vận chuyển');
-      }
-      if (discountCount > 1) {
-        throw new Error('Chỉ có thể sử dụng một mã giảm giá');
-      }
-      
-      promotionDetails = {
-        promotions: appliedPromotions,
-        totalDiscount: discount,
-        freeShippingApplied: freeShippingCount > 0
-      };
-    } catch (error) {
-      promotionDetails = {
-        error: error.message
-      };
-      discount = 0;
-    }
-  } else if (promotionCode) {
-    // Single promotion code (backward compatibility)
-    const Promotion = mongoose.model('Promotion');
-    const promotion = await Promotion.findOne({ 
-      code: promotionCode,
-      isActive: true,
-      startDate: { $lte: new Date() },
-      endDate: { $gte: new Date() }
-    });
-
-    if (promotion) {
-      const minOrderValue = promotion.conditions?.minOrderValue || 0;
-      const maxDiscount = promotion.conditions?.maxDiscount || null;
-      
-      if (subtotal >= minOrderValue) {
-        if (promotion.discountType === 'PERCENTAGE') {
-          discount = Math.min(
-            (subtotal * promotion.discountValue) / 100,
-            maxDiscount || Infinity
-          );
-        } else if (promotion.discountType === 'FIXED_AMOUNT') {
-          discount = promotion.discountValue;
-        } else if (promotion.discountType === 'FREE_SHIPPING') {
-          // For FREE_SHIPPING, apply maxDiscount if set
-          discount = Math.min(shippingFee, maxDiscount || Infinity);
-        }
-        
-        promotionDetails = {
-          code: promotion.code,
-          description: promotion.description,
-          discountValue: promotion.discountValue,
-          discountType: promotion.discountType,
-          discountAmount: discount
-        };
-      } else {
-        promotionDetails = {
-          error: `Đơn hàng tối thiểu ${minOrderValue.toLocaleString('vi-VN')}₫ để áp dụng mã`
-        };
-      }
-    } else {
-      promotionDetails = {
-        error: 'Mã giảm giá không hợp lệ hoặc đã hết hạn'
-      };
-    }
-  }
-
-  const totalPrice = subtotal + shippingFee - discount;
+  const result = await orderService.getOrderPreview(userId, promotionCode, promotionCodes);
 
   res.status(StatusCodes.OK).json({
     success: true,
-    data: {
-      user: {
-        username: user.username,
-        email: user.email,
-        phone: user.phone,
-        defaultAddress: user.defaultAddress
-      },
-      items,
-      subtotal,
-      shippingFee,
-      discount,
-      totalPrice,
-      promotion: promotionDetails
-    }
+    data: result
   });
 };
 
@@ -400,31 +200,11 @@ const getUserOrders = async (req, res) => {
   const userId = req.user.userId;
   const { status, page = 1, limit = 10 } = req.query;
 
-  const query = { userId };
-  if (status) {
-    query.status = status;
-  }
-
-  const orders = await Order.find(query)
-    .sort('-createdAt')
-    .limit(parseInt(limit))
-    .skip((parseInt(page) - 1) * parseInt(limit))
-    .populate('items.productId', 'name images')
-    .populate('paymentId', 'method status');
-
-  const total = await Order.countDocuments(query);
+  const result = await orderService.getUserOrders(userId, { status, page, limit });
 
   res.status(StatusCodes.OK).json({
     success: true,
-    data: {
-      orders,
-      pagination: {
-        page: parseInt(page),
-        limit: parseInt(limit),
-        total,
-        pages: Math.ceil(total / parseInt(limit))
-      }
-    }
+    data: result
   });
 };
 
@@ -436,19 +216,7 @@ const getOrderById = async (req, res) => {
   const userId = req.user.userId;
   const userRole = req.user.role;
 
-  const order = await Order.findById(id)
-    .populate('items.productId', 'name images sku')
-    .populate('paymentId')
-    .populate('userId', 'username email phone');
-
-  if (!order) {
-    throw new NotFoundError('Không tìm thấy đơn hàng');
-  }
-
-  // Check ownership
-  if (userRole !== 'admin' && order.userId._id.toString() !== userId) {
-    throw new UnauthorizedError('Bạn không có quyền xem đơn hàng này');
-  }
+  const order = await orderService.getOrderById(id, userId, userRole);
 
   res.status(StatusCodes.OK).json({
     success: true,
@@ -460,100 +228,12 @@ const getOrderById = async (req, res) => {
 // @route   PATCH /api/orders/:id/cancel
 // @access  Private (User)
 const cancelOrder = async (req, res) => {
-  // NOTE: Transactions disabled for standalone MongoDB (Docker development)
-  // const session = await mongoose.startSession();
-  // session.startTransaction();
-  
   try {
     const { id } = req.params;
     const reason = req.body?.reason || 'Không có lý do';
     const userId = req.user.userId;
 
-    console.time('cancelOrder:findOrder');
-    const order = await Order.findById(id)
-      .select('status userId items paymentId')
-      // .session(session) // Disabled for standalone MongoDB
-      .lean();
-    console.timeEnd('cancelOrder:findOrder');
-
-    if (!order) {
-      throw new NotFoundError('Không tìm thấy đơn hàng');
-    }
-
-    // Check ownership
-    if (order.userId.toString() !== userId) {
-      throw new UnauthorizedError('Bạn không có quyền hủy đơn hàng này');
-    }
-
-    // Check cancellable status
-    const cancellableStatuses = ['PENDING', 'CONFIRMED', 'FAILED']; // ✅ Bỏ PROCESSING
-    if (!cancellableStatuses.includes(order.status)) {
-      throw new BadRequestError(
-        `Không thể hủy đơn hàng ở trạng thái "${order.status}". Chỉ có thể hủy đơn hàng ở trạng thái: ${cancellableStatuses.join(', ')}`
-      );
-    }
-
-    // Update order status first to prevent race conditions
-    console.time('cancelOrder:updateOrder');
-    const updatedOrder = await Order.findByIdAndUpdate(
-      id,
-      {
-        $set: {
-          status: 'CANCELLED',
-          cancelReason: reason,
-          cancelledAt: new Date(),
-          cancelledBy: userId
-        }
-      },
-      { new: true } // session disabled for standalone MongoDB
-    ).lean();
-    console.timeEnd('cancelOrder:updateOrder');
-
-    // Update product stocks in parallel
-    console.time('cancelOrder:updateProducts');
-    const productUpdates = order.items.map(item => 
-      Product.updateOne(
-        { _id: item.productId },
-        { 
-          $inc: { 
-            stock: item.quantity,
-            soldCount: -item.quantity 
-          } 
-        }
-        // { session } // Disabled for standalone MongoDB
-      )
-    );
-    await Promise.all(productUpdates);
-    
-    // ✅ Invalidate product cache after restoring stock
-    const cacheService = (await import('../services/cacheService.js')).default;
-    await Promise.all(order.items.map(item => cacheService.invalidateProduct(item.productId)));
-    
-    console.timeEnd('cancelOrder:updateProducts');
-
-    // Update payment status if exists
-    if (order.paymentId) {
-      console.time('cancelOrder:updatePayment');
-      await Payment.updateOne(
-        { _id: order.paymentId, status: { $ne: 'COMPLETED' } },
-        { $set: { status: 'CANCELLED' } }
-        // { session } // Disabled for standalone MongoDB
-      );
-      console.timeEnd('cancelOrder:updatePayment');
-    }
-
-    // Commit transaction
-    // await session.commitTransaction(); // Disabled for standalone MongoDB
-    console.log('✅ Transaction committed successfully');
-
-    // Get updated order with populated fields
-    console.time('cancelOrder:fetchUpdatedOrder');
-    const populatedOrder = await Order.findById(id)
-      .populate('items.productId', 'name price images')
-      .populate('userId', 'fullName email phoneNumber')
-      .populate('paymentId', 'method status')
-      .lean();
-    console.timeEnd('cancelOrder:fetchUpdatedOrder');
+    const populatedOrder = await orderService.cancelOrder(id, userId, reason);
 
     res.status(StatusCodes.OK).json({
       success: true,
@@ -562,7 +242,6 @@ const cancelOrder = async (req, res) => {
     });
 
   } catch (error) {
-    // await session.abortTransaction(); // Disabled for standalone MongoDB
     console.error('❌ Error in cancelOrder:', error.message);
     
     const statusCode = error.statusCode || 
@@ -576,8 +255,6 @@ const cancelOrder = async (req, res) => {
       message: error.message || 'Có lỗi xảy ra khi hủy đơn hàng',
       error: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
-  } finally {
-    // session.endSession(); // Disabled for standalone MongoDB
   }
 };
 

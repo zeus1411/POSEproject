@@ -444,11 +444,11 @@ class OrderService {
   /**
    * Get order preview (before placing order)
    * @param {string} userId - User ID
-   * @param {string} promotionCode - Optional promotion code
+   * @param {string|Array} promotionCode - Optional promotion code(s)
+   * @param {Array} promotionCodes - Optional array of promotion codes
    * @returns {Promise<Object>} Order preview data
    */
-  async getOrderPreview(userId, promotionCode) {
-    // Implementation similar to previewOrder in controller
+  async getOrderPreview(userId, promotionCode, promotionCodes) {
     const user = await User.findById(userId).select('username email phone defaultAddress');
     
     if (!user) {
@@ -513,8 +513,80 @@ class OrderService {
     const shippingFee = calculateShippingFee(subtotal); // Bậc thang: 14%, 8%, 5%, 3%, 1.8%
     let discount = 0;
     let promotionDetails = null;
+    let appliedPromotions = [];
 
-    if (promotionCode) {
+    // Handle multiple promotion codes (priority over single code)
+    if (promotionCodes) {
+      try {
+        const codes = typeof promotionCodes === 'string' ? promotionCodes.split(',') : promotionCodes;
+        const Promotion = mongoose.model('Promotion');
+        
+        let freeShippingCount = 0;
+        let discountCount = 0;
+        
+        for (const code of codes) {
+          const promotion = await Promotion.findOne({ 
+            code: code.trim().toUpperCase(),
+            isActive: true,
+            startDate: { $lte: new Date() },
+            endDate: { $gte: new Date() }
+          });
+
+          if (promotion) {
+            const minOrderValue = promotion.conditions?.minOrderValue || 0;
+            const maxDiscount = promotion.conditions?.maxDiscount || null;
+            
+            if (subtotal >= minOrderValue) {
+              let promotionDiscount = 0;
+              
+              if (promotion.discountType === 'PERCENTAGE') {
+                promotionDiscount = Math.min(
+                  (subtotal * promotion.discountValue) / 100,
+                  maxDiscount || Infinity
+                );
+                discountCount++;
+              } else if (promotion.discountType === 'FIXED_AMOUNT') {
+                promotionDiscount = promotion.discountValue;
+                discountCount++;
+              } else if (promotion.discountType === 'FREE_SHIPPING') {
+                // Apply maxDiscount for FREE_SHIPPING if set
+                promotionDiscount = Math.min(shippingFee, maxDiscount || Infinity);
+                freeShippingCount++;
+              }
+              
+              discount += promotionDiscount;
+              appliedPromotions.push({
+                code: promotion.code,
+                description: promotion.description,
+                discountType: promotion.discountType,
+                discountValue: promotion.discountValue,
+                discountAmount: promotionDiscount
+              });
+            }
+          }
+        }
+        
+        // Check validation
+        if (freeShippingCount > 1) {
+          throw new Error('Chỉ có thể sử dụng một mã miễn phí vận chuyển');
+        }
+        if (discountCount > 1) {
+          throw new Error('Chỉ có thể sử dụng một mã giảm giá');
+        }
+        
+        promotionDetails = {
+          promotions: appliedPromotions,
+          totalDiscount: discount,
+          freeShippingApplied: freeShippingCount > 0
+        };
+      } catch (error) {
+        promotionDetails = {
+          error: error.message
+        };
+        discount = 0;
+      }
+    } else if (promotionCode) {
+      // Single promotion code (backward compatibility)
       const Promotion = mongoose.model('Promotion');
       const promotion = await Promotion.findOne({ 
         code: promotionCode,
@@ -586,12 +658,6 @@ class OrderService {
   async getUserOrders(userId, filters) {
     const { status, page = 1, limit = 10 } = filters;
 
-    // Thử lấy từ cache
-    const cachedOrders = await cacheService.getUserOrders(userId, filters);
-    if (cachedOrders) {
-      return cachedOrders;
-    }
-
     const query = { userId };
     if (status) {
       query.status = status;
@@ -606,7 +672,7 @@ class OrderService {
 
     const total = await Order.countDocuments(query);
 
-    const result = {
+    return {
       orders,
       pagination: {
         page: parseInt(page),
@@ -615,11 +681,6 @@ class OrderService {
         pages: Math.ceil(total / parseInt(limit))
       }
     };
-
-    // Lưu vào cache (TTL 2 phút)
-    await cacheService.setUserOrders(userId, filters, result, 120);
-
-    return result;
   }
 
   /**
@@ -630,16 +691,6 @@ class OrderService {
    * @returns {Promise<Object>} Order object
    */
   async getOrderById(orderId, userId, userRole) {
-    // Thử lấy từ cache
-    const cachedOrder = await cacheService.getOrder(orderId);
-    if (cachedOrder) {
-      // Vẫn phải kiểm tra quyền
-      if (userRole !== 'admin' && cachedOrder.userId._id.toString() !== userId) {
-        throw new UnauthorizedError('Bạn không có quyền xem đơn hàng này');
-      }
-      return cachedOrder;
-    }
-
     const order = await Order.findById(orderId)
       .populate('items.productId', 'name images sku')
       .populate('paymentId')
@@ -649,12 +700,10 @@ class OrderService {
       throw new NotFoundError('Không tìm thấy đơn hàng');
     }
 
+    // Check ownership
     if (userRole !== 'admin' && order.userId._id.toString() !== userId) {
       throw new UnauthorizedError('Bạn không có quyền xem đơn hàng này');
     }
-
-    // Lưu vào cache (TTL 3 phút)
-    await cacheService.setOrder(orderId, order, 180);
 
     return order;
   }
@@ -672,27 +721,32 @@ class OrderService {
     // session.startTransaction();
     
     try {
+      console.time('cancelOrder:findOrder');
       const order = await Order.findById(orderId)
         .select('status userId items paymentId')
         // .session(session) // Disabled for standalone MongoDB
         .lean();
+      console.timeEnd('cancelOrder:findOrder');
 
       if (!order) {
         throw new NotFoundError('Không tìm thấy đơn hàng');
       }
 
+      // Check ownership
       if (order.userId.toString() !== userId) {
         throw new UnauthorizedError('Bạn không có quyền hủy đơn hàng này');
       }
 
-      const cancellableStatuses = ['PENDING', 'CONFIRMED', 'FAILED'];
+      // Check cancellable status
+      const cancellableStatuses = ['PENDING', 'CONFIRMED', 'FAILED']; // ✅ Bỏ PROCESSING
       if (!cancellableStatuses.includes(order.status)) {
         throw new BadRequestError(
           `Không thể hủy đơn hàng ở trạng thái "${order.status}". Chỉ có thể hủy đơn hàng ở trạng thái: ${cancellableStatuses.join(', ')}`
         );
       }
 
-      // Update order status
+      // Update order status first to prevent race conditions
+      console.time('cancelOrder:updateOrder');
       const updatedOrder = await Order.findByIdAndUpdate(
         orderId,
         {
@@ -705,8 +759,10 @@ class OrderService {
         },
         { new: true } // session disabled for standalone MongoDB
       ).lean();
+      console.timeEnd('cancelOrder:updateOrder');
 
-      // Restore product stocks
+      // Update product stocks in parallel
+      console.time('cancelOrder:updateProducts');
       const productUpdates = order.items.map(item => 
         Product.updateOne(
           { _id: item.productId },
@@ -720,26 +776,35 @@ class OrderService {
         )
       );
       await Promise.all(productUpdates);
+      
+      // ✅ Invalidate product cache after restoring stock
+      await Promise.all(order.items.map(item => cacheService.invalidateProduct(item.productId)));
+      
+      console.timeEnd('cancelOrder:updateProducts');
 
       // Update payment status if exists
       if (order.paymentId) {
+        console.time('cancelOrder:updatePayment');
         await Payment.updateOne(
           { _id: order.paymentId, status: { $ne: 'COMPLETED' } },
           { $set: { status: 'CANCELLED' } }
           // { session } // Disabled for standalone MongoDB
         );
+        console.timeEnd('cancelOrder:updatePayment');
       }
 
+      // Commit transaction
       // await session.commitTransaction(); // Disabled for standalone MongoDB
+      console.log('✅ Transaction committed successfully');
 
-      // Xóa cache order
-      await cacheService.invalidateOrder(orderId);
-
+      // Get updated order with populated fields
+      console.time('cancelOrder:fetchUpdatedOrder');
       const populatedOrder = await Order.findById(orderId)
         .populate('items.productId', 'name price images')
         .populate('userId', 'fullName email phoneNumber')
         .populate('paymentId', 'method status')
         .lean();
+      console.timeEnd('cancelOrder:fetchUpdatedOrder');
 
       return populatedOrder;
 
