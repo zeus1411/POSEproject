@@ -816,8 +816,583 @@ class OrderService {
     }
   }
 
-  // Additional admin methods can be added here
-  // getAllOrders, updateOrderStatus, getOrderStatistics, etc.
+  /**
+   * Process VNPay return callback
+   * @param {Object} vnpParams - VNPay return parameters
+   * @returns {Promise<Object>} Result with redirect URL
+   */
+  async processVNPayReturn(vnpParams) {
+    const { verifyVNPayReturn } = await import('./vnpayService.js');
+    const { getTempOrder, removeTempOrder } = await import('../utils/tempOrderStorage.js');
+    
+    // 1. Xác thực chữ ký VNPay trả về
+    const verifyResult = verifyVNPayReturn(vnpParams);
+    const isValid = verifyResult?.isVerified !== false;
+
+    // 2. Kiểm tra mã phản hồi
+    if (isValid && vnpParams.vnp_ResponseCode === '00') {
+      const txnRef = vnpParams.vnp_TxnRef;
+
+      console.log('🟢 VNPay Success: Processing payment for transaction:', txnRef);
+
+      // Get temporary order data
+      const tempOrder = getTempOrder(txnRef);
+      
+      if (!tempOrder) {
+        console.log('❌ Temp order not found or expired:', txnRef);
+        return { 
+          success: false, 
+          redirectUrl: `${process.env.CLIENT_URL}/checkout?payment=expired` 
+        };
+      }
+
+      try {
+        // ==================== CREATE ACTUAL ORDER ====================
+        console.log('📦 Creating actual order from temp data...');
+
+        // Check stock availability again before creating order
+        const cart = await Cart.findOne({ userId: tempOrder.userId }).populate('items.productId');
+        
+        if (!cart || cart.items.length === 0) {
+          throw new Error('Giỏ hàng đã bị thay đổi hoặc trống');
+        }
+
+        // Validate stock again
+        for (const item of cart.items) {
+          const product = item.productId;
+          
+          if (!product) continue;
+          
+          let availableStock = product.stock;
+          if (product.hasVariants && item.variantId) {
+            const variant = product.variants.find(v => v._id.toString() === item.variantId);
+            if (variant) {
+              availableStock = variant.stock;
+            }
+          }
+
+          if (availableStock < item.quantity) {
+            throw new Error(`Sản phẩm "${product.name}" chỉ còn ${availableStock} sản phẩm`);
+          }
+        }
+
+        // Create order
+        console.log('💾 Creating VNPay order with discount:', tempOrder.discount);
+        const order = await Order.create([{
+          userId: tempOrder.userId,
+          items: tempOrder.items,
+          subtotal: tempOrder.subtotal,
+          shippingFee: tempOrder.shippingFee,
+          discount: tempOrder.discount,
+          tax: tempOrder.tax,
+          totalPrice: tempOrder.totalPrice,
+          status: 'PENDING',
+          shippingAddress: tempOrder.shippingAddress,
+          promotionId: tempOrder.promotionId,
+          promotionCode: tempOrder.promotionCode,
+          notes: tempOrder.notes,
+          isPaid: true,
+          paidAt: new Date()
+        }]);
+
+        console.log('📦 Order created:', order[0].orderNumber);
+        console.log('✅ VNPay Order created with values:', {
+          orderId: order[0]._id,
+          subtotal: order[0].subtotal,
+          discount: order[0].discount,
+          totalPrice: order[0].totalPrice
+        });
+
+        // Create payment record
+        const payment = await Payment.create([{
+          orderId: order[0]._id,
+          userId: tempOrder.userId,
+          method: 'VNPAY',
+          status: 'COMPLETED',
+          amount: tempOrder.totalPrice,
+          currency: 'VND',
+          transactionId: txnRef,
+          processedAt: new Date(),
+          vnpayDetails: {
+            vnp_TxnRef: vnpParams.vnp_TxnRef,
+            vnp_BankCode: vnpParams.vnp_BankCode,
+            vnp_CardType: vnpParams.vnp_CardType,
+            vnp_TransactionNo: vnpParams.vnp_TransactionNo,
+            vnp_PayDate: vnpParams.vnp_PayDate,
+            vnp_ResponseCode: vnpParams.vnp_ResponseCode,
+            vnp_TransactionStatus: vnpParams.vnp_TransactionStatus,
+          }
+        }]);
+
+        order[0].paymentId = payment[0]._id;
+        await order[0].save();
+
+        console.log('💳 Payment record created');
+
+        // ✅ Record promotion usage for VNPay orders
+        if (tempOrder.promotionCode) {
+          console.log('📊 Recording promotion usage for VNPay order...');
+          const Promotion = mongoose.model('Promotion');
+          const codes = tempOrder.promotionCode.split(',');
+          
+          for (const code of codes) {
+            try {
+              const promotion = await Promotion.findOne({ code: code.trim().toUpperCase() });
+              if (promotion) {
+                await promotion.recordUsage(tempOrder.userId);
+                console.log(`✅ Recorded usage for promotion: ${code}`);
+              }
+            } catch (error) {
+              console.error(`❌ Failed to record usage for promotion ${code}:`, error);
+            }
+          }
+        }
+
+        // Deduct stock from products
+        console.log('📉 Deducting stock after VNPay payment...');
+        for (const item of cart.items) {
+          const product = item.productId;
+          
+          if (!product) continue;
+          
+          if (product.hasVariants && item.variantId) {
+            await Product.updateOne(
+              { 
+                _id: product._id,
+                'variants._id': item.variantId
+              },
+              {
+                $inc: { 
+                  'variants.$.stock': -item.quantity,
+                  soldCount: item.quantity 
+                }
+              }
+            );
+          } else {
+            await Product.updateOne(
+              { _id: product._id },
+              {
+                $inc: { 
+                  stock: -item.quantity,
+                  soldCount: item.quantity 
+                }
+              }
+            );
+          }
+          
+          // ✅ Invalidate product cache after stock update
+          await cacheService.invalidateProduct(product._id);
+          
+          console.log(`✅ Stock updated for product: ${product.name}`);
+        }
+
+        // Clear cart
+        await Cart.findOneAndUpdate(
+          { userId: tempOrder.userId },
+          { $set: { items: [] } }
+        );
+        console.log('🛒 Cart cleared after VNPay payment');
+
+        // Remove temp order data
+        removeTempOrder(txnRef);
+        console.log('🗑️ Temp order data cleaned up');
+
+        // Send notifications async
+        setImmediate(async () => {
+          try {
+            // Customer notification
+            await Notification.createPaymentNotification(
+              order[0].userId,
+              order[0]._id,
+              'COMPLETED',
+              `Thanh toán cho đơn hàng ${order[0].orderNumber} thành công`
+            );
+
+            await Notification.createOrderNotification(
+              order[0].userId,
+              order[0]._id,
+              'PENDING',
+              `Đơn hàng ${order[0].orderNumber} đã được xác nhận`
+            );
+
+            // Admin notifications
+            const user = await User.findById(order[0].userId);
+            await Notification.createNewOrderNotificationForAdmins(
+              order[0]._id,
+              order[0].orderNumber,
+              user?.fullName || user?.username || 'Khách hàng',
+              order[0].totalPrice
+            );
+
+            console.log('✅ Notifications sent for VNPay order');
+          } catch (notifError) {
+            console.error('❌ Notification failed:', notifError.message);
+          }
+        });
+        
+        // Redirect về FE: success
+        return {
+          success: true,
+          redirectUrl: `${process.env.CLIENT_URL}/orders/${order[0]._id}?payment=success`
+        };
+
+      } catch (error) {
+        console.error('❌ Error creating order from VNPay payment:', error);
+        
+        // Remove temp order data on error
+        removeTempOrder(txnRef);
+        
+        return {
+          success: false,
+          redirectUrl: `${process.env.CLIENT_URL}/checkout?payment=failed&error=${encodeURIComponent(error.message)}`
+        };
+      }
+    }
+
+    // Trường hợp chữ ký fail hoặc user cancel
+    console.log('❌ VNPay payment failed or cancelled');
+    
+    // Clean up temp order data if exists
+    const { getTempOrder: getTempOrderFn, removeTempOrder: removeTempOrderFn } = await import('../utils/tempOrderStorage.js');
+    const txnRef = vnpParams.vnp_TxnRef;
+    if (txnRef) {
+      const tempOrder = getTempOrderFn(txnRef);
+      if (tempOrder) {
+        removeTempOrderFn(txnRef);
+        console.log('🗑️ Temp order data cleaned up for cancelled payment');
+      }
+    }
+    
+    return {
+      success: false,
+      redirectUrl: `${process.env.CLIENT_URL}/checkout?payment=failed`
+    };
+  }
+
+  /**
+   * Simulate VNPay payment (for testing)
+   * @param {string} transactionId - Transaction ID
+   * @param {string} userId - User ID
+   * @param {string} responseCode - Response code (default '00')
+   * @returns {Promise<Object>} Created order and payment
+   */
+  async simulateVNPayPayment(transactionId, userId, responseCode = '00') {
+    const { getTempOrder, removeTempOrder } = await import('../utils/tempOrderStorage.js');
+    
+    console.log('🧪 Simulating VNPay payment for transaction:', transactionId);
+
+    // Get temporary order data
+    const tempOrder = getTempOrder(transactionId);
+    
+    if (!tempOrder) {
+      throw new NotFoundError('Không tìm thấy dữ liệu đơn hàng tạm thời hoặc đã hết hạn');
+    }
+
+    if (tempOrder.userId.toString() !== userId) {
+      throw new UnauthorizedError('Không có quyền truy cập đơn hàng này');
+    }
+
+    // ==================== CREATE ACTUAL ORDER (SIMULATED) ====================
+    console.log('📦 Creating actual order from simulated VNPay payment...');
+
+    // Check stock availability again before creating order
+    const cart = await Cart.findOne({ userId: tempOrder.userId }).populate('items.productId');
+    
+    if (!cart || cart.items.length === 0) {
+      throw new BadRequestError('Giỏ hàng đã bị thay đổi hoặc trống');
+    }
+
+    // Validate stock again
+    for (const item of cart.items) {
+      const product = item.productId;
+      
+      if (!product) continue;
+      
+      let availableStock = product.stock;
+      if (product.hasVariants && item.variantId) {
+        const variant = product.variants.find(v => v._id.toString() === item.variantId);
+        if (variant) {
+          availableStock = variant.stock;
+        }
+      }
+
+      if (availableStock < item.quantity) {
+        throw new BadRequestError(`Sản phẩm "${product.name}" chỉ còn ${availableStock} sản phẩm`);
+      }
+    }
+
+    // Create order
+    const order = await Order.create([{
+      userId: tempOrder.userId,
+      items: tempOrder.items,
+      subtotal: tempOrder.subtotal,
+      shippingFee: tempOrder.shippingFee,
+      discount: tempOrder.discount,
+      tax: tempOrder.tax,
+      totalPrice: tempOrder.totalPrice,
+      status: 'PENDING',
+      shippingAddress: tempOrder.shippingAddress,
+      promotionId: tempOrder.promotionId,
+      promotionCode: tempOrder.promotionCode,
+      notes: tempOrder.notes,
+      isPaid: true,
+      paidAt: new Date()
+    }]);
+
+    console.log('📦 Order created (simulated):', order[0].orderNumber);
+
+    // Create payment record
+    const payment = await Payment.create([{
+      orderId: order[0]._id,
+      userId: tempOrder.userId,
+      method: 'VNPAY',
+      status: 'COMPLETED',
+      amount: tempOrder.totalPrice,
+      currency: 'VND',
+      transactionId: transactionId,
+      processedAt: new Date(),
+      vnpayDetails: {
+        vnp_TxnRef: transactionId,
+        vnp_TransactionNo: `${Date.now()}`,
+        vnp_ResponseCode: responseCode,
+        vnp_PayDate: new Date().toISOString(),
+        isSimulated: true
+      }
+    }]);
+
+    order[0].paymentId = payment[0]._id;
+    await order[0].save();
+
+    console.log('💳 Payment record created (simulated)');
+
+    // ✅ Record promotion usage for simulated VNPay orders
+    if (tempOrder.promotionCode) {
+      console.log('📊 Recording promotion usage for simulated VNPay order...');
+      const Promotion = mongoose.model('Promotion');
+      const codes = tempOrder.promotionCode.split(',');
+      
+      for (const code of codes) {
+        try {
+          const promotion = await Promotion.findOne({ code: code.trim().toUpperCase() });
+          if (promotion) {
+            await promotion.recordUsage(tempOrder.userId);
+            console.log(`✅ Recorded usage for promotion: ${code}`);
+          }
+        } catch (error) {
+          console.error(`❌ Failed to record usage for promotion ${code}:`, error);
+        }
+      }
+    }
+
+    // Deduct stock from products
+    console.log('📉 Deducting stock after simulated VNPay payment...');
+    for (const item of cart.items) {
+      const product = item.productId;
+      
+      if (!product) continue;
+      
+      if (product.hasVariants && item.variantId) {
+        await Product.updateOne(
+          { 
+            _id: product._id,
+            'variants._id': item.variantId
+          },
+          {
+            $inc: { 
+              'variants.$.stock': -item.quantity,
+              soldCount: item.quantity 
+            }
+          }
+        );
+      } else {
+        await Product.updateOne(
+          { _id: product._id },
+          {
+            $inc: { 
+              stock: -item.quantity,
+              soldCount: item.quantity 
+            }
+          }
+        );
+      }
+      
+      // ✅ Invalidate product cache after stock update
+      await cacheService.invalidateProduct(product._id);
+      
+      console.log(`✅ Stock updated for product: ${product.name}`);
+    }
+
+    // Clear cart
+    await Cart.findOneAndUpdate(
+      { userId: tempOrder.userId },
+      { $set: { items: [] } }
+    );
+    console.log('🛒 Cart cleared after simulated VNPay payment');
+
+    // Remove temp order data
+    removeTempOrder(transactionId);
+    console.log('🗑️ Temp order data cleaned up');
+
+    console.log('✅ Payment simulated successfully:', payment[0]._id);
+
+    // Send notifications async
+    setImmediate(async () => {
+      try {
+        // Customer notification
+        await Notification.createPaymentNotification(
+          order[0].userId,
+          order[0]._id,
+          'COMPLETED',
+          `Thanh toán cho đơn hàng ${order[0].orderNumber} thành công (mô phỏng)`
+        );
+
+        await Notification.createOrderNotification(
+          order[0].userId,
+          order[0]._id,
+          'PENDING',
+          `Đơn hàng ${order[0].orderNumber} đã được xác nhận`
+        );
+
+        // Admin notifications
+        const user = await User.findById(order[0].userId);
+        await Notification.createNewOrderNotificationForAdmins(
+          order[0]._id,
+          order[0].orderNumber,
+          user?.fullName || user?.username || 'Khách hàng',
+          order[0].totalPrice
+        );
+
+        console.log('✅ Notifications sent for simulated VNPay order');
+      } catch (notifError) {
+        console.error('❌ Notification failed:', notifError.message);
+      }
+    });
+
+    return {
+      payment: payment[0],
+      order: order[0]
+    };
+  }
+
+  /**
+   * Get all orders (Admin)
+   * @param {Object} filters - { status, page, limit, search }
+   * @returns {Promise<Object>} Orders with pagination
+   */
+  async getAllOrders(filters) {
+    const { status, page = 1, limit = 10, search } = filters;
+
+    const query = {};
+    if (status) {
+      query.status = status;
+    }
+    if (search) {
+      query.$or = [
+        { orderNumber: { $regex: search, $options: 'i' } },
+        { 'shippingAddress.phone': { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    const orders = await Order.find(query)
+      .sort('-createdAt')
+      .limit(parseInt(limit))
+      .skip((parseInt(page) - 1) * parseInt(limit))
+      .populate('userId', 'username email phone')
+      .populate('paymentId', 'method status');
+
+    const total = await Order.countDocuments(query);
+
+    return {
+      orders,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / parseInt(limit))
+      }
+    };
+  }
+
+  /**
+   * Update order status (Admin)
+   * @param {string} orderId - Order ID
+   * @param {Object} updateData - { status, note, trackingNumber, shippingProvider }
+   * @param {string} adminId - Admin user ID
+   * @returns {Promise<Object>} Updated order
+   */
+  async updateOrderStatus(orderId, updateData, adminId) {
+    const { status, note, trackingNumber, shippingProvider } = updateData;
+
+    const order = await Order.findById(orderId);
+
+    if (!order) {
+      throw new NotFoundError('Không tìm thấy đơn hàng');
+    }
+
+    // ✅ Validate status transition - Updated logic (bỏ PROCESSING, REFUNDED)
+    const validTransitions = {
+      'PENDING': ['CONFIRMED', 'CANCELLED'],
+      'CONFIRMED': ['SHIPPING', 'CANCELLED'], // ✅ Từ Đã xác nhận → Đang giao (bỏ PROCESSING)
+      'SHIPPING': ['COMPLETED', 'CANCELLED'],
+      'COMPLETED': [], // ✅ Hoàn thành là trạng thái cuối (bỏ REFUNDED)
+      'CANCELLED': [],
+      'FAILED': []
+    };
+
+    if (!validTransitions[order.status].includes(status)) {
+      throw new BadRequestError(
+        `Không thể chuyển từ trạng thái ${order.status} sang ${status}`
+      );
+    }
+
+    // Cập nhật order
+    await order.updateStatus(status, note, adminId);
+
+    if (trackingNumber) {
+      order.trackingNumber = trackingNumber;
+    }
+    if (shippingProvider) {
+      order.shippingProvider = shippingProvider;
+    }
+
+    await order.save();
+
+    // Tạo thông báo thân thiện cho user
+    const notificationMessages = {
+      'CONFIRMED': `🎉 Đơn hàng ${order.orderNumber} đã được xác nhận! Chúng tôi đang chuẩn bị hàng cho bạn.`,
+      'SHIPPING': `📦 Đơn hàng ${order.orderNumber} đang trên đường giao đến bạn!${trackingNumber ? ` Mã vận đơn: ${trackingNumber}` : ''}`,
+      'COMPLETED': `✅ Đơn hàng ${order.orderNumber} đã được giao thành công! Đừng quên chia sẻ trải nghiệm của bạn bằng cách đánh giá sản phẩm nhé! 🌟`,
+      'CANCELLED': `❌ Đơn hàng ${order.orderNumber} đã bị hủy.${note ? ` Lý do: ${note}` : ''}`
+    };
+
+    const notificationMessage = notificationMessages[status] || note || `Đơn hàng ${order.orderNumber} đã được cập nhật`;
+
+    // Tạo thông báo cho user
+    await Notification.createOrderNotification(
+      order.userId,
+      order._id,
+      status,
+      notificationMessage
+    );
+
+    // Lấy lại order với thông tin customer đầy đủ
+    const updatedOrder = await Order.findById(orderId)
+      .populate('userId', 'fullName email phone')
+      .lean();
+
+    // Đổi tên trường userId thành customer để phù hợp với frontend
+    if (updatedOrder) {
+      updatedOrder.customer = {
+        _id: updatedOrder.userId._id,
+        fullName: updatedOrder.userId.fullName,
+        email: updatedOrder.userId.email,
+        phone: updatedOrder.userId.phone
+      };
+      delete updatedOrder.userId;
+    }
+
+    return updatedOrder || order;
+  }
 }
 
 // Export singleton instance
