@@ -5,6 +5,50 @@ import {
     attachCookiesToResponse,
 } from '../middlewares/auth.js';
 
+// ==================== REGISTRATION WITH OTP ====================
+
+// @desc    Send OTP to email for registration
+// @route   POST /api/v1/auth/register/send-otp
+// @access  Public
+const sendRegistrationOTP = async (req, res) => {
+    const { email, username, password } = req.body;
+    
+    const result = await authService.sendRegistrationOTP({ email, username, password });
+
+    res.status(StatusCodes.OK).json(result);
+};
+
+// @desc    Resend OTP for registration
+// @route   POST /api/v1/auth/register/resend-otp
+// @access  Public
+const resendRegistrationOTP = async (req, res) => {
+    const { email } = req.body;
+    
+    const result = await authService.resendRegistrationOTP(email);
+
+    res.status(StatusCodes.OK).json(result);
+};
+
+// @desc    Verify OTP and complete registration
+// @route   POST /api/v1/auth/register/verify-otp
+// @access  Public
+const verifyRegistrationOTP = async (req, res) => {
+    const { email, otp } = req.body;
+
+    const user = await authService.verifyRegistrationOTP({ email, otp });
+    
+    const { token, tokenUser } = attachCookiesToResponse(res, user);
+    
+    res.status(StatusCodes.CREATED).json({ 
+        success: true,
+        user: tokenUser,
+        token,
+        message: 'Đăng ký thành công! Chào mừng bạn đến với AquaticStore'
+    });
+};
+
+// ==================== OLD REGISTRATION (for backward compatibility) ====================
+
 const register = async (req, res) => {
     const { email, password, username } = req.body;
 
@@ -103,5 +147,9 @@ export {
     getCurrentUser,
     sendOTP,
     resendOTP,
-    verifyOTPAndResetPassword as resetPassword
+    verifyOTPAndResetPassword as resetPassword,
+    // Registration OTP
+    sendRegistrationOTP,
+    resendRegistrationOTP,
+    verifyRegistrationOTP
 };
