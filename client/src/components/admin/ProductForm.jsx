@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X, Upload } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import ProductVariantsManager from './ProductVariantsManager';
+import RichTextEditor from './RichTextEditor';
 
 const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => {
   const [formData, setFormData] = useState({
@@ -86,7 +87,14 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
 
     if (!formData.name.trim()) newErrors.name = 'Tên sản phẩm là bắt buộc';
     if (!formData.sku.trim()) newErrors.sku = 'SKU là bắt buộc';
-    if (!formData.description.trim()) newErrors.description = 'Mô tả sản phẩm là bắt buộc';
+    
+    // Validate description - check if there's actual text content (not just HTML tags)
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = formData.description;
+    const textContent = tempDiv.textContent || tempDiv.innerText || '';
+    if (!textContent.trim()) {
+      newErrors.description = 'Mô tả sản phẩm là bắt buộc';
+    }
     
     // ✅ Chỉ validate price và stock khi KHÔNG có variants
     if (!formData.hasVariants) {
@@ -318,19 +326,17 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Mô tả <span className="text-red-500">*</span>
             </label>
-            <textarea
-              name="description"
+            <RichTextEditor
               value={formData.description}
-              onChange={handleInputChange}
-              rows="4"
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                errors.description ? 'border-red-500' : 'border-gray-300'
-              }`}
-              placeholder="Nhập mô tả sản phẩm"
+              onChange={(content) => {
+                setFormData(prev => ({ ...prev, description: content }));
+                if (errors.description) {
+                  setErrors(prev => ({ ...prev, description: '' }));
+                }
+              }}
+              placeholder="Nhập mô tả sản phẩm chi tiết..."
+              error={errors.description}
             />
-            {errors.description && (
-              <p className="mt-1 text-sm text-red-500">{errors.description}</p>
-            )}
           </div>
 
           {/* Status */}

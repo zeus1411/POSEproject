@@ -462,27 +462,11 @@ const ProductDetail = () => {
         {/* Product Description */}
         <div className="mt-12 bg-white rounded-lg p-6 border border-gray-200">
           <h2 className="text-xl font-bold text-gray-900 mb-4">Mô tả sản phẩm</h2>
-          <div className="prose max-w-none">
-            <p className="text-gray-700 leading-relaxed">
-              {currentProduct.description}
-            </p>
-          </div>
+          <div 
+            className="product-description-content"
+            dangerouslySetInnerHTML={{ __html: currentProduct.description }}
+          />
         </div>
-
-        {/* Specifications */}
-        {currentProduct.specifications && Object.keys(currentProduct.specifications).length > 0 && (
-          <div className="mt-8 bg-white rounded-lg p-6 border border-gray-200">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Thông số kỹ thuật</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {Object.entries(currentProduct.specifications).map(([key, value]) => (
-                <div key={key} className="flex justify-between py-2 border-b border-gray-100">
-                  <span className="font-medium text-gray-700">{key}</span>
-                  <span className="text-gray-600">{value}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
 
         {/* Đánh giá sản phẩm */}
         <div id="review-section" className="mt-12 bg-white rounded-lg p-6 border border-gray-200">
