@@ -228,3 +228,28 @@ export const deleteVariant = async (req, res, next) => {
         next(error);
     }
 };
+
+// @desc    Upload image for product description (TinyMCE)
+// @route   POST /api/v1/products/upload-description-image
+// @access  Private (Admin)
+export const uploadDescriptionImage = async (req, res, next) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: 'Không có file ảnh nào được upload'
+            });
+        }
+
+        // Return the uploaded image URL from Cloudinary
+        const imageUrl = req.file.path;
+
+        res.status(200).json({
+            success: true,
+            message: 'Upload ảnh thành công',
+            imageUrl: imageUrl
+        });
+    } catch (error) {
+        next(error);
+    }
+};

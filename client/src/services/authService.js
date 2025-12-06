@@ -1,5 +1,33 @@
 import api from './api';
 
+// ==================== REGISTRATION WITH OTP ====================
+
+// Send OTP for registration
+const sendRegistrationOTP = async (email, username, password) => {
+  const response = await api.post('/auth/register/send-otp', { email, username, password });
+  return response.data;
+};
+
+// Resend OTP for registration
+const resendRegistrationOTP = async (email) => {
+  const response = await api.post('/auth/register/resend-otp', { email });
+  return response.data;
+};
+
+// Verify OTP and complete registration
+const verifyRegistrationOTP = async (email, otp) => {
+  const response = await api.post('/auth/register/verify-otp', { email, otp });
+  if (response.data.success && response.data.user) {
+    localStorage.setItem('user', JSON.stringify(response.data.user));
+    if (response.data.token) {
+      localStorage.setItem('token', response.data.token);
+    }
+  }
+  return response.data;
+};
+
+// ==================== OLD REGISTRATION (no OTP) ====================
+
 // Register user
 const register = async (userData) => {
   const response = await api.post('/auth/register', userData);
@@ -102,7 +130,11 @@ const authService = {
   getCurrentUser,
   sendOTP,
   resendOTP,
-  resetPassword
+  resetPassword,
+  // Registration OTP
+  sendRegistrationOTP,
+  resendRegistrationOTP,
+  verifyRegistrationOTP
 };
 
 export default authService;

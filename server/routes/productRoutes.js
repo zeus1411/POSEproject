@@ -11,7 +11,8 @@ import {
   updateProductVariants,
   addVariant,
   updateVariant,
-  deleteVariant
+  deleteVariant,
+  uploadDescriptionImage
 } from '../controllers/productController.js';
 import { authenticateUser, authorizeRoles } from '../middlewares/auth.js';
 import { upload } from '../middlewares/upload.js';
@@ -57,6 +58,15 @@ router.post(
   authenticateUser,
   authorizeRoles('admin'),
   updateProductImages
+);
+
+// Upload image for description (TinyMCE)
+router.post(
+  '/upload-description-image',
+  authenticateUser,
+  authorizeRoles('admin'),
+  upload.single('image'),
+  uploadDescriptionImage
 );
 
 router.delete('/:id', authenticateUser, authorizeRoles('admin'), deleteProduct);

@@ -19,7 +19,55 @@ const initialState = {
   isSuccess: false,
   error: null,
   message: '',
+  // OTP Registration state
+  otpSent: false,
+  otpEmail: null,
+  otpLoading: false,
+  otpError: null,
 };
+
+// ==================== REGISTRATION WITH OTP ====================
+
+export const sendRegistrationOTP = createAsyncThunk(
+  'auth/sendRegistrationOTP',
+  async ({ email, username, password }, { rejectWithValue }) => {
+    try {
+      const response = await authService.sendRegistrationOTP(email, username, password);
+      return { ...response, email };
+    } catch (error) {
+      const message = error.response?.data?.message || 'Không thể gửi OTP';
+      return rejectWithValue(message);
+    }
+  }
+);
+
+export const resendRegistrationOTP = createAsyncThunk(
+  'auth/resendRegistrationOTP',
+  async (email, { rejectWithValue }) => {
+    try {
+      const response = await authService.resendRegistrationOTP(email);
+      return response;
+    } catch (error) {
+      const message = error.response?.data?.message || 'Không thể gửi lại OTP';
+      return rejectWithValue(message);
+    }
+  }
+);
+
+export const verifyRegistrationOTP = createAsyncThunk(
+  'auth/verifyRegistrationOTP',
+  async ({ email, otp }, { rejectWithValue }) => {
+    try {
+      const response = await authService.verifyRegistrationOTP(email, otp);
+      return response;
+    } catch (error) {
+      const message = error.response?.data?.message || 'Xác thực OTP thất bại';
+      return rejectWithValue(message);
+    }
+  }
+);
+
+// ==================== OLD ASYNC THUNKS ====================
 
 // Async thunks
 export const login = createAsyncThunk(
@@ -108,6 +156,13 @@ const authSlice = createSlice({
       state.isSuccess = false;
       state.error = null;
       state.message = '';
+      state.otpError = null;
+    },
+    resetOTP: (state) => {
+      state.otpSent = false;
+      state.otpEmail = null;
+      state.otpLoading = false;
+      state.otpError = null;
     },
     setError: (state, action) => {
       state.isError = true;
@@ -204,9 +259,58 @@ const authSlice = createSlice({
         state.isSuccess = false;
         state.isError = false;
         state.message = '';
+      })
+      // ==================== REGISTRATION OTP ====================
+      // Send Registration OTP
+      .addCase(sendRegistrationOTP.pending, (state) => {
+        state.otpLoading = true;
+        state.otpError = null;
+        state.otpSent = false;
+      })
+      .addCase(sendRegistrationOTP.fulfilled, (state, action) => {
+        state.otpLoading = false;
+        state.otpSent = true;
+        state.otpEmail = action.payload.email;
+        state.message = action.payload.message || 'OTP đã được gửi đến email của bạn';
+      })
+      .addCase(sendRegistrationOTP.rejected, (state, action) => {
+        state.otpLoading = false;
+        state.otpError = action.payload;
+        state.otpSent = false;
+      })
+      // Resend Registration OTP
+      .addCase(resendRegistrationOTP.pending, (state) => {
+        state.otpLoading = true;
+        state.otpError = null;
+      })
+      .addCase(resendRegistrationOTP.fulfilled, (state, action) => {
+        state.otpLoading = false;
+        state.message = action.payload.message || 'OTP mới đã được gửi';
+      })
+      .addCase(resendRegistrationOTP.rejected, (state, action) => {
+        state.otpLoading = false;
+        state.otpError = action.payload;
+      })
+      // Verify Registration OTP
+      .addCase(verifyRegistrationOTP.pending, (state) => {
+        state.isLoading = true;
+        state.isError = false;
+        state.otpError = null;
+      })
+      .addCase(verifyRegistrationOTP.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.isSuccess = true;
+        state.user = action.payload?.user || null;
+        state.otpSent = false;
+        state.otpEmail = null;
+      })
+      .addCase(verifyRegistrationOTP.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.otpError = action.payload;
       });
   },
 });
 
-export const { reset, setError, setUser, clearUser } = authSlice.actions;
+export const { reset, resetOTP, setError, setUser, clearUser } = authSlice.actions;
 export default authSlice.reducer;
