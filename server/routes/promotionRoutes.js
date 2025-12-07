@@ -13,7 +13,6 @@ import {
   validateCoupon,
   applyPromotions,
   applyPromotionsToCart,
-  getPromotionStatistics,
   getUnviewedPromotions,
   markPromotionAsViewed
 } from '../controllers/promotionController.js';
@@ -37,7 +36,6 @@ router.use(authenticateUser); // All routes below require authentication
 
 router.post('/', authorizeRoles('admin'), createPromotion);
 router.get('/', authorizeRoles('admin'), getAllPromotions);
-router.get('/statistics', authorizeRoles('admin'), getPromotionStatistics);
 router.get('/:id', authorizeRoles('admin'), getPromotionById);
 router.put('/:id', authorizeRoles('admin'), updatePromotion);
 router.delete('/:id', authorizeRoles('admin'), deletePromotion);

@@ -8,10 +8,6 @@ import {
   searchProducts,
   updateProductImages,
   uploadProductImages,
-  updateProductVariants,
-  addVariant,
-  updateVariant,
-  deleteVariant,
   uploadDescriptionImage
 } from '../controllers/productController.js';
 import { authenticateUser, authorizeRoles } from '../middlewares/auth.js';
@@ -70,38 +66,5 @@ router.post(
 );
 
 router.delete('/:id', authenticateUser, authorizeRoles('admin'), deleteProduct);
-
-// ========== PRODUCT VARIANTS ROUTES ==========
-// Update all variants and options for a product
-router.put(
-  '/:id/variants',
-  authenticateUser,
-  authorizeRoles('admin'),
-  updateProductVariants
-);
-
-// Add a single variant
-router.post(
-  '/:id/variants',
-  authenticateUser,
-  authorizeRoles('admin'),
-  addVariant
-);
-
-// Update a specific variant
-router.put(
-  '/:id/variants/:variantId',
-  authenticateUser,
-  authorizeRoles('admin'),
-  updateVariant
-);
-
-// Delete a specific variant
-router.delete(
-  '/:id/variants/:variantId',
-  authenticateUser,
-  authorizeRoles('admin'),
-  deleteVariant
-);
 
 export default router;
