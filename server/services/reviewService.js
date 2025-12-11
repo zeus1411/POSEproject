@@ -41,8 +41,9 @@ class ReviewService {
         throw new BadRequestError('Đơn hàng không hợp lệ hoặc chưa hoàn thành.');
       }
       
-      // Check if already reviewed for this order
+      // Check if already reviewed for this specific order
       const existingReview = await Review.findOne({ userId, productId, orderId });
+      
       if (existingReview) {
         throw new BadRequestError('Bạn đã đánh giá sản phẩm này trong đơn hàng này rồi.');
       }
