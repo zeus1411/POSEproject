@@ -17,13 +17,14 @@ export const fetchReviews = createAsyncThunk(
 // Gửi đánh giá mới
 export const createReview = createAsyncThunk(
   "reviews/createReview",
-  async ({ productId, rating, title, comment }, { rejectWithValue }) => {
+  async ({ productId, rating, title, comment, orderId }, { rejectWithValue }) => {
     try {
       const response = await reviewService.createReview({
         productId,
         rating,
         title,
-        comment
+        comment,
+        orderId
       });
       return response.review;
     } catch (err) {
