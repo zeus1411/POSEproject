@@ -1,10 +1,13 @@
 import React, { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { createReview, fetchReviews } from "../../redux/slices/reviewSlice";
 import { StarIcon } from "@heroicons/react/24/solid";
+import { toast } from "react-toastify";
 
 const ReviewForm = ({ productId, orderId, onReviewSubmitted }) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(0);
@@ -61,8 +64,8 @@ const ReviewForm = ({ productId, orderId, onReviewSubmitted }) => {
       
       await dispatch(createReview(reviewData)).unwrap();
       
-      // Mark as submitted to hide the form
-      setSubmitted(true);
+      // Show success toast
+      toast.success('Gửi đánh giá thành công! Cảm ơn bạn đã chia sẻ.');
       
       // Reload danh sách đánh giá
       dispatch(fetchReviews(productId));
@@ -70,6 +73,16 @@ const ReviewForm = ({ productId, orderId, onReviewSubmitted }) => {
       // Call callback if provided
       if (onReviewSubmitted) {
         onReviewSubmitted();
+      }
+      
+      // If from order detail, redirect back with refresh flag
+      if (orderId) {
+        setTimeout(() => {
+          navigate(`/orders/${orderId}?refresh=${Date.now()}`);
+        }, 1000);
+      } else {
+        // Mark as submitted to hide the form
+        setSubmitted(true);
       }
     } catch (err) {
       setError(err || "Không thể gửi đánh giá, vui lòng thử lại.");
