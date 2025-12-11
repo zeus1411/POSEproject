@@ -1,13 +1,16 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
-dotenv.config();
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
-const baseUri = process.env.MONGODB_URI || 'mongodb://localhost:27017';
-const dbName = 'AquaticStorePOSE';
-const MONGODB_URI = baseUri.includes('mongodb+srv://') 
-  ? baseUri.replace('/?', `/${dbName}?`) 
-  : `${baseUri}/${dbName}`;
+// Load .env or .env.docker
+dotenv.config({ path: join(__dirname, '.env') });
+dotenv.config({ path: join(__dirname, '.env.docker') });
+
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://pose_mongodb:27017/AquaticStorePOSE';
 
 async function fixIndex() {
   try {
