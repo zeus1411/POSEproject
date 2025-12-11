@@ -153,6 +153,19 @@ const OrderDetail = () => {
     
     fetchReviewStatus();
   }, [orderDetail, id]);
+  
+  // Refetch when coming back from review (query param changed)
+  useEffect(() => {
+    const refresh = searchParams.get('refresh');
+    if (refresh && orderDetail?.status === 'COMPLETED') {
+      checkOrderReviewStatus(id).then(data => {
+        setReviewStatus(data.reviewStatus || {});
+        // Clean URL
+        searchParams.delete('refresh');
+        setSearchParams(searchParams, { replace: true });
+      });
+    }
+  }, [searchParams, orderDetail, id, setSearchParams]);
 
   // Extract order details with proper fallbacks
   const { 

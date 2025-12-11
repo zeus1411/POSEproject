@@ -47,24 +47,37 @@ class ReviewService {
         throw new BadRequestError('Bạn đã đánh giá sản phẩm này trong đơn hàng này rồi.');
       }
     } else {
-      // If no orderId provided, find any completed order with this product
-      const order = await Order.findOne({
+      // If no orderId provided, find completed orders and pick one that hasn't been reviewed
+      const completedOrders = await Order.find({
         userId,
         'items.productId': productId,
         status: 'COMPLETED'
-      });
+      }).select('_id').lean();
 
-      if (!order) {
+      if (!completedOrders || completedOrders.length === 0) {
         throw new BadRequestError('Bạn chỉ có thể đánh giá sản phẩm đã mua.');
       }
       
-      finalOrderId = order._id;
-      
-      // Check if already reviewed for this order
-      const existingReview = await Review.findOne({ userId, productId, orderId: finalOrderId });
-      if (existingReview) {
-        throw new BadRequestError('Bạn đã đánh giá sản phẩm này rồi.');
+      // Find an order that hasn't been reviewed yet
+      let unreviewedOrder = null;
+      for (const order of completedOrders) {
+        const existingReview = await Review.findOne({ 
+          userId, 
+          productId, 
+          orderId: order._id 
+        });
+        
+        if (!existingReview) {
+          unreviewedOrder = order;
+          break;
+        }
       }
+      
+      if (!unreviewedOrder) {
+        throw new BadRequestError('Bạn đã đánh giá sản phẩm này cho tất cả các đơn hàng.');
+      }
+      
+      finalOrderId = unreviewedOrder._id;
     }
 
     // Create review
