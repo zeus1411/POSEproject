@@ -49,16 +49,26 @@ const avatarStorage = new CloudinaryStorage({
   }
 });
 
-// File filter
-const imageFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith('image/')) {
-    cb(null, true);
-  } else {
-    cb(new Error('Chỉ chấp nhận file ảnh!'), false);
+// Configure Cloudinary storage for blogs
+const blogStorage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: 'pose/blogs',
+    allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+    format: 'webp',
+    transformation: [
+      { width: 1200, height: 630, crop: 'fill', gravity: 'center', quality: 'auto' }, // Standard share size
+      { fetch_format: 'auto' }
+    ],
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+    cb(null, 'blog-' + uniqueSuffix);
   }
-};
+});
 
-// Initialize multer instances
+// File filter (Already defined)
+// Initializing multer instances
 const upload = multer({
   storage: productStorage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
@@ -71,4 +81,10 @@ const uploadAvatar = multer({
   fileFilter: imageFilter
 });
 
-export { upload, uploadAvatar, cloudinary };
+const uploadBlogImage = multer({
+  storage: blogStorage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
+  fileFilter: imageFilter
+});
+
+export { upload, uploadAvatar, uploadBlogImage, cloudinary };

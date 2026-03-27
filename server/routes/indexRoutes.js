@@ -13,6 +13,7 @@ import chatRoutes from './chatRoutes.js';
 import promotionRoutes from './promotionRoutes.js';
 import blogCategoryRoutes from './blogCategoryRoutes.js';
 import tagRoutes from './tagRoutes.js';
+import blogRoutes from './blogRoutes.js';
 const router = express.Router();
 
 // Health check endpoint for Docker
@@ -39,4 +40,5 @@ router.use('/chat', chatRoutes);
 router.use('/promotions', promotionRoutes);
 router.use('/blog-categories', blogCategoryRoutes);
 router.use('/tags', tagRoutes);
+router.use('/blogs', blogRoutes);
 export default router;
