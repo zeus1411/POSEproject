@@ -11,6 +11,8 @@ import notificationRoutes from './notificationRoutes.js';
 import cacheRoutes from './cacheRoutes.js';
 import chatRoutes from './chatRoutes.js';
 import promotionRoutes from './promotionRoutes.js';
+import blogCategoryRoutes from './blogCategoryRoutes.js';
+import tagRoutes from './tagRoutes.js';
 const router = express.Router();
 
 // Health check endpoint for Docker
@@ -35,4 +37,6 @@ router.use('/notifications', notificationRoutes);
 router.use('/cache', cacheRoutes); // 🔍 Debug cache
 router.use('/chat', chatRoutes);
 router.use('/promotions', promotionRoutes);
+router.use('/blog-categories', blogCategoryRoutes);
+router.use('/tags', tagRoutes);
 export default router;

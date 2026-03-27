@@ -607,3 +607,258 @@ API được document chi tiết tại: `http://localhost:3000/api-docs` (khi ch
 - [ ] Caching strategies
 - [ ] SEO optimization
 - [ ] Performance monitoring
+
+```
+POSEproject
+├─ .vs
+│  ├─ POSEproject
+│  │  ├─ FileContentIndex
+│  │  │  ├─ 4efa819b-408b-4e8e-87b5-7afc2db289a8.vsidx
+│  │  │  ├─ 509ad3df-0877-406c-8a06-e99eec64edc1.vsidx
+│  │  │  ├─ 73a90547-aae4-49cf-ab79-ae7c644b1de0.vsidx
+│  │  │  ├─ 96ab4f83-8bfa-49ce-b71e-e5c578d27b04.vsidx
+│  │  │  └─ e53dc649-b8b1-4c81-b10f-205f287f27a9.vsidx
+│  │  └─ v17
+│  │     ├─ .wsuo
+│  │     ├─ DocumentLayout.backup.json
+│  │     └─ DocumentLayout.json
+│  ├─ ProjectSettings.json
+│  ├─ slnx.sqlite
+│  └─ VSWorkspaceState.json
+├─ client
+│  ├─ .dockerignore
+│  ├─ Dockerfile
+│  ├─ index.html
+│  ├─ nginx.conf
+│  ├─ package-lock.json
+│  ├─ package.json
+│  ├─ postcss.config.js
+│  ├─ public
+│  │  └─ images
+│  │     ├─ AIimage.jpg
+│  │     ├─ beeshrimp.jpg
+│  │     ├─ biotope.jpg
+│  │     ├─ community-tank.jpg
+│  │     ├─ dutch-style.jpg
+│  │     ├─ FirstImage.jpg
+│  │     ├─ iwagumi.jpg
+│  │     ├─ kingfish.jpg
+│  │     ├─ nature-style.jpg
+│  │     ├─ OverviewTank.jpg
+│  │     └─ planted-tank.jpg
+│  ├─ README_LOGIN.md
+│  ├─ src
+│  │  ├─ App.jsx
+│  │  ├─ components
+│  │  │  ├─ admin
+│  │  │  │  ├─ AdminChatPanel.jsx
+│  │  │  │  ├─ AdminLayout.jsx
+│  │  │  │  ├─ AdminShell.jsx
+│  │  │  │  ├─ AdminSidebar.jsx
+│  │  │  │  ├─ AdminUserFilters.jsx
+│  │  │  │  ├─ AdminUserForm.jsx
+│  │  │  │  ├─ AdminUserTable.jsx
+│  │  │  │  ├─ CategoryForm.jsx
+│  │  │  │  ├─ CategoryTable.jsx
+│  │  │  │  ├─ IconPicker.jsx
+│  │  │  │  ├─ ProductFilters.jsx
+│  │  │  │  ├─ ProductForm.jsx
+│  │  │  │  ├─ ProductTable.jsx
+│  │  │  │  ├─ ProductVariantsManager.jsx
+│  │  │  │  └─ RichTextEditor.jsx
+│  │  │  ├─ checkout
+│  │  │  │  └─ CouponDropdown.jsx
+│  │  │  ├─ common
+│  │  │  │  ├─ CategoryFilter.jsx
+│  │  │  │  ├─ CategorySidebar.jsx
+│  │  │  │  ├─ ChatBubble.jsx
+│  │  │  │  ├─ ConfirmDialog.jsx
+│  │  │  │  ├─ Footer.jsx
+│  │  │  │  ├─ Header.jsx
+│  │  │  │  ├─ MiniCart.jsx
+│  │  │  │  ├─ NotificationIcon.jsx
+│  │  │  │  ├─ Pagination.jsx
+│  │  │  │  ├─ ProductCard.jsx
+│  │  │  │  ├─ ProductGrid.jsx
+│  │  │  │  ├─ ProductVariantSelector.jsx
+│  │  │  │  ├─ PromotionToast.jsx
+│  │  │  │  ├─ ProtectedRoute.jsx
+│  │  │  │  ├─ SearchFilter.jsx
+│  │  │  │  ├─ ShopCarousel.jsx
+│  │  │  │  ├─ Sidebar.jsx
+│  │  │  │  └─ Toast.jsx
+│  │  │  ├─ customer
+│  │  │  │  ├─ AddressCard.jsx
+│  │  │  │  ├─ CouponInput.jsx
+│  │  │  │  ├─ EditProfileModal.jsx
+│  │  │  │  ├─ PromotionBadge.jsx
+│  │  │  │  └─ PromotionBanner.jsx
+│  │  │  ├─ Layout.jsx
+│  │  │  ├─ order
+│  │  │  │  └─ CancelOrderDialog.jsx
+│  │  │  └─ review
+│  │  │     ├─ ReviewCard.jsx
+│  │  │     ├─ ReviewForm.jsx
+│  │  │     └─ ReviewList.jsx
+│  │  ├─ context
+│  │  │  ├─ AuthContext.jsx
+│  │  │  └─ SocketContext.jsx
+│  │  ├─ index.css
+│  │  ├─ main.jsx
+│  │  ├─ pages
+│  │  │  ├─ admin
+│  │  │  │  ├─ AdminOrderDetail.jsx
+│  │  │  │  ├─ ManageUsers.jsx
+│  │  │  │  ├─ Orders.jsx
+│  │  │  │  ├─ Products.jsx
+│  │  │  │  ├─ Promotions.jsx
+│  │  │  │  └─ Statistics.jsx
+│  │  │  ├─ auth
+│  │  │  │  ├─ ForgotPassword.jsx
+│  │  │  │  ├─ Login.jsx
+│  │  │  │  └─ Register.jsx
+│  │  │  ├─ common
+│  │  │  │  └─ Home.jsx
+│  │  │  ├─ customer
+│  │  │  │  ├─ Checkout.jsx
+│  │  │  │  ├─ MyOrders.jsx
+│  │  │  │  ├─ OrderDetail.jsx
+│  │  │  │  ├─ ProfilePage.jsx
+│  │  │  │  └─ Shop.jsx
+│  │  │  └─ product
+│  │  │     └─ ProductDetail.jsx
+│  │  ├─ redux
+│  │  │  ├─ slices
+│  │  │  │  ├─ adminOrderSlice.jsx
+│  │  │  │  ├─ adminProductSlice.js
+│  │  │  │  ├─ adminUserSlice.js
+│  │  │  │  ├─ authSlice.js
+│  │  │  │  ├─ cartSlice.js
+│  │  │  │  ├─ categorySlice.js
+│  │  │  │  ├─ chatSlice.js
+│  │  │  │  ├─ customerSlice.js
+│  │  │  │  ├─ notificationSlice.js
+│  │  │  │  ├─ orderSlice.js
+│  │  │  │  ├─ productSlice.js
+│  │  │  │  ├─ promotionSlice.js
+│  │  │  │  └─ reviewSlice.js
+│  │  │  └─ store.js
+│  │  ├─ services
+│  │  │  ├─ addressService.js
+│  │  │  ├─ api.js
+│  │  │  ├─ authService.js
+│  │  │  ├─ cartService.js
+│  │  │  ├─ categoryService.js
+│  │  │  ├─ notificationService.js
+│  │  │  ├─ orderService.js
+│  │  │  ├─ productService.js
+│  │  │  ├─ promotionService.js
+│  │  │  ├─ reviewService.js
+│  │  │  └─ userService.js
+│  │  └─ utils
+│  │     └─ shippingCalculator.js
+│  ├─ tailwind.config.js
+│  └─ vite.config.js
+├─ docker-compose.yml
+├─ README.md
+├─ server
+│  ├─ .dockerignore
+│  ├─ config
+│  │  ├─ db.js
+│  │  ├─ redis.js
+│  │  └─ socket.js
+│  ├─ controllers
+│  │  ├─ admin
+│  │  ├─ authController.js
+│  │  ├─ cacheController.js
+│  │  ├─ cartController.js
+│  │  ├─ categoryController.js
+│  │  ├─ chatController.js
+│  │  ├─ common
+│  │  ├─ customer
+│  │  ├─ googleAuthController.js
+│  │  ├─ locationController.js
+│  │  ├─ notificationController.js
+│  │  ├─ orderController.js
+│  │  ├─ productController.js
+│  │  ├─ promotionController.js
+│  │  ├─ reviewController.js
+│  │  └─ userController.js
+│  ├─ Dockerfile
+│  ├─ fix-review-index.js
+│  ├─ index.js
+│  ├─ middlewares
+│  │  ├─ auth.js
+│  │  ├─ error.js
+│  │  ├─ rateLimiter.js
+│  │  └─ upload.js
+│  ├─ models
+│  │  ├─ Blog.js
+│  │  ├─ Cart.js
+│  │  ├─ Category.js
+│  │  ├─ Chat.js
+│  │  ├─ Notification.js
+│  │  ├─ Order.js
+│  │  ├─ Payment.js
+│  │  ├─ Product.js
+│  │  ├─ Promotion.js
+│  │  ├─ RegistrationOTP.js
+│  │  ├─ Review.js
+│  │  └─ User.js
+│  ├─ MONGODB
+│  │  ├─ AquaticStorePOSE.blogs.json
+│  │  ├─ AquaticStorePOSE.carts.json
+│  │  ├─ AquaticStorePOSE.categories.json
+│  │  ├─ AquaticStorePOSE.notifications.json
+│  │  ├─ AquaticStorePOSE.orders.json
+│  │  ├─ AquaticStorePOSE.payments.json
+│  │  ├─ AquaticStorePOSE.products.json
+│  │  ├─ AquaticStorePOSE.reviews.json
+│  │  └─ AquaticStorePOSE.users.json
+│  ├─ package-lock.json
+│  ├─ package.json
+│  ├─ public
+│  ├─ routes
+│  │  ├─ admin
+│  │  ├─ authRoutes.js
+│  │  ├─ cacheRoutes.js
+│  │  ├─ cartRoutes.js
+│  │  ├─ categoryRoutes.js
+│  │  ├─ chatRoutes.js
+│  │  ├─ common
+│  │  ├─ customer
+│  │  ├─ indexRoutes.js
+│  │  ├─ locationRoutes.js
+│  │  ├─ notificationRoutes.js
+│  │  ├─ orderRoutes.js
+│  │  ├─ productRoutes.js
+│  │  ├─ promotionRoutes.js
+│  │  ├─ reviewRoutes.js
+│  │  └─ userRoutes.js
+│  ├─ services
+│  │  ├─ admin
+│  │  ├─ authService.js
+│  │  ├─ cacheService.js
+│  │  ├─ cartService.js
+│  │  ├─ categoryService.js
+│  │  ├─ chatService.js
+│  │  ├─ common
+│  │  ├─ customer
+│  │  ├─ locationService.js
+│  │  ├─ orderService.js
+│  │  ├─ productService.js
+│  │  ├─ promotionService.js
+│  │  ├─ reviewService.js
+│  │  ├─ userService.js
+│  │  └─ vnpayService.js
+│  └─ utils
+│     ├─ cloudinaryUtils.js
+│     ├─ errorHandler.js
+│     ├─ sendEmail.js
+│     ├─ shippingCalculator.js
+│     ├─ tempOrderStorage.js
+│     ├─ upload-results.json
+│     └─ uploadImages.js
+└─ TINYMCE_GUIDE.md
+
+```
