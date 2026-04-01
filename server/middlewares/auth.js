@@ -145,11 +145,22 @@ const authorizeRoles = (...roles) => {
 const checkOwnership = (modelName = 'user', paramName = 'id') => {
     return async (req, res, next) => {
         try {           
-            const Model = require(`../models/${modelName}.js`);
+            let Model;
+            try {
+                // Try ecommerce first (most models are here)
+                Model = (await import(`../server-ecommerce/models/${modelName}.js`)).default;
+            } catch (err) {
+                try {
+                    // Try blogs domain
+                    Model = (await import(`../server-blogs/models/${modelName}.js`)).default;
+                } catch (err2) {
+                    console.error(`Model ${modelName} not found in any domain.`);
+                    throw new NotFoundError(`Không tìm thấy tài nguyên (Model ${modelName} lỗi)`);
+                }
+            }
             const resourceId = req.params[paramName];
             const userId = req.user.userId;
 
-            
             const resource = await Model.findById(resourceId);
             
             if (!resource) {

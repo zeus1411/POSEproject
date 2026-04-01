@@ -67,7 +67,15 @@ const blogStorage = new CloudinaryStorage({
   }
 });
 
-// File filter (Already defined)
+// File filter for images
+const imageFilter = (req, file, cb) => {
+  // Accept images only
+  if (!file.originalname.match(/\.(jpg|jpeg|png|gif|webp)$/)) {
+    return cb(new Error('Chỉ chấp nhận các tệp hình ảnh (jpg, jpeg, png, gif, webp)!'), false);
+  }
+  cb(null, true);
+};
+
 // Initializing multer instances
 const upload = multer({
   storage: productStorage,
