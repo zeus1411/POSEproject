@@ -1,6 +1,6 @@
 import { Server } from 'socket.io';
 import jwt from 'jsonwebtoken';
-import Chat from '../models/Chat.js';
+import Chat from '../server-ecommerce/models/Chat.js';
 
 let io = null;
 

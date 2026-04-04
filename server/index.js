@@ -9,6 +9,8 @@ import errorHandlerMiddleware from './middlewares/error.js';
 import cookieParser from 'cookie-parser';
 import { initRedis, closeRedis } from './config/redis.js';
 import { initializeSocket } from './config/socket.js';
+import swaggerUi from 'swagger-ui-express';
+import swaggerSpec from './config/swaggerConfig.js';
 
 // Load environment variables
 dotenv.config();
@@ -45,6 +47,9 @@ app.use(cookieParser(process.env.JWT_SECRET));
 
 // Routes - Sử dụng indexRoutes để gom tất cả routes
 app.use('/api/v1', indexRoutes);
+
+// Swagger Documentation
+app.use('/api/v1/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 // Xử lý lỗi
 app.use(errorHandlerMiddleware);
