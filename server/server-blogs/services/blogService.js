@@ -25,11 +25,11 @@ class BlogService {
     // Handle tags (support both stringified array and real array)
     let processedTags = tags;
     if (typeof tags === 'string') {
-        try {
-            processedTags = JSON.parse(tags);
-        } catch (e) {
-            processedTags = tags.split(',').map(t => t.trim());
-        }
+      try {
+        processedTags = JSON.parse(tags);
+      } catch (e) {
+        processedTags = tags.split(',').map(t => t.trim());
+      }
     }
 
     const blogData = {
@@ -59,7 +59,7 @@ class BlogService {
    */
   async getAllBlogs(query = {}, userRole = 'user', userId = null) {
     const { status, category, tag, page = 1, limit = 10, search } = query;
-    
+
     const filter = {};
 
     // Access control: Guest/User can only see PUBLISHED
@@ -138,7 +138,7 @@ class BlogService {
    * @returns {Promise<Object>} Blog object
    */
   async getBlogBySlug(slug) {
-    const blog = await Blog.findOne({ slug, status: 'PUBLISHED' })
+    const blog = await Blog.findOne({ slug, isPublished: true })
       .populate('author', 'username fullName avatar')
       .populate('category', 'name slug')
       .populate('tags', 'name slug');
@@ -181,7 +181,7 @@ class BlogService {
     if (file) {
       // Delete old image from Cloudinary
       if (blog.coverImage && blog.coverImage.publicId) {
-        await deleteFromCloudinary(blog.coverImage.publicId).catch(err => 
+        await deleteFromCloudinary(blog.coverImage.publicId).catch(err =>
           console.error('Error deleting old blog image:', err)
         );
       }
@@ -193,17 +193,17 @@ class BlogService {
 
     // Handle tags if provided
     if (data.tags && typeof data.tags === 'string') {
-        try {
-            data.tags = JSON.parse(data.tags);
-        } catch (e) {
-            data.tags = data.tags.split(',').map(t => t.trim());
-        }
+      try {
+        data.tags = JSON.parse(data.tags);
+      } catch (e) {
+        data.tags = data.tags.split(',').map(t => t.trim());
+      }
     }
 
     // Ensure status safety (Users can't set status to PUBLISHED themselves if we wanted moderation)
     // For now, I'll allow it if they are admin, or keep it PENDING if they are user.
     if (userRole !== 'admin' && data.status === 'PUBLISHED') {
-        data.status = 'PENDING';
+      data.status = 'PENDING';
     }
 
     const updatedBlog = await Blog.findByIdAndUpdate(
@@ -239,7 +239,7 @@ class BlogService {
 
     // Delete image from Cloudinary
     if (blog.coverImage && blog.coverImage.publicId) {
-      await deleteFromCloudinary(blog.coverImage.publicId).catch(err => 
+      await deleteFromCloudinary(blog.coverImage.publicId).catch(err =>
         console.error('Error deleting blog image on delete:', err)
       );
     }
