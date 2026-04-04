@@ -6,10 +6,11 @@ import {
   updateProduct,
   deleteProduct,
   searchProducts,
+  searchProductsQuick,
   updateProductImages,
   uploadProductImages,
   uploadDescriptionImage
-} from '../controllers/productController.js';
+} from '../controllers/ProductController.js';
 import { authenticateUser, authorizeRoles } from '../../middlewares/auth.js';
 import { upload } from '../../middlewares/upload.js';
 
@@ -82,6 +83,31 @@ router.get('/', getProducts);
  *         description: Search results
  */
 router.get('/search', searchProducts);
+
+/**
+ * @swagger
+ * /products/search-quick:
+ *   get:
+ *     summary: Quick search products by name or SKU
+ *     tags: [Products]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: q
+ *         schema:
+ *           type: string
+ *         description: Search keyword (name or SKU)
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *     responses:
+ *       200:
+ *         description: List of products found
+ */
+router.get('/search-quick', authenticateUser, searchProductsQuick);
 
 /**
  * @swagger

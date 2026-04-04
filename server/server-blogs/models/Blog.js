@@ -79,6 +79,12 @@ const blogSchema = new mongoose.Schema(
       type: Number, // in minutes
       default: 0
     },
+    relatedProducts: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Product'
+      }
+    ],
     metaTitle: String,
     metaDescription: String
   },

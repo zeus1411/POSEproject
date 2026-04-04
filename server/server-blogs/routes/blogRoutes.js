@@ -74,6 +74,9 @@ const optionalAuth = (req, res, next) => {
  *                 enum: [DRAFT, PENDING, PUBLISHED]
  *               isFeatured:
  *                 type: boolean
+ *               relatedProducts:
+ *                 type: string
+ *                 description: Comma-separated list of product IDs
  *               coverImage:
  *                 type: string
  *                 format: binary
@@ -149,6 +152,9 @@ router.get('/slug/:slug', getBlogBySlug);
  *                 enum: [DRAFT, PENDING, PUBLISHED]
  *               isFeatured:
  *                 type: boolean
+ *               relatedProducts:
+ *                 type: string
+ *                 description: Comma-separated list of product IDs
  *               coverImage:
  *                 type: string
  *                 format: binary

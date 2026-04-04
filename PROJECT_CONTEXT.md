@@ -54,16 +54,15 @@ This document provides a comprehensive overview of the POSEproject to optimize c
 
 ### Backend Service Layer (Singletons)
 - `AuthService`: `register()`, `login()`, `sendOTP()`, `verifyRegistrationOTP()`.
-- `ProductService`: `createProduct()`, `getAllProducts()`, `getProductById()`, `searchProducts()`.
-- `OrderService`: `createOrder()`, `updateOrderStatus()`, `getMyOrders()`.
-- `BlogService`: `createBlog()`, `getAllBlogs()`, `getBlogBySlug()`, `updateBlog()`, `deleteBlog()`.
+- `ProductService`: `createProduct()`, `getAllProducts()`, `getProductById()`, `searchProducts()`, `searchProductsQuick()`.
+- `BlogService`: `createBlog()`, `getAllBlogs()`, `getBlogById()`, `getBlogBySlug()`, `updateBlog()`, `deleteBlog()`.
 - `BlogCategoryService` & `TagService`: CRUD for metadata.
 - `CacheService`: redis-based methods for cache management.
 
 ### Backend Models (Schema Highlights)
 - `User`: Handles authentication, profiles, and roles (`user` vs `admin`). Methods: `comparePassword`, `generateAuthToken`.
 - `Product`: Rich schema supporting variations (options/variants), stock tracking, and status (`ACTIVE`/`INACTIVE`).
-- `Blog`: Rich schema with HTML content, cover image (Cloudinary), and references to `User`, `BlogCategory`, and `Tag`.
+- `Blog`: Rich schema with HTML content, cover image (Cloudinary), references to `User`, `BlogCategory`, `Tag`, and `relatedProducts` (referencing `Product`).
 - `BlogCategory` & `Tag`: Metadata for blog categorization.
 
 ### Frontend Architecture

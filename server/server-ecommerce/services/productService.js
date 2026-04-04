@@ -428,6 +428,33 @@ class ProductService {
     };
   }
 
+  /**
+   * Quick search for products by name or SKU
+   * Specifically for blog tagging or similar quick selections
+   * @param {string} searchTerm - Search query
+   * @param {number} limit - Max results
+   * @returns {Promise<Array>} List of products
+   */
+  async searchProductsQuick(searchTerm, limit = 10) {
+    if (!searchTerm || typeof searchTerm !== 'string' || searchTerm.trim().length === 0) {
+      return [];
+    }
+
+    const keyword = searchTerm.trim();
+    const query = {
+      status: 'ACTIVE',
+      $or: [
+        { name: { $regex: keyword, $options: 'i' } },
+        { sku: { $regex: keyword, $options: 'i' } }
+      ]
+    };
+
+    return await Product.find(query)
+      .select('name price images sku slug discount originalPrice')
+      .limit(limit)
+      .sort({ name: 1 });
+  }
+
 }
 
 // Export singleton instance

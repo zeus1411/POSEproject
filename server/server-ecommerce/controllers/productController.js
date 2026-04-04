@@ -1,4 +1,4 @@
-import productService from '../services/productService.js';
+import ProductService from '../services/ProductService.js';
 import { deleteFromCloudinary } from '../../utils/cloudinaryUtils.js';
 
 // Create a new product
@@ -7,7 +7,7 @@ export const createProduct = async (req, res, next) => {
         const files = req.files;
         const userId = req.user?.userId;
         
-        const savedProduct = await productService.createProduct(req.body, files, userId);
+        const savedProduct = await ProductService.createProduct(req.body, files, userId);
         res.status(201).json(savedProduct);
     } catch (error) {
         // Clean up uploaded files if there was an error
@@ -29,7 +29,7 @@ export const getProducts = async (req, res, next) => {
         const isAdmin = req.user?.role === 'admin';
         const includeInactive = req.query.includeInactive === 'true';
         
-        const products = await productService.getAllProducts(isAdmin, includeInactive);
+        const products = await ProductService.getAllProducts(isAdmin, includeInactive);
         res.status(200).json(products);
     } catch (error) {
         next(error);
@@ -43,7 +43,7 @@ export const getProductById = async (req, res, next) => {
         const { includeInactive } = req.query;
         const isAdmin = req.user?.role === 'admin';
         
-        const product = await productService.getProductById(id, isAdmin, includeInactive === 'true');
+        const product = await ProductService.getProductById(id, isAdmin, includeInactive === 'true');
         res.status(200).json(product);
     } catch (error) {
         next(error);
@@ -56,7 +56,7 @@ export const updateProduct = async (req, res, next) => {
         const { id } = req.params;
         const files = req.files;
         
-        const updatedProduct = await productService.updateProduct(id, req.body, files);
+        const updatedProduct = await ProductService.updateProduct(id, req.body, files);
         res.status(200).json(updatedProduct);
     } catch (error) {
         // Clean up uploaded files if there was an error
@@ -83,7 +83,7 @@ export const updateProductImages = async (req, res, next) => {
         const { id } = req.params;
         const { imageUrls } = req.body;
         
-        const product = await productService.updateProductImages(id, imageUrls);
+        const product = await ProductService.updateProductImages(id, imageUrls);
 
         res.status(200).json({ 
             success: true, 
@@ -125,7 +125,7 @@ export const deleteProduct = async (req, res, next) => {
     try {
         const { id } = req.params;
         
-        await productService.deleteProduct(id);
+        await ProductService.deleteProduct(id);
 
         res.status(200).json({ 
             success: true,
@@ -141,7 +141,7 @@ export const searchProducts = async (req, res, next) => {
     try {
         const isAdmin = req.user?.role === 'admin';
         
-        const result = await productService.searchProducts(req.query, isAdmin);
+        const result = await ProductService.searchProducts(req.query, isAdmin);
         return res.status(200).json(result);
     } catch (error) {
         return next(error);
@@ -167,6 +167,22 @@ export const uploadDescriptionImage = async (req, res, next) => {
             success: true,
             message: 'Upload ảnh thành công',
             imageUrl: imageUrl
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// @desc    Quick search for products by name or SKU
+// @route   GET /api/v1/products/search-quick
+// @access  Private (Admin)
+export const searchProductsQuick = async (req, res, next) => {
+    try {
+        const { q, limit } = req.query;
+        const products = await ProductService.searchProductsQuick(q, parseInt(limit, 10) || 10);
+        res.status(200).json({
+            success: true,
+            products
         });
     } catch (error) {
         next(error);
