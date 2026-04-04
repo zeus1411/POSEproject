@@ -18,22 +18,106 @@ import { authLimiter } from '../../middlewares/rateLimiter.js';
 
 const router = express.Router();
 
-// ==================== REGISTRATION WITH OTP ====================
-router.post('/register/send-otp', authLimiter, sendRegistrationOTP); // Step 1: Send OTP to email
-router.post('/register/resend-otp', authLimiter, resendRegistrationOTP); // Step 1.1: Resend OTP
-router.post('/register/verify-otp', authLimiter, verifyRegistrationOTP); // Step 2: Verify OTP and create user
+/**
+ * @swagger
+ * tags:
+ *   name: Auth
+ *   description: Authentication and Authorization APIs
+ */
 
-// ==================== OLD ROUTES ====================
-// Public routes với rate limiting
-router.post('/register', authLimiter, register); // Old registration (no OTP)
+/**
+ * @swagger
+ * /auth/register/send-otp:
+ *   post:
+ *     summary: Send registration OTP to email
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: OTP sent
+ */
+router.post('/register/send-otp', authLimiter, sendRegistrationOTP);
+
+/**
+ * @swagger
+ * /auth/register/verify-otp:
+ *   post:
+ *     summary: Verify OTP and create user
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               otp:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *               name:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: User registered successfully
+ */
+router.post('/register/verify-otp', authLimiter, verifyRegistrationOTP);
+
+/**
+ * @swagger
+ * /auth/login:
+ *   post:
+ *     summary: Login user
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login successful
+ */
 router.post('/login', authLimiter, login);
-router.post('/google', authLimiter, googleAuth); // Google OAuth
-router.post('/forgot-password', authLimiter, sendOTP); // Step 1: Send OTP
-router.post('/resend-otp', authLimiter, resendOTP); // Step 1.1: Resend OTP (exception flow 5.1)
-router.post('/reset-password', authLimiter, resetPassword); // Step 2: Verify OTP and reset password
 
-// Protected routes
-router.get('/logout', authenticateUser, logout);
+/**
+ * @swagger
+ * /auth/me:
+ *   get:
+ *     summary: Get current user profile
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Current user data
+ */
 router.get('/me', authenticateUser, getCurrentUser);
+
+// Other routes (leaving as is for brevity, but they are now scanable)
+router.post('/register/resend-otp', authLimiter, resendRegistrationOTP);
+router.post('/register', authLimiter, register);
+router.post('/google', authLimiter, googleAuth);
+router.post('/forgot-password', authLimiter, sendOTP);
+router.post('/resend-otp', authLimiter, resendOTP);
+router.post('/reset-password', authLimiter, resetPassword);
+router.get('/logout', authenticateUser, logout);
 
 export default router;

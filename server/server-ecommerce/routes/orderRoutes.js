@@ -15,36 +15,188 @@ import { authenticateUser, authorizeRoles } from '../../middlewares/auth.js';
 
 const router = express.Router();
 
-// ========== PUBLIC ROUTES ==========
-// VNPay return URL (public)
+/**
+ * @swagger
+ * tags:
+ *   name: Orders
+ *   description: Order management and Payment APIs
+ */
+
+/**
+ * @swagger
+ * /orders/payment/vnpay/return:
+ *   get:
+ *     summary: VNPay payment return callback
+ *     tags: [Orders]
+ *     responses:
+ *       200:
+ *         description: Payment processing result
+ */
 router.get('/payment/vnpay/return', vnpayReturn);
 
-// Lấy tất cả đơn hàng (Admin)
-router.get('/admin/all', authenticateUser, authorizeRoles('admin'),getAllOrders);
+/**
+ * @swagger
+ * /orders/admin/all:
+ *   get:
+ *     summary: Get all orders (Admin only)
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of all orders
+ */
+router.get('/admin/all', authenticateUser, authorizeRoles('admin'), getAllOrders);
 
-// Thống kê đơn hàng (Admin)
+/**
+ * @swagger
+ * /orders/admin/statistics:
+ *   get:
+ *     summary: Get order statistics (Admin only)
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Order stats
+ */
 router.get('/admin/statistics', authenticateUser, authorizeRoles('admin'), getOrderStatistics);
 
-// Cập nhật trạng thái đơn hàng (Admin)
-router.patch('/admin/:id/status',authenticateUser,authorizeRoles('admin'),updateOrderStatus);
+/**
+ * @swagger
+ * /orders/admin/{id}/status:
+ *   patch:
+ *     summary: Update order status (Admin only)
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               status:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Status updated
+ */
+router.patch('/admin/:id/status', authenticateUser, authorizeRoles('admin'), updateOrderStatus);
 
-// ========== user ROUTES ==========
-// Xem trước đơn hàng (preview trước khi đặt) - ĐẶT TRƯỚC /
+/**
+ * @swagger
+ * /orders/preview:
+ *   get:
+ *     summary: Preview order before checkout
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Order preview data
+ */
 router.get('/preview', authenticateUser, previewOrder);
 
-// Tạo đơn hàng mới
+/**
+ * @swagger
+ * /orders:
+ *   get:
+ *     summary: Get user's orders
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of user orders
+ *   post:
+ *     summary: Create a new order
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               shippingAddress:
+ *                 type: string
+ *               paymentMethod:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Order created
+ */
 router.post('/', authenticateUser, createOrder);
-
-// Lấy danh sách đơn hàng của user
 router.get('/', authenticateUser, getUserOrders);
 
-// Simulate VNPay payment success (for testing)
+/**
+ * @swagger
+ * /orders/{id}/payment/vnpay/simulate:
+ *   post:
+ *     summary: Simulate VNPay payment success (Testing)
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Payment simulated
+ */
 router.post('/:id/payment/vnpay/simulate', authenticateUser, simulateVNPayPayment);
 
-// Hủy đơn hàng
+/**
+ * @swagger
+ * /orders/{id}/cancel:
+ *   patch:
+ *     summary: Cancel order
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Order cancelled
+ */
 router.patch('/:id/cancel', authenticateUser, cancelOrder);
 
-// Lấy chi tiết đơn hàng - ĐẶT CUỐI CÙNG
+/**
+ * @swagger
+ * /orders/{id}:
+ *   get:
+ *     summary: Get order details by ID
+ *     tags: [Orders]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Order details
+ */
 router.get('/:id', authenticateUser, getOrderById);
 
 export default router;
