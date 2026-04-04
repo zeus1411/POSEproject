@@ -3,6 +3,7 @@ import RichTextEditor from '../../../client-eco/components/admin/RichTextEditor'
 import { X } from 'lucide-react';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import blogService from '../../services/blogService';
 
 const BlogForm = ({
   blog,
@@ -22,6 +23,11 @@ const BlogForm = ({
   });
 
   const [preview, setPreview] = useState(null);
+  const [relatedProducts, setRelatedProducts] = useState([]);
+  const [productQuery, setProductQuery] = useState('');    
+  const [productResults, setProductResults] = useState([]);
+
+  
 
   // 🔥 Slug preview
   const generateSlug = (text) =>
@@ -41,6 +47,10 @@ const BlogForm = ({
         coverImage: null,
         status: blog.status || 'DRAFT'
       });
+      if (blog?.relatedProducts?.length > 0) {
+        setRelatedProducts(blog.relatedProducts); 
+        // blog.relatedProducts đã populated với {_id, name, sku, price,...} từ BE
+      }
       setPreview(blog.coverImage?.url || null);
     }
   }, [blog]);
@@ -61,6 +71,14 @@ const BlogForm = ({
     data.append('tags', JSON.stringify(formData.tags));
 
     if (formData.coverImage) data.append('coverImage', formData.coverImage);
+
+    if (relatedProducts.length > 0) {
+      // Gửi mảng id sản phẩm
+      data.append(
+        'relatedProducts',
+        JSON.stringify(relatedProducts.map((p) => p._id))
+      );
+    }
 
     onSubmit(data);
   };
@@ -176,6 +194,80 @@ const BlogForm = ({
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* RELATED PRODUCTS */}
+          <div>
+            <label className="font-medium">Sản phẩm đính kèm</label>
+
+            {/* Input search */}
+            <input
+              type="text"
+              className="w-full border p-2 rounded-lg mt-1 focus:ring-2 focus:ring-blue-500"
+              placeholder="Nhập tên sản phẩm..."
+              value={productQuery}
+              onChange={async (e) => {
+                const q = e.target.value;
+                setProductQuery(q);
+
+                if (!q) {
+                  setProductResults([]);
+                  return;
+                }
+
+                try {
+                  const results = await blogService.searchProductsQuick(q);
+                  setProductResults(results);
+                } catch (err) {
+                  console.error(err);
+                }
+              }}
+            />
+
+            {/* Kết quả search */}
+            {productResults.length > 0 && (
+              <div className="border rounded-lg mt-2 max-h-40 overflow-y-auto">
+                {productResults.map((p) => (
+                  <div
+                    key={p._id}
+                    className="p-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center"
+                    onClick={() => {
+                      if (!relatedProducts.find((rp) => rp._id === p._id)) {
+                        setRelatedProducts([...relatedProducts, p]);
+                      }
+                      setProductQuery('');
+                      setProductResults([]);
+                    }}
+                  >
+                    <span>{p.name} ({p.sku})</span>
+                    <span className="text-sm text-gray-500">{p.price}₫</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Sản phẩm đã chọn */}
+            {relatedProducts.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {relatedProducts.map((p) => (
+                  <span
+                    key={p._id}
+                    className="flex items-center gap-1 bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm"
+                  >
+                    {p.name}
+                    <X
+                      size={14}
+                      className="cursor-pointer hover:text-red-600"
+                      onClick={() =>
+                        setRelatedProducts(
+                          relatedProducts.filter((rp) => rp._id !== p._id)
+                        )
+                      }
+                    />
+                  </span>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* COVER IMAGE */}

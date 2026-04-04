@@ -31,10 +31,16 @@ const deleteBlog = async (id) => {
   return res.data;
 };
 
+const searchProductsQuick = async (query) => {
+  const res = await api.get(`/products/search-quick?q=${query}`);
+  return res.data; // array các sản phẩm { _id, name, sku, price, images, slug }
+};
+
 export default {
   createBlog,
   updateBlog,
   getBlogById,
   getAllBlogs,
-  deleteBlog
+  deleteBlog,
+  searchProductsQuick
 };
