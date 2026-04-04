@@ -6,7 +6,9 @@ import {
   CubeIcon,
   HomeModernIcon,
   UsersIcon,
-  TicketIcon
+  TicketIcon,
+  DocumentTextIcon,
+  NewspaperIcon 
 } from '@heroicons/react/24/outline';
 
 const AdminSidebar = () => {
@@ -56,8 +58,31 @@ const AdminSidebar = () => {
       color: 'from-purple-500 to-fuchsia-500',
       bg: 'bg-gradient-to-br from-purple-50 to-fuchsia-50',
       iconColor: 'text-purple-600',
-    
-    }
+    },
+    { 
+      name: 'Blog Categories',
+      href: '/admin/blog-categories',
+      icon: DocumentTextIcon,
+      color: 'from-cyan-500 to-sky-500',
+      bg: 'bg-gradient-to-br from-cyan-50 to-sky-50',
+      iconColor: 'text-cyan-600',
+    },
+    { 
+      name: 'Blog Tags',
+      href: '/admin/tags',
+      icon: TicketIcon,
+      color: 'from-cyan-500 to-sky-500',
+      bg: 'bg-gradient-to-br from-cyan-50 to-sky-50',
+      iconColor: 'text-cyan-600',
+    },
+    { 
+      name: 'Blog List',
+      href: '/admin/blogs',
+      icon: NewspaperIcon,
+      color: 'from-cyan-500 to-sky-500',
+      bg: 'bg-gradient-to-br from-cyan-50 to-sky-50',
+      iconColor: 'text-cyan-600',
+    },
   ];
 
   return (

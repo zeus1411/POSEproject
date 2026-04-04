@@ -3,28 +3,33 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { Provider } from 'react-redux';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import store from './redux/store';
-import Layout from './components/Layout';
-import ProtectedRoute from './components/common/ProtectedRoute';
-import { SocketProvider } from './context/SocketContext';
-import Home from './pages/common/Home';
-import Statistics from './pages/admin/Statistics';
-import Products from './pages/admin/Products';
-import ManageUsers from './pages/admin/ManageUsers';
-import MyOrders from './pages/customer/MyOrders';
-import OrderDetail from './pages/customer/OrderDetail';
-import Shop from './pages/customer/Shop';
-import ProductDetail from "./pages/product/ProductDetail";
-import Login from './pages/auth/Login';
-import Register from './pages/auth/Register';
-import ForgotPassword from './pages/auth/ForgotPassword';
-import Checkout from './pages/customer/Checkout';
-import ProfilePage from './pages/customer/ProfilePage';
-import AdminOrders from './pages/admin/Orders';
-import AdminOrderDetail from './pages/admin/AdminOrderDetail';
-import AdminLayout from './components/admin/AdminLayout';
-import AdminPromotions from './pages/admin/Promotions';
+import store from './shared/redux/store';
+import Layout from '../src/client-eco/components/Layout.jsx';
+import ProtectedRoute from '../src/client-eco/components/common/ProtectedRoute';
+import { SocketProvider } from '../src/client-eco/context/SocketContext';
+import Home from '../src/client-eco/pages/common/Home';
+import Statistics from '../src/client-eco/pages/admin/Statistics';
+import Products from '../src/client-eco/pages/admin/Products';
+import ManageUsers from '../src/client-eco/pages/admin/ManageUsers';
+import MyOrders from '../src/client-eco/pages/customer/MyOrders';
+import OrderDetail from '../src/client-eco/pages/customer/OrderDetail';
+import Shop from '../src/client-eco/pages/customer/Shop';
+import ProductDetail from "../src/client-eco/pages/product/ProductDetail";
+import Login from '../src/client-eco/pages/auth/Login';
+import Register from '../src/client-eco/pages/auth/Register';
+import ForgotPassword from '../src/client-eco/pages/auth/ForgotPassword';
+import Checkout from '../src/client-eco/pages/customer/Checkout';
+import ProfilePage from '../src/client-eco/pages/customer/ProfilePage';
+import AdminOrders from '../src/client-eco/pages/admin/Orders';
+import AdminOrderDetail from '../src/client-eco/pages/admin/AdminOrderDetail';
+import AdminLayout from '../src/client-eco/components/admin/AdminLayout';
+import AdminPromotions from '../src/client-eco/pages/admin/Promotions';
 
+// Blog management pages
+import AdminBlogCategories from './client-blog/pages/admin/BlogCategories';
+import AdminBlogTags from './client-blog/pages/admin/BlogTags';
+import BlogEditor from './client-blog/pages/admin/BlogEditor';
+import BlogList from './client-blog/pages/admin/BlogList';
 
 function App() {
   return (
@@ -54,6 +59,7 @@ function App() {
 
             {/* Protected Admin Routes */}
             <Route element={<ProtectedRoute adminOnly={true} />}>
+              {/* Ecom management routes */}
               <Route path="admin/dashboard" element={<Navigate to="/admin/products" replace />} />
               <Route path="admin/products" element={<Products />} />
               <Route path="admin/manage-users" element={<ManageUsers />} />
@@ -62,6 +68,13 @@ function App() {
               <Route path="/admin/orders/:id" element={<AdminOrderDetail />} />
               <Route path="/admin/my-orders" element={<AdminLayout> <MyOrders /> </AdminLayout>} />
               <Route path="admin/promotions" element={<AdminPromotions />} />
+
+              {/* Blog management routes */}
+              <Route path="admin/blog-categories" element={<AdminBlogCategories />} />
+              <Route path="admin/tags" element={<AdminBlogTags />} />
+              <Route path="/admin/blogs/create" element={<BlogEditor />} />
+              <Route path="/admin/blogs/edit/:id" element={<BlogEditor />} />
+              <Route path="/admin/blogs" element={<BlogList />} />
             </Route>
         </Route>
 

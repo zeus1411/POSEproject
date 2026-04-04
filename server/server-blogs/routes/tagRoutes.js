@@ -107,4 +107,3 @@ router.put('/:id', authenticateUser, authorizeRoles('admin'), updateTag);
 router.delete('/:id', authenticateUser, authorizeRoles('admin'), deleteTag);
 
 export default router;
-
