@@ -3,8 +3,8 @@ import ReactDOM from 'react-dom/client'
 import { Provider } from 'react-redux'
 import { GoogleOAuthProvider } from '@react-oauth/google'
 import App from './App.jsx'
-import store from './redux/store'
-import { AuthProvider } from './context/AuthContext'
+import store from '../src/shared/redux/store'
+import { AuthProvider } from '../src/client-eco/context/AuthContext.jsx'
 import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(

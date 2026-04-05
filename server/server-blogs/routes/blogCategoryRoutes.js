@@ -107,4 +107,3 @@ router.put('/:id', authenticateUser, authorizeRoles('admin'), updateBlogCategory
 router.delete('/:id', authenticateUser, authorizeRoles('admin'), deleteBlogCategory);
 
 export default router;
-

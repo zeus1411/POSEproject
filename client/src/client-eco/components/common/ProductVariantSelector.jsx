@@ -8,19 +8,37 @@ const ProductVariantSelector = ({ product, selectedVariant, onVariantChange }) =
   const [selectedOptions, setSelectedOptions] = React.useState({});
 
   // Initialize selectedOptions from selectedVariant or first available variant
+  // React.useEffect(() => {
+  //   if (selectedVariant && selectedVariant.optionValues) {
+  //     // ✅ optionValues is plain object, not Map
+  //     setSelectedOptions(selectedVariant.optionValues);
+  //   } else if (product.variants && product.variants.length > 0) {
+  //     // Select first active variant by default
+  //     const firstActive = product.variants.find(v => v.isActive);
+  //     if (firstActive && firstActive.optionValues) {
+  //       setSelectedOptions(firstActive.optionValues);
+  //       onVariantChange(firstActive);
+  //     }
+  //   }
+  // }, [product, selectedVariant]);
+  
   React.useEffect(() => {
-    if (selectedVariant && selectedVariant.optionValues) {
-      // ✅ optionValues is plain object, not Map
-      setSelectedOptions(selectedVariant.optionValues);
-    } else if (product.variants && product.variants.length > 0) {
-      // Select first active variant by default
-      const firstActive = product.variants.find(v => v.isActive);
-      if (firstActive && firstActive.optionValues) {
-        setSelectedOptions(firstActive.optionValues);
-        onVariantChange(firstActive);
-      }
+  if (selectedVariant && selectedVariant.optionValues) {
+    setSelectedOptions(selectedVariant.optionValues);
+  } else if (product.variants && product.variants.length > 0) {
+    // Select first ACTIVE variant that has stock > 0
+    const firstAvailable = product.variants.find(v => v.isActive && Number(v.stock) > 0);
+    if (firstAvailable && firstAvailable.optionValues) {
+      setSelectedOptions(firstAvailable.optionValues);
+      onVariantChange(firstAvailable);
+    } else {
+      // No available variant, clear selection
+      setSelectedOptions({});
+      onVariantChange(null);
     }
-  }, [product, selectedVariant]);
+  }
+}, [product, selectedVariant]);
+
 
   // Handle option selection
   const handleOptionSelect = (optionName, optionValue) => {
