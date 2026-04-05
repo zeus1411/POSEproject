@@ -50,6 +50,21 @@ export const getAllBlogs = async (req, res, next) => {
     }
 };
 
+// @desc    Get public blogs (Only PUBLISHED)
+// @route   GET /api/v1/blogs/public
+// @access  Public
+export const getPublicBlogs = async (req, res, next) => {
+    try {
+        const result = await blogService.getPublicBlogs(req.query);
+        res.status(StatusCodes.OK).json({
+            success: true,
+            ...result
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 // @desc    Get blog by ID
 // @route   GET /api/v1/blogs/:id
 // @access  Public

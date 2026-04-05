@@ -70,6 +70,24 @@ export const updateBlogCategory = async (req, res, next) => {
     }
 };
 
+// @desc    Update blog category status
+// @route   PATCH /api/v1/blog-categories/:id/status
+// @access  Private (Admin)
+export const updateCategoryStatus = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+        const category = await blogCategoryService.updateCategoryStatus(id, status);
+        res.status(StatusCodes.OK).json({
+            success: true,
+            message: 'Cập nhật trạng thái danh mục thành công',
+            category
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
 // @desc    Delete blog category
 // @route   DELETE /api/v1/blog-categories/:id
 // @access  Private (Admin)

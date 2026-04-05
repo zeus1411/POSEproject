@@ -104,6 +104,34 @@ class BlogCategoryService {
   }
 
   /**
+   * Update blog category status
+   * @param {string} id - Category ID
+   * @param {string} status - New status (ACTIVE, INACTIVE)
+   * @returns {Promise<Object>} Updated category
+   */
+  async updateCategoryStatus(id, status) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw new BadRequestError('ID không hợp lệ');
+    }
+
+    if (!['ACTIVE', 'INACTIVE'].includes(status)) {
+      throw new BadRequestError('Trạng thái không hợp lệ. Phải là ACTIVE hoặc INACTIVE');
+    }
+
+    const category = await BlogCategory.findByIdAndUpdate(
+      id,
+      { status },
+      { new: true, runValidators: true }
+    );
+
+    if (!category) {
+      throw new NotFoundError('Không tìm thấy danh mục bài viết');
+    }
+
+    return category;
+  }
+
+  /**
    * Delete blog category
    * @param {string} id - Category ID
    * @returns {Promise<Object>} Result message
