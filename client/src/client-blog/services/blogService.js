@@ -1,4 +1,6 @@
 import api from '../../client-eco/services/api';
+import blogCategoryService from './blogCategoryService';
+import blogTagService from './blogTagService';
 
 const API_URL = '/blogs';
 
@@ -36,11 +38,35 @@ const searchProductsQuick = async (query) => {
   return res.data; // array các sản phẩm { _id, name, sku, price, images, slug }
 };
 
+const getAllCategories = () => blogCategoryService.getBlogCategories();
+
+const getAllTags = () => blogTagService.getBlogTags();
+
+const likeBlog = async (blogId) => {
+  const res = await api.post(`/blogs/${blogId}/like`);
+  return res.data;
+};
+
+const addComment = async (blogId, content) => {
+  const res = await api.post(`/blogs/${blogId}/comments`, { content });
+  return res.data;
+};
+
+const increaseView = async (blogId) => {
+  const res = await api.post(`/blogs/${blogId}/view`);
+  return res.data;
+};
+
 export default {
   createBlog,
   updateBlog,
   getBlogById,
   getAllBlogs,
   deleteBlog,
-  searchProductsQuick
+  searchProductsQuick,
+  getAllCategories,
+  getAllTags,
+  likeBlog,
+  addComment,
+  increaseView
 };

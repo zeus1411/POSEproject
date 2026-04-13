@@ -30,6 +30,11 @@ import AdminBlogCategories from './client-blog/pages/admin/BlogCategories';
 import AdminBlogTags from './client-blog/pages/admin/BlogTags';
 import BlogEditor from './client-blog/pages/admin/BlogEditor';
 import BlogList from './client-blog/pages/admin/BlogList';
+import BlogComments from './client-blog/pages/admin/BlogComments.jsx';
+
+// Public blog listing page
+import BlogListPage from './client-blog/pages/common/BlogListPage';
+import BlogDetailPage from './client-blog/pages/common/BlogDetailPage';
 
 function App() {
   return (
@@ -75,6 +80,11 @@ function App() {
               <Route path="/admin/blogs/create" element={<BlogEditor />} />
               <Route path="/admin/blogs/edit/:id" element={<BlogEditor />} />
               <Route path="/admin/blogs" element={<BlogList />} />
+              <Route path="/admin/blog-comments" element={<BlogComments />} />
+
+              {/* Public blog listing */}
+              <Route path="/blogs" element={<BlogListPage />} />
+              <Route path="/blogs/:slug" element={<BlogDetailPage />} />
             </Route>
         </Route>
 
