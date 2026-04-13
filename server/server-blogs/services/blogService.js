@@ -123,6 +123,51 @@ class BlogService {
   }
 
   /**
+   * Get public blogs (Only PUBLISHED)
+   * @param {Object} query - Query parameters (category, tag, page, limit, search)
+   * @returns {Promise<Object>} List of blogs and pagination info
+   */
+  async getPublicBlogs(query = {}) {
+    const { category, tag, page = 1, limit = 10, search } = query;
+
+    const filter = { status: 'PUBLISHED' };
+
+    if (category) filter.category = category;
+    if (tag) filter.tags = tag;
+    
+    // Search by title specifically as requested
+    if (search) {
+      filter.title = { $regex: search, $options: 'i' };
+    }
+
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const pageSize = Math.max(1, Math.min(100, parseInt(limit, 10) || 10));
+    const skip = (pageNum - 1) * pageSize;
+
+    const [blogs, total] = await Promise.all([
+      Blog.find(filter)
+        .populate('author', 'username fullName avatar')
+        .populate('category', 'name slug')
+        .populate('tags', 'name slug')
+        .populate('relatedProducts', 'name price images sku slug discount originalPrice')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(pageSize),
+      Blog.countDocuments(filter)
+    ]);
+
+    return {
+      blogs,
+      pagination: {
+        total,
+        page: pageNum,
+        pages: Math.ceil(total / pageSize),
+        limit: pageSize
+      }
+    };
+  }
+
+  /**
    * Get blog by ID
    * @param {string} id - Blog ID
    * @returns {Promise<Object>} Blog object

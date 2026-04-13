@@ -4,6 +4,7 @@ import {
     getBlogCategoryById,
     createBlogCategory,
     updateBlogCategory,
+    updateCategoryStatus,
     deleteBlogCategory
 } from '../controllers/blogCategoryController.js';
 import { authenticateUser, authorizeRoles } from '../../middlewares/auth.js';
@@ -16,6 +17,36 @@ const router = express.Router();
  *   name: Blog Categories
  *   description: Blog Category management APIs
  */
+
+/**
+ * @swagger
+ * /blog-categories/{id}/status:
+ *   patch:
+ *     summary: Update blog category status (Admin only)
+ *     tags: [Blog Categories]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [ACTIVE, INACTIVE]
+ *     responses:
+ *       200:
+ *         description: Status updated
+ */
+router.patch('/:id/status', authenticateUser, authorizeRoles('admin'), updateCategoryStatus);
 
 /**
  * @swagger

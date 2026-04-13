@@ -4,6 +4,7 @@ import {
     getAllBlogs,
     getBlogById,
     getBlogBySlug,
+    getPublicBlogs,
     updateBlog,
     deleteBlog
 } from '../controllers/blogController.js';
@@ -34,6 +35,44 @@ const optionalAuth = (req, res, next) => {
  *   name: Blogs
  *   description: Blog management APIs
  */
+
+/**
+ * @swagger
+ * /blogs/public:
+ *   get:
+ *     summary: Get public blogs (Only PUBLISHED)
+ *     tags: [Blogs]
+ *     parameters:
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search by title
+ *       - in: query
+ *         name: category
+ *         schema:
+ *           type: string
+ *         description: Category ID
+ *       - in: query
+ *         name: tag
+ *         schema:
+ *           type: string
+ *         description: Tag ID
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *     responses:
+ *       200:
+ *         description: List of public blogs
+ */
+router.get('/public', getPublicBlogs);
 
 /**
  * @swagger
