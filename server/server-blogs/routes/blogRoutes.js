@@ -6,7 +6,8 @@ import {
     getBlogBySlug,
     getPublicBlogs,
     updateBlog,
-    deleteBlog
+    deleteBlog,
+    updateBlogStatus
 } from '../controllers/blogController.js';
 import { authenticateUser, authorizeRoles } from '../../middlewares/auth.js';
 import { uploadBlogImage } from '../../middlewares/upload.js';
@@ -215,6 +216,38 @@ router.get('/slug/:slug', getBlogBySlug);
  *     responses:
  *       200:
  *         description: Blog deleted
+ * 
+ *   patch:
+ *     summary: Update blog status (Admin only)
+ *     tags: [Blogs]
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [PUBLISHED, REJECTED]
+ *                 description: |
+ *                   'PUBLISHED' to accept and post.
+ *                   'REJECTED' to send back to DRAFT for fixing.
+ *               rejectionReason:
+ *                 type: string
+ *                 description: Required if status is REJECTED.
+ *     responses:
+ *       200:
+ *         description: Blog status updated
  */
 router.get('/:id', optionalAuth, getBlogById);
 
@@ -232,6 +265,8 @@ router.put(
     uploadBlogImage.single('coverImage'), 
     updateBlog
 );
+
+router.patch('/:id/status', authenticateUser, authorizeRoles('admin'), updateBlogStatus);
 
 router.delete('/:id', authenticateUser, deleteBlog);
 

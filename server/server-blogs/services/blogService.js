@@ -2,6 +2,8 @@ import Blog from '../models/Blog.js';
 import mongoose from 'mongoose';
 import { BadRequestError, NotFoundError, UnauthorizedError } from '../../utils/errorHandler.js';
 import { deleteFromCloudinary } from '../../utils/cloudinaryUtils.js';
+import cacheService from '../../server-ecommerce/services/cacheService.js';
+import Notification from '../../server-ecommerce/models/Notification.js';
 
 /**
  * Blog Service
@@ -13,9 +15,10 @@ class BlogService {
    * @param {Object} data - Blog data
    * @param {Object} file - Uploaded cover image file
    * @param {string} userId - Author ID
+   * @param {string} userRole - Role of the creator
    * @returns {Promise<Object>} Created blog
    */
-  async createBlog(data, file, userId) {
+  async createBlog(data, file, userId, userRole) {
     if (!file) {
       throw new BadRequestError('Vui lòng tải lên ảnh bìa cho bài viết');
     }
@@ -61,7 +64,23 @@ class BlogService {
       relatedProducts: processedRelatedProducts
     };
 
+    // Secure relatedProducts: Only admins can tag products
+    if (userRole !== 'admin') {
+      blogData.relatedProducts = [];
+    }
+
     const blog = await Blog.create(blogData);
+
+    // If submitted for review, notify admins
+    if (blog.status === 'PENDING') {
+      const populatedBlog = await blog.populate('author', 'fullName username');
+      Notification.createBlogSubmissionNotificationForAdmins(
+        blog._id, 
+        blog.title, 
+        populatedBlog.author.fullName || populatedBlog.author.username
+      ).catch(err => console.error('Error triggering admin notification:', err));
+    }
+
     return blog;
   }
 
@@ -149,7 +168,7 @@ class BlogService {
         .populate('author', 'username fullName avatar')
         .populate('category', 'name slug')
         .populate('tags', 'name slug')
-        .populate('relatedProducts', 'name price images sku slug discount originalPrice')
+      .populate('relatedProducts', 'name price images sku slug discount originalPrice stock')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(pageSize),
@@ -181,7 +200,7 @@ class BlogService {
       .populate('author', 'username fullName avatar')
       .populate('category', 'name slug')
       .populate('tags', 'name slug')
-      .populate('relatedProducts', 'name price images sku slug discount originalPrice');
+      .populate('relatedProducts', 'name price images sku slug discount originalPrice stock');
 
     if (!blog) {
       throw new NotFoundError('Không tìm thấy bài viết');
@@ -196,21 +215,28 @@ class BlogService {
   /**
    * Get blog by slug
    * @param {string} slug - Blog slug
+   * @param {string} clientIp - Client IP address
    * @returns {Promise<Object>} Blog object
    */
-  async getBlogBySlug(slug) {
+  async getBlogBySlug(slug, clientIp) {
     const blog = await Blog.findOne({ slug, status: 'PUBLISHED' })
       .populate('author', 'username fullName avatar')
       .populate('category', 'name slug')
       .populate('tags', 'name slug')
-      .populate('relatedProducts', 'name price images sku slug discount originalPrice');
+      .populate('relatedProducts', 'name price images sku slug discount originalPrice stock');
 
     if (!blog) {
       throw new NotFoundError('Không tìm thấy bài viết hoặc bài viết chưa được công bố');
     }
 
-    // Increment view count
-    blog.incrementViewCount().catch(err => console.error('Error incrementing view count:', err));
+    // Increment view count with 30m TTL (1800 seconds)
+    const cacheKey = `blog:view:${slug}:${clientIp}`;
+    const hasViewed = await cacheService.get(cacheKey);
+    
+    if (!hasViewed) {
+      blog.incrementViewCount().catch(err => console.error('Error incrementing view count:', err));
+      await cacheService.set(cacheKey, true, 30 * 60);
+    }
 
     return blog;
   }
@@ -279,12 +305,28 @@ class BlogService {
       data.status = 'PENDING';
     }
 
+    // Detect status transition to PENDING to notify admins
+    const statusChangedToPending = data.status === 'PENDING' && blog.status !== 'PENDING';
+
+    // Secure relatedProducts: Only admins can update product tags
+    if (userRole !== 'admin') {
+      delete data.relatedProducts;
+    }
+
     const updatedBlog = await Blog.findByIdAndUpdate(
       id,
       { $set: data },
       { new: true, runValidators: true }
     ).populate('author category tags')
-    .populate('relatedProducts', 'name price images sku slug discount originalPrice');
+    .populate('relatedProducts', 'name price images sku slug discount originalPrice stock');
+
+    if (statusChangedToPending && updatedBlog) {
+      Notification.createBlogSubmissionNotificationForAdmins(
+        updatedBlog._id, 
+        updatedBlog.title, 
+        updatedBlog.author.fullName || updatedBlog.author.username
+      ).catch(err => console.error('Error triggering admin notification on update:', err));
+    }
 
     return updatedBlog;
   }
@@ -320,6 +362,64 @@ class BlogService {
 
     await Blog.findByIdAndDelete(id);
     return { success: true, message: 'Xóa bài viết thành công' };
+  }
+  /**
+   * Update blog status (Accept/Reject)
+   * @param {string} id - Blog ID
+   * @param {string} status - New status signal ('PUBLISHED' or 'REJECTED')
+   * @param {string} reason - Rejection reason (required if status is 'REJECTED')
+   * @returns {Promise<Object>} Updated blog
+   */
+  async updateBlogStatus(id, status, reason) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw new BadRequestError('ID không hợp lệ');
+    }
+
+    const blog = await Blog.findById(id).populate('author', 'fullName username email');
+    if (!blog) {
+      throw new NotFoundError('Không tìm thấy bài viết');
+    }
+
+    let updateData = {};
+    
+    if (status === 'PUBLISHED') {
+      updateData = { 
+        status: 'PUBLISHED',
+        publishedAt: new Date(),
+        rejectionReason: null // Clear reason if publishing
+      };
+    } else if (status === 'REJECTED') {
+      if (!reason) {
+        throw new BadRequestError('Vui lòng cung cấp lý do từ chối bài viết');
+      }
+      // Revert to DRAFT with reason
+      updateData = { 
+        status: 'DRAFT', 
+        rejectionReason: reason 
+      };
+    } else {
+      throw new BadRequestError('Trạng thái không hợp lệ. Chỉ chấp nhận PUBLISHED hoặc REJECTED');
+    }
+
+    const updatedBlog = await Blog.findByIdAndUpdate(
+      id,
+      { $set: updateData },
+      { new: true, runValidators: true }
+    ).populate('author category tags')
+     .populate('relatedProducts', 'name price images sku slug discount originalPrice stock');
+
+    // Trigger notifications for the author
+    if (updatedBlog) {
+      Notification.createBlogStatusNotificationForUser(
+        blog.author._id,
+        blog._id,
+        blog.title,
+        status, // Use the signal status
+        reason
+      ).catch(err => console.error('Error triggering blog status notification:', err));
+    }
+
+    return updatedBlog;
   }
 }
 

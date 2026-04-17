@@ -55,14 +55,17 @@ This document provides a comprehensive overview of the POSEproject to optimize c
 ### Backend Service Layer (Singletons)
 - `AuthService`: `register()`, `login()`, `sendOTP()`, `verifyRegistrationOTP()`.
 - `ProductService`: `createProduct()`, `getAllProducts()`, `getProductById()`, `searchProducts()`, `searchProductsQuick()`.
-- `BlogService`: `createBlog()`, `getAllBlogs()`, `getBlogById()`, `getBlogBySlug()`, `getPublicBlogs()`, `updateBlog()`, `deleteBlog()`.
+- `BlogService`: `createBlog()`, `getAllBlogs()`, `getBlogById()`, `getBlogBySlug()`, `getPublicBlogs()`, `updateBlog()`, `updateBlogStatus()`, `deleteBlog()`.
 - `BlogCategoryService`: `getAllBlogCategories()`, `getBlogCategoryById()`, `createBlogCategory()`, `updateBlogCategory()`, `updateCategoryStatus()`, `deleteBlogCategory()`.
-- `CacheService`: redis-based methods for cache management.
+- `CacheService`: redis-based methods for cache management (including blog view increments).
 
 ### Backend Models (Schema Highlights)
 - `User`: Handles authentication, profiles, and roles (`user` vs `admin`). Methods: `comparePassword`, `generateAuthToken`.
 - `Product`: Rich schema supporting variations (options/variants), stock tracking, and status (`ACTIVE`/`INACTIVE`).
-- `Blog`: Rich schema with HTML content, cover image (Cloudinary), references to `User`, `BlogCategory`, `Tag`, and `relatedProducts` (referencing `Product`).
+- `Blog`: Rich schema with HTML content, cover image (Cloudinary), references to `User`, `BlogCategory`, `Tag`, and `relatedProducts` (referencing `Product` with stock population). 
+  - **Approval Workflow**: 3-step process (Draft -> Pending -> Published). Rejection sends the post back to Draft with a `rejectionReason`.
+  - **Security**: Product tagging (`relatedProducts`) is strictly restricted to **Admin** users.
+  - **Performance**: View counts use a 30-minute Redis TTL per IP to prevent spam.
 - `BlogCategory` & `Tag`: Metadata for blog categorization. `BlogCategory` includes a `status` field (`ACTIVE`/`INACTIVE`).
 
 ### Frontend Architecture

@@ -54,6 +54,10 @@ const blogSchema = new mongoose.Schema(
       enum: ['DRAFT', 'PENDING', 'PUBLISHED'],
       default: 'DRAFT'
     },
+    rejectionReason: {
+      type: String,
+      trim: true
+    },
     viewCount: {
       type: Number,
       default: 0,
