@@ -2,6 +2,7 @@ import express from 'express';
 import blogCategoryRoutes from './blogCategoryRoutes.js';
 import tagRoutes from './tagRoutes.js';
 import blogRoutes from './blogRoutes.js';
+import commentRoutes from './commentRoutes.js';
 
 const router = express.Router();
 
@@ -9,5 +10,6 @@ const router = express.Router();
 router.use('/blog-categories', blogCategoryRoutes);
 router.use('/tags', tagRoutes);
 router.use('/blogs', blogRoutes);
+router.use('/comments', commentRoutes);
 
 export default router;

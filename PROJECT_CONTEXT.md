@@ -56,7 +56,7 @@ This document provides a comprehensive overview of the POSEproject to optimize c
 - `AuthService`: `register()`, `login()`, `sendOTP()`, `verifyRegistrationOTP()`.
 - `ProductService`: `createProduct()`, `getAllProducts()`, `getProductById()`, `searchProducts()`, `searchProductsQuick()`.
 - `BlogService`: `createBlog()`, `getAllBlogs()`, `getBlogById()`, `getBlogBySlug()`, `getPublicBlogs()`, `updateBlog()`, `updateBlogStatus()`, `deleteBlog()`.
-- `BlogCategoryService`: `getAllBlogCategories()`, `getBlogCategoryById()`, `createBlogCategory()`, `updateBlogCategory()`, `updateCategoryStatus()`, `deleteBlogCategory()`.
+- `CommentService`: `createComment()`, `getCommentsByBlog()`, `deleteComment()`.
 - `CacheService`: redis-based methods for cache management (including blog view increments).
 
 ### Backend Models (Schema Highlights)
@@ -65,7 +65,10 @@ This document provides a comprehensive overview of the POSEproject to optimize c
 - `Blog`: Rich schema with HTML content, cover image (Cloudinary), references to `User`, `BlogCategory`, `Tag`, and `relatedProducts` (referencing `Product` with stock population). 
   - **Approval Workflow**: 3-step process (Draft -> Pending -> Published). Rejection sends the post back to Draft with a `rejectionReason`.
   - **Security**: Product tagging (`relatedProducts`) is strictly restricted to **Admin** users.
-  - **Performance**: View counts use a 30-minute Redis TTL per IP to prevent spam.
+  - **Performance**: View counts use a 30-minute Redis TTL per IP to prevent spam. Tracks `commentCount`.
+- `Comment`: Manages user interactions on blogs.
+  - **Logic**: Automatically updates `blog.commentCount` on creation and removal.
+  - **Permissions**: Logged-in users can comment/delete their own; Admins can delete any comment.
 - `BlogCategory` & `Tag`: Metadata for blog categorization. `BlogCategory` includes a `status` field (`ACTIVE`/`INACTIVE`).
 
 ### Frontend Architecture

@@ -74,6 +74,11 @@ const blogSchema = new mongoose.Schema(
         ref: 'User'
       }
     ],
+    commentCount: {
+      type: Number,
+      default: 0,
+      min: 0
+    },
     isFeatured: {
       type: Boolean,
       default: false
