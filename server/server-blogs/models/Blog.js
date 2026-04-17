@@ -68,13 +68,12 @@ const blogSchema = new mongoose.Schema(
       default: 0,
       min: 0
     },
-    likedBy: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
-      }
-    ],
     commentCount: {
+      type: Number,
+      default: 0,
+      min: 0
+    },
+    bookmarkCount: {
       type: Number,
       default: 0,
       min: 0

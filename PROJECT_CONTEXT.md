@@ -65,10 +65,11 @@ This document provides a comprehensive overview of the POSEproject to optimize c
 - `Blog`: Rich schema with HTML content, cover image (Cloudinary), references to `User`, `BlogCategory`, `Tag`, and `relatedProducts` (referencing `Product` with stock population). 
   - **Approval Workflow**: 3-step process (Draft -> Pending -> Published). Rejection sends the post back to Draft with a `rejectionReason`.
   - **Security**: Product tagging (`relatedProducts`) is strictly restricted to **Admin** users.
-  - **Performance**: View counts use a 30-minute Redis TTL per IP to prevent spam. Tracks `commentCount`.
+  - **Performance**: View counts use a 30-minute Redis TTL per IP to prevent spam. Tracks `commentCount`, `likeCount`, and `bookmarkCount`.
 - `Comment`: Manages user interactions on blogs.
   - **Logic**: Automatically updates `blog.commentCount` on creation and removal.
-  - **Permissions**: Logged-in users can comment/delete their own; Admins can delete any comment.
+- `BlogInteraction`: Dedicated collection for `LIKE` and `BOOKMARK` actions.
+  - **Logic**: High-performance toggle system with compound indexing. Synchronizes counts in the underlying Blog document.
 - `BlogCategory` & `Tag`: Metadata for blog categorization. `BlogCategory` includes a `status` field (`ACTIVE`/`INACTIVE`).
 
 ### Frontend Architecture
