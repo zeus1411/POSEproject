@@ -20,7 +20,7 @@ class BlogService {
       throw new BadRequestError('Vui lòng tải lên ảnh bìa cho bài viết');
     }
 
-    const { title, content, category, tags, status, excerpt } = data;
+    const { title, content, category, tags, status, excerpt, relatedProducts } = data;
 
     // Handle tags (support both stringified array and real array)
     let processedTags = tags;
@@ -29,6 +29,20 @@ class BlogService {
         processedTags = JSON.parse(tags);
       } catch (e) {
         processedTags = tags.split(',').map(t => t.trim());
+      }
+    }
+
+    // Handle relatedProducts
+    let processedRelatedProducts = [];
+    if (relatedProducts) {
+      if (typeof relatedProducts === 'string') {
+        try {
+          processedRelatedProducts = JSON.parse(relatedProducts);
+        } catch (e) {
+          processedRelatedProducts = relatedProducts.split(',').map(id => id.trim());
+        }
+      } else if (Array.isArray(relatedProducts)) {
+        processedRelatedProducts = relatedProducts;
       }
     }
 
@@ -43,7 +57,8 @@ class BlogService {
       coverImage: {
         url: file.path,
         publicId: file.filename
-      }
+      },
+      relatedProducts: processedRelatedProducts
     };
 
     const blog = await Blog.create(blogData);
@@ -108,6 +123,51 @@ class BlogService {
   }
 
   /**
+   * Get public blogs (Only PUBLISHED)
+   * @param {Object} query - Query parameters (category, tag, page, limit, search)
+   * @returns {Promise<Object>} List of blogs and pagination info
+   */
+  async getPublicBlogs(query = {}) {
+    const { category, tag, page = 1, limit = 10, search } = query;
+
+    const filter = { status: 'PUBLISHED' };
+
+    if (category) filter.category = category;
+    if (tag) filter.tags = tag;
+    
+    // Search by title specifically as requested
+    if (search) {
+      filter.title = { $regex: search, $options: 'i' };
+    }
+
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const pageSize = Math.max(1, Math.min(100, parseInt(limit, 10) || 10));
+    const skip = (pageNum - 1) * pageSize;
+
+    const [blogs, total] = await Promise.all([
+      Blog.find(filter)
+        .populate('author', 'username fullName avatar')
+        .populate('category', 'name slug')
+        .populate('tags', 'name slug')
+        .populate('relatedProducts', 'name price images sku slug discount originalPrice')
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(pageSize),
+      Blog.countDocuments(filter)
+    ]);
+
+    return {
+      blogs,
+      pagination: {
+        total,
+        page: pageNum,
+        pages: Math.ceil(total / pageSize),
+        limit: pageSize
+      }
+    };
+  }
+
+  /**
    * Get blog by ID
    * @param {string} id - Blog ID
    * @returns {Promise<Object>} Blog object
@@ -120,7 +180,8 @@ class BlogService {
     const blog = await Blog.findById(id)
       .populate('author', 'username fullName avatar')
       .populate('category', 'name slug')
-      .populate('tags', 'name slug');
+      .populate('tags', 'name slug')
+      .populate('relatedProducts', 'name price images sku slug discount originalPrice');
 
     if (!blog) {
       throw new NotFoundError('Không tìm thấy bài viết');
@@ -138,10 +199,11 @@ class BlogService {
    * @returns {Promise<Object>} Blog object
    */
   async getBlogBySlug(slug) {
-    const blog = await Blog.findOne({ slug, isPublished: true })
+    const blog = await Blog.findOne({ slug, status: 'PUBLISHED' })
       .populate('author', 'username fullName avatar')
       .populate('category', 'name slug')
-      .populate('tags', 'name slug');
+      .populate('tags', 'name slug')
+      .populate('relatedProducts', 'name price images sku slug discount originalPrice');
 
     if (!blog) {
       throw new NotFoundError('Không tìm thấy bài viết hoặc bài viết chưa được công bố');
@@ -200,6 +262,17 @@ class BlogService {
       }
     }
 
+    // Handle relatedProducts if provided
+    if (data.relatedProducts) {
+      if (typeof data.relatedProducts === 'string') {
+        try {
+          data.relatedProducts = JSON.parse(data.relatedProducts);
+        } catch (e) {
+          data.relatedProducts = data.relatedProducts.split(',').map(id => id.trim());
+        }
+      }
+    }
+
     // Ensure status safety (Users can't set status to PUBLISHED themselves if we wanted moderation)
     // For now, I'll allow it if they are admin, or keep it PENDING if they are user.
     if (userRole !== 'admin' && data.status === 'PUBLISHED') {
@@ -210,7 +283,8 @@ class BlogService {
       id,
       { $set: data },
       { new: true, runValidators: true }
-    ).populate('author category tags');
+    ).populate('author category tags')
+    .populate('relatedProducts', 'name price images sku slug discount originalPrice');
 
     return updatedBlog;
   }

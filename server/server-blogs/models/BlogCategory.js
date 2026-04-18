@@ -18,6 +18,11 @@ const blogCategorySchema = new mongoose.Schema(
     description: {
       type: String,
       maxlength: [500, 'Mô tả không được vượt quá 500 ký tự']
+    },
+    status: {
+      type: String,
+      enum: ['ACTIVE', 'INACTIVE'],
+      default: 'ACTIVE'
     }
   },
   {
