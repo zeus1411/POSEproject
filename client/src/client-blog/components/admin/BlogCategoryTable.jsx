@@ -65,26 +65,26 @@ const BlogCategoryTable = ({ categories, onEdit, onDelete, onToggleStatus, isLoa
               <td className="px-6 py-4 whitespace-nowrap">
                 <span
                   className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                    category.isActive
+                    category.status === 'ACTIVE'
                       ? 'bg-green-100 text-green-800'
                       : 'bg-red-100 text-red-800'
                   }`}
                 >
-                  {category.isActive ? 'Hoạt động' : 'Vô hiệu hóa'}
+                  {category.status === 'ACTIVE' ? 'Hoạt động' : 'Vô hiệu hóa'}
                 </span>
               </td>
               <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                 <div className="flex justify-end gap-2">
                   <button
-                    onClick={() => onToggleStatus(category._id, !category.isActive)}
+                    onClick={() => onToggleStatus(category._id, category.status)}
                     className={`p-2 rounded-lg transition ${
-                      category.isActive
+                      category.status === 'ACTIVE'
                         ? 'text-green-600 hover:text-green-900 hover:bg-green-50'
                         : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
                     }`}
-                    title={category.isActive ? 'Vô hiệu hóa' : 'Kích hoạt'}
+                    title={category.status === 'ACTIVE' ? 'Vô hiệu hóa' : 'Kích hoạt'}
                   >
-                    {category.isActive ? <Eye size={16} /> : <EyeOff size={16} />}
+                    {category.status === 'ACTIVE' ? <Eye size={16} /> : <EyeOff size={16} />}
                   </button>
                   <button
                     onClick={() => onEdit(category._id)}

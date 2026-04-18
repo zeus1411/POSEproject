@@ -98,9 +98,9 @@ export const deleteBlogCategory = createAsyncThunk(
 // Update blog category status
 export const updateBlogCategoryStatus = createAsyncThunk(
   'blogCategories/updateBlogCategoryStatus',
-  async ({ categoryId, isActive }, thunkAPI) => {
+  async ({ categoryId, status }, thunkAPI) => {
     try {
-      return await blogCategoryService.updateBlogCategoryStatus(categoryId, isActive);
+      return await blogCategoryService.updateBlogCategoryStatus(categoryId, status);
     } catch (error) {
       const message =
         error.response?.data?.message ||
@@ -234,9 +234,11 @@ export const blogCategorySlice = createSlice({
 
         const updatedCategory = action.payload.category;
 
-        state.message = `Đã ${
-          updatedCategory.isActive ? 'kích hoạt' : 'vô hiệu hóa'
-        } danh mục bài viết`;
+          state.message = `Đã ${
+            updatedCategory.status === 'ACTIVE'
+              ? 'kích hoạt'
+              : 'vô hiệu hóa'
+          } danh mục bài viết`;
 
         const index = state.blogCategories.findIndex(
           (cat) => cat._id === updatedCategory._id

@@ -28,8 +28,12 @@ const blogCategoryService = {
     return response.data;
   },
 
-  updateBlogCategoryStatus: async (categoryId, isActive) => {
-    const response = await api.patch(`/blog-categories/${categoryId}`, { isActive });
+  updateBlogCategoryStatus: async (categoryId, status) => {
+    const response = await api.patch(
+      `/blog-categories/${categoryId}/status`,
+      { status }
+    );
+
     return response.data;
   }
 };

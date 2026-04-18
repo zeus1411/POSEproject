@@ -57,6 +57,15 @@ const increaseView = async (blogId) => {
   return res.data;
 };
 
+const getBlogBySlug = async (slug) => {
+  const res = await api.get(`/blogs/slug/${slug}`);
+  return res.data;
+};
+
+const getPublicBlogs = async (params) => {
+  const res = await api.get('/blogs/public', { params });
+  return res.data;
+};
 export default {
   createBlog,
   updateBlog,
@@ -68,5 +77,7 @@ export default {
   getAllTags,
   likeBlog,
   addComment,
-  increaseView
+  increaseView,
+  getBlogBySlug,
+  getPublicBlogs
 };

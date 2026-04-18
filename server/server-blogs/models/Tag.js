@@ -18,13 +18,17 @@ const tagSchema = new mongoose.Schema(
     description: {
       type: String,
       maxlength: [200, 'Mô tả không được vượt quá 200 ký tự']
-    }
+    },
+    isActive: {
+      type: Boolean,
+      default: true
+    },
   },
   {
     timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true }
-  }
+  }  
 );
 
 // Indexes

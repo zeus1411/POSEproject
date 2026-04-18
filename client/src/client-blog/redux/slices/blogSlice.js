@@ -72,6 +72,19 @@ export const deleteBlog = createAsyncThunk(
   }
 );
 
+export const getPublicBlogs = createAsyncThunk(
+  'blog/getPublic',
+  async (params, thunkAPI) => {
+    try {
+      return await blogService.getPublicBlogs(params);
+    } catch (err) {
+      return thunkAPI.rejectWithValue(
+        err.response?.data?.message || err.message
+      );
+    }
+  }
+);
+
 const blogSlice = createSlice({
   name: 'blog',
   initialState,
@@ -121,6 +134,23 @@ const blogSlice = createSlice({
         state.blogs = state.blogs.filter(
           (blog) => blog._id !== action.meta.arg
         );
+      })
+      
+      .addCase(getPublicBlogs.pending, (state) => {
+        state.isLoading = true;
+      })
+
+      .addCase(getPublicBlogs.fulfilled, (state, action) => {
+        state.isLoading = false;
+
+        state.blogs = action.payload.blogs;
+
+        // vì BE của bạn trả pagination object
+        state.total = action.payload.pagination.total;
+
+        state.page = action.payload.pagination.page;
+
+        state.totalPages = action.payload.pagination.pages;
       })
       .addMatcher(
         (action) => action.type.endsWith('/rejected'),

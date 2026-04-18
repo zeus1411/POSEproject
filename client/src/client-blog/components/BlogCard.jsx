@@ -41,8 +41,8 @@ const BlogCard = ({ blog }) => {
         <div className="flex justify-between items-end text-xs text-gray-500 mt-2">
           {/* Left: likes + views */}
           <div className="flex gap-3">
-            <span>❤️ {formatNumber(blog.likesCount)}</span>
-            <span>👁 {formatNumber(blog.views)}</span>
+            <span>❤️ {formatNumber(blog.likeCount)}</span>
+            <span>👁 {formatNumber(blog.viewCount)}</span>
           </div>
 
           {/* Right: comments + date */}

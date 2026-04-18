@@ -70,12 +70,12 @@ const BlogTags = () => {
     setShowForm(true);
   };
 
-  const handleEditTag = (tagId) => {
-    dispatch(getBlogTagById(tagId));
+  const handleEditTag = async (tagId) => {
+    await dispatch(getBlogTagById(tagId));
     setEditingTag(tagId);
     setShowForm(true);
   };
-
+  
   const handleDeleteTag = (tagId) => {
     setDeleteTagId(tagId);
     setShowConfirm(true);

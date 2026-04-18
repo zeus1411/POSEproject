@@ -112,23 +112,23 @@ const BlogCategories = () => {
     dispatch(clearCurrentBlogCategory());
   };
 
-  const handleToggleCategoryStatus = async (categoryId, newStatus) => {
+  const handleToggleCategoryStatus = async (categoryId, currentStatus) => {
     try {
-      const category = blogCategories.find(cat => cat._id === categoryId);
+      const newStatus =
+        currentStatus === 'ACTIVE'
+          ? 'INACTIVE'
+          : 'ACTIVE';
 
       await dispatch(
-        updateBlogCategory({
+        updateBlogCategoryStatus({
           categoryId,
-          categoryData: {
-            ...category,
-            isActive: newStatus
-          }
+          status: newStatus
         })
       ).unwrap();
 
     } catch (error) {
-      console.error('Error toggling blog category status:', error);
-      toast.error('Có lỗi xảy ra khi cập nhật trạng thái danh mục bài viết');
+      console.error(error);
+      toast.error('Lỗi cập nhật trạng thái');
     }
   };
 

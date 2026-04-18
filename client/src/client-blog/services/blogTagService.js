@@ -9,8 +9,8 @@ const blogTagService = {
   },
 
   getBlogTagById: async (tagId) => {
-    const response = await api.get(`/tags/${tagId}`);
-    return response.data;
+  const response = await api.get(`/tags/${tagId}`);
+  return response.data.tag;
   },
 
   createBlogTag: async (tagData) => {
