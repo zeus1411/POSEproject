@@ -35,9 +35,8 @@ const deleteBlog = async (id) => {
 
 const searchProductsQuick = async (query) => {
   const res = await api.get(`/products/search-quick?q=${query}`);
-  return res.data; // array các sản phẩm { _id, name, sku, price, images, slug }
+  return res.data.products || [];
 };
-
 const getAllCategories = () => blogCategoryService.getBlogCategories();
 
 const getAllTags = () => blogTagService.getBlogTags();

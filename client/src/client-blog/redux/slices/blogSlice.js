@@ -121,10 +121,10 @@ const blogSlice = createSlice({
       })
       .addCase(getAllBlogs.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.blogs = action.payload.blogs;
-        state.total = action.payload.total;
-        state.page = action.payload.page;
-        state.totalPages = action.payload.totalPages;
+        state.blogs = action.payload.blogs || [];
+        state.total = action.payload.pagination?.total || 0;
+        state.page = action.payload.pagination?.page || 1;
+        state.totalPages = action.payload.pagination?.pages || 1;
       })
       .addCase(deleteBlog.fulfilled, (state, action) => {
         state.isSuccess = true;
@@ -135,7 +135,7 @@ const blogSlice = createSlice({
           (blog) => blog._id !== action.meta.arg
         );
       })
-      
+
       .addCase(getPublicBlogs.pending, (state) => {
         state.isLoading = true;
       })

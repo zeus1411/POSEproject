@@ -12,10 +12,12 @@ const BlogList = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { blogs, isLoading, page, totalPages } = useSelector((state) => state.blog);
+  console.log({ page, totalPages, blogs });
   const [confirmId, setConfirmId] = React.useState(null);
   
   useEffect(() => {
-        dispatch(getAllBlogs({ page: 1, limit: 10 }));
+        dispatch(getAllBlogs({ page: 1, limit: 10 }))
+        .then(res => console.log(res.payload));
   }, [dispatch]);
 
   const handleDelete = async (id) => {    

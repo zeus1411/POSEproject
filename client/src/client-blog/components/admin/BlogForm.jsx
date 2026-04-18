@@ -58,25 +58,42 @@ const BlogForm = ({
   const handleSubmit = (e) => {
     e.preventDefault();
 
+    // check category
+    if (!formData.category) {
+      toast.error("Phải chọn danh mục");
+      return;
+    }
+
+    // tạo mới mới bắt buộc có ảnh
     if (!blog && !formData.coverImage) {
       toast.error("Phải chọn ảnh bìa");
       return;
     }
 
     const data = new FormData();
+
     data.append('title', formData.title);
     data.append('content', formData.content);
-    data.append('category', formData.category);
     data.append('status', formData.status);
+
+    // chỉ gửi nếu có category
+    if (formData.category) {
+      data.append('category', formData.category);
+    }
+
     data.append('tags', JSON.stringify(formData.tags));
 
-    if (formData.coverImage) data.append('coverImage', formData.coverImage);
+    if (formData.coverImage) {
+      data.append('coverImage', formData.coverImage);
+    }
 
+    // sản phẩm liên kết
     if (relatedProducts.length > 0) {
-      // Gửi mảng id sản phẩm
       data.append(
         'relatedProducts',
-        JSON.stringify(relatedProducts.map((p) => p._id))
+        JSON.stringify(
+          relatedProducts.map(p => p._id)
+        )
       );
     }
 
