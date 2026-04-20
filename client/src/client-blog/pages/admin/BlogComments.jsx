@@ -1,100 +1,233 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import { MessageSquare, EyeOff, Search } from 'lucide-react';
 
-const BlogComments = () => {
+import AdminLayout from '../../../client-eco/components/admin/AdminLayout';
+
+import commentService from '../../services/commentService';
+import blogService from '../../services/blogService';
+import ConfirmDialog from '../../../client-eco/components/common/ConfirmDialog';
+
+const BlogComment = () => {
+  const [blogs, setBlogs] = useState([]);
+  const [selectedBlog, setSelectedBlog] = useState('');
   const [comments, setComments] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [search, setSearch] = useState('');
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [selectedCommentId, setSelectedCommentId] = useState(null);
 
   useEffect(() => {
-    // 👉 FAKE DATA
-    setComments([
-      {
-        _id: '1',
-        user: 'Nguyễn Văn A',
-        content: 'Bài viết hay!',
-        blogTitle: 'Setup hồ thủy sinh',
-        createdAt: new Date(),
-        isHidden: false
-      },
-      {
-        _id: '2',
-        user: 'Trần Thị B',
-        content: 'Spam link abcxyz',
-        blogTitle: 'Setup hồ thủy sinh',
-        createdAt: new Date(),
-        isHidden: true
-      }
-    ]);
+    loadBlogs();
   }, []);
 
-  const toggleHide = (id) => {
-    setComments(prev =>
-      prev.map(c =>
-        c._id === id ? { ...c, isHidden: !c.isHidden } : c
-      )
-    );
+  const loadBlogs = async () => {
+    try {
+      const data = await blogService.getAllBlogs();
+
+      const blogList = data.blogs || [];
+
+      setBlogs(blogList);
+
+      if (blogList.length > 0) {
+        const firstBlogId = blogList[0]._id;
+
+        setSelectedBlog(firstBlogId);
+
+        loadComments(firstBlogId);
+      }
+    } catch (error) {
+      toast.error('Không tải được danh sách bài viết');
+    }
   };
 
-   const navigate = useNavigate();
+  const loadComments = async (blogId) => {
+    try {
+      setLoading(true);
 
-   const goToComment = (comment) => {
-      navigate(`/blog/${comment.blogSlug}?commentId=${comment._id}`);
-   };
+      const data = await commentService.getCommentsByBlog(blogId);
+
+      setComments(data.comments || []);
+    } catch (error) {
+      toast.error('Không tải được bình luận');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleChangeBlog = (e) => {
+    const blogId = e.target.value;
+
+    setSelectedBlog(blogId);
+
+    loadComments(blogId);
+  };
+
+  const handleHideComment = async () => {
+
+    if (!selectedCommentId) return;
+
+    try {
+
+      await commentService.hideComment(selectedCommentId);
+
+      toast.success('Đã ẩn bình luận');
+
+      setComments(prev =>
+        prev.filter(
+          item => item._id !== selectedCommentId
+        )
+      );
+
+    } catch (error) {
+
+      toast.error('Ẩn bình luận thất bại');
+
+    } finally {
+
+      setShowConfirm(false);
+      setSelectedCommentId(null);
+
+    }
+
+  };
+
+  const filteredComments = comments.filter((comment) =>
+    comment.content
+      ?.toLowerCase()
+      .includes(search.toLowerCase())
+  );
 
   return (
-    <div className="p-6">
-      <h2 className="text-xl font-semibold mb-4">
-        🛡️ Quản lý bình luận
-      </h2>
+    <AdminLayout>
+      <div className='p-6'>
+        <div className='flex items-center gap-3 mb-6'>
+          <MessageSquare size={28} />
+          <h1 className='text-2xl font-bold'>
+            Quản lý bình luận
+          </h1>
+        </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full border text-sm">
-          <thead className="bg-gray-100">
-            <tr>
-              <th className="p-2 text-left">User</th>
-              <th className="p-2 text-left">Comment</th>
-              <th className="p-2 text-left">Blog</th>
-              <th className="p-2 text-left">Date</th>
-              <th className="p-2 text-center">Action</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {comments.map(c => (
-              <tr key={c._id} className="border-t">
-                <td className="p-2">{c.user}</td>
-                <td className="p-2">{c.content}</td>
-                <td className="p-2">{c.blogTitle}</td>
-                <td className="p-2">
-                  {new Date(c.createdAt).toLocaleString('vi-VN')}
-                </td>
-
-                <td className="p-2 text-center">
-                  <button
-                    onClick={() => toggleHide(c._id)}
-                    className={`px-3 py-1 rounded text-white text-xs ${
-                      c.isHidden
-                        ? 'bg-green-500'
-                        : 'bg-red-500'
-                    }`}
-                  >
-                    {c.isHidden ? 'Hiện lại' : 'Ẩn'}
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-
-            <button
-                onClick={() => goToComment(c)}
-                className="px-3 py-1 text-xs rounded bg-blue-500 text-white"
+        <div className='bg-white p-5 rounded-xl shadow mb-6'>
+          <div className='grid md:grid-cols-2 gap-4'>
+            <select
+              value={selectedBlog}
+              onChange={handleChangeBlog}
+              className='border rounded-lg p-3'
+            >
+              {blogs.map((blog) => (
+                <option
+                  key={blog._id}
+                  value={blog._id}
                 >
-                Xem bình luận
-            </button>
+                  {blog.title}
+                </option>
+              ))}
+            </select>
 
-        </table>
+            <div className='relative'>
+              <Search
+                size={18}
+                className='absolute left-3 top-3'
+              />
+
+              <input
+                type='text'
+                placeholder='Tìm bình luận...'
+                value={search}
+                onChange={(e) =>
+                  setSearch(e.target.value)
+                }
+                className='w-full border rounded-lg p-3 pl-10'
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className='bg-white rounded-xl shadow'>
+          {loading ? (
+            <div className='text-center p-10'>
+              Đang tải...
+            </div>
+          ) : filteredComments.length === 0 ? (
+            <div className='text-center p-10'>
+              Không có bình luận
+            </div>
+          ) : (
+            <table className='w-full'>
+              <thead className='bg-gray-50 border-b'>
+                <tr>
+                  <th className='p-4 text-left'>
+                    Người dùng
+                  </th>
+                  <th className='p-4 text-left'>
+                    Nội dung
+                  </th>
+                  <th className='p-4 text-left'>
+                    Ngày tạo
+                  </th>
+                  <th className='p-4 text-center'>
+                    Thao tác
+                  </th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {filteredComments.map((comment) => (
+                  <tr
+                    key={comment._id}
+                    className='border-b'
+                  >
+                    <td className='p-4'>
+                      {comment.author?.fullName ||
+                        comment.author?.username ||
+                        'Unknown'}
+                    </td>
+
+                    <td className='p-4'>
+                      {comment.content}
+                    </td>
+
+                    <td className='p-4'>
+                      {new Date(
+                        comment.createdAt
+                      ).toLocaleDateString('vi-VN')}
+                    </td>
+
+                    <td className='p-4 text-center'>
+                      <button
+                        onClick={() => {
+                          setSelectedCommentId(comment._id);
+                          setShowConfirm(true);
+                        }}
+                        className='bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg inline-flex items-center gap-2'
+                      >
+                        <EyeOff size={16} />
+                        Ẩn
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
       </div>
-    </div>
+      
+      <ConfirmDialog
+        isOpen={showConfirm}
+        title="Xác nhận ẩn bình luận"
+        message="Bạn có chắc muốn ẩn bình luận này? Bình luận sẽ không còn hiển thị với người dùng."
+        confirmText="Ẩn bình luận"
+        cancelText="Hủy"
+        onConfirm={handleHideComment}
+        onCancel={() => {
+          setShowConfirm(false);
+          setSelectedCommentId(null);
+        }}
+      />
+    </AdminLayout>
   );
 };
 
-export default BlogComments;
+export default BlogComment;

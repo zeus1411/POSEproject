@@ -85,7 +85,7 @@ const AdminSidebar = () => {
     },
     {
       name: 'Blog Comments',
-      path: '/admin/blog-comments',
+      href: '/admin/blog-comments',
       icon: NewspaperIcon,
       color: 'from-cyan-500 to-sky-500',
       bg: 'bg-gradient-to-br from-cyan-50 to-sky-50',
