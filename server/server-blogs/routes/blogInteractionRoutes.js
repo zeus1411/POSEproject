@@ -2,7 +2,8 @@ import express from 'express';
 import {
     toggleLike,
     toggleBookmark,
-    getMyInteractions
+    getMyInteractions,
+    getMyBookmarks
 } from '../controllers/blogInteractionController.js';
 import { authenticateUser } from '../../middlewares/auth.js';
 
@@ -94,5 +95,7 @@ router.post('/bookmark/:blogId', authenticateUser, toggleBookmark);
  *         description: Map of interaction statuses
  */
 router.post('/status', authenticateUser, getMyInteractions);
+
+router.get('/my-bookmarks', authenticateUser, getMyBookmarks);
 
 export default router;

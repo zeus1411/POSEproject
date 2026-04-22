@@ -22,6 +22,11 @@ const commentSchema = new mongoose.Schema(
       type: String,
       enum: ['ACTIVE', 'HIDDEN'],
       default: 'ACTIVE'
+    },
+    parentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Comment',
+      default: null
     }
   },
   {

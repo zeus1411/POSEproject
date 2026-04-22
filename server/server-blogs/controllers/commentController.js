@@ -11,10 +11,10 @@ import commentService from '../services/commentService.js';
 // @access  Private
 export const createComment = async (req, res, next) => {
     try {
-        const { blogId, content } = req.body;
+        const { blogId, content, parentId } = req.body;
         const userId = req.user.userId;
 
-        const comment = await commentService.createComment(blogId, userId, content);
+        const comment = await commentService.createComment(blogId, userId, content, parentId);
         res.status(StatusCodes.CREATED).json({
             success: true,
             message: 'Đăng bình luận thành công',
@@ -52,6 +52,19 @@ export const deleteComment = async (req, res, next) => {
 
         const result = await commentService.deleteComment(id, userId, userRole);
         res.status(StatusCodes.OK).json(result);
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const updateComment = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { content } = req.body;
+        const userId = req.user.userId;
+
+        const updatedComment = await commentService.updateComment(id, userId, content);
+        res.status(StatusCodes.OK).json(updatedComment);
     } catch (error) {
         next(error);
     }

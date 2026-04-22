@@ -10,7 +10,8 @@ import {
   SparklesIcon,
   BeakerIcon,
   LightBulbIcon,
-  SunIcon
+  SunIcon,
+  NewspaperIcon
 } from '@heroicons/react/24/outline';
 
 const Home = () => {
@@ -28,7 +29,7 @@ const Home = () => {
   // Track active section on scroll
   useEffect(() => {
     const handleScroll = () => {
-      const sections = ['hero', 'collections', 'features', 'why-us'];
+      const sections = ['hero', 'collections', 'features', 'why-us', 'blogs'];
       const scrollPosition = window.scrollY + 200;
 
       for (const sectionId of sections) {
@@ -148,6 +149,21 @@ const Home = () => {
                 Ưu điểm
               </span>
             </button>
+            <button
+              onClick={() => scrollToSection('blogs')}
+              className="group relative"
+              title="Blogs"
+            >
+              <div className={`w-3 h-3 rounded-full transition-all duration-200 ${
+                activeSection === 'blogs'
+                  ? 'bg-teal-600 ring-4 ring-teal-200'
+                  : 'bg-gray-300 group-hover:bg-teal-400'
+              }`}></div>
+
+              <span className="absolute left-8 top-1/2 -translate-y-1/2 bg-gray-900 text-white text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
+                Blogs
+              </span>
+            </button>
           </div>
         </div>
       </nav>
@@ -179,20 +195,63 @@ const Home = () => {
                 </p>
               </div>
 
-              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+              <div className="pt-4 flex flex-col items-center lg:items-start gap-5">
+                {/* Primary buttons */}
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Link
+                    to="/shop"
+                    className="inline-flex items-center justify-center
+                              px-8 py-4
+                              text-lg font-semibold
+                              text-white
+                              bg-gradient-to-r from-emerald-600 to-teal-600
+                              rounded-full
+                              hover:from-emerald-700 hover:to-teal-700
+                              hover:scale-105
+                              transition-all duration-300
+                              shadow-lg hover:shadow-xl"
+                  >
+                    Shopping time
+                    <ArrowRightIcon className="ml-2 w-5 h-5" />
+                  </Link>
+
+                  <button
+                    onClick={() => scrollToSection('collections')}
+                    className="inline-flex items-center justify-center
+                              px-8 py-4
+                              text-lg font-semibold
+                              text-emerald-600
+                              bg-white
+                              border-2 border-emerald-600
+                              rounded-full
+                              hover:bg-emerald-50
+                              hover:scale-105
+                              transition-all duration-300
+                              shadow-md hover:shadow-lg"
+                  >
+                    Tìm Hiểu Thêm
+                  </button>
+                </div>
+
+                {/* Tertiary CTA */}
                 <Link
-                  to="/shop"
-                  className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-gradient-to-r from-emerald-600 to-teal-600 rounded-full hover:from-emerald-700 hover:to-teal-700 transform hover:scale-105 transition-all duration-200 shadow-lg hover:shadow-xl"
-                >
-                  Shopping time
-                  <ArrowRightIcon className="ml-2 w-5 h-5" />
+                  to="/blogs"
+                  className="inline-flex items-center justify-center
+                              px-8 py-4
+                              text-lg font-semibold
+                              text-emerald-600
+                              bg-white
+                              border-2 border-emerald-600
+                              rounded-full
+                              hover:bg-emerald-50
+                              hover:scale-105
+                              transition-all duration-300
+                              shadow-md hover:shadow-lg"
+                  >
+                  <span className="mr-2">📖</span>
+                  Xem Blog hướng dẫn setup
+                  <ArrowRightIcon className="ml-2 w-4 h-4"/>
                 </Link>
-                <button
-                  onClick={() => scrollToSection('collections')}
-                  className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-emerald-600 bg-white border-2 border-emerald-600 rounded-full hover:bg-emerald-50 transition-colors duration-200 shadow-md hover:shadow-lg"
-                >
-                  Tìm Hiểu Thêm
-                </button>
               </div>
             </div>
 
@@ -891,6 +950,156 @@ const Home = () => {
                 <div className="text-gray-600 text-sm">Đơn Hàng</div>
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Blog Section */}
+      <section
+        id="blogs"
+        className="py-24 bg-gradient-to-b from-slate-50 to-cyan-50 relative overflow-hidden"
+      >
+        {/* Background blobs */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-20 left-20 w-72 h-72 bg-cyan-300 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-20 right-20 w-72 h-72 bg-teal-300 rounded-full blur-3xl"></div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+
+          {/* Heading */}
+          <div className="text-center mb-16 animate-on-scroll">
+            <div className="inline-flex items-center gap-2 bg-white shadow-md px-5 py-2 rounded-full mb-6">
+              <NewspaperIcon className="w-5 h-5 text-teal-600" />
+              <span className="font-semibold text-gray-700">
+                Aquascaping Knowledge
+              </span>
+            </div>
+
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+              Blogs & Hướng Dẫn
+            </h2>
+
+            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+              Chia sẻ kinh nghiệm setup, chăm cây, nuôi cá và các bí quyết giúp bể
+              thủy sinh của bạn đẹp hơn mỗi ngày.
+            </p>
+          </div>
+
+          {/* Blog Cards */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+            {/* Blog 1 */}
+            <Link
+              to="/blogs/setup-be-thuy-sinh-cho-nguoi-moi"
+              className="group bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500"
+            >
+              <div className="overflow-hidden h-60">
+                <img
+                  src="/images/nature-style.jpg"
+                  alt=""
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                />
+              </div>
+
+              <div className="p-8">
+                <span className="text-sm font-semibold text-teal-600">
+                  Beginner Guide
+                </span>
+
+                <h3 className="text-2xl font-bold text-gray-900 mt-3 mb-4 group-hover:text-teal-600 transition-colors">
+                  Cách Setup Bể Thủy Sinh Cho Người Mới
+                </h3>
+
+                <p className="text-gray-600 mb-6">
+                  Hướng dẫn từng bước từ nền, lọc, đèn cho đến chọn cây và cá.
+                </p>
+
+                <div className="flex items-center text-teal-600 font-semibold">
+                  Đọc bài viết
+                  <ArrowRightIcon className="w-5 h-5 ml-2 group-hover:translate-x-2 transition-transform" />
+                </div>
+              </div>
+            </Link>
+
+
+            {/* Blog 2 */}
+            <Link
+              to="/blogs/co2-va-anh-sang"
+              className="group bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500"
+            >
+              <div className="overflow-hidden h-60">
+                <img
+                  src="/images/iwagumi.jpg"
+                  alt=""
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                />
+              </div>
+
+              <div className="p-8">
+                <span className="text-sm font-semibold text-cyan-600">
+                  Advanced Tips
+                </span>
+
+                <h3 className="text-2xl font-bold text-gray-900 mt-3 mb-4 group-hover:text-cyan-600 transition-colors">
+                  CO2 Và Ánh Sáng: Bộ Đôi Quyết Định Thành Công
+                </h3>
+
+                <p className="text-gray-600 mb-6">
+                  Hiểu đúng về ánh sáng và CO2 để cây phát triển khỏe mạnh.
+                </p>
+
+                <div className="flex items-center text-cyan-600 font-semibold">
+                  Đọc bài viết
+                  <ArrowRightIcon className="w-5 h-5 ml-2 group-hover:translate-x-2 transition-transform" />
+                </div>
+              </div>
+            </Link>
+
+
+            {/* Blog 3 */}
+            <Link
+              to="/blogs/top-10-cay-de-song"
+              className="group bg-white rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500"
+            >
+              <div className="overflow-hidden h-60">
+                <img
+                  src="/images/planted-tank.jpg"
+                  alt=""
+                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                />
+              </div>
+
+              <div className="p-8">
+                <span className="text-sm font-semibold text-emerald-600">
+                  Plant Care
+                </span>
+
+                <h3 className="text-2xl font-bold text-gray-900 mt-3 mb-4 group-hover:text-emerald-600 transition-colors">
+                  Top 10 Cây Thủy Sinh Dễ Sống Nhất
+                </h3>
+
+                <p className="text-gray-600 mb-6">
+                  Danh sách cây cực dễ chơi cho người mới bắt đầu.
+                </p>
+
+                <div className="flex items-center text-emerald-600 font-semibold">
+                  Đọc bài viết
+                  <ArrowRightIcon className="w-5 h-5 ml-2 group-hover:translate-x-2 transition-transform" />
+                </div>
+              </div>
+            </Link>
+          </div>
+
+          {/* CTA */}
+          <div className="text-center mt-16">
+            <Link
+              to="/blogs"
+              className="inline-flex items-center px-8 py-4 rounded-full bg-gradient-to-r from-teal-600 to-cyan-600 text-white font-bold hover:scale-105 transition-all shadow-xl"
+            >
+              Xem Tất Cả Blogs
+              <ArrowRightIcon className="w-5 h-5 ml-2"/>
+            </Link>
           </div>
         </div>
       </section>

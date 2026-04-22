@@ -14,7 +14,7 @@
     // 🔥 Tạo comment
     createComment: async (data) => {
       const res = await api.post(API_URL, data);
-      return res.data;
+      return res.data.comment;
       // expect: { _id, content, user, createdAt }
     },
 
@@ -28,8 +28,12 @@
     deleteComment: async (commentId) => {
       const res = await api.delete(`${API_URL}/${commentId}`);
       return res.data;
-    }
+    },
 
+    updateComment: async (commentId, content) => {
+      const res = await api.put(`${API_URL}/${commentId}`, { content });
+      return res.data;
+    }
   };
 
   export default commentService;

@@ -21,9 +21,13 @@ import {
 
 const BlogCategories = () => {
   const dispatch = useDispatch();
+  const [page,setPage]=useState(1);
+  const limit=10;
 
   const {
     blogCategories,
+    totalPages,
+    total,
     currentBlogCategory,
     isLoading,
     isSuccess,
@@ -38,8 +42,14 @@ const BlogCategories = () => {
 
   // Load blog categories on mount
   useEffect(() => {
-    dispatch(getBlogCategories(true));
-  }, [dispatch]);
+    dispatch(
+      getBlogCategories({
+        page,
+        limit,
+        includeInactive:true
+      })
+    );
+  }, [dispatch,page]);
 
   // Handle success
   useEffect(() => {
@@ -134,29 +144,55 @@ const BlogCategories = () => {
 
   return (
     <AdminLayout>
-      <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Header */}
+      <div className="min-h-screen bg-[#f8f9ff] p-8">
+        {/* HEADER */}
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              Quản lý danh mục bài viết
-            </h1>
-            <p className="text-gray-600 mt-1">
-              Quản lý danh mục dùng cho các bài blog thủy sinh
+            <div className="flex items-center gap-3 mb-2">
+              <h1 className="text-3xl font-black tracking-tight text-[#1e293b]">
+                Blog Categories
+              </h1>
+
+              <span className="bg-[#4f46e5]/10 text-[#4f46e5] px-3 py-1 rounded-full text-sm font-bold">
+                {blogCategories?.length || 0} danh mục
+              </span>
+            </div>
+
+            <p className="text-slate-500 font-medium">
+              Quản lý danh mục dùng để phân loại nội dung bài viết.
             </p>
           </div>
 
           <button
             onClick={handleAddCategory}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
+            className="
+              bg-[#4f46e5]
+              text-white
+              px-5 py-3
+              rounded-xl
+              font-bold
+              shadow-md
+              hover:shadow-lg
+              hover:scale-[1.02]
+              transition-all
+              flex items-center gap-2
+            "
           >
-            <Plus size={20} />
-            Thêm danh mục bài viết
+            <Plus size={18} />
+            Thêm danh mục
           </button>
         </div>
 
-        {/* Table */}
-        <div className="bg-white rounded-lg shadow overflow-hidden">
+        {/* TABLE */}
+        <div
+          className="
+            bg-white
+            rounded-2xl
+            shadow-[0_8px_32px_rgba(11,28,48,0.04)]
+            overflow-hidden
+            border border-slate-100
+          "
+        >
           <BlogCategoryTable
             categories={blogCategories}
             onEdit={handleEditCategory}
@@ -166,7 +202,7 @@ const BlogCategories = () => {
           />
         </div>
 
-        {/* Form Modal */}
+        {/* FORM */}
         {showForm && (
           <BlogCategoryForm
             category={currentBlogCategory}
@@ -176,16 +212,15 @@ const BlogCategories = () => {
           />
         )}
 
-        {/* Confirm Delete */}
         <ConfirmDialog
           isOpen={showConfirm}
-          title="Xác nhận xóa danh mục bài viết"
-          message="Bạn có chắc chắn muốn xóa danh mục bài viết này? Hành động này không thể hoàn tác."
+          title="Xác nhận xóa danh mục"
+          message="Bạn có chắc muốn xóa danh mục này?"
           confirmText="Xóa"
           cancelText="Hủy"
           onConfirm={handleConfirmDelete}
           onCancel={() => setShowConfirm(false)}
-          isDangerous={true}
+          isDangerous
         />
       </div>
     </AdminLayout>

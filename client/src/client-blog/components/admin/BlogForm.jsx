@@ -11,7 +11,8 @@ const BlogForm = ({
   tags,
   onSubmit,
   onCancel,
-  isLoading
+  isLoading,
+  isAdmin = true
 }) => {
   const [formData, setFormData] = useState({
     title: '',
@@ -19,15 +20,15 @@ const BlogForm = ({
     category: '',
     tags: [],
     coverImage: null,
-    status: 'DRAFT'
   });
 
   const [preview, setPreview] = useState(null);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [productQuery, setProductQuery] = useState('');    
   const [productResults, setProductResults] = useState([]);
-
-  
+  const [productDropdownOpen, setProductDropdownOpen] = useState(false);
+  const [selectedProducts, setSelectedProducts] = useState([]);
+  const MAX_RELATED_PRODUCTS = 10;
 
   // 🔥 Slug preview
   const generateSlug = (text) =>
@@ -74,7 +75,7 @@ const BlogForm = ({
 
     data.append('title', formData.title);
     data.append('content', formData.content);
-    data.append('status', formData.status);
+    data.append('status', blog?.status || (isAdmin ? 'PUBLISHED' : 'PENDING'));
 
     // chỉ gửi nếu có category
     if (formData.category) {
@@ -216,73 +217,226 @@ const BlogForm = ({
           {/* RELATED PRODUCTS */}
           <div>
             <label className="font-medium">Sản phẩm đính kèm</label>
+            <p className="text-sm text-gray-500 mt-1">
+              Đã chọn {relatedProducts.length}/{MAX_RELATED_PRODUCTS}
+            </p>
 
-            {/* Input search */}
-            <input
-              type="text"
-              className="w-full border p-2 rounded-lg mt-1 focus:ring-2 focus:ring-blue-500"
-              placeholder="Nhập tên sản phẩm..."
-              value={productQuery}
-              onChange={async (e) => {
-                const q = e.target.value;
-                setProductQuery(q);
-
-                if (!q) {
-                  setProductResults([]);
-                  return;
+            {/* Dropdown Trigger */}
+            <div className="mt-2 relative">
+              <button
+                type="button"
+                onClick={() =>
+                  setProductDropdownOpen(!productDropdownOpen)
                 }
+                className="w-full border p-3 rounded-lg bg-white text-left hover:border-blue-500"
+              >
+                Chọn sản phẩm liên quan ▼
+              </button>
 
-                try {
-                  const results = await blogService.searchProductsQuick(q);
-                  setProductResults(results);
-                } catch (err) {
-                  console.error(err);
-                }
-              }}
-            />
+              {/* DROPDOWN */}
+              {productDropdownOpen && (
+                <div className="absolute z-50 mt-2 w-full bg-white border rounded-xl shadow-lg p-4">
 
-            {/* Kết quả search */}
-            {productResults.length > 0 && (
-              <div className="border rounded-lg mt-2 max-h-40 overflow-y-auto">
-                {productResults.map((p) => (
-                  <div
-                    key={p._id}
-                    className="p-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center"
-                    onClick={() => {
-                      if (!relatedProducts.find((rp) => rp._id === p._id)) {
-                        setRelatedProducts([...relatedProducts, p]);
+                  {/* Search */}
+                  <input
+                    type="text"
+                    placeholder="Tìm theo tên hoặc SKU..."
+                    value={productQuery}
+                    onChange={async (e) => {
+                      const q = e.target.value;
+                      setProductQuery(q);
+
+                      try {
+                        const results =
+                          await blogService.searchProductsQuick(q);
+
+                        setProductResults(results || []);
+                      } catch (err) {
+                        console.error(err);
                       }
-                      setProductQuery('');
-                      setProductResults([]);
                     }}
-                  >
-                    <span>{p.name} ({p.sku})</span>
-                    <span className="text-sm text-gray-500">{p.price}₫</span>
-                  </div>
-                ))}
-              </div>
-            )}
+                    className="w-full border p-2 rounded-lg mb-3"
+                  />
 
-            {/* Sản phẩm đã chọn */}
+                  {/* Product List */}
+                  <div className="max-h-72 overflow-y-auto border rounded-lg">
+
+                    {productResults.length === 0 && (
+                      <div className="p-4 text-gray-500">
+                        Không tìm thấy sản phẩm
+                      </div>
+                    )}
+
+                    {productResults.map((product) => (
+                      <label
+                        key={product._id}
+                        className="flex items-center justify-between p-3 border-b hover:bg-gray-50 cursor-pointer"
+                      >
+                        <div className="flex items-center gap-3">
+
+                          {/* Radio */}
+                          <input
+                            type="checkbox"
+                            checked={
+                              selectedProducts.some(
+                                p => p._id === product._id
+                              )
+                            }
+                            onChange={(e) => {
+
+                              if (e.target.checked) {
+
+                                // Chặn vượt quá 10 ngay lúc tick
+                                if (
+                                  relatedProducts.length +
+                                  selectedProducts.length >=
+                                  MAX_RELATED_PRODUCTS
+                                ) {
+                                  toast.error(
+                                    `Tối đa ${MAX_RELATED_PRODUCTS} sản phẩm`
+                                  );
+                                  return;
+                                }
+
+                                // add vào danh sách đang chọn
+                                setSelectedProducts([
+                                  ...selectedProducts,
+                                  product
+                                ]);
+
+                              } else {
+
+                                // bỏ tick
+                                setSelectedProducts(
+                                  selectedProducts.filter(
+                                    p => p._id !== product._id
+                                  )
+                                );
+                              }
+                            }}
+                          />
+
+                          <div>
+                            <p className="font-medium">
+                              {product.name}
+                            </p>
+
+                            <p className="text-sm text-gray-500">
+                              SKU: {product.sku}
+                            </p>
+                          </div>
+
+                        </div>
+
+                        <span className="text-sm text-blue-600">
+                          {product.price}₫
+                        </span>
+                      </label>
+                    ))}
+
+                  </div>
+
+                  {/* Add Product */}
+                  <div className="flex justify-end items-center gap-3 mt-3">
+                    <p className="text-sm text-blue-600 mb-0">
+                      Đang chọn tạm: {selectedProducts.length}
+                    </p>
+                    <button 
+                      disabled={
+                        relatedProducts.length >= MAX_RELATED_PRODUCTS ||
+                        selectedProducts.length === 0
+                      }
+                      type="button"
+                      className={`px-4 py-2 rounded-lg text-white
+                        ${
+                        relatedProducts.length >= MAX_RELATED_PRODUCTS
+                          ? 'bg-gray-400 cursor-not-allowed'
+                          : 'bg-blue-600'
+                        }`}
+                      onClick={() => {
+
+                        // Chưa tick gì
+                        if (selectedProducts.length === 0) return;
+
+
+                        // Loại sản phẩm bị trùng
+                        const newProducts =
+                          selectedProducts.filter(
+                            sp =>
+                              !relatedProducts.some(
+                                rp => rp._id === sp._id
+                              )
+                          );
+
+
+                        if (newProducts.length === 0) {
+                          toast.warning(
+                            "Các sản phẩm này đã được chọn"
+                          );
+                          return;
+                        }
+
+
+                        // Double-check không vượt 10
+                        if (
+                          relatedProducts.length +
+                          newProducts.length >
+                          MAX_RELATED_PRODUCTS
+                        ) {
+                          toast.error(
+                            `Chỉ được tối đa ${MAX_RELATED_PRODUCTS} sản phẩm`
+                          );
+                          return;
+                        }
+
+
+                        // Add hàng loạt
+                        setRelatedProducts([
+                          ...relatedProducts,
+                          ...newProducts
+                        ]);
+
+
+                        // Reset dropdown
+                        setSelectedProducts([]);
+                        setProductDropdownOpen(false);
+                        setProductQuery('');
+
+                      }}
+                    >
+                      Thêm sản phẩm
+                    </button>
+                  </div>
+
+                </div>
+              )}
+            </div>
+
+            {/* Selected Products */}
             {relatedProducts.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-2">
+              <div className="flex flex-wrap gap-2 mt-4">
+
                 {relatedProducts.map((p) => (
                   <span
                     key={p._id}
-                    className="flex items-center gap-1 bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm"
+                    className="flex items-center gap-2 bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm"
                   >
-                    {p.name}
+                    {p.name} ({p.sku})
+
                     <X
                       size={14}
                       className="cursor-pointer hover:text-red-600"
                       onClick={() =>
                         setRelatedProducts(
-                          relatedProducts.filter((rp) => rp._id !== p._id)
+                          relatedProducts.filter(
+                            rp => rp._id !== p._id
+                          )
                         )
                       }
                     />
                   </span>
                 ))}
+
               </div>
             )}
           </div>
@@ -327,23 +481,6 @@ const BlogForm = ({
                 style={{ minHeight: '250px' }}
               />
             </div>
-          </div>
-
-          {/* STATUS */}
-          <div>
-            <label className="font-medium">Trạng thái</label>
-            <select
-              className="w-full border p-3 rounded-lg mt-1 focus:ring-2 focus:ring-blue-500 transition"
-              value={formData.status}
-              onChange={(e) =>
-                setFormData({ ...formData, status: e.target.value })
-              }
-            >
-              <option value="DRAFT">Draft</option>
-              <option value="PENDING">Chờ duyệt</option>
-              <option value="PUBLISHED">Published</option>
-              <option value="HIDDEN">Ẩn</option>
-            </select>
           </div>
 
           {/* ACTIONS */}

@@ -85,6 +85,31 @@ export const getPublicBlogs = createAsyncThunk(
   }
 );
 
+export const updateBlogStatus =
+ createAsyncThunk(
+  'blog/updateStatus',
+
+  async(data, thunkAPI)=>{
+
+   try{
+
+    return await blogService
+      .updateBlogStatus(
+       data.id,
+       data.status,
+       data.rejectionReason
+    );
+
+   }catch(err){
+
+    return thunkAPI.rejectWithValue(
+      err.response?.data?.message
+    );
+
+   }
+
+ });
+
 const blogSlice = createSlice({
   name: 'blog',
   initialState,

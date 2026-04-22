@@ -149,8 +149,9 @@ export const updateBlogStatus = async (req, res, next) => {
     try {
         const { id } = req.params;
         const { status, rejectionReason } = req.body;
+        const adminId = req.user.userId;
 
-        const updatedBlog = await blogService.updateBlogStatus(id, status, rejectionReason);
+        const updatedBlog = await blogService.updateBlogStatus(id, status, rejectionReason, adminId);
         res.status(StatusCodes.OK).json({
             success: true,
             message: status === 'PUBLISHED' 
@@ -158,6 +159,17 @@ export const updateBlogStatus = async (req, res, next) => {
               : 'Đã từ chối và gửi trả bài viết về bản nháp',
             blog: updatedBlog
         });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const getMyBlogs = async (req, res, next) => {
+    console.log("REQ.USER:", req.user);
+    try {
+        const userId = req.user.userId;
+        const result = await blogService.getMyBlogs(userId, req.query);
+        res.status(StatusCodes.OK).json({ success: true, ...result });
     } catch (error) {
         next(error);
     }

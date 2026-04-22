@@ -94,7 +94,12 @@ const blogSchema = new mongoose.Schema(
       }
     ],
     metaTitle: String,
-    metaDescription: String
+    metaDescription: String,
+    approvedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null
+    },
   },
   {
     timestamps: true,

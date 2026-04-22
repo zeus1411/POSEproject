@@ -37,6 +37,7 @@ const searchProductsQuick = async (query) => {
   const res = await api.get(`/products/search-quick?q=${query}`);
   return res.data.products || [];
 };
+
 const getAllCategories = () => blogCategoryService.getBlogCategories();
 
 const getAllTags = () => blogTagService.getBlogTags();
@@ -65,6 +66,25 @@ const getPublicBlogs = async (params) => {
   const res = await api.get('/blogs/public', { params });
   return res.data;
 };
+
+const updateBlogStatus = async (id, status, rejectionReason) => {
+  const res = await api.patch(
+    `/blogs/${id}/status`,
+    {
+      status,
+      rejectionReason
+    }
+  );
+  return res.data;
+};
+
+// 🔥 Lấy bài viết của TÔI
+const getMyBlogs = async (params = {}) => {
+  // params có thể truyền { status: 'PUBLISHED' } hoặc 'PENDING', 'DRAFT'
+  const res = await api.get(`${API_URL}/my-blogs`, { params });
+  return res.data;
+};
+
 export default {
   createBlog,
   updateBlog,
@@ -78,5 +98,7 @@ export default {
   addComment,
   increaseView,
   getBlogBySlug,
-  getPublicBlogs
+  getPublicBlogs,
+  updateBlogStatus,
+  getMyBlogs
 };

@@ -54,3 +54,13 @@ export const getMyInteractions = async (req, res, next) => {
         next(error);
     }
 };
+
+export const getMyBookmarks = async (req, res, next) => {
+    try {
+        const userId = req.user.userId;
+        const result = await blogInteractionService.getMyBookmarks(userId, req.query);
+        res.status(StatusCodes.OK).json({ success: true, ...result });
+    } catch (error) {
+        next(error);
+    }
+};

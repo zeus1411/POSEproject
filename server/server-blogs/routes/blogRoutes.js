@@ -7,7 +7,8 @@ import {
     getPublicBlogs,
     updateBlog,
     deleteBlog,
-    updateBlogStatus
+    updateBlogStatus,
+    getMyBlogs
 } from '../controllers/blogController.js';
 import { authenticateUser, authorizeRoles } from '../../middlewares/auth.js';
 import { uploadBlogImage } from '../../middlewares/upload.js';
@@ -36,6 +37,8 @@ const optionalAuth = (req, res, next) => {
  *   name: Blogs
  *   description: Blog management APIs
  */
+
+router.get('/my-blogs', authenticateUser, getMyBlogs);
 
 /**
  * @swagger
@@ -74,6 +77,24 @@ const optionalAuth = (req, res, next) => {
  *         description: List of public blogs
  */
 router.get('/public', getPublicBlogs);
+
+/**
+ * @swagger
+ * /blogs/slug/{slug}:
+ *   get:
+ *     summary: Get blog by slug
+ *     tags: [Blogs]
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Blog details
+ */
+router.get('/slug/:slug', getBlogBySlug);
 
 /**
  * @swagger
@@ -126,23 +147,12 @@ router.get('/public', getPublicBlogs);
  */
 router.get('/', optionalAuth, getAllBlogs);
 
-/**
- * @swagger
- * /blogs/slug/{slug}:
- *   get:
- *     summary: Get blog by slug
- *     tags: [Blogs]
- *     parameters:
- *       - in: path
- *         name: slug
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Blog details
- */
-router.get('/slug/:slug', getBlogBySlug);
+router.post(
+    '/', 
+    authenticateUser, 
+    uploadBlogImage.single('coverImage'), 
+    createBlog
+);
 
 /**
  * @swagger
@@ -250,14 +260,6 @@ router.get('/slug/:slug', getBlogBySlug);
  *         description: Blog status updated
  */
 router.get('/:id', optionalAuth, getBlogById);
-
-// Protected routes
-router.post(
-    '/', 
-    authenticateUser, 
-    uploadBlogImage.single('coverImage'), 
-    createBlog
-);
 
 router.put(
     '/:id', 

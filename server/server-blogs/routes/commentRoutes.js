@@ -2,7 +2,8 @@ import express from 'express';
 import {
     createComment,
     getBlogComments,
-    deleteComment
+    deleteComment,
+    updateComment
 } from '../controllers/commentController.js';
 import { authenticateUser, authorizeRoles } from '../../middlewares/auth.js';
 
@@ -92,5 +93,8 @@ router.get('/blog/:blogId', getBlogComments);
  *         description: Comment deleted successfully
  */
 router.delete('/:id', authenticateUser, deleteComment);
+
+// Thêm import updateComment từ controller
+router.put('/:id', authenticateUser, updateComment);
 
 export default router;

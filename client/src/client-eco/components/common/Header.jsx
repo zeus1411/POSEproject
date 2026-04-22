@@ -8,7 +8,8 @@ import {
   UserCircleIcon,
   Cog6ToothIcon,
   ShoppingBagIcon,
-  ArrowRightOnRectangleIcon
+  ArrowRightOnRectangleIcon,
+  DocumentTextIcon
 } from '@heroicons/react/24/outline';
 import { User } from 'lucide-react';
 
@@ -230,6 +231,18 @@ const Header = () => {
                       >
                         <UserCircleIcon className="w-5 h-5" />
                         <span>Thông tin cá nhân</span>
+                      </button>
+                      {/* NÚT QUẢN LÝ BÀI VIẾT (Cho cả Admin và User) */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsUserMenuOpen(false);
+                          navigate('/my-blogs'); // Chuyển hướng tới trang MyBlogs
+                        }}
+                        className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100 flex items-center gap-3"
+                      >
+                        <DocumentTextIcon className="w-5 h-5" />
+                        <span>Bài viết của tôi</span>
                       </button>
                       {user.role !== 'admin' && (
                         <button

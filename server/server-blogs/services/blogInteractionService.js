@@ -95,6 +95,46 @@ class BlogInteractionService {
 
     return result;
   }
+
+  // 🔥 Lấy bài viết TÔI ĐÃ BOOKMARK
+  async getMyBookmarks(userId, query = {}) {
+    const { page = 1, limit = 10 } = query;
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const pageSize = Math.max(1, Math.min(100, parseInt(limit, 10) || 10));
+    const skip = (pageNum - 1) * pageSize;
+
+    const [interactions, total] = await Promise.all([
+      // 1. Sửa điều kiện tìm kiếm: dùng userId và type = 'BOOKMARK'
+      BlogInteraction.find({ userId: userId, type: 'BOOKMARK' })
+        .populate({
+            path: 'blogId', // 2. Sửa đường dẫn populate thành blogId
+            populate: [
+                { path: 'author', select: 'fullName username avatar' },
+                { path: 'category', select: 'name slug' }
+            ]
+        })
+        .sort({ updatedAt: -1 })
+        .skip(skip)
+        .limit(pageSize),
+      // Đếm tổng số cũng phải sửa điều kiện tương tự
+      BlogInteraction.countDocuments({ userId: userId, type: 'BOOKMARK' })
+    ]);
+
+    // 3. Lọc và bóc tách dữ liệu theo đúng trường blogId
+    const validBookmarks = interactions
+        .filter(i => i.blogId !== null) 
+        .map(i => i.blogId);            
+
+    return {
+      bookmarks: validBookmarks,
+      pagination: {
+        total,
+        page: pageNum,
+        pages: Math.ceil(total / pageSize),
+        limit: pageSize
+      }
+    };
+  }
 }
 
 export default new BlogInteractionService();

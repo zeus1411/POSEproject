@@ -15,7 +15,7 @@ class CommentService {
    * @param {string} content 
    * @returns {Promise<Object>}
    */
-  async createComment(blogId, userId, content) {
+  async createComment(blogId, userId, content, parentId = null) {
     if (!mongoose.Types.ObjectId.isValid(blogId)) {
       throw new BadRequestError('ID bài viết không hợp lệ');
     }
@@ -28,7 +28,8 @@ class CommentService {
     const comment = await Comment.create({
       blog: blogId,
       author: userId,
-      content
+      content,
+      parentId: parentId || null
     });
 
     // Increment comment count in blog
@@ -48,26 +49,55 @@ class CommentService {
       throw new BadRequestError('ID bài viết không hợp lệ');
     }
 
-    const { page = 1, limit = 20 } = query;
+    const { page = 1, limit = 50 } = query;
     const pageNum = Math.max(1, parseInt(page, 10) || 1);
-    const pageSize = Math.max(1, Math.min(100, parseInt(limit, 10) || 20));
+    const pageSize = Math.max(1, Math.min(100, parseInt(limit, 10) || 50));
     const skip = (pageNum - 1) * pageSize;
 
-    const [comments, total] = await Promise.all([
+    // 1. Lấy ALL comments của blog (KHÔNG paginate tree trước khi build)
+    const [allComments, total] = await Promise.all([
       Comment.find({ blog: blogId, status: 'ACTIVE' })
         .populate('author', 'username fullName avatar')
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(pageSize),
+        .sort({ createdAt: -1 }),
       Comment.countDocuments({ blog: blogId, status: 'ACTIVE' })
     ]);
 
+    // 2. Convert sang map để build tree
+    const commentMap = {};
+    const roots = [];
+
+    allComments.forEach(c => {
+      commentMap[c._id.toString()] = {
+        _id: c._id,
+        content: c.content,
+        createdAt: c.createdAt,
+        author: c.author,
+        parentId: c.parentId,
+        replies: []
+      };
+    });
+
+    // 3. Build tree structure
+    allComments.forEach(c => {
+      if (c.parentId) {
+        const parent = commentMap[c.parentId];
+        if (parent) {
+          parent.replies.push(commentMap[c._id.toString()]);
+        }
+      } else {
+        roots.push(commentMap[c._id]);
+      }
+    });
+
+    // 4. Pagination cho ROOT comments (giống Facebook feed)
+    const paginatedRoots = roots.slice(skip, skip + pageSize);
+
     return {
-      comments,
+      comments: paginatedRoots,
       pagination: {
-        total,
+        total: roots.length,
         page: pageNum,
-        pages: Math.ceil(total / pageSize),
+        pages: Math.ceil(roots.length / pageSize),
         limit: pageSize
       }
     };
@@ -104,6 +134,22 @@ class CommentService {
     await Blog.findByIdAndUpdate(blogId, { $inc: { commentCount: -1 } });
 
     return { success: true, message: 'Xóa bình luận thành công' };
+  }
+
+  async updateComment(id, userId, content) {
+    if (!mongoose.Types.ObjectId.isValid(id)) throw new BadRequestError('ID bình luận không hợp lệ');
+    
+    const comment = await Comment.findById(id);
+    if (!comment) throw new NotFoundError('Không tìm thấy bình luận');
+
+    // Chỉ tác giả mới được sửa
+    if (comment.author.toString() !== userId) {
+      throw new UnauthorizedError('Bạn không có quyền sửa bình luận này');
+    }
+
+    comment.content = content;
+    await comment.save();
+    return comment;
   }
 }
 
