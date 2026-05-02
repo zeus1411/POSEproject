@@ -124,6 +124,19 @@ const Header = () => {
                       <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-0.5 bg-white rounded-full"></span>
                     )}
                   </Link>
+                  <Link 
+                    to="/blogs" 
+                    className={`relative px-6 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${
+                      location.pathname.startsWith('/blogs')
+                        ? 'text-white bg-white/20' 
+                        : 'text-teal-50 hover:text-white hover:bg-white/10'
+                    }`}
+                  >
+                    Blog
+                    {location.pathname.startsWith('/blogs') && (
+                      <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-0.5 bg-white rounded-full"></span>
+                    )}
+                  </Link>
                 </nav>
               </div>
             )}

@@ -1,151 +1,75 @@
-import React,{useState} from 'react';
-
-import {
- Heart,
- Bookmark
-} from 'lucide-react';
-
+import React, { useState } from 'react';
+import { Heart, Bookmark } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 import blogInteractionService from '../services/blogInteractionService';
 
+const BlogInteractionButtons = ({
+  blogId,
+  initialLikes = 0,
+  initialBookmarks = 0,
+  initialLiked = false,
+  initialBookmarked = false,
+  isLoggedIn,
+}) => {
+  const [liked, setLiked] = useState(initialLiked);
+  const [bookmarked, setBookmarked] = useState(initialBookmarked);
+  const [likes, setLikes] = useState(initialLikes);
+  const [bookmarks, setBookmarks] = useState(initialBookmarks);
 
-const BlogInteractionButtons=({
+  const requireLogin = () => {
+    if (!isLoggedIn) {
+      toast.info('Vui lòng đăng nhập để sử dụng tính năng này');
+      return false;
+    }
+    return true;
+  };
 
- blogId,
+  const handleLike = async () => {
+    if (!requireLogin()) return;
 
- initialLikes=0,
- initialBookmarks=0,
+    try {
+      const data = await blogInteractionService.toggleLike(blogId);
 
- initialLiked=false,
- initialBookmarked=false,
+      setLiked(data.isActed);
+      setLikes(data.counts.likes);
+    } catch (e) {
+      toast.error('Like thất bại');
+    }
+  };
 
- isLoggedIn
+  const handleBookmark = async () => {
+    if (!requireLogin()) return;
 
-})=>{
+    try {
+      const data = await blogInteractionService.toggleBookmark(blogId);
 
-const [liked,setLiked]=useState(
- initialLiked
-);
+      setBookmarked(data.isActed);
+      setBookmarks(data.counts.bookmarks);
+    } catch (e) {
+      toast.error('Lưu bài viết thất bại');
+    }
+  };
 
-const [bookmarked,setBookmarked]=useState(
- initialBookmarked
-);
+  return (
+    <div className="flex gap-4">
+      <button
+        onClick={handleLike}
+        className="flex items-center gap-2"
+      >
+        <Heart fill={liked ? 'currentColor' : 'none'} />
+        <span>{likes}</span>
+      </button>
 
-const [likes,setLikes]=useState(
- initialLikes
-);
-
-const [bookmarks,setBookmarks]=useState(
- initialBookmarks
-);
-
-
-const requireLogin=()=>{
-
- if(!isLoggedIn){
-
-   toast.info(
-    'Vui lòng đăng nhập để sử dụng tính năng này'
-   );
-
-   return false;
- }
-
- return true;
-
-};
-
-
-const handleLike=async()=>{
-
-if(!requireLogin()) return;
-
-try{
-
-const data=
-await blogInteractionService
-.toggleLike(blogId);
-
-setLiked(data.isActed);
-
-setLikes(data.counts.likes);
-
-}
-catch(e){
-
-toast.error('Like thất bại');
-
-}
-
-};
-
-
-
-const handleBookmark=async()=>{
-
-if(!requireLogin()) return;
-
-try{
-
-const data=
-await blogInteractionService
-.toggleBookmark(blogId);
-
-setBookmarked(data.isActed);
-
-setBookmarks(data.counts.bookmarks);
-
-}
-catch(e){
-
-toast.error('Lưu bài viết thất bại');
-
-}
-
-};
-
-
-
-return(
-
-<div className='flex gap-4'>
-
-<button
-onClick={handleLike}
-className='flex items-center gap-2'
->
-
-<Heart
-fill={liked ? 'currentColor':'none'}
-/>
-
-<span>
-{likes}
-</span>
-
-</button>
-
-
-<button
-onClick={handleBookmark}
-className='flex items-center gap-2'
->
-
-<Bookmark
-fill={bookmarked ? 'currentColor':'none'}
-/>
-
-<span>
-{bookmarks}
-</span>
-
-</button>
-
-</div>
-
-)
-
+      <button
+        onClick={handleBookmark}
+        className="flex items-center gap-2"
+      >
+        <Bookmark fill={bookmarked ? 'currentColor' : 'none'} />
+        <span>{bookmarks}</span>
+      </button>
+    </div>
+  );
 };
 
 export default BlogInteractionButtons;

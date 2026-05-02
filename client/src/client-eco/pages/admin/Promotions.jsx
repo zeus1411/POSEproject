@@ -353,7 +353,9 @@ const AdminPromotions = () => {
         {/* Header */}
         <div className="mb-6 flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold text-gray-800">Quản lý Mã giảm giá</h1>
+          <h1 className="text-3xl font-black tracking-tight text-[#1e293b]">
+              Quản lý Mã giảm giá
+          </h1>
           <p className="text-gray-600 mt-1">Tạo và quản lý các mã giảm giá (Coupon) cho khách hàng</p>
         </div>
         <button

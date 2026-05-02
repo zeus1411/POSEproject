@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Heart, MessageCircle, Eye, Bookmark, MoreHorizontal } from 'lucide-react';
+import Swal from 'sweetalert2';
 import { useDispatch } from 'react-redux';
 import { deleteBlog } from '../redux/slices/blogSlice';
 import blogInteractionService from '../services/blogInteractionService';
@@ -54,7 +55,15 @@ const BlogCard = ({ blog }) => {
     e.preventDefault(); 
     e.stopPropagation();
     
-    if (!localStorage.getItem('token')) return alert('Vui lòng đăng nhập!');
+    if (!localStorage.getItem('token')) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Vui lòng đăng nhập',
+        text: 'Bạn cần đăng nhập để thực hiện thao tác này.',
+        confirmButtonText: 'Đóng'
+      });
+      return;
+    }
     if (loadingLike) return;
     
     setLoadingLike(true);
@@ -73,7 +82,15 @@ const BlogCard = ({ blog }) => {
     e.preventDefault(); 
     e.stopPropagation();
 
-    if (!localStorage.getItem('token')) return alert('Vui lòng đăng nhập!');
+    if (!localStorage.getItem('token')) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Vui lòng đăng nhập',
+        text: 'Bạn cần đăng nhập để thực hiện thao tác này.',
+        confirmButtonText: 'Đóng'
+      });
+      return;
+    }
     if (loadingBookmark) return;
 
     setLoadingBookmark(true);
@@ -156,14 +173,9 @@ const BlogCard = ({ blog }) => {
       {/* STATS SUMMARY */}
       <div className="px-4 py-3 border-b border-gray-100 flex justify-between items-center text-[13px] text-gray-500">
         <div className="flex items-center space-x-2">
-          <div className="flex -space-x-1.5">
-            <span className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center ring-2 ring-white z-20">
-              <Heart size={12} className="text-white fill-current" />
-            </span>
-            <span className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center ring-2 ring-white z-10">
-              <svg className="w-3 h-3 text-white fill-current" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
-            </span>
-          </div>
+          <span className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center ring-2 ring-white">
+            <Heart size={12} className="text-white fill-current" />
+          </span>
           <span className="hover:underline cursor-pointer">{likes.toLocaleString()}</span>
         </div>
         <div className="flex space-x-4">

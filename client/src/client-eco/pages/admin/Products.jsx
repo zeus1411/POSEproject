@@ -253,8 +253,9 @@ const Products = () => {
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">Quản lý sản phẩm & danh mục</h1>
-            <p className="text-gray-600 mt-1">Quản lý sản phẩm và danh mục sản phẩm</p>
+            <h1 className="text-3xl font-black tracking-tight text-[#1e293b]">
+              Quản lý sản phẩm & danh mục
+            </h1>
           </div>
           <button
             onClick={activeTab === 'products' ? handleAddProduct : handleAddCategory}

@@ -830,13 +830,18 @@ const Home = () => {
       </section>
 
       {/* Customer Showcase Section */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-20 bg-gradient-to-br from-teal-700 via-cyan-600 to-emerald-600 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/30"></div>
+        <div className="absolute inset-0 opacity-40">
+          <div className="absolute -top-10 left-10 w-72 h-72 bg-cyan-400/70 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 right-10 w-80 h-80 bg-emerald-400/70 rounded-full blur-3xl"></div>
+        </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center mb-16 animate-on-scroll">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 drop-shadow-lg">
               Bể Thủy Sinh Từ Cộng Đồng
             </h2>
-            <p className="text-lg text-gray-600 max-w-3xl mx-auto">
+            <p className="text-lg text-teal-50 max-w-3xl mx-auto drop-shadow">
               Những layout tuyệt đẹp được tạo ra bởi khách hàng của chúng tôi
             </p>
           </div>
@@ -931,7 +936,7 @@ const Home = () => {
           </div>
 
           {/* Stats bar */}
-          <div className="mt-16 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-3xl p-8 animate-on-scroll">
+          <div className="mt-16 bg-white/90 backdrop-blur-md border border-white/30 rounded-3xl p-8 animate-on-scroll">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
               <div className="text-center">
                 <div className="text-3xl md:text-4xl font-bold text-emerald-600 mb-2">98%</div>

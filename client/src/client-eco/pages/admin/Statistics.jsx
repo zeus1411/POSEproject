@@ -119,7 +119,9 @@ const Statistics = () => {
       <div className="max-w-7xl mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Xem Thống Kê</h1>
+          <h1 className="text-3xl font-black tracking-tight text-[#1e293b]">
+            Xem thống kê
+          </h1>
           <p className="text-gray-600 mt-2">Phân tích dữ liệu bán hàng và hiệu suất kinh doanh</p>
         </div>
 

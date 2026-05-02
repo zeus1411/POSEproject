@@ -103,10 +103,9 @@ const AdminOrdersPage = () => {
             <div className="max-w-7xl mx-auto px-4 py-8">
                 {/* Header */}
                 <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-gray-900">Đơn hàng</h1>
-                    <p className="text-gray-600 mt-1">
-                        Quản lý và cập nhật trạng thái các đơn hàng
-                    </p>
+                    <h1 className="text-3xl font-black tracking-tight text-[#1e293b]">
+                        Quản lý đơn hàng
+                    </h1>
                 </div>
 
                 {/* Status Filter Tabs */}
