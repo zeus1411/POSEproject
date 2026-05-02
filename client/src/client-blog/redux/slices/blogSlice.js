@@ -72,6 +72,44 @@ export const deleteBlog = createAsyncThunk(
   }
 );
 
+export const getPublicBlogs = createAsyncThunk(
+  'blog/getPublic',
+  async (params, thunkAPI) => {
+    try {
+      return await blogService.getPublicBlogs(params);
+    } catch (err) {
+      return thunkAPI.rejectWithValue(
+        err.response?.data?.message || err.message
+      );
+    }
+  }
+);
+
+export const updateBlogStatus =
+ createAsyncThunk(
+  'blog/updateStatus',
+
+  async(data, thunkAPI)=>{
+
+   try{
+
+    return await blogService
+      .updateBlogStatus(
+       data.id,
+       data.status,
+       data.rejectionReason
+    );
+
+   }catch(err){
+
+    return thunkAPI.rejectWithValue(
+      err.response?.data?.message
+    );
+
+   }
+
+ });
+
 const blogSlice = createSlice({
   name: 'blog',
   initialState,
@@ -108,10 +146,10 @@ const blogSlice = createSlice({
       })
       .addCase(getAllBlogs.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.blogs = action.payload.blogs;
-        state.total = action.payload.total;
-        state.page = action.payload.page;
-        state.totalPages = action.payload.totalPages;
+        state.blogs = action.payload.blogs || [];
+        state.total = action.payload.pagination?.total || 0;
+        state.page = action.payload.pagination?.page || 1;
+        state.totalPages = action.payload.pagination?.pages || 1;
       })
       .addCase(deleteBlog.fulfilled, (state, action) => {
         state.isSuccess = true;
@@ -121,6 +159,23 @@ const blogSlice = createSlice({
         state.blogs = state.blogs.filter(
           (blog) => blog._id !== action.meta.arg
         );
+      })
+
+      .addCase(getPublicBlogs.pending, (state) => {
+        state.isLoading = true;
+      })
+
+      .addCase(getPublicBlogs.fulfilled, (state, action) => {
+        state.isLoading = false;
+
+        state.blogs = action.payload.blogs;
+
+        // vì BE của bạn trả pagination object
+        state.total = action.payload.pagination.total;
+
+        state.page = action.payload.pagination.page;
+
+        state.totalPages = action.payload.pagination.pages;
       })
       .addMatcher(
         (action) => action.type.endsWith('/rejected'),

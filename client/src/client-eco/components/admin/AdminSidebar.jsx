@@ -10,6 +10,7 @@ import {
   DocumentTextIcon,
   NewspaperIcon 
 } from '@heroicons/react/24/outline';
+import { FileClock } from 'lucide-react';
 
 const AdminSidebar = () => {
   const location = useLocation();
@@ -84,9 +85,9 @@ const AdminSidebar = () => {
       iconColor: 'text-cyan-600',
     },
     {
-      name: 'Blog Comments',
-      path: '/admin/blog-comments',
-      icon: NewspaperIcon,
+      name: 'Blog Pending',
+      href: '/admin/blogs/pending',
+      icon: FileClock,
       color: 'from-cyan-500 to-sky-500',
       bg: 'bg-gradient-to-br from-cyan-50 to-sky-50',
       iconColor: 'text-cyan-600',
@@ -107,16 +108,16 @@ const AdminSidebar = () => {
         </div>
         
         {/* Main Navigation */}
-        <nav className="flex-1 flex flex-col py-6 px-4 space-y-2">
+        <nav className="flex-1 overflow-y-auto flex flex-col py-4 px-4 space-y-2">
           {navigation.map((item) => {
-            const isActive = location.pathname.startsWith(item.href);
+            const isActive = location.pathname === item.href;
             const Icon = item.icon;
             
             return (
               <NavLink
                 key={item.name}
                 to={item.href}
-                className={`group relative flex items-center p-4 rounded-xl transition-all duration-200 h-24 ${
+                className={`group relative flex items-center p-4 rounded-xl transition-all duration-200 min-h-[72px] ${
                   isActive 
                     ? 'bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-100 shadow-md'
                     : 'hover:bg-gray-50 hover:shadow-md'

@@ -120,6 +120,20 @@ class TagService {
 
     return { success: true, message: 'Xóa thẻ thành công' };
   }
+
+  async updateTagStatus(id, isActive) {
+   const tag = await Tag.findByIdAndUpdate(
+      id,
+      { isActive },
+      { new:true }
+   );
+
+   if (!tag) {
+      throw new NotFoundError('Không tìm thấy tag');
+   }
+
+   return tag;
+  }
 }
 
 export default new TagService();

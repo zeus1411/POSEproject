@@ -13,9 +13,10 @@ import { deleteFromCloudinary } from '../../utils/cloudinaryUtils.js';
 export const createBlog = async (req, res, next) => {
     try {
         const userId = req.user.userId;
+        const userRole = req.user.role;
         const file = req.file;
 
-        const blog = await blogService.createBlog(req.body, file, userId);
+        const blog = await blogService.createBlog(req.body, file, userId, userRole);
         res.status(StatusCodes.CREATED).json({
             success: true,
             message: 'Tạo bài viết thành công',
@@ -87,7 +88,8 @@ export const getBlogById = async (req, res, next) => {
 export const getBlogBySlug = async (req, res, next) => {
     try {
         const { slug } = req.params;
-        const blog = await blogService.getBlogBySlug(slug);
+        const clientIp = req.ip || req.connection?.remoteAddress || 'unknown';
+        const blog = await blogService.getBlogBySlug(slug, clientIp);
         res.status(StatusCodes.OK).json({
             success: true,
             blog
@@ -140,3 +142,35 @@ export const deleteBlog = async (req, res, next) => {
     }
 };
 
+// @desc    Update blog status
+// @route   PATCH /api/v1/blogs/:id/status
+// @access  Private (Admin)
+export const updateBlogStatus = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { status, rejectionReason } = req.body;
+        const adminId = req.user.userId;
+
+        const updatedBlog = await blogService.updateBlogStatus(id, status, rejectionReason, adminId);
+        res.status(StatusCodes.OK).json({
+            success: true,
+            message: status === 'PUBLISHED' 
+              ? 'Bài viết đã được đăng công khai' 
+              : 'Đã từ chối và gửi trả bài viết về bản nháp',
+            blog: updatedBlog
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const getMyBlogs = async (req, res, next) => {
+    console.log("REQ.USER:", req.user);
+    try {
+        const userId = req.user.userId;
+        const result = await blogService.getMyBlogs(userId, req.query);
+        res.status(StatusCodes.OK).json({ success: true, ...result });
+    } catch (error) {
+        next(error);
+    }
+};

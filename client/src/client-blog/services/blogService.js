@@ -35,7 +35,7 @@ const deleteBlog = async (id) => {
 
 const searchProductsQuick = async (query) => {
   const res = await api.get(`/products/search-quick?q=${query}`);
-  return res.data; // array các sản phẩm { _id, name, sku, price, images, slug }
+  return res.data.products || [];
 };
 
 const getAllCategories = () => blogCategoryService.getBlogCategories();
@@ -57,6 +57,34 @@ const increaseView = async (blogId) => {
   return res.data;
 };
 
+const getBlogBySlug = async (slug) => {
+  const res = await api.get(`/blogs/slug/${slug}`);
+  return res.data;
+};
+
+const getPublicBlogs = async (params) => {
+  const res = await api.get('/blogs/public', { params });
+  return res.data;
+};
+
+const updateBlogStatus = async (id, status, rejectionReason) => {
+  const res = await api.patch(
+    `/blogs/${id}/status`,
+    {
+      status,
+      rejectionReason
+    }
+  );
+  return res.data;
+};
+
+// 🔥 Lấy bài viết của TÔI
+const getMyBlogs = async (params = {}) => {
+  // params có thể truyền { status: 'PUBLISHED' } hoặc 'PENDING', 'DRAFT'
+  const res = await api.get(`${API_URL}/my-blogs`, { params });
+  return res.data;
+};
+
 export default {
   createBlog,
   updateBlog,
@@ -68,5 +96,9 @@ export default {
   getAllTags,
   likeBlog,
   addComment,
-  increaseView
+  increaseView,
+  getBlogBySlug,
+  getPublicBlogs,
+  updateBlogStatus,
+  getMyBlogs
 };

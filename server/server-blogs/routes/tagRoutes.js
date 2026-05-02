@@ -4,7 +4,8 @@ import {
     getTagById,
     createTag,
     updateTag,
-    deleteTag
+    deleteTag,
+    updateTagStatus
 } from '../controllers/tagController.js';
 import { authenticateUser, authorizeRoles } from '../../middlewares/auth.js';
 
@@ -105,5 +106,6 @@ router.get('/:id', getTagById);
 router.post('/', authenticateUser, authorizeRoles('admin'), createTag);
 router.put('/:id', authenticateUser, authorizeRoles('admin'), updateTag);
 router.delete('/:id', authenticateUser, authorizeRoles('admin'), deleteTag);
+router.patch('/:id/status', authenticateUser, authorizeRoles('admin'), updateTagStatus);
 
 export default router;

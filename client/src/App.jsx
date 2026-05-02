@@ -30,16 +30,23 @@ import AdminBlogCategories from './client-blog/pages/admin/BlogCategories';
 import AdminBlogTags from './client-blog/pages/admin/BlogTags';
 import BlogEditor from './client-blog/pages/admin/BlogEditor';
 import BlogList from './client-blog/pages/admin/BlogList';
-import BlogComments from './client-blog/pages/admin/BlogComments.jsx';
+import PendingBlogList from './client-blog/pages/admin/PendingBlogList.jsx';
 
 // Public blog listing page
 import BlogListPage from './client-blog/pages/common/BlogListPage';
 import BlogDetailPage from './client-blog/pages/common/BlogDetailPage';
+import CreateUserBlog from './client-blog/pages/common/CreateUserBlog.jsx';
+
+// Customer blog pages
+import MyBlogs from './client-blog/pages/customer/MyBlogs.jsx';
+
+import ScrollToTop from './client-blog/components/ScrollToTop.jsx';
 
 function App() {
   return (
     <Provider store={store}>
       <Router>
+        <ScrollToTop />
         <SocketProvider>
           <Routes>
           {/* Auth Routes */}
@@ -60,6 +67,8 @@ function App() {
               <Route path="orders" element={<MyOrders />} />
               <Route path="orders/:id" element={<OrderDetail />} />
               <Route path="checkout" element={<Checkout />} />
+              <Route path="/my-blogs" element={<MyBlogs />} />
+              <Route path="/my-blogs/preview/:id" element={<BlogDetailPage isAdminPreview />} />
             </Route>
 
             {/* Protected Admin Routes */}
@@ -80,13 +89,22 @@ function App() {
               <Route path="/admin/blogs/create" element={<BlogEditor />} />
               <Route path="/admin/blogs/edit/:id" element={<BlogEditor />} />
               <Route path="/admin/blogs" element={<BlogList />} />
-              <Route path="/admin/blog-comments" element={<BlogComments />} />
-
-              {/* Public blog listing */}
-              <Route path="/blogs" element={<BlogListPage />} />
-              <Route path="/blogs/:slug" element={<BlogDetailPage />} />
+              <Route path="/admin/blogs/pending" element={<PendingBlogList />} />
+              <Route path="/admin/blogs/preview/:id" element={<BlogDetailPage isAdminPreview />} />
             </Route>
-        </Route>
+
+            {/* PUBLIC BLOG ROUTES */}
+            <Route path="/blogs" element={<BlogListPage />} />
+            <Route path="/blogs/:slug" element={<BlogDetailPage />} />
+            <Route element={<ProtectedRoute />}>
+              <Route
+                path="/blogs/create"
+                element={<CreateUserBlog />}
+              />
+            </Route>
+          </Route>
+
+          
 
           {/* Catch-all: mọi đường dẫn lạ → /shop */}
           <Route path="*" element={<Navigate to="/shop" replace />} />

@@ -19,7 +19,9 @@ const notificationSchema = new mongoose.Schema(
         'SYSTEM_ANNOUNCEMENT',
         'WELCOME',
         'PASSWORD_RESET',
-        'NEW_ORDER_ADMIN'
+        'NEW_ORDER_ADMIN',
+        'BLOG_SUBMISSION_ADMIN',
+        'BLOG_STATUS_UPDATE'
       ],
       required: true
     },
@@ -228,11 +230,10 @@ notificationSchema.methods.sendEmail = async function () {
 notificationSchema.statics.createNotification = async function (data) {
   const notification = await this.create(data);
   
-  // ⚠️ TEMPORARILY DISABLED - Gmail daily limit exceeded
   // Send notifications through configured channels
-  // if (notification.channels.includes('EMAIL')) {
-  //   await notification.sendEmail();
-  // }
+  if (notification.channels.includes('EMAIL')) {
+    await notification.sendEmail();
+  }
   
   console.log('📧 Email notification skipped (Gmail limit exceeded)');
   
@@ -400,6 +401,67 @@ notificationSchema.statics.createNewOrderNotificationForAdmins = async function 
   } catch (error) {
     console.error('Error creating admin notifications:', error);
     return [];
+  }
+};
+
+// ✅ Static method to create new blog submission notification for all admins
+notificationSchema.statics.createBlogSubmissionNotificationForAdmins = async function (blogId, blogTitle, authorName) {
+  try {
+    const User = mongoose.model('User');
+    const admins = await User.find({ role: 'admin' });
+    
+    if (admins.length === 0) return [];
+    
+    const notifications = await Promise.all(
+      admins.map(admin =>
+        this.createNotification({
+          userId: admin._id,
+          type: 'BLOG_SUBMISSION_ADMIN',
+          priority: 'HIGH',
+          title: '📝 Bài viết mới cần duyệt',
+          message: `Tác giả ${authorName} vừa gửi bài viết "${blogTitle}" để duyệt.`,
+          relatedId: blogId,
+          relatedType: 'blog',
+          actionUrl: `/admin/blogs/${blogId}`,
+          actionText: 'Duyệt bài',
+          icon: '📝',
+          channels: ['IN_APP', 'EMAIL']
+        })
+      )
+    );
+    
+    return notifications;
+  } catch (error) {
+    console.error('Error creating blog submission notifications:', error);
+    return [];
+  }
+};
+
+// ✅ Static method to notify user about blog status update
+notificationSchema.statics.createBlogStatusNotificationForUser = async function (userId, blogId, blogTitle, status, reason) {
+  try {
+    const isPublished = status === 'PUBLISHED';
+    
+    const data = {
+      userId,
+      type: 'BLOG_STATUS_UPDATE',
+      priority: isPublished ? 'MEDIUM' : 'HIGH',
+      title: isPublished ? '✅ Bài viết đã được đăng' : '❌ Bài viết bị từ chối',
+      message: isPublished 
+        ? `Chúc mừng! Bài viết "${blogTitle}" của bạn đã được quản trị viên phê duyệt và đăng tải.`
+        : `Bài viết "${blogTitle}" của bạn đã bị từ chối. Lý do: ${reason}. Vui lòng sửa lại và gửi duyệt lại.`,
+      relatedId: blogId,
+      relatedType: 'blog',
+      actionUrl: isPublished ? `/blogs/slug/${blogId}` : `/me/blogs/edit/${blogId}`, // Simplified links
+      actionText: 'Xem chi tiết',
+      icon: isPublished ? '✅' : '❌',
+      channels: ['IN_APP', 'EMAIL']
+    };
+
+    return await this.createNotification(data);
+  } catch (error) {
+    console.error('Error creating blog status notification:', error);
+    return null;
   }
 };
 

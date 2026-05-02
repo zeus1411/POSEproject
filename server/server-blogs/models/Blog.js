@@ -54,6 +54,10 @@ const blogSchema = new mongoose.Schema(
       enum: ['DRAFT', 'PENDING', 'PUBLISHED'],
       default: 'DRAFT'
     },
+    rejectionReason: {
+      type: String,
+      trim: true
+    },
     viewCount: {
       type: Number,
       default: 0,
@@ -64,12 +68,16 @@ const blogSchema = new mongoose.Schema(
       default: 0,
       min: 0
     },
-    likedBy: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
-      }
-    ],
+    commentCount: {
+      type: Number,
+      default: 0,
+      min: 0
+    },
+    bookmarkCount: {
+      type: Number,
+      default: 0,
+      min: 0
+    },
     isFeatured: {
       type: Boolean,
       default: false
@@ -86,7 +94,12 @@ const blogSchema = new mongoose.Schema(
       }
     ],
     metaTitle: String,
-    metaDescription: String
+    metaDescription: String,
+    approvedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null
+    },
   },
   {
     timestamps: true,

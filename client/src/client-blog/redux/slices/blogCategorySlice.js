@@ -3,6 +3,9 @@ import blogCategoryService from '../../services/blogCategoryService';
 
 const initialState = {
   blogCategories: [],
+  page: 1,
+  totalPages: 1,
+  total: 0,
   currentBlogCategory: null,
   isLoading: false,
   isSuccess: false,
@@ -13,8 +16,14 @@ const initialState = {
 // Get all blog categories
 export const getBlogCategories = createAsyncThunk(
   'blogCategories/getBlogCategories',
-  async (includeInactive = false, thunkAPI) => {
-    try {
+  async (
+    {
+      page = 1,
+      limit = 10,
+      includeInactive = false
+    } = {},
+    thunkAPI
+  ) => { try {
       return await blogCategoryService.getBlogCategories(includeInactive);
     } catch (error) {
       const message =
@@ -98,9 +107,9 @@ export const deleteBlogCategory = createAsyncThunk(
 // Update blog category status
 export const updateBlogCategoryStatus = createAsyncThunk(
   'blogCategories/updateBlogCategoryStatus',
-  async ({ categoryId, isActive }, thunkAPI) => {
+  async ({ categoryId, status }, thunkAPI) => {
     try {
-      return await blogCategoryService.updateBlogCategoryStatus(categoryId, isActive);
+      return await blogCategoryService.updateBlogCategoryStatus(categoryId, status);
     } catch (error) {
       const message =
         error.response?.data?.message ||
@@ -138,11 +147,18 @@ export const blogCategorySlice = createSlice({
       .addCase(getBlogCategories.pending, (state) => {
         state.isLoading = true;
       })
+      
       .addCase(getBlogCategories.fulfilled, (state, action) => {
-        state.isLoading = false;
-        state.isSuccess = true;
-        state.blogCategories = action.payload.categories;
+
+      state.isLoading = false;
+      state.isSuccess = true;
+
+      state.blogCategories = action.payload.categories;
+      state.page = action.payload.pagination.page;
+      state.totalPages = action.payload.pagination.pages;
+      state.total = action.payload.pagination.total;
       })
+
       .addCase(getBlogCategories.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
@@ -234,9 +250,11 @@ export const blogCategorySlice = createSlice({
 
         const updatedCategory = action.payload.category;
 
-        state.message = `Đã ${
-          updatedCategory.isActive ? 'kích hoạt' : 'vô hiệu hóa'
-        } danh mục bài viết`;
+          state.message = `Đã ${
+            updatedCategory.status === 'ACTIVE'
+              ? 'kích hoạt'
+              : 'vô hiệu hóa'
+          } danh mục bài viết`;
 
         const index = state.blogCategories.findIndex(
           (cat) => cat._id === updatedCategory._id

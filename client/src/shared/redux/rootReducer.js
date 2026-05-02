@@ -19,6 +19,7 @@ import promotionReducer from '../../client-eco/redux/slices/promotionSlice';
 import blogCategoryReducer from '../../client-blog/redux/slices/blogCategorySlice';
 import blogTagReducer from '../../client-blog/redux/slices/blogTagSlice';
 import blogReducer from '../../client-blog/redux/slices/blogSlice';
+import commentReducer from '../../client-blog/redux/slices/commentSlice'
 
 const rootReducer = combineReducers({
   auth: authReducer,
@@ -38,6 +39,7 @@ const rootReducer = combineReducers({
   blogCategories: blogCategoryReducer,
   blogTags: blogTagReducer,
   blog: blogReducer,
+  comments: commentReducer
 });
 
 export default rootReducer;

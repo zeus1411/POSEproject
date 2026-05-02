@@ -110,9 +110,28 @@ const blogTagSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // PENDING
+      .addCase(getBlogTags.pending, (state) => {
+        state.isLoading = true;
+        state.isError = false;
+        state.message = '';
+      })
+
+      // SUCCESS
       .addCase(getBlogTags.fulfilled, (state, action) => {
-        state.blogTags = Array.isArray(action.payload) ? action.payload : [];
+        state.isLoading = false;
         state.isSuccess = true;
+
+        state.blogTags = Array.isArray(action.payload.tags)
+          ? action.payload.tags
+          : [];
+      })
+
+      // ERROR
+      .addCase(getBlogTags.rejected, (state, action) => {
+        state.isLoading = false;
+        state.isError = true;
+        state.message = action.payload;
       })
 
       .addCase(getBlogTagById.fulfilled, (state, action) => {

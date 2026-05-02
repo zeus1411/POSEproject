@@ -6,7 +6,9 @@ import {
     getBlogBySlug,
     getPublicBlogs,
     updateBlog,
-    deleteBlog
+    deleteBlog,
+    updateBlogStatus,
+    getMyBlogs
 } from '../controllers/blogController.js';
 import { authenticateUser, authorizeRoles } from '../../middlewares/auth.js';
 import { uploadBlogImage } from '../../middlewares/upload.js';
@@ -35,6 +37,8 @@ const optionalAuth = (req, res, next) => {
  *   name: Blogs
  *   description: Blog management APIs
  */
+
+router.get('/my-blogs', authenticateUser, getMyBlogs);
 
 /**
  * @swagger
@@ -73,6 +77,24 @@ const optionalAuth = (req, res, next) => {
  *         description: List of public blogs
  */
 router.get('/public', getPublicBlogs);
+
+/**
+ * @swagger
+ * /blogs/slug/{slug}:
+ *   get:
+ *     summary: Get blog by slug
+ *     tags: [Blogs]
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Blog details
+ */
+router.get('/slug/:slug', getBlogBySlug);
 
 /**
  * @swagger
@@ -125,23 +147,12 @@ router.get('/public', getPublicBlogs);
  */
 router.get('/', optionalAuth, getAllBlogs);
 
-/**
- * @swagger
- * /blogs/slug/{slug}:
- *   get:
- *     summary: Get blog by slug
- *     tags: [Blogs]
- *     parameters:
- *       - in: path
- *         name: slug
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Blog details
- */
-router.get('/slug/:slug', getBlogBySlug);
+router.post(
+    '/', 
+    authenticateUser, 
+    uploadBlogImage.single('coverImage'), 
+    createBlog
+);
 
 /**
  * @swagger
@@ -215,16 +226,40 @@ router.get('/slug/:slug', getBlogBySlug);
  *     responses:
  *       200:
  *         description: Blog deleted
+ * 
+ *   patch:
+ *     summary: Update blog status (Admin only)
+ *     tags: [Blogs]
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [PUBLISHED, REJECTED]
+ *                 description: |
+ *                   'PUBLISHED' to accept and post.
+ *                   'REJECTED' to send back to DRAFT for fixing.
+ *               rejectionReason:
+ *                 type: string
+ *                 description: Required if status is REJECTED.
+ *     responses:
+ *       200:
+ *         description: Blog status updated
  */
 router.get('/:id', optionalAuth, getBlogById);
-
-// Protected routes
-router.post(
-    '/', 
-    authenticateUser, 
-    uploadBlogImage.single('coverImage'), 
-    createBlog
-);
 
 router.put(
     '/:id', 
@@ -232,6 +267,8 @@ router.put(
     uploadBlogImage.single('coverImage'), 
     updateBlog
 );
+
+router.patch('/:id/status', authenticateUser, authorizeRoles('admin'), updateBlogStatus);
 
 router.delete('/:id', authenticateUser, deleteBlog);
 
