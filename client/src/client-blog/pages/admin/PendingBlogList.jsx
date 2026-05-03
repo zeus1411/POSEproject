@@ -97,7 +97,7 @@ const PendingBlogList = () => {
                 Bài viết chờ duyệt
               </h1>
               <span className="bg-[#4f46e5]/10 text-[#4f46e5] px-3 py-1 rounded-full text-sm font-bold">
-                {blogs?.length || 0} bài mới
+                {blogs?.length || 0} bài chờ duyệt
               </span>
             </div>
             <p className="text-slate-500 font-medium">
@@ -165,7 +165,7 @@ const PendingBlogList = () => {
                     </td>
                     <td className="px-6 py-5">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-orange-100 text-orange-600">
-                        ● Pending
+                        ● Chờ duyệt
                       </span>
                     </td>
                     <td className="px-6 py-5">

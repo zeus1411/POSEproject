@@ -172,19 +172,19 @@ return (
                   <td className="px-6 py-5">
                     {blog.status === "PUBLISHED" && (
                       <span className="inline-flex px-3 py-1 rounded-full text-xs font-bold bg-green-100 text-green-700">
-                        ● Published
+                        ● Đã đăng
                       </span>
                     )}
 
                     {blog.status === "PENDING" && (
                       <span className="inline-flex px-3 py-1 rounded-full text-xs font-bold bg-orange-100 text-orange-600">
-                        ● Pending
+                        ● Chờ duyệt
                       </span>
                     )}
 
                     {blog.status === "DRAFT" && (
                       <span className="inline-flex px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-600">
-                        ● Draft (Rejected)
+                        ● Bị từ chối
                       </span>
                     )}
                   </td>
@@ -192,23 +192,6 @@ return (
                   {/* ACTIONS */}
                   <td className="px-6 py-5">
                     <div className="flex items-center justify-center gap-2">
-                      {blog.status === "PENDING" && (
-                        <button
-                          onClick={() => navigate("/admin/blogs/pending")}
-                          className="
-                            px-4 py-1.5
-                            rounded-lg
-                            bg-blue-50
-                            text-blue-600
-                            hover:bg-blue-600
-                            hover:text-white
-                            text-sm font-bold
-                            transition-all
-                          "
-                        >
-                          Duyệt
-                        </button>
-                      )}
                       <button
                         onClick={() =>
                           window.open(`/admin/blogs/preview/${blog._id}`, "_blank")

@@ -84,7 +84,7 @@ const Statistics = () => {
   if (loading) {
     return (
       <AdminShell>
-        <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="min-h-screen bg-[#f8f9ff] p-8">
           <div className="flex items-center justify-center h-96">
             <div className="text-center">
               <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -99,7 +99,7 @@ const Statistics = () => {
   if (error) {
     return (
       <AdminShell>
-        <div className="max-w-7xl mx-auto px-4 py-8">
+        <div className="min-h-screen bg-[#f8f9ff] p-8">
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
             <p className="text-red-800">Lỗi: {error}</p>
             <button
@@ -116,7 +116,7 @@ const Statistics = () => {
 
   return (
     <AdminShell>
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="min-h-screen bg-[#f8f9ff] p-8">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-black tracking-tight text-[#1e293b]">
@@ -315,7 +315,7 @@ const Statistics = () => {
           </div>
         )}
 
-        {/* Order Status Details Table */}
+      {/* Order Status Details Table */}
         {statistics?.byStatus && statistics.byStatus.length > 0 && (
           <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Chi Tiết Trạng Thái Đơn Hàng</h2>

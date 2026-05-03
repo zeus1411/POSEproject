@@ -349,7 +349,7 @@ const AdminPromotions = () => {
 
   return (
     <AdminLayout>
-      <div className="p-6 bg-gray-50 min-h-screen">
+      <div className="min-h-screen bg-[#f8f9ff] p-8">
         {/* Header */}
         <div className="mb-6 flex justify-between items-center">
         <div>
