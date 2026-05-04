@@ -3,7 +3,7 @@ import RichTextEditor from '../../../client-eco/components/admin/RichTextEditor'
 import { X } from 'lucide-react';
 import { toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import blogService from '../../services/blogService';
+import productService from '../../../client-eco/services/productService';
 
 const BlogForm = ({
   blog,
@@ -28,6 +28,8 @@ const BlogForm = ({
   const [productResults, setProductResults] = useState([]);
   const [productDropdownOpen, setProductDropdownOpen] = useState(false);
   const [selectedProducts, setSelectedProducts] = useState([]);
+  const [allProducts, setAllProducts] = useState([]);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
   const MAX_RELATED_PRODUCTS = 10;
 
   // 🔥 Slug preview
@@ -55,6 +57,43 @@ const BlogForm = ({
       setPreview(blog.coverImage?.url || null);
     }
   }, [blog]);
+
+  const fetchAllProducts = async () => {
+    setIsLoadingProducts(true);
+    try {
+      const res = await productService.getAllProductsAdmin({ page: 1, limit: 1000 });
+      const items = res?.items || res?.products || [];
+      setAllProducts(items);
+      setProductResults(items);
+    } catch (err) {
+      console.error(err);
+      toast.error('Không tải được danh sách sản phẩm');
+    } finally {
+      setIsLoadingProducts(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!productDropdownOpen) return;
+
+    if (allProducts.length === 0) {
+      fetchAllProducts();
+      return;
+    }
+
+    const q = productQuery.trim().toLowerCase();
+    if (!q) {
+      setProductResults(allProducts);
+      return;
+    }
+
+    setProductResults(
+      allProducts.filter((p) =>
+        (p.name || '').toLowerCase().includes(q) ||
+        (p.sku || '').toLowerCase().includes(q)
+      )
+    );
+  }, [productDropdownOpen, productQuery, allProducts]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -228,9 +267,16 @@ const BlogForm = ({
                 onClick={() =>
                   setProductDropdownOpen(!productDropdownOpen)
                 }
-                className="w-full border p-3 rounded-lg bg-white text-left hover:border-blue-500"
+                className="w-full border p-3 rounded-lg bg-white text-left hover:border-blue-500 flex items-center justify-between"
               >
-                Chọn sản phẩm liên quan ▼
+                <span>Chọn sản phẩm liên quan</span>
+                <span
+                  className={`ml-2 inline-block transition-transform ${
+                    productDropdownOpen ? 'rotate-0' : '-rotate-90'
+                  }`}
+                >
+                  ▼
+                </span>
               </button>
 
               {/* DROPDOWN */}
@@ -242,18 +288,8 @@ const BlogForm = ({
                     type="text"
                     placeholder="Tìm theo tên hoặc SKU..."
                     value={productQuery}
-                    onChange={async (e) => {
-                      const q = e.target.value;
-                      setProductQuery(q);
-
-                      try {
-                        const results =
-                          await blogService.searchProductsQuick(q);
-
-                        setProductResults(results || []);
-                      } catch (err) {
-                        console.error(err);
-                      }
+                    onChange={(e) => {
+                      setProductQuery(e.target.value);
                     }}
                     className="w-full border p-2 rounded-lg mb-3"
                   />
@@ -261,7 +297,13 @@ const BlogForm = ({
                   {/* Product List */}
                   <div className="max-h-72 overflow-y-auto border rounded-lg">
 
-                    {productResults.length === 0 && (
+                    {isLoadingProducts && (
+                      <div className="p-4 text-gray-500">
+                        Đang tải sản phẩm...
+                      </div>
+                    )}
+
+                    {!isLoadingProducts && productResults.length === 0 && (
                       <div className="p-4 text-gray-500">
                         Không tìm thấy sản phẩm
                       </div>

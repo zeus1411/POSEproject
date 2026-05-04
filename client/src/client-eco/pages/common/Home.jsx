@@ -974,12 +974,6 @@ const Home = () => {
 
           {/* Heading */}
           <div className="text-center mb-16 animate-on-scroll">
-            <div className="inline-flex items-center gap-2 bg-white shadow-md px-5 py-2 rounded-full mb-6">
-              <NewspaperIcon className="w-5 h-5 text-teal-600" />
-              <span className="font-semibold text-gray-700">
-                Aquascaping Knowledge
-              </span>
-            </div>
 
             <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
               Blogs & Hướng Dẫn
