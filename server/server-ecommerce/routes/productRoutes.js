@@ -10,7 +10,7 @@ import {
   updateProductImages,
   uploadProductImages,
   uploadDescriptionImage
-} from '../controllers/ProductController.js';
+} from '../controllers/productController.js';
 import { authenticateUser, authorizeRoles } from '../../middlewares/auth.js';
 import { upload } from '../../middlewares/upload.js';
 

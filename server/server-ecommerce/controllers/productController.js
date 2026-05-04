@@ -1,4 +1,4 @@
-import ProductService from '../services/ProductService.js';
+import ProductService from '../services/productService.js';
 import { deleteFromCloudinary } from '../../utils/cloudinaryUtils.js';
 
 // Create a new product

@@ -266,7 +266,7 @@ class OrderService {
       if (paymentMethod === 'VNPAY') {
         console.log('🔵 VNPay Flow: Storing temporary order data (no database creation yet)...');
         
-        const transactionId = `VNPAY-${Date.now()}`;
+        const transactionId = `VNPAY${Date.now()}`;
         
         // Store order data temporarily
         const tempOrder = storeTempOrder(transactionId, {
@@ -1067,6 +1067,59 @@ class OrderService {
       success: false,
       redirectUrl: `${process.env.CLIENT_URL}/checkout?payment=failed`
     };
+  }
+
+  /**
+   * Process VNPay IPN callback
+   * @param {Object} vnpParams - VNPay IPN parameters
+   * @returns {Promise<Object>} IPN response info
+   */
+  async processVNPayIpn(vnpParams) {
+    const { verifyVNPayReturn } = await import('./vnpayService.js');
+    const { getTempOrder, removeTempOrder } = await import('../utils/tempOrderStorage.js');
+
+    try {
+      const verifyResult = verifyVNPayReturn(vnpParams);
+      const isValid = verifyResult?.isVerified !== false;
+
+      if (!isValid) {
+        return { rspCode: '97', message: 'Fail checksum' };
+      }
+
+      const txnRef = vnpParams.vnp_TxnRef;
+      if (!txnRef) {
+        return { rspCode: '01', message: 'Missing txn ref' };
+      }
+
+      if (vnpParams.vnp_ResponseCode !== '00') {
+        const tempOrder = getTempOrder(txnRef);
+        if (tempOrder) {
+          removeTempOrder(txnRef);
+        }
+
+        return { rspCode: '00', message: 'Payment failed' };
+      }
+
+      const existingPayment = await Payment.findOne({
+        transactionId: txnRef,
+        method: 'VNPAY'
+      }).select('_id status');
+
+      if (existingPayment) {
+        return { rspCode: '00', message: 'Already processed' };
+      }
+
+      const result = await this.processVNPayReturn(vnpParams);
+
+      if (result?.success) {
+        return { rspCode: '00', message: 'success' };
+      }
+
+      return { rspCode: '99', message: 'Update failed' };
+    } catch (error) {
+      console.error('❌ VNPay IPN error:', error);
+      return { rspCode: '99', message: 'Internal error' };
+    }
   }
 
   /**

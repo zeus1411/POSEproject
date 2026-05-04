@@ -6,6 +6,7 @@ import {
   getOrderById,
   cancelOrder,
   vnpayReturn,
+  vnpayIpn,
   simulateVNPayPayment,
   getAllOrders,
   updateOrderStatus,
@@ -33,6 +34,18 @@ const router = express.Router();
  *         description: Payment processing result
  */
 router.get('/payment/vnpay/return', vnpayReturn);
+
+/**
+ * @swagger
+ * /orders/payment/vnpay/ipn:
+ *   get:
+ *     summary: VNPay IPN callback
+ *     tags: [Orders]
+ *     responses:
+ *       200:
+ *         description: IPN processing result
+ */
+router.get('/payment/vnpay/ipn', vnpayIpn);
 
 /**
  * @swagger

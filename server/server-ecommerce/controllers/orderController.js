@@ -135,6 +135,20 @@ const vnpayReturn = async (req, res) => {
   return res.redirect(result.redirectUrl);
 };
 
+// @desc    VNPay IPN callback (server-to-server)
+// @route   GET /api/v1/orders/payment/vnpay/ipn
+// @access  Public
+const vnpayIpn = async (req, res) => {
+  const vnpParams = req.query;
+
+  const result = await orderService.processVNPayIpn(vnpParams);
+
+  return res.status(StatusCodes.OK).json({
+    RspCode: result.rspCode,
+    Message: result.message
+  });
+};
+
 // @desc    Simulate VNPay payment success (for testing)
 // @route   POST /api/orders/:id/payment/vnpay/simulate
 // @access  Private
@@ -331,6 +345,7 @@ export {
   getOrderById,
   cancelOrder,
   vnpayReturn,
+  vnpayIpn,
   simulateVNPayPayment,
   getAllOrders,
   updateOrderStatus,
