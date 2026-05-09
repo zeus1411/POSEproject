@@ -122,6 +122,45 @@ const authenticateUser = async (req, res, next) => {
     }
 };
 
+// Optional authentication middleware (continues when no token is provided)
+const optionalAuthenticateUser = async (req, res, next) => {
+    try {
+        const token = req.signedCookies.token ||
+                     (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')
+                        ? req.headers.authorization.split(' ')[1]
+                        : null);
+
+        if (!token) {
+            return next();
+        }
+
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        req.user = {
+            userId: decoded.userId,
+            username: decoded.username,
+            email: decoded.email,
+            role: (decoded.role || '').toLowerCase()
+        };
+
+        next();
+    } catch (error) {
+        if (error.name === 'TokenExpiredError') {
+            throw new UnauthenticatedError('Session expired. Please log in again.');
+        }
+
+        if (error.name === 'JsonWebTokenError') {
+            throw new UnauthenticatedError('Invalid token. Please log in again.');
+        }
+
+        if (error instanceof UnauthenticatedError) {
+            throw error;
+        }
+
+        throw new UnauthenticatedError('Authentication failed. Please log in again.');
+    }
+};
+
 // Authorization middleware for roles
 const authorizeRoles = (...roles) => {
     return (req, res, next) => {
@@ -197,6 +236,7 @@ export {
     attachCookiesToResponse,
     // Middlewares
     authenticateUser, 
+    optionalAuthenticateUser,
     authorizeRoles, 
     checkOwnership 
 };
