@@ -30,12 +30,16 @@ const getOrCreateConversation = async ({ conversationId, userId, anonymousId, mo
       throw new BadRequestError('Conversation not found');
     }
 
-    if (existing.userId && userId && existing.userId.toString() !== userId) {
-      throw new UnauthorizedError('Conversation does not belong to user');
+    if (existing.userId) {
+      if (!userId || existing.userId.toString() !== userId) {
+        throw new UnauthorizedError('Conversation does not belong to user');
+      }
     }
 
-    if (existing.anonymousId && anonymousId && existing.anonymousId !== anonymousId) {
-      throw new UnauthorizedError('Conversation does not belong to anonymous user');
+    if (!existing.userId && existing.anonymousId) {
+      if (!anonymousId || existing.anonymousId !== anonymousId) {
+        throw new UnauthorizedError('Conversation does not belong to anonymous user');
+      }
     }
 
     if (userId && !existing.userId) {
@@ -78,7 +82,10 @@ const handleAiChat = async ({
   message,
   mode,
   userId,
-  anonymousId
+  anonymousId,
+  onStart,
+  onMeta,
+  onToken
 }) => {
   if (!message || !String(message).trim()) {
     throw new BadRequestError('Message is required');
@@ -109,7 +116,10 @@ const handleAiChat = async ({
   const result = await routeAiQuery({
     mode: normalizedMode,
     message: String(message).trim(),
-    conversationId: conversation._id.toString()
+    conversationId: conversation._id.toString(),
+    onStart,
+    onMeta,
+    onToken
   });
 
   conversation.addMessage({

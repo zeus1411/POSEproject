@@ -16,39 +16,67 @@ const extractAnonymousId = (req) => {
 
 export const streamAiChat = async (req, res, next) => {
   try {
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache, no-transform');
-    res.setHeader('Connection', 'keep-alive');
-    res.setHeader('X-Accel-Buffering', 'no');
-
-    if (res.flushHeaders) {
-      res.flushHeaders();
-    }
-
     const { conversationId, message, mode } = req.body || {};
     const userId = req.user?.userId || null;
     const anonymousId = extractAnonymousId(req);
+    let sseStarted = false;
+    let metaSent = false;
+    let tokenSent = false;
+
+    const startSse = () => {
+      if (sseStarted) return;
+      sseStarted = true;
+      res.setHeader('Content-Type', 'text/event-stream');
+      res.setHeader('Cache-Control', 'no-cache, no-transform');
+      res.setHeader('Connection', 'keep-alive');
+      res.setHeader('X-Accel-Buffering', 'no');
+
+      if (res.flushHeaders) {
+        res.flushHeaders();
+      }
+    };
+
+    const onMeta = (meta) => {
+      metaSent = true;
+      startSse();
+      writeSseEvent(res, 'meta', meta);
+    };
+
+    const onToken = (delta) => {
+      if (!delta) return;
+      tokenSent = true;
+      startSse();
+      writeSseEvent(res, 'message', { delta });
+    };
 
     const result = await handleAiChat({
       conversationId,
       message,
       mode,
       userId,
-      anonymousId
+      anonymousId,
+      onStart: startSse,
+      onMeta,
+      onToken
     });
 
-    writeSseEvent(res, 'meta', {
-      conversationId: result.conversationId,
-      anonymousId: result.anonymousId,
-      mode: result.mode,
-      retrievalStrategy: result.retrievalStrategy,
-      sourceSummary: result.sourceSummary
-    });
+    if (!metaSent) {
+      startSse();
+      writeSseEvent(res, 'meta', {
+        conversationId: result.conversationId,
+        anonymousId: result.anonymousId,
+        mode: result.mode,
+        retrievalStrategy: result.retrievalStrategy,
+        sourceSummary: result.sourceSummary
+      });
+    }
 
-    writeSseEvent(res, 'message', {
-      delta: result.answer
-    });
+    if (!tokenSent) {
+      startSse();
+      writeSseEvent(res, 'message', { delta: result.answer });
+    }
 
+    startSse();
     writeSseEvent(res, 'done', {
       message: result.answer,
       conversationId: result.conversationId,
@@ -61,15 +89,17 @@ export const streamAiChat = async (req, res, next) => {
 
     res.end();
   } catch (error) {
+    const statusCode = error.statusCode || StatusCodes.INTERNAL_SERVER_ERROR;
     if (!res.headersSent) {
-      return res.status(StatusCodes.BAD_REQUEST).json({
+      return res.status(statusCode).json({
         success: false,
         message: error.message || 'Chat failed'
       });
     }
 
     writeSseEvent(res, 'error', {
-      message: error.message || 'Chat failed'
+      message: error.message || 'Chat failed',
+      statusCode
     });
     res.end();
   }
