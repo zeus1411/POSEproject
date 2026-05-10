@@ -12,109 +12,117 @@ import {
 
 const Footer = () => {
   return (
-    <footer className="bg-gray-900 text-gray-300 mt-auto">
-      <div className="max-w-7xl mx-auto px-6 py-10 grid grid-cols-1 md:grid-cols-4 gap-8">
+    <footer className="bg-abyss text-gray-400 mt-auto border-t border-white/5">
+      <div className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-4 gap-8">
 
         {/* --- Cột 1: Logo + Mô tả --- */}
         <div>
-          <h2 className="text-2xl font-bold text-white mb-3">POSE Shop</h2>
-          <p className="text-gray-400 text-sm leading-relaxed">
-            POSE Shop là nơi mang đến cho bạn những sản phẩm và phụ kiện về thủy sinh chất lượng, giúp bạn tiến đến gần với đam mê.
+          <h2 className="text-2xl font-headline font-bold text-white mb-3 flex items-center gap-2">
+            <span className="text-neon-cyan">🐠</span> AquaticPose
+          </h2>
+          <p className="text-gray-500 text-sm leading-relaxed font-body">
+            Khám phá bộ sưu tập đẳng cấp, biến không gian sống thành tác phẩm nghệ thuật thủy sinh.
           </p>
 
-          <div className="flex space-x-4 mt-4">
-            <a href="#" className="hover:text-white transition">
+          <div className="flex space-x-4 mt-5">
+            <a href="#" className="text-gray-500 hover:text-neon-cyan transition-colors duration-200">
               <Facebook size={20} />
             </a>
-            <a href="#" className="hover:text-white transition">
+            <a href="#" className="text-gray-500 hover:text-neon-cyan transition-colors duration-200">
               <Instagram size={20} />
             </a>
-            <a href="#" className="hover:text-white transition">
-              <Twitter size={20} />
-            </a>
-            <a href="#" className="hover:text-white transition">
+            <a href="#" className="text-gray-500 hover:text-neon-cyan transition-colors duration-200">
               <Youtube size={20} />
+            </a>
+            <a href="#" className="text-gray-500 hover:text-neon-cyan transition-colors duration-200">
+              <Twitter size={20} />
             </a>
           </div>
         </div>
 
-        {/* --- Cột 2: Về chúng tôi --- */}
+        {/* --- Cột 2: Trang chủ --- */}
         <div>
-          <h3 className="text-lg font-semibold text-white mb-3">Về chúng tôi</h3>
-          <ul className="space-y-2 text-sm">
+          <h3 className="text-sm font-body font-semibold text-white uppercase tracking-wider mb-4">Trang chủ</h3>
+          <ul className="space-y-2.5 text-sm font-body">
             <li>
-              <Link to="/about" className="hover:text-white transition">
-                Giới thiệu POSE
+              <Link to="/" className="hover:text-neon-cyan transition-colors duration-200">
+                Trang chủ
               </Link>
             </li>
             <li>
-              <Link to="/terms" className="hover:text-white transition">
-                Điều khoản sử dụng
+              <Link to="/shop" className="hover:text-neon-cyan transition-colors duration-200">
+                Cửa hàng
               </Link>
             </li>
             <li>
-              <Link to="/privacy" className="hover:text-white transition">
-                Chính sách bảo mật
-              </Link>
-            </li>
-            <li>
-              <Link to="/career" className="hover:text-white transition">
-                Tuyển dụng
+              <Link to="/blogs" className="hover:text-neon-cyan transition-colors duration-200">
+                Blog
               </Link>
             </li>
           </ul>
         </div>
 
-        {/* --- Cột 3: Hỗ trợ khách hàng --- */}
+        {/* --- Cột 3: Blog --- */}
         <div>
-          <h3 className="text-lg font-semibold text-white mb-3">Hỗ trợ khách hàng</h3>
-          <ul className="space-y-2 text-sm">
+          <h3 className="text-sm font-body font-semibold text-white uppercase tracking-wider mb-4">Blog</h3>
+          <ul className="space-y-2.5 text-sm font-body">
             <li>
-              <Link to="/faq" className="hover:text-white transition">
-                Câu hỏi thường gặp
+              <Link to="/blogs" className="hover:text-neon-cyan transition-colors duration-200">
+                Bài viết
               </Link>
             </li>
             <li>
-              <Link to="/return-policy" className="hover:text-white transition">
-                Chính sách đổi trả
+              <Link to="/blogs" className="hover:text-neon-cyan transition-colors duration-200">
+                Mẹo vặt
               </Link>
             </li>
             <li>
-              <Link to="/shipping" className="hover:text-white transition">
-                Chính sách giao hàng
-              </Link>
-            </li>
-            <li>
-              <Link to="/contact" className="hover:text-white transition">
-                Liên hệ hỗ trợ
+              <Link to="/blogs" className="hover:text-neon-cyan transition-colors duration-200">
+                Cách nuôi cá
               </Link>
             </li>
           </ul>
         </div>
 
-        {/* --- Cột 4: Thông tin liên hệ --- */}
+        {/* --- Cột 4: Info Liên hệ --- */}
         <div>
-          <h3 className="text-lg font-semibold text-white mb-3">Liên hệ</h3>
-          <ul className="space-y-3 text-sm">
+          <h3 className="text-sm font-body font-semibold text-white uppercase tracking-wider mb-4">Liên hệ</h3>
+          <ul className="space-y-3 text-sm font-body">
             <li className="flex items-start gap-2">
-              <MapPin size={18} className="text-primary-400 mt-1" />
+              <MapPin size={18} className="text-neon-cyan/60 mt-0.5 flex-shrink-0" />
               <span>1 Võ Văn Ngân, Linh Chiểu, TP HCM</span>
             </li>
             <li className="flex items-center gap-2">
-              <Phone size={18} className="text-primary-400" />
+              <Phone size={18} className="text-neon-cyan/60 flex-shrink-0" />
               <span>+84 969258024</span>
             </li>
             <li className="flex items-center gap-2">
-              <Mail size={18} className="text-primary-400" />
+              <Mail size={18} className="text-neon-cyan/60 flex-shrink-0" />
               <span>22110077@student.hcmute.edu.vn</span>
             </li>
           </ul>
+
+          {/* Social icons row for mobile */}
+          <div className="flex space-x-3 mt-5">
+            <a href="#" className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-gray-500 hover:text-neon-cyan hover:border-neon-cyan/30 transition-all duration-200">
+              <Facebook size={16} />
+            </a>
+            <a href="#" className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-gray-500 hover:text-neon-cyan hover:border-neon-cyan/30 transition-all duration-200">
+              <Instagram size={16} />
+            </a>
+            <a href="#" className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-gray-500 hover:text-neon-cyan hover:border-neon-cyan/30 transition-all duration-200">
+              <Youtube size={16} />
+            </a>
+            <a href="#" className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-gray-500 hover:text-neon-cyan hover:border-neon-cyan/30 transition-all duration-200">
+              <Twitter size={16} />
+            </a>
+          </div>
         </div>
       </div>
 
       {/* --- Dòng bản quyền --- */}
-      <div className="border-t border-gray-700 py-4 text-center text-sm text-gray-400">
-        &copy; {new Date().getFullYear()} POSE Shop. All rights reserved.
+      <div className="border-t border-white/5 py-4 text-center text-sm text-gray-600 font-body">
+        Copyright © {new Date().getFullYear()} AquaticPose
       </div>
     </footer>
   );

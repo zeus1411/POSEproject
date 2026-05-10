@@ -62,7 +62,7 @@ const Header = () => {
 
   return (
     <>
-      <header className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-700 shadow-lg fixed w-full z-50">
+      <header className="bg-abyss/60 backdrop-blur-xl border-b border-white/10 shadow-lg fixed w-full z-50">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex items-center justify-between h-20">
             {/* Logo / Brand */}
@@ -71,7 +71,7 @@ const Header = () => {
                 to={isAdmin ? "/admin/products" : "/"} 
                 className="flex items-center space-x-3 group"
               >
-                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm group-hover:bg-white/30 group-hover:rotate-12 transition-all duration-300">
+                <div className="w-10 h-10 bg-neon-cyan/10 border border-neon-cyan/30 rounded-xl flex items-center justify-center backdrop-blur-sm group-hover:bg-neon-cyan/20 group-hover:rotate-12 transition-all duration-300 shadow-glow-cyan">
                   <svg className="w-6 h-6 text-white" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
                     <path d="M811.1 354.7L767.5 331c-24.8-13.5-45-35-56.9-60.6l-20.9-45c-11.8-25.5-18.8-52.7-20.7-80.8-1.2-17.1-13.8-31.2-30.6-34.4-19.5-3.6-38.5 8.6-43.3 27.8l-1 3.9c-8.1 32.4-9.8 65.5-5 98.6l11.3 78-272.7 115.8c-81.6 34.7-145.4 99.1-180 178.7-0.9 2.1-1.9 4.3-2.8 6.4-1.2 2.9-2.3 5.9-3.4 8.8-1.2 3.3-2.5 6.6-3.6 9.9-0.9 2.5-1.7 5.1-2.5 7.6-1.3 4-2.5 8.1-3.6 12.2-0.6 2.1-1.2 4.1-1.7 6.2-1.6 6.2-3.1 12.5-4.4 18.9L98.1 821.6c-0.8 4.2 0.4 8.6 3.3 11.7l21 22.4-16.3 15.3c-5 4.7-5.6 12.4-1.4 17.8 12.6 16.4 32.1 24.5 52.3 21.8l162-21.7c9.7-1.3 19.2-3.1 28.6-5.2 2.1-0.5 4.2-0.9 6.3-1.5 9.5-2.3 18.9-4.9 28-7.9 0.2-0.1 0.4-0.2 0.6-0.2 9.7-3.2 19.1-7 28.4-11.1 0.7-0.3 1.4-0.6 2.2-0.9 71.4-31.9 130.7-87.5 166.7-159.3l132.7-264.7 77.2 16.1c32.7 6.8 65.9 7.2 98.7 1.2l4-0.7c7.3-1.3 13.8-4.8 18.8-9.5 8.5-7.9 13.1-19.7 11.6-32-2.1-17-15.4-30.4-32.4-32.7-27.9-3.7-54.6-12.4-79.3-25.8z" fill="currentColor" />
                     <path d="M218.6 729.1m-25.5 0a25.5 25.5 0 1 0 51 0 25.5 25.5 0 1 0-51 0Z" fill="currentColor" />
@@ -86,10 +86,10 @@ const Header = () => {
                   </svg>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-xl font-bold text-white tracking-tight">
+                  <span className="text-xl font-headline font-bold text-white tracking-tight">
                     AquaticPose
                   </span>
-                  <span className="text-xs text-teal-100">Thủy Sinh Cao Cấp</span>
+                  <span className="text-xs text-neon-cyan/70">Thủy Sinh Cao Cấp</span>
                 </div>
               </Link>
             </div>
@@ -100,41 +100,41 @@ const Header = () => {
                 <nav className="flex items-center space-x-2">
                   <Link 
                     to="/" 
-                    className={`relative px-6 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${
+                    className={`relative px-6 py-2 text-sm font-body font-semibold rounded-lg transition-all duration-200 ${
                       location.pathname === '/' 
-                        ? 'text-white bg-white/20' 
-                        : 'text-teal-50 hover:text-white hover:bg-white/10'
+                        ? 'text-neon-cyan bg-neon-cyan/10 border border-neon-cyan/20' 
+                        : 'text-gray-300 hover:text-neon-cyan hover:bg-white/5'
                     }`}
                   >
                     Trang chủ
                     {location.pathname === '/' && (
-                      <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-0.5 bg-white rounded-full"></span>
+                      <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-0.5 bg-neon-cyan rounded-full shadow-glow-cyan"></span>
                     )}
                   </Link>
                   <Link 
                     to="/shop" 
-                    className={`relative px-6 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${
+                    className={`relative px-6 py-2 text-sm font-body font-semibold rounded-lg transition-all duration-200 ${
                       location.pathname.startsWith('/shop')
-                        ? 'text-white bg-white/20' 
-                        : 'text-teal-50 hover:text-white hover:bg-white/10'
+                        ? 'text-neon-cyan bg-neon-cyan/10 border border-neon-cyan/20' 
+                        : 'text-gray-300 hover:text-neon-cyan hover:bg-white/5'
                     }`}
                   >
                     Cửa hàng
                     {location.pathname.startsWith('/shop') && (
-                      <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-0.5 bg-white rounded-full"></span>
+                      <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-0.5 bg-neon-cyan rounded-full shadow-glow-cyan"></span>
                     )}
                   </Link>
                   <Link 
                     to="/blogs" 
-                    className={`relative px-6 py-2 text-sm font-semibold rounded-lg transition-all duration-200 ${
+                    className={`relative px-6 py-2 text-sm font-body font-semibold rounded-lg transition-all duration-200 ${
                       location.pathname.startsWith('/blogs')
-                        ? 'text-white bg-white/20' 
-                        : 'text-teal-50 hover:text-white hover:bg-white/10'
+                        ? 'text-neon-cyan bg-neon-cyan/10 border border-neon-cyan/20' 
+                        : 'text-gray-300 hover:text-neon-cyan hover:bg-white/5'
                     }`}
                   >
                     Blog
                     {location.pathname.startsWith('/blogs') && (
-                      <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-0.5 bg-white rounded-full"></span>
+                      <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-0.5 bg-neon-cyan rounded-full shadow-glow-cyan"></span>
                     )}
                   </Link>
                 </nav>
@@ -179,13 +179,13 @@ const Header = () => {
                 <div className="flex items-center gap-2">
                   <Link
                     to="/login"
-                    className="px-5 py-2 text-sm font-semibold text-white hover:bg-white/10 rounded-lg transition-all duration-200"
+                    className="px-5 py-2 text-sm font-body font-semibold text-gray-300 hover:text-neon-cyan hover:bg-white/5 rounded-lg transition-all duration-200"
                   >
                     Đăng nhập
                   </Link>
                   <Link
                     to="/register"
-                    className="px-5 py-2 text-sm font-semibold text-teal-600 bg-white hover:bg-teal-50 rounded-lg shadow-md hover:shadow-lg transition-all duration-200"
+                    className="px-5 py-2 text-sm font-body font-semibold text-abyss bg-neon-cyan hover:bg-neon-teal rounded-lg shadow-glow-cyan hover:shadow-lg transition-all duration-200"
                   >
                     Đăng ký
                   </Link>
