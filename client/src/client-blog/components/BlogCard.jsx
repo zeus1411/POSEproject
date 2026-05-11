@@ -106,103 +106,67 @@ const BlogCard = ({ blog }) => {
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden mb-5 transition-all hover:shadow-md group">
-      {/* CARD HEADER */}
-      <div className="p-4 flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <div className="relative">
-            <img 
-              src={authorAvatar} 
-              alt={authorName} 
-              className="w-10 h-10 rounded-full object-cover border border-gray-100 hover:opacity-90 transition-opacity cursor-pointer"
-            />
-            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
-          </div>
-          <div>
-            <div className="flex items-center space-x-2">
-              <h3 className="font-bold text-gray-900 text-[15px] hover:underline cursor-pointer leading-none">
-                {authorName}
-              </h3>
-              {authorRole && (
-                <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-bold uppercase rounded-md tracking-wider">
-                  {authorRole}
-                </span>
-              )}
-            </div>
-            <p className="text-[12px] text-gray-500 mt-1 flex items-center">
-              {formattedDate} <span className="mx-1">·</span> <span className="hover:underline cursor-pointer">Công khai</span>
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center space-x-1">
-          <button
-            onClick={handleBookmark}
-            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-all"
-          >
-            <Bookmark
-              size={20}
-              className={bookmarked ? "text-blue-600 fill-blue-600" : ""}
-            />
-          </button>
-        </div>
-      </div>
+    <div className="group bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] overflow-hidden transition-all duration-500 hover:bg-white/10 hover:translate-y-[-4px] shadow-xl">
       
-      {/* CARD CONTENT */}
-      <div className="px-4 pb-3">
-        <Link to={`/blogs/${slug || _id}`}>
-          <h2 className="text-[19px] font-bold text-gray-900 mb-2 leading-snug hover:text-blue-600 transition-colors">
-            {title}
-          </h2>
-        </Link>
-        <p className="text-gray-600 text-[14px] leading-relaxed line-clamp-3">
-          {excerpt}
-        </p>
-      </div>
-
-      {/* COVER IMAGE */}
+      {/* 1. COVER IMAGE - Chiếm phần trên của thẻ */}
       {coverImage && (
-        <Link to={`/blogs/${slug || _id}`} className="block overflow-hidden">
+        <Link to={`/blogs/${slug || _id}`} className="block overflow-hidden m-4 rounded-[2rem]">
           <img 
             src={coverImage?.url || coverImage}
             alt={title} 
-            className="w-full aspect-[16/9] object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+            className="w-full aspect-[21/9] object-cover transition-transform duration-700 group-hover:scale-105"
           />
         </Link>
       )}
 
-      {/* STATS SUMMARY */}
-      <div className="px-4 py-3 border-b border-gray-100 flex justify-between items-center text-[13px] text-gray-500">
-        <div className="flex items-center space-x-2">
-          <span className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center ring-2 ring-white">
-            <Heart size={12} className="text-white fill-current" />
-          </span>
-          <span className="hover:underline cursor-pointer">{likes.toLocaleString()}</span>
-        </div>
-        <div className="flex space-x-4">
-          <span className="hover:underline cursor-pointer">{commentCount.toLocaleString()} bình luận</span>
-          <span className="hover:underline cursor-pointer">{viewCount.toLocaleString()} lượt xem</span>
-        </div>
-      </div>
-
-      {/* ACTION BUTTONS */}
-      <div className="px-2 py-1 flex justify-between space-x-1">
-        <button
-          onClick={handleLike}
-          className="flex-1 flex items-center justify-center space-x-2 py-2 text-gray-600 font-semibold text-[14px] hover:bg-gray-100 active:bg-gray-200 rounded-lg transition-all"
-        >
-          <Heart
-            size={20}
-            className={isLiked ? "text-red-500 fill-red-500" : ""}
-          />
-          <span>Thích</span>
-        </button>
-        <Link 
-          to={`/blogs/${slug || _id}`}
-          className="flex-1 flex items-center justify-center space-x-2 py-2 text-blue-600 font-bold text-[14px] hover:bg-blue-50 active:bg-blue-100 rounded-lg transition-all"
-        >
-          <Eye size={20} />
-          <span>Xem thêm</span>
+      {/* 2. CARD CONTENT */}
+      <div className="px-8 pb-6 pt-2">
+        {/* Title */}
+        <Link to={`/blogs/${slug || _id}`}>
+          <h2 className="text-2xl md:text-3xl font-bold text-white mb-4 leading-tight group-hover:text-cyan-300 transition-colors">
+            {title}
+          </h2>
         </Link>
+
+        {/* Excerpt */}
+        <p className="text-gray-300 text-base leading-relaxed mb-8 line-clamp-3 font-light">
+          {excerpt}
+        </p>
+
+        {/* 3. AUTHOR & STATS ROW */}
+        <div className="flex flex-wrap items-center justify-between gap-4 pt-6 border-t border-white/10">
+          
+          {/* Left: Author Info */}
+          <div className="flex items-center space-x-3">
+            <img 
+              src={authorAvatar} 
+              alt={authorName} 
+              className="w-10 h-10 rounded-full object-cover ring-2 ring-cyan-500/30"
+            />
+            <div>
+              <p className="text-sm font-semibold text-white">{authorName}</p>
+              <p className="text-[11px] text-gray-400 uppercase tracking-widest">{formattedDate}</p>
+            </div>
+          </div>
+
+          {/* Right: Interaction Stats (Like, View, Comment) */}
+          <div className="flex items-center space-x-6 text-gray-300">
+            <div className="flex items-center space-x-1.5 cursor-pointer hover:text-red-400 transition-colors" onClick={handleLike}>
+              <Heart size={18} className={isLiked ? "fill-red-500 text-red-500" : ""} />
+              <span className="text-sm font-medium">{likes}</span>
+            </div>
+            
+            <div className="flex items-center space-x-1.5">
+              <Eye size={18} />
+              <span className="text-sm font-medium">{viewCount}</span>
+            </div>
+
+            <div className="flex items-center space-x-1.5">
+              <MessageCircle size={18} />
+              <span className="text-sm font-medium">{commentCount}</span>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
