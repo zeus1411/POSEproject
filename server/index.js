@@ -11,6 +11,7 @@ import { initRedis, closeRedis } from './config/redis.js';
 import { initializeSocket } from './config/socket.js';
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from './config/swaggerConfig.js';
+import { startCatalogSyncScheduler } from './server-ai/services/catalogIngestService.js';
 
 // Load environment variables
 dotenv.config();
@@ -73,6 +74,9 @@ Promise.all([
         
         // Initialize Socket.IO
         initializeSocket(httpServer);
+
+        // Start catalog sync scheduler (if enabled)
+        startCatalogSyncScheduler();
         
         httpServer.listen(port, () => {
             console.log(`🚀 Server đang chạy tại http://localhost:${port}`);

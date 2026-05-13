@@ -1,6 +1,11 @@
 import { QdrantClient } from '@qdrant/js-client-rest';
 import { InternalServerError } from '../../utils/errorHandler.js';
-import { QDRANT_URL, QDRANT_API_KEY, QDRANT_DOCS_COLLECTION } from '../config/aiConfig.js';
+import {
+  QDRANT_URL,
+  QDRANT_API_KEY,
+  QDRANT_DOCS_COLLECTION,
+  QDRANT_CATALOG_COLLECTION
+} from '../config/aiConfig.js';
 
 let client;
 
@@ -51,10 +56,58 @@ const ensureDocsCollection = async (vectorSize) => {
   }
 };
 
+const ensureCatalogCollection = async (vectorSize) => {
+  const qdrant = getClient();
+  const exists = await collectionExists(QDRANT_CATALOG_COLLECTION);
+
+  if (!exists) {
+    await qdrant.createCollection(QDRANT_CATALOG_COLLECTION, {
+      vectors: {
+        size: vectorSize,
+        distance: 'Cosine'
+      }
+    });
+    return;
+  }
+
+  const info = await qdrant.getCollection(QDRANT_CATALOG_COLLECTION);
+  const existingSize = getCollectionVectorSize(info);
+  if (existingSize && existingSize !== vectorSize) {
+    throw new InternalServerError(
+      `Qdrant collection vector size mismatch. Expected ${existingSize}, got ${vectorSize}.`
+    );
+  }
+};
+
+const recreateCatalogCollection = async (vectorSize) => {
+  const qdrant = getClient();
+  const exists = await collectionExists(QDRANT_CATALOG_COLLECTION);
+
+  if (exists) {
+    await qdrant.deleteCollection(QDRANT_CATALOG_COLLECTION);
+  }
+
+  await qdrant.createCollection(QDRANT_CATALOG_COLLECTION, {
+    vectors: {
+      size: vectorSize,
+      distance: 'Cosine'
+    }
+  });
+};
+
 const upsertDocumentChunks = async (points) => {
   if (!points.length) return;
   const qdrant = getClient();
   await qdrant.upsert(QDRANT_DOCS_COLLECTION, {
+    wait: true,
+    points
+  });
+};
+
+const upsertCatalogItems = async (points) => {
+  if (!points.length) return;
+  const qdrant = getClient();
+  await qdrant.upsert(QDRANT_CATALOG_COLLECTION, {
     wait: true,
     points
   });
@@ -82,4 +135,34 @@ const searchDocumentChunks = async (vector, { limit, scoreThreshold }) => {
   });
 };
 
-export { ensureDocsCollection, upsertDocumentChunks, searchDocumentChunks };
+const searchCatalogItems = async (vector, { limit, scoreThreshold }) => {
+  const exists = await collectionExists(QDRANT_CATALOG_COLLECTION);
+  if (!exists) {
+    return [];
+  }
+  const qdrant = getClient();
+  return qdrant.search(QDRANT_CATALOG_COLLECTION, {
+    vector,
+    limit,
+    with_payload: true,
+    score_threshold: scoreThreshold,
+    filter: {
+      must: [
+        {
+          key: 'source_type',
+          match: { any: ['catalog_product', 'catalog_promotion'] }
+        }
+      ]
+    }
+  });
+};
+
+export {
+  ensureDocsCollection,
+  ensureCatalogCollection,
+  recreateCatalogCollection,
+  upsertDocumentChunks,
+  upsertCatalogItems,
+  searchDocumentChunks,
+  searchCatalogItems
+};

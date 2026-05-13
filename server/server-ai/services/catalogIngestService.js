@@ -1,0 +1,355 @@
+import Category from '../../server-ecommerce/models/Category.js';
+import Product from '../../server-ecommerce/models/Product.js';
+import Promotion from '../../server-ecommerce/models/Promotion.js';
+import {
+  CATALOG_SYNC_DEBOUNCE_MS,
+  CATALOG_SYNC_INTERVAL_MINUTES,
+  GEMINI_EMBED_MODEL
+} from '../config/aiConfig.js';
+import { embedText } from './geminiService.js';
+import { recreateCatalogCollection, upsertCatalogItems } from './qdrantService.js';
+
+const MAX_DESCRIPTION_CHARS = 1200;
+const BATCH_SIZE = 50;
+
+let syncRunning = false;
+let syncPending = false;
+let syncTimer = null;
+let syncIntervalId = null;
+
+let lastSyncAt = null;
+let lastSyncResult = null;
+let lastSyncError = null;
+let lastSyncReason = null;
+
+const formatNumber = (value) => {
+  if (!Number.isFinite(value)) return '';
+  return new Intl.NumberFormat('en-US').format(value);
+};
+
+const formatDate = (value) => {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toISOString().slice(0, 10);
+};
+
+const trimText = (value, maxChars) => {
+  const text = String(value || '').replace(/\s+/g, ' ').trim();
+  if (!text) return '';
+  if (text.length <= maxChars) return text;
+  return `${text.slice(0, maxChars)}...`;
+};
+
+const buildCategoryPath = (category, categoryMap) => {
+  if (!category) return '';
+  const names = [];
+  let current = category;
+  let safety = 0;
+
+  while (current && safety < 10) {
+    if (current.name) {
+      names.unshift(current.name);
+    }
+    if (!current.parentId) break;
+    current = categoryMap.get(String(current.parentId)) || null;
+    safety += 1;
+  }
+
+  return names.join(' > ');
+};
+
+const getVariantPriceRange = (variants = []) => {
+  const activeVariants = variants.filter((variant) => variant && variant.isActive !== false);
+  if (!activeVariants.length) return null;
+  const prices = activeVariants
+    .map((variant) => Number(variant.price))
+    .filter((value) => Number.isFinite(value));
+  if (!prices.length) return null;
+  const min = Math.min(...prices);
+  const max = Math.max(...prices);
+  return { min, max };
+};
+
+const getVariantStockTotal = (variants = []) => {
+  return variants
+    .filter((variant) => variant && variant.isActive !== false)
+    .reduce((total, variant) => total + (Number(variant.stock) || 0), 0);
+};
+
+const buildProductText = ({ product, categoryPath }) => {
+  const variantRange = getVariantPriceRange(product.variants || []);
+  const basePrice = Number(product.price) || 0;
+  const priceText = variantRange
+    ? variantRange.min === variantRange.max
+      ? formatNumber(variantRange.min)
+      : `${formatNumber(variantRange.min)} - ${formatNumber(variantRange.max)}`
+    : formatNumber(basePrice);
+
+  const stockValue = product.hasVariants
+    ? getVariantStockTotal(product.variants || [])
+    : Number(product.stock) || 0;
+
+  const description = trimText(product.description, MAX_DESCRIPTION_CHARS);
+  const tags = Array.isArray(product.tags) ? product.tags.join(', ') : '';
+  const specEntries = product.specifications instanceof Map
+    ? Array.from(product.specifications.entries())
+    : Object.entries(product.specifications || {});
+  const specs = specEntries.length
+    ? specEntries.map(([key, value]) => `${key}: ${value}`).join(', ')
+    : '';
+
+  const lines = [
+    'Type: product',
+    `Name: ${product.name}`,
+    product.sku ? `SKU: ${product.sku}` : '',
+    categoryPath ? `Category: ${categoryPath}` : '',
+    priceText ? `Price: ${priceText}` : '',
+    Number.isFinite(product.originalPrice) ? `Original price: ${formatNumber(product.originalPrice)}` : '',
+    Number.isFinite(product.discount) && product.discount > 0 ? `Discount percent: ${product.discount}` : '',
+    `Stock: ${formatNumber(stockValue)}`,
+    product.status ? `Status: ${product.status}` : '',
+    tags ? `Tags: ${tags}` : '',
+    specs ? `Specs: ${specs}` : '',
+    description ? `Description: ${description}` : ''
+  ];
+
+  return lines.filter(Boolean).join('\n');
+};
+
+const buildPromotionText = (promotion) => {
+  const conditions = promotion.conditions || {};
+  const lines = [
+    'Type: promotion',
+    `Name: ${promotion.name}`,
+    `Code: ${promotion.code}`,
+    `Discount type: ${promotion.discountType}`,
+    `Discount value: ${formatNumber(promotion.discountValue)}`,
+    `Min order value: ${formatNumber(conditions.minOrderValue || 0)}`,
+    `Min quantity: ${formatNumber(conditions.minQuantity || 0)}`,
+    conditions.maxDiscount ? `Max discount: ${formatNumber(conditions.maxDiscount)}` : '',
+    conditions.firstOrderOnly ? 'First order only: yes' : 'First order only: no',
+    `Valid from: ${formatDate(promotion.startDate)}`,
+    `Valid until: ${formatDate(promotion.endDate)}`,
+    promotion.isActive ? 'Active: yes' : 'Active: no'
+  ];
+
+  return lines.filter(Boolean).join('\n');
+};
+
+const buildCatalogItems = async () => {
+  const [categories, products, promotions] = await Promise.all([
+    Category.find({}).lean(),
+    Product.find({ status: 'ACTIVE' }).lean(),
+    Promotion.find({
+      promotionType: 'COUPON',
+      isActive: true,
+      startDate: { $lte: new Date() },
+      endDate: { $gte: new Date() }
+    }).lean()
+  ]);
+
+  const categoryMap = new Map(categories.map((category) => [String(category._id), category]));
+
+  const productItems = products.map((product) => {
+    const category = categoryMap.get(String(product.categoryId));
+    const categoryPath = buildCategoryPath(category, categoryMap);
+    const text = buildProductText({ product, categoryPath });
+    const productId = String(product._id);
+    const variantRange = getVariantPriceRange(product.variants || []);
+    const basePrice = Number(product.price) || 0;
+    const minPrice = variantRange ? variantRange.min : basePrice;
+    const maxPrice = variantRange ? variantRange.max : basePrice;
+
+    return {
+      id: `product:${productId}`,
+      text,
+      payload: {
+        source_type: 'catalog_product',
+        itemType: 'product',
+        itemId: productId,
+        title: product.name,
+        name: product.name,
+        sku: product.sku || '',
+        slug: product.slug || '',
+        uri: product.slug ? `/products/${product.slug}` : '',
+        category: categoryPath,
+        price: basePrice,
+        minPrice,
+        maxPrice,
+        originalPrice: Number(product.originalPrice) || 0,
+        discountPercent: Number(product.discount) || 0,
+        stock: product.hasVariants
+          ? getVariantStockTotal(product.variants || [])
+          : Number(product.stock) || 0,
+        status: product.status || '',
+        tags: product.tags || [],
+        embeddingModel: GEMINI_EMBED_MODEL,
+        updatedAt: product.updatedAt || product.createdAt || null,
+        text
+      }
+    };
+  });
+
+  const promotionItems = promotions.map((promotion) => {
+    const text = buildPromotionText(promotion);
+    const promotionId = String(promotion._id);
+
+    return {
+      id: `promotion:${promotionId}`,
+      text,
+      payload: {
+        source_type: 'catalog_promotion',
+        itemType: 'promotion',
+        itemId: promotionId,
+        title: promotion.name,
+        name: promotion.name,
+        code: promotion.code,
+        discountType: promotion.discountType,
+        discountValue: Number(promotion.discountValue) || 0,
+        conditions: promotion.conditions || {},
+        startDate: promotion.startDate,
+        endDate: promotion.endDate,
+        isActive: Boolean(promotion.isActive),
+        embeddingModel: GEMINI_EMBED_MODEL,
+        updatedAt: promotion.updatedAt || promotion.createdAt || null,
+        text
+      }
+    };
+  });
+
+  return {
+    items: [...productItems, ...promotionItems],
+    counts: {
+      products: productItems.length,
+      promotions: promotionItems.length
+    }
+  };
+};
+
+const upsertCatalogPoints = async (items) => {
+  let buffer = [];
+  let firstVectorSize = null;
+  let collectionReady = false;
+
+  for (const item of items) {
+    const vector = await embedText(item.text);
+
+    if (!firstVectorSize) {
+      firstVectorSize = vector.length;
+    }
+
+    if (!collectionReady && firstVectorSize) {
+      await recreateCatalogCollection(firstVectorSize);
+      collectionReady = true;
+    }
+
+    buffer.push({
+      id: item.id,
+      vector,
+      payload: item.payload
+    });
+
+    if (buffer.length >= BATCH_SIZE) {
+      await upsertCatalogItems(buffer);
+      buffer = [];
+    }
+  }
+
+  if (buffer.length) {
+    await upsertCatalogItems(buffer);
+  }
+};
+
+const syncCatalogIndex = async ({ reason = 'manual' } = {}) => {
+  if (syncRunning) {
+    syncPending = true;
+    return { status: 'queued', reason };
+  }
+
+  syncRunning = true;
+  lastSyncReason = reason;
+  lastSyncError = null;
+
+  try {
+    const { items, counts } = await buildCatalogItems();
+
+    if (!items.length) {
+      const result = {
+        status: 'skipped',
+        reason,
+        counts
+      };
+      lastSyncAt = new Date();
+      lastSyncResult = result;
+      return result;
+    }
+
+    await upsertCatalogPoints(items);
+
+    const result = {
+      status: 'ok',
+      reason,
+      counts
+    };
+
+    lastSyncAt = new Date();
+    lastSyncResult = result;
+    return result;
+  } catch (error) {
+    lastSyncError = error;
+    throw error;
+  } finally {
+    syncRunning = false;
+    if (syncPending) {
+      syncPending = false;
+      syncCatalogIndex({ reason: 'pending' }).catch((error) => {
+        lastSyncError = error;
+      });
+    }
+  }
+};
+
+const requestCatalogSync = ({ reason = 'auto', delayMs = CATALOG_SYNC_DEBOUNCE_MS } = {}) => {
+  if (syncTimer) {
+    return { status: 'scheduled' };
+  }
+
+  syncTimer = setTimeout(() => {
+    syncTimer = null;
+    syncCatalogIndex({ reason }).catch((error) => {
+      lastSyncError = error;
+      console.error('[catalog-sync] failed:', error.message || error);
+    });
+  }, Math.max(0, Number(delayMs) || 0));
+
+  return { status: 'scheduled' };
+};
+
+const startCatalogSyncScheduler = () => {
+  if (syncIntervalId) return;
+  const minutes = Number(CATALOG_SYNC_INTERVAL_MINUTES || 0);
+  if (!minutes || minutes <= 0) return;
+
+  syncIntervalId = setInterval(() => {
+    requestCatalogSync({ reason: 'interval', delayMs: 0 });
+  }, minutes * 60 * 1000);
+};
+
+const getCatalogSyncStatus = () => {
+  return {
+    running: syncRunning,
+    pending: syncPending,
+    lastSyncAt: lastSyncAt ? lastSyncAt.toISOString() : null,
+    lastSyncReason,
+    lastSyncResult,
+    lastSyncError: lastSyncError ? lastSyncError.message || String(lastSyncError) : null
+  };
+};
+
+export {
+  syncCatalogIndex,
+  requestCatalogSync,
+  startCatalogSyncScheduler,
+  getCatalogSyncStatus
+};

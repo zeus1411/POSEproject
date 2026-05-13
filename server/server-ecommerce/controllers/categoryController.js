@@ -1,4 +1,5 @@
 import categoryService from '../services/categoryService.js';
+import { requestCatalogSync } from '../../server-ai/services/catalogIngestService.js';
 
 /**
  * Category Controller
@@ -63,6 +64,7 @@ export const getCategoryBySlug = async (req, res, next) => {
 export const createCategory = async (req, res, next) => {
     try {
         const savedCategory = await categoryService.createCategory(req.body);
+        requestCatalogSync({ reason: 'category_create' });
         res.status(201).json(savedCategory);
     } catch (error) {
         next(error);
@@ -74,6 +76,7 @@ export const updateCategory = async (req, res, next) => {
     try {
         const { id } = req.params;
         const updatedCategory = await categoryService.updateCategory(id, req.body);
+        requestCatalogSync({ reason: 'category_update' });
         res.status(200).json(updatedCategory);
     } catch (error) {
         next(error);
@@ -85,6 +88,7 @@ export const deleteCategory = async (req, res, next) => {
     try {
         const { id } = req.params;
         await categoryService.deleteCategory(id);
+        requestCatalogSync({ reason: 'category_delete' });
         res.status(200).json({ message: 'Xóa danh mục thành công' });
     } catch (error) {
         next(error);
@@ -97,6 +101,7 @@ export const updateCategoryStatus = async (req, res, next) => {
         const { id } = req.params;
         const { isActive } = req.body;
         const updatedCategory = await categoryService.updateCategoryStatus(id, isActive);
+        requestCatalogSync({ reason: 'category_status' });
         res.status(200).json(updatedCategory);
     } catch (error) {
         next(error);

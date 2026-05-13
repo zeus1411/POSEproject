@@ -3,6 +3,7 @@ import { StatusCodes } from 'http-status-codes';
 import { broadcastPromotionToCustomers } from '../../config/socket.js';
 import User from '../models/User.js';
 import Promotion from '../models/Promotion.js';
+import { requestCatalogSync } from '../../server-ai/services/catalogIngestService.js';
 
 // ==================== ADMIN CONTROLLERS ====================
 
@@ -19,6 +20,8 @@ export const createPromotion = async (req, res, next) => {
     if (promotion.isActive && promotion.promotionType === 'COUPON') {
       broadcastPromotionToCustomers(promotion);
     }
+
+    requestCatalogSync({ reason: 'promotion_create' });
 
     res.status(StatusCodes.CREATED).json({
       success: true,
@@ -98,6 +101,8 @@ export const updatePromotion = async (req, res, next) => {
       data: promotion,
       message: 'Cập nhật chương trình khuyến mãi thành công'
     });
+
+    requestCatalogSync({ reason: 'promotion_update' });
   } catch (error) {
     next(error);
   }
@@ -116,6 +121,8 @@ export const deletePromotion = async (req, res, next) => {
       success: true,
       ...result
     });
+
+    requestCatalogSync({ reason: 'promotion_delete' });
   } catch (error) {
     next(error);
   }
@@ -135,6 +142,8 @@ export const togglePromotionStatus = async (req, res, next) => {
       data: promotion,
       message: `Đã ${promotion.isActive ? 'kích hoạt' : 'tắt'} chương trình khuyến mãi`
     });
+
+    requestCatalogSync({ reason: 'promotion_toggle' });
   } catch (error) {
     next(error);
   }

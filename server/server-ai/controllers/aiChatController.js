@@ -67,7 +67,8 @@ export const streamAiChat = async (req, res, next) => {
         anonymousId: result.anonymousId,
         mode: result.mode,
         retrievalStrategy: result.retrievalStrategy,
-        sourceSummary: result.sourceSummary
+        sourceSummary: result.sourceSummary,
+        sources: result.sources
       });
     }
 
