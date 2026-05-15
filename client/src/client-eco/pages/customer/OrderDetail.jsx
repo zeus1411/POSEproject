@@ -27,32 +27,32 @@ const formatDateTime = (dateString) => {
 const statusMap = {
   PENDING: { 
     label: 'Chờ xác nhận', 
-    color: 'bg-yellow-100 text-yellow-800',
+    color: 'bg-yellow-600 text-white',
     description: 'Đơn hàng đang chờ được xác nhận từ cửa hàng.'
   },
   CONFIRMED: { 
     label: 'Đã xác nhận', 
-    color: 'bg-blue-100 text-blue-800',
+    color: 'bg-blue-600 text-white',
     description: 'Đơn hàng đã được xác nhận và đang được chuẩn bị.'
   },
   SHIPPING: { 
     label: 'Đang giao hàng', 
-    color: 'bg-purple-100 text-purple-800',
+    color: 'bg-purple-600 text-white',
     description: 'Đơn hàng đang được vận chuyển đến bạn.'
   },
   COMPLETED: { 
     label: 'Hoàn thành', 
-    color: 'bg-green-100 text-green-800',
+    color: 'bg-green-600 text-white',
     description: 'Đơn hàng đã được giao thành công.'
   },
   CANCELLED: { 
     label: 'Đã hủy', 
-    color: 'bg-red-100 text-red-800',
+    color: 'bg-red-600 text-white',
     description: 'Đơn hàng đã bị hủy.'
   },
   FAILED: { 
     label: 'Thất bại', 
-    color: 'bg-red-100 text-red-800',
+    color: 'bg-red-600 text-white',
     description: 'Đơn hàng thất bại do lỗi thanh toán hoặc lỗi hệ thống.'
   },
 };
@@ -286,14 +286,14 @@ const OrderDetail = () => {
   if (!orderDetail) {
     return (
       <div className="text-center py-12">
-        <FiPackage className="mx-auto h-12 w-12 text-gray-400" />
-        <h3 className="mt-2 text-sm font-medium text-gray-900">Không tìm thấy đơn hàng</h3>
-        <p className="mt-1 text-sm text-gray-500">Đơn hàng bạn đang tìm kiếm không tồn tại.</p>
+        <FiPackage className="mx-auto h-12 w-12 text-white/60" />
+        <h3 className="mt-2 text-sm font-medium text-white">Không tìm thấy đơn hàng</h3>
+        <p className="mt-1 text-sm text-white/70">Đơn hàng bạn đang tìm kiếm không tồn tại.</p>
         <div className="mt-6">
           <button
             type="button"
             onClick={() => navigate('/orders')}
-            className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md bg-gradient-to-r from-emerald-400 to-cyan-300 text-abyss-800 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-400"
           >
             <FiArrowLeft className="-ml-1 mr-2 h-5 w-5" />
             Quay lại danh sách đơn hàng
@@ -304,17 +304,17 @@ const OrderDetail = () => {
   }
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="bg-transparent min-h-screen">
       <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
         {/* Order Header */}
-        <div className="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
-          <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
+        <div className="glass-card shadow overflow-hidden sm:rounded-lg mb-6">
+          <div className="px-4 py-5 sm:px-6 border-b border-white/6">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <h3 className="text-lg leading-6 font-medium text-gray-900">
+                <h3 className="text-lg leading-6 font-medium text-white">
                   Đơn hàng #{orderNumber || id?.substring(0, 8) || ''}
                 </h3>
-                <p className="mt-1 max-w-2xl text-sm text-gray-500">
+                <p className="mt-1 max-w-2xl text-sm text-white/70">
                   Đặt ngày: {orderDate}
                 </p>
               </div>
@@ -334,12 +334,12 @@ const OrderDetail = () => {
         </div>
 
         {/* Status Timeline */}
-        <div className="bg-white shadow overflow-hidden sm:rounded-lg mb-6">
-          <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
-            <h3 className="text-lg leading-6 font-medium text-gray-900">
+        <div className="glass-card shadow overflow-hidden sm:rounded-lg mb-6">
+          <div className="px-4 py-5 sm:px-6 border-b border-white/6">
+            <h3 className="text-lg leading-6 font-medium text-white">
               Tình trạng đơn hàng
             </h3>
-            <p className="mt-1 text-sm text-gray-500">
+            <p className="mt-1 text-sm text-white/70">
               {currentStatus.description}
             </p>
           </div>
@@ -357,7 +357,7 @@ const OrderDetail = () => {
                       <div className="relative pb-8">
                         {stepIdx !== statusSteps.length - 1 ? (
                           <span 
-                            className={`absolute top-4 left-4 -ml-px h-full w-0.5 ${isCompleted ? 'bg-green-600' : 'bg-gray-200'}`} 
+                            className={`absolute top-4 left-4 -ml-px h-full w-0.5 ${isCompleted ? 'bg-green-600' : 'bg-white/6'}`} 
                             aria-hidden="true"
                           />
                         ) : null}
@@ -385,15 +385,15 @@ const OrderDetail = () => {
                             <div>
                               <p className={`text-sm ${
                                 isCompleted || isCurrent 
-                                  ? 'text-gray-900 font-medium' 
-                                  : 'text-gray-500'
+                                  ? 'text-white font-medium' 
+                                  : 'text-white/60'
                               }`}>
                                 {step.label}
                               </p>
                             </div>
-                            <div className="text-right text-sm whitespace-nowrap text-gray-500">
+                            <div className="text-right text-sm whitespace-nowrap text-white/60">
                               {isCurrent && status !== 'CANCELLED' && status !== 'COMPLETED' && (
-                                <span className="text-blue-600 font-medium">
+                                <span className="text-cyan-300 font-medium">
                                   Đang xử lý...
                                 </span>
                               )}
@@ -467,11 +467,11 @@ const OrderDetail = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Order Items */}
           <div className="lg:col-span-2 space-y-6">
-            <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-              <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
-                <h3 className="text-lg leading-6 font-medium text-gray-900">Sản phẩm</h3>
+            <div className="glass-card shadow overflow-hidden sm:rounded-lg">
+              <div className="px-4 py-5 sm:px-6 border-b border-white/6">
+                <h3 className="text-lg leading-6 font-medium text-white">Sản phẩm</h3>
               </div>
-              <div className="divide-y divide-gray-200">
+              <div className="divide-y divide-white/6">
                 {items && items.length > 0 ? (
                   items.map((item, index) => {
                     // Handle backend shape: productId populated with name/images and our fallbacks
@@ -500,7 +500,7 @@ const OrderDetail = () => {
                     
                     return (
                       <div key={item._id || `item-${index}`} className="p-4 sm:p-6 flex">
-                        <div className="flex-shrink-0 h-20 w-20 rounded-md overflow-hidden border border-gray-200">
+                        <div className="flex-shrink-0 h-20 w-20 rounded-md overflow-hidden border border-white/6">
                           <img
                             src={productImage}
                             alt={productName}
@@ -510,12 +510,12 @@ const OrderDetail = () => {
                             }}
                           />
                         </div>
-                        <div className="ml-4 flex-1">
+                          <div className="ml-4 flex-1">
                           <div className="flex justify-between">
-                            <h4 className="text-sm font-medium text-gray-900">
+                            <h4 className="text-sm font-medium text-white">
                               {productName}
                             </h4>
-                            <p className="ml-4 font-medium text-gray-900 whitespace-nowrap">
+                            <p className="ml-4 font-medium text-white whitespace-nowrap">
                               {formatCurrency(price)}
                             </p>
                           </div>
@@ -534,11 +534,11 @@ const OrderDetail = () => {
                             </div>
                           )}
                           
-                          <p className="mt-1 text-sm text-gray-500">
+                          <p className="mt-1 text-sm text-white/60">
                             Số lượng: {quantity}
                           </p>
                           <div className="mt-2 flex items-center justify-between">
-                            <p className="text-sm font-medium text-gray-900">
+                            <p className="text-sm font-medium text-white">
                               Thành tiền: {formatCurrency(totalPrice)}
                             </p>
                             
@@ -546,7 +546,7 @@ const OrderDetail = () => {
                             {canReview && (
                               <div>
                                 {hasReviewed ? (
-                                  <span className="inline-flex items-center px-3 py-1 text-xs font-medium text-green-700 bg-green-50 rounded-full">
+                                  <span className="inline-flex items-center px-3 py-1 text-xs font-medium text-green-800 bg-green-100 rounded-full">
                                     <FiCheckCircle className="w-3 h-3 mr-1" />
                                     Cảm ơn bạn vì đã đánh giá!
                                   </span>
@@ -578,35 +578,35 @@ const OrderDetail = () => {
             </div>
 
             {/* Order Summary */}
-            <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-              <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
-                <h3 className="text-lg leading-6 font-medium text-gray-900">Tổng đơn hàng</h3>
+            <div className="glass-card shadow overflow-hidden sm:rounded-lg">
+              <div className="px-4 py-5 sm:px-6 border-b border-white/6">
+                <h3 className="text-lg leading-6 font-medium text-white">Tổng đơn hàng</h3>
               </div>
               <div className="px-4 py-5 sm:p-6">
                 <dl className="space-y-4">
                   <div className="flex justify-between">
-                    <dt className="text-sm text-gray-600">Tạm tính</dt>
-                    <dd className="text-sm font-medium text-gray-900">
+                    <dt className="text-sm text-white/70">Tạm tính</dt>
+                    <dd className="text-sm font-medium text-white">
                       {formatCurrency(subTotal)}
                     </dd>
                   </div>
                   <div className="flex justify-between">
-                    <dt className="text-sm text-gray-600">Phí vận chuyển</dt>
-                    <dd className="text-sm font-medium text-gray-900">
+                    <dt className="text-sm text-white/70">Phí vận chuyển</dt>
+                    <dd className="text-sm font-medium text-white">
                       {shippingFee ? formatCurrency(shippingFee) : 'Miễn phí'}
                     </dd>
                   </div>
                   {discount > 0 && (
                     <div className="flex justify-between">
-                      <dt className="text-sm text-gray-600">Giảm giá</dt>
-                      <dd className="text-sm font-medium text-red-600">
+                      <dt className="text-sm text-white/70">Giảm giá</dt>
+                      <dd className="text-sm font-medium text-rose-400">
                         -{formatCurrency(discount)}
                       </dd>
                     </div>
                   )}
-                  <div className="border-t border-gray-200 pt-4 flex items-center justify-between">
-                    <dt className="text-base font-medium text-gray-900">Tổng cộng</dt>
-                    <dd className="text-base font-bold text-gray-900">
+                  <div className="border-t border-white/6 pt-4 flex items-center justify-between">
+                    <dt className="text-base font-medium text-white">Tổng cộng</dt>
+                    <dd className="text-base font-bold text-emerald-300">
                       {formatCurrency(total)}
                     </dd>
                   </div>
@@ -618,23 +618,23 @@ const OrderDetail = () => {
           {/* Order Info */}
           <div className="space-y-6">
             {/* Shipping Address */}
-            <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-              <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
-                <h3 className="text-lg leading-6 font-medium text-gray-900">Địa chỉ giao hàng</h3>
+            <div className="glass-card shadow overflow-hidden sm:rounded-lg">
+              <div className="px-4 py-5 sm:px-6 border-b border-white/6">
+                <h3 className="text-lg leading-6 font-medium text-white">Địa chỉ giao hàng</h3>
               </div>
               <div className="px-4 py-5 sm:p-6">
                 <div className="flex items-start">
                   <div className="flex-shrink-0">
-                    <FiMapPin className="h-6 w-6 text-gray-400" />
+                    <FiMapPin className="h-6 w-6 text-white/70" />
                   </div>
                   <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className="text-sm font-medium text-white">
                       {effectiveShippingAddress.fullName}
                     </p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-white/70">
                       {effectiveShippingAddress.phoneNumber}
                     </p>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-white/70 mt-1">
                       {[
                         effectiveShippingAddress.street,
                         effectiveShippingAddress.ward,
@@ -654,17 +654,17 @@ const OrderDetail = () => {
             </div>
 
             {/* Payment Method */}
-            <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-              <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
-                <h3 className="text-lg leading-6 font-medium text-gray-900">Phương thức thanh toán</h3>
+            <div className="glass-card shadow overflow-hidden sm:rounded-lg">
+              <div className="px-4 py-5 sm:px-6 border-b border-white/6">
+                <h3 className="text-lg leading-6 font-medium text-white">Phương thức thanh toán</h3>
               </div>
               <div className="px-4 py-5 sm:p-6">
                 <div className="flex items-start">
                   <div className="flex-shrink-0">
-                    <FiDollarSign className="h-6 w-6 text-gray-400" />
+                    <FiDollarSign className="h-6 w-6 text-white/70" />
                   </div>
                   <div className="ml-3">
-                    <p className="text-sm font-medium text-gray-900">
+                    <p className="text-sm font-medium text-white">
                       {derivedPaymentMethod === 'COD' 
                         ? 'Thanh toán khi nhận hàng (COD)' 
                         : derivedPaymentMethod === 'VNPAY' 
@@ -672,7 +672,7 @@ const OrderDetail = () => {
                           : derivedPaymentMethod || 'Không xác định'
                       }
                     </p>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-white/70 mt-1">
                       {derivedPaymentStatus === 'paid' 
                         ? 'Đã thanh toán' 
                         : derivedPaymentMethod === 'COD'
@@ -686,9 +686,9 @@ const OrderDetail = () => {
 
             {/* Order Actions - Only show Cancel button for cancelable orders */}
             {canCancel && (
-              <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-                <div className="px-4 py-5 sm:px-6 border-b border-gray-200">
-                  <h3 className="text-lg leading-6 font-medium text-gray-900">Thao tác</h3>
+              <div className="glass-card shadow overflow-hidden sm:rounded-lg">
+                <div className="px-4 py-5 sm:px-6 border-b border-white/6">
+                  <h3 className="text-lg leading-6 font-medium text-white">Thao tác</h3>
                 </div>
                 <div className="px-4 py-5 sm:p-6">
                   <button
