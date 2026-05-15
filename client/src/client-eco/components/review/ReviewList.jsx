@@ -14,15 +14,15 @@ const ReviewList = ({ productId }) => {
   }, [dispatch, productId]);
 
   if (loading) {
-    return <p className="text-gray-500">Đang tải đánh giá...</p>;
+    return <p className="text-white font-medium">Đang tải đánh giá...</p>;
   }
 
   if (error) {
-    return <p className="text-red-500">Lỗi khi tải đánh giá: {error}</p>;
+    return <p className="text-red-400 font-medium">Lỗi khi tải đánh giá: {error}</p>;
   }
 
   if (!list || list.length === 0) {
-    return <p className="text-gray-500">Chưa có đánh giá nào cho sản phẩm này.</p>;
+    return <p className="text-white/70">Chưa có đánh giá nào cho sản phẩm này.</p>;
   }
 
   return (

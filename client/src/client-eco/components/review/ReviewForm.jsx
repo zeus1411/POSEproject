@@ -19,8 +19,8 @@ const ReviewForm = ({ productId, orderId, onReviewSubmitted }) => {
   // 🧠 Nếu chưa đăng nhập → hiển thị lời nhắc
   if (!user) {
     return (
-      <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-md mb-6">
-        <p className="text-yellow-700 text-sm">
+      <div className="p-4 bg-amber-900/10 border border-amber-700/20 rounded-md mb-6">
+        <p className="text-amber-200 text-sm">
           Vui lòng <a href="/login" className="font-medium underline">đăng nhập</a> để gửi đánh giá.
         </p>
       </div>
@@ -30,8 +30,8 @@ const ReviewForm = ({ productId, orderId, onReviewSubmitted }) => {
   // 🎉 Nếu đã gửi đánh giá thành công → hiển thị thông báo cảm ơn
   if (submitted) {
     return (
-      <div className="p-4 bg-green-50 border border-green-200 rounded-md mb-6">
-        <p className="text-green-700 text-sm font-medium">
+      <div className="p-4 bg-emerald-900/10 border border-emerald-700/20 rounded-md mb-6">
+        <p className="text-emerald-200 text-sm font-medium">
           ✓ Gửi đánh giá thành công! Cảm ơn bạn đã chia sẻ.
         </p>
       </div>
@@ -92,8 +92,8 @@ const ReviewForm = ({ productId, orderId, onReviewSubmitted }) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-200">
-      <h3 className="text-lg font-semibold text-gray-900 mb-3">Gửi đánh giá của bạn</h3>
+    <form onSubmit={handleSubmit} className="mb-6 p-4 rounded-lg">
+      <h3 className="text-base font-semibold text-white mb-3">Gửi đánh giá của bạn</h3>
 
       {/* Rating stars */}
       <div className="flex items-center gap-1 mb-3">
@@ -110,7 +110,7 @@ const ReviewForm = ({ productId, orderId, onReviewSubmitted }) => {
               className={`w-6 h-6 ${
                 star <= (hover || rating)
                   ? "text-yellow-400"
-                  : "text-gray-300"
+                  : "text-white/20"
               }`}
             />
           </button>
@@ -123,17 +123,30 @@ const ReviewForm = ({ productId, orderId, onReviewSubmitted }) => {
         placeholder="Chia sẻ cảm nhận của bạn về sản phẩm..."
         value={comment}
         onChange={(e) => setComment(e.target.value)}
-        className="w-full border border-gray-300 rounded-md p-2 text-sm focus:ring-primary-500 focus:border-primary-500"
+       className="
+  w-full
+  bg-black/12
+  border-2 border-white/40
+  text-black
+  placeholder-black/60
+  rounded-lg
+  p-3
+  text-sm
+  focus:outline-none
+  focus:border-white/60
+  focus:ring-2
+  focus:ring-white/20
+"
       ></textarea>
 
       {/* Message */}
-      {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+      {error && <p className="text-red-400 text-sm mt-2 font-medium">{error}</p>}
 
       {/* Submit */}
       <button
         type="submit"
         disabled={submitting}
-        className="mt-4 bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-md font-medium disabled:opacity-50"
+        className="mt-4 bg-gradient-to-r from-emerald-400 to-cyan-300 text-abyss-800 px-4 py-2 rounded-md font-semibold disabled:opacity-50 hover:shadow-lg transition-all"
       >
         {submitting ? "Đang gửi..." : "Gửi đánh giá"}
       </button>
