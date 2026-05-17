@@ -137,15 +137,6 @@ const BlogListPage = () => {
                     {user.name || user.fullName || user.username} ơi, bạn đang nghĩ gì thế?
                   </button>
                 </div>
-                <div className="border-t border-white/5 pt-3 flex justify-start pl-2">
-                  <button 
-                    onClick={handleCreatePost} 
-                    className="flex items-center space-x-2 text-emerald-400 font-bold text-sm py-2 px-4 hover:bg-emerald-500/10 rounded-xl transition-all"
-                  >
-                    <PlusSquare size={20} />
-                    <span>Viết bài mới</span>
-                  </button>
-                </div>
               </div>
             )}
 
