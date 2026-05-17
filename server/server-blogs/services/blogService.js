@@ -172,7 +172,7 @@ class BlogService {
 
     const [blogs, total] = await Promise.all([
       Blog.find(filter)
-        .populate('author', 'username fullName avatar')
+        .populate('author','username fullName avatar role')
         .populate('approvedBy', 'username fullName')
         .populate('category', 'name slug')
         .populate('tags', 'name slug')
