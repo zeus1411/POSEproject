@@ -121,9 +121,37 @@ const BlogListPage = () => {
 
         {/* MAIN FEED */}
         <main className="flex-1 w-full space-y-10">
-          <div className="flex justify-between items-center pl-4">
-            <h1 className="text-2xl font-bold text-white/90 tracking-tight">Bài viết mới nhất</h1>
-          </div>
+          {/* COMPOSER PLACEHOLDER (Trình tạo bài viết giả lập đã được Glassmorphism hóa) */}
+            {user && (
+              <div className="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-5 shadow-xl">
+                <div className="flex items-center space-x-4 mb-4">
+                  <img 
+                    src={user.avatar || 'https://via.placeholder.com/40'} 
+                    alt="User" 
+                    className="w-10 h-10 rounded-full border border-white/10 object-cover ring-2 ring-emerald-500/20"
+                  />
+                  <button 
+                    onClick={handleCreatePost}
+                    className="flex-1 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white text-left px-5 py-3 rounded-full transition-all text-sm outline-none"
+                  >
+                    {user.name || user.fullName || user.username} ơi, bạn đang nghĩ gì thế?
+                  </button>
+                </div>
+                <div className="border-t border-white/5 pt-3 flex justify-start pl-2">
+                  <button 
+                    onClick={handleCreatePost} 
+                    className="flex items-center space-x-2 text-emerald-400 font-bold text-sm py-2 px-4 hover:bg-emerald-500/10 rounded-xl transition-all"
+                  >
+                    <PlusSquare size={20} />
+                    <span>Viết bài mới</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-between items-center pl-4">
+              <h1 className="text-2xl font-bold text-white/90 tracking-tight">Bài viết mới nhất</h1>
+            </div>
 
           <div className="space-y-12">
             {isLoading ? (
