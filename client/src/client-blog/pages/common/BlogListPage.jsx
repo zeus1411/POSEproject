@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import blogService from '../../services/blogService';
+import { getPublicBlogs } from '../../redux/slices/blogSlice';
 import BlogCard from '../../components/BlogCard';
 import BlogFilters from '../../components/BlogFilters';
 import SimplePagination from '../../components/SimplePagination';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { PlusSquare } from 'lucide-react';
 
@@ -23,36 +24,26 @@ const truncateText = (text, length = 150) => {
 
 const BlogListPage = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { blogs, totalPages, isLoading } = useSelector((state) => state.blog);
   const { user } = useSelector((state) => state.auth);
-
-  const [blogs, setBlogs] = useState([]);
   const [categories, setCategories] = useState([]);
   const [tags, setTags] = useState([]);
   const [filters, setFilters] = useState({ search: '', category: '', tag: '', page: 1 });
-  const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => { fetchCategoriesAndTags(); }, []);
   useEffect(() => { fetchBlogs(); }, [filters]);
 
-  const fetchBlogs = async () => {
-    try {
-      setLoading(true);
-      const params = {
-        search: filters.search || undefined,
-        category: filters.category || undefined,
-        tag: filters.tag || undefined,
-        page: filters.page,
-        limit: PAGE_SIZE
-      };
-      const data = await blogService.getPublicBlogs(params);
-      setBlogs(data.blogs || []);
-      setTotalPages(data.pagination?.pages || 1);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+  const fetchBlogs = () => {
+    const params = {
+      search: filters.search || undefined,
+      category: filters.category || undefined,
+      tag: filters.tag || undefined,
+      page: filters.page,
+      limit: PAGE_SIZE
+    };
+    
+    dispatch(getPublicBlogs(params));
   };
 
   const fetchCategoriesAndTags = async () => {
@@ -135,7 +126,7 @@ const BlogListPage = () => {
           </div>
 
           <div className="space-y-12">
-            {loading ? (
+            {isLoading ? (
               <div className="text-center py-20 text-emerald-200/50 animate-pulse">Đang tải dữ liệu thủy sinh...</div>
             ) : blogs.map((b) => (
               <BlogCard
