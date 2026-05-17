@@ -145,7 +145,7 @@ const Header = () => {
             <div className="flex items-center gap-4 min-w-[200px] justify-end">
               {/* Mobile shop button - visible on small screens only - Ẩn với admin */}
               {!isAdmin && (
-                <div className="md:hidden">
+                <div className="md:hidden flex items-center gap-2">
                   <Link
                     to="/shop"
                     className="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold text-white bg-white/10 rounded-lg hover:bg-white/20 transition-colors"

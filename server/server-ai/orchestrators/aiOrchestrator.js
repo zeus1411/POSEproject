@@ -17,9 +17,45 @@ const EMPTY_CONTEXT_ANSWER =
 const EMPTY_CATALOG_ANSWER =
   'Toi chua tim thay thong tin san pham hoac khuyen mai phu hop trong catalog hien co.';
 
-const normalizeMode = (mode) => {
-  if (!mode) return 'document_rag';
-  return String(mode).toLowerCase();
+const CATALOG_KEYWORDS = [
+  'san pham',
+  'gia',
+  'khuyen mai',
+  'giam gia',
+  'coupon',
+  'voucher',
+  'promotion',
+  'discount',
+  'sku',
+  'ton kho',
+  'stock',
+  'flash sale',
+  'sale'
+];
+
+const normalizeText = (value) => {
+  return String(value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+};
+
+const detectModeFromMessage = (message) => {
+  const normalized = normalizeText(message);
+  if (!normalized) return 'document_rag';
+  const isCatalog = CATALOG_KEYWORDS.some((keyword) => normalized.includes(keyword));
+  return isCatalog ? 'catalog_qa' : 'document_rag';
+};
+
+const normalizeMode = (mode, message) => {
+  if (!mode) return detectModeFromMessage(message);
+  const normalizedMode = String(mode).toLowerCase().trim();
+  if (normalizedMode === 'auto') {
+    return detectModeFromMessage(message);
+  }
+  return normalizedMode;
 };
 
 const ensureModeSupported = (mode) => {
@@ -33,7 +69,7 @@ const getDefaultRetrievalStrategy = (mode) => {
 };
 
 const routeAiQuery = async ({ mode, message, conversationId, onStart, onMeta, onToken }) => {
-  const normalizedMode = normalizeMode(mode);
+  const normalizedMode = normalizeMode(mode, message);
   ensureModeSupported(normalizedMode);
 
   if (normalizedMode === 'document_rag') {

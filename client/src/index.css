@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -10,6 +12,53 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+:root {
+  --ai-ink: #0f172a;
+  --ai-muted: #4b5563;
+  --ai-card: rgba(255, 255, 255, 0.92);
+  --ai-border: rgba(15, 23, 42, 0.12);
+  --ai-shadow: 0 18px 40px rgba(15, 23, 42, 0.12);
+}
+
+.ai-assistant {
+  font-family: 'Space Grotesk', 'Segoe UI', sans-serif;
+  color: var(--ai-ink);
+  background:
+    radial-gradient(circle at 12% 12%, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0) 35%),
+    radial-gradient(circle at 85% 20%, rgba(223, 248, 255, 0.9) 0%, rgba(223, 248, 255, 0) 40%),
+    linear-gradient(120deg, #eef6f6, #f7f3ff 60%, #fff3ec);
+}
+
+.ai-title {
+  font-family: 'Fraunces', 'Times New Roman', serif;
+}
+
+.ai-card {
+  background: var(--ai-card);
+  border: 1px solid var(--ai-border);
+  border-radius: 24px;
+  box-shadow: var(--ai-shadow);
+  backdrop-filter: blur(12px);
+}
+
+.ai-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.8) transparent;
+}
+
+.ai-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.ai-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.ai-scroll::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.8);
+  border-radius: 999px;
 }
 
 /* Hide scrollbar */

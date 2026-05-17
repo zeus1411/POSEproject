@@ -2,6 +2,8 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { BadRequestError } from '../../utils/errorHandler.js';
 import { GEMINI_API_KEY, GEMINI_MODEL, GEMINI_EMBED_MODEL } from '../config/aiConfig.js';
 
+const FALLBACK_EMBED_MODEL = 'embedding-001';
+
 let genAI;
 
 const getGenAi = () => {
@@ -25,19 +27,33 @@ const getChatModel = () => {
   });
 };
 
-const getEmbeddingModel = () => {
+const embedWithModel = async (modelName, input) => {
   const client = getGenAi();
-  return client.getGenerativeModel({ model: GEMINI_EMBED_MODEL });
-};
-
-const embedText = async (input) => {
-  const model = getEmbeddingModel();
+  const model = client.getGenerativeModel({ model: modelName });
   const result = await model.embedContent(String(input || ''));
   const values = result?.embedding?.values || result?.embedding?.value || result?.embedding;
   if (!Array.isArray(values)) {
     throw new BadRequestError('Embedding failed.');
   }
   return values;
+};
+
+const embedText = async (input) => {
+  try {
+    return await embedWithModel(GEMINI_EMBED_MODEL, input);
+  } catch (error) {
+    const message = String(error?.message || '');
+    const shouldFallback =
+      GEMINI_EMBED_MODEL !== FALLBACK_EMBED_MODEL &&
+      message.includes('embedContent') &&
+      message.includes('not found');
+
+    if (shouldFallback) {
+      return await embedWithModel(FALLBACK_EMBED_MODEL, input);
+    }
+
+    throw error;
+  }
 };
 
 const generateGeminiAnswer = async ({ prompt, onToken }) => {

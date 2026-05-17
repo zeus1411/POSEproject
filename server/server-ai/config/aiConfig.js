@@ -2,7 +2,7 @@ import path from 'path';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || '';
 const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash-latest';
-const GEMINI_EMBED_MODEL = process.env.GEMINI_EMBED_MODEL || 'text-embedding-004';
+const GEMINI_EMBED_MODEL = process.env.GEMINI_EMBED_MODEL || 'embedding-001';
 
 const DOC_CHUNK_SIZE = Number(process.env.DOC_CHUNK_SIZE || 1000);
 const DOC_CHUNK_OVERLAP = Number(process.env.DOC_CHUNK_OVERLAP || 200);

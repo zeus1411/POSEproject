@@ -20,8 +20,8 @@ const countUserMessages = (messages = []) => {
   return messages.filter((msg) => msg.role === 'user').length;
 };
 
-const getOrCreateConversation = async ({ conversationId, userId, anonymousId, mode }) => {
-  const normalizedMode = normalizeMode(mode);
+const getOrCreateConversation = async ({ conversationId, userId, anonymousId, mode, message }) => {
+  const normalizedMode = normalizeMode(mode, message);
   ensureModeSupported(normalizedMode);
 
   if (conversationId) {
@@ -91,14 +91,15 @@ const handleAiChat = async ({
     throw new BadRequestError('Message is required');
   }
 
-  const normalizedMode = normalizeMode(mode);
+  const normalizedMode = normalizeMode(mode, message);
   ensureModeSupported(normalizedMode);
 
   const { conversation, anonymousId: resolvedAnonymousId } = await getOrCreateConversation({
     conversationId,
     userId,
     anonymousId,
-    mode: normalizedMode
+    mode: normalizedMode,
+    message
   });
 
   if (!userId) {

@@ -8,7 +8,8 @@ import {
   UsersIcon,
   TicketIcon,
   DocumentTextIcon,
-  NewspaperIcon 
+  NewspaperIcon,
+  SparklesIcon
 } from '@heroicons/react/24/outline';
 import { FileClock } from 'lucide-react';
 
@@ -42,6 +43,14 @@ const AdminSidebar = () => {
       bg: 'bg-gradient-to-br from-pink-50 to-rose-50',
       iconColor: 'text-pink-600',
    
+    },
+    {
+      name: 'AI Catalog',
+      href: '/admin/ai-catalog',
+      icon: SparklesIcon,
+      color: 'from-teal-500 to-emerald-500',
+      bg: 'bg-gradient-to-br from-teal-50 to-emerald-50',
+      iconColor: 'text-teal-600',
     },
     { 
       name: 'Người dùng', 
