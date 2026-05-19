@@ -695,3 +695,49 @@ html {
   border-top: 1px solid #e5e7eb;
   margin: 2rem 0;
 }
+
+/* ==========================================================================
+   AQUATIC GLASSMORPHISM THEME FOR SWEETALERT2 (SWAL)
+   ========================================================================== */
+.aquatic-swal-popup {
+  background: rgba(5, 28, 28, 0.95) !important; /* Màu rêu tối thẳm đáy hồ */
+  backdrop-filter: blur(20px) !important; /* Hiệu ứng kính mờ xuyên thấu */
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important; /* Viền mờ ảo */
+  border-radius: 2rem !important; /* Bo cong mềm mại hạt đậu */
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Nhuộm sáng màu chữ tiêu đề và nội dung thông báo */
+.aquatic-swal-title {
+  color: #ffffff !important;
+  font-family: inherit;
+  font-weight: 700 !important;
+}
+
+.aquatic-swal-html {
+  color: #9ca3af !important; /* Màu xám bạc dễ đọc */
+  font-size: 0.9rem !important;
+  line-height: 1.6 !important;
+}
+
+/* Custom lại nút xác nhận (Confirm Button) */
+.aquatic-swal-confirm-btn {
+  padding: 0.6rem 2rem !important;
+  font-size: 0.85rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  border-radius: 0.75rem !important; /* Đồng bộ bo góc với Form input */
+  transition: all 0.2s ease-in-out !important;
+}
+
+.aquatic-swal-confirm-btn:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.3) !important;
+}
+
+/* Đè màu cho vòng quay thanh tiến trình chạy ngầm (Progress Bar) */
+.aquatic-swal-timer-progress {
+  background: #10b981 !important; /* Thanh màu ngọc lục bảo */
+}
