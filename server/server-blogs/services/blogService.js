@@ -172,11 +172,11 @@ class BlogService {
 
     const [blogs, total] = await Promise.all([
       Blog.find(filter)
-        .populate('author', 'username fullName avatar')
+        .populate('author','username fullName avatar role')
         .populate('approvedBy', 'username fullName')
         .populate('category', 'name slug')
         .populate('tags', 'name slug')
-      .populate('relatedProducts', 'name price images sku slug discount originalPrice stock')
+        .populate('relatedProducts', 'name price images sku slug discount originalPrice stock hasVariants variants')
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(pageSize),
@@ -209,7 +209,7 @@ class BlogService {
       .populate('approvedBy', 'username fullName')
       .populate('category', 'name slug')
       .populate('tags', 'name slug')
-      .populate('relatedProducts', 'name price images sku slug discount originalPrice stock');
+      .populate('relatedProducts', 'name price images sku slug discount originalPrice stock hasVariants variants');
 
     if (!blog) {
       throw new NotFoundError('Không tìm thấy bài viết');
@@ -232,7 +232,7 @@ class BlogService {
       .populate('author', 'username fullName avatar')
       .populate('category', 'name slug')
       .populate('tags', 'name slug')
-      .populate('relatedProducts', 'name price images sku slug discount originalPrice stock');
+      .populate('relatedProducts', 'name price images sku slug discount originalPrice stock hasVariants variants');
 
     if (!blog) {
       throw new NotFoundError('Không tìm thấy bài viết hoặc bài viết chưa được công bố');
@@ -339,7 +339,7 @@ class BlogService {
       { $set: data },
       { new: true, runValidators: true }
     ).populate('author category tags')
-    .populate('relatedProducts', 'name price images sku slug discount originalPrice stock');
+    .populate('relatedProducts', 'name price images sku slug discount originalPrice stock hasVariants variants');
 
     if (statusChangedToPending && updatedBlog) {
       Notification.createBlogSubmissionNotificationForAdmins(

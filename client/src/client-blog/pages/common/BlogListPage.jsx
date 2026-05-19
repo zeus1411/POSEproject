@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import blogService from '../../services/blogService';
+import { getPublicBlogs } from '../../redux/slices/blogSlice';
 import BlogCard from '../../components/BlogCard';
 import BlogFilters from '../../components/BlogFilters';
 import SimplePagination from '../../components/SimplePagination';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { PlusSquare } from 'lucide-react';
 
@@ -23,36 +24,26 @@ const truncateText = (text, length = 150) => {
 
 const BlogListPage = () => {
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const { blogs, totalPages, isLoading } = useSelector((state) => state.blog);
   const { user } = useSelector((state) => state.auth);
-
-  const [blogs, setBlogs] = useState([]);
   const [categories, setCategories] = useState([]);
   const [tags, setTags] = useState([]);
   const [filters, setFilters] = useState({ search: '', category: '', tag: '', page: 1 });
-  const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => { fetchCategoriesAndTags(); }, []);
   useEffect(() => { fetchBlogs(); }, [filters]);
 
-  const fetchBlogs = async () => {
-    try {
-      setLoading(true);
-      const params = {
-        search: filters.search || undefined,
-        category: filters.category || undefined,
-        tag: filters.tag || undefined,
-        page: filters.page,
-        limit: PAGE_SIZE
-      };
-      const data = await blogService.getPublicBlogs(params);
-      setBlogs(data.blogs || []);
-      setTotalPages(data.pagination?.pages || 1);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+  const fetchBlogs = () => {
+    const params = {
+      search: filters.search || undefined,
+      category: filters.category || undefined,
+      tag: filters.tag || undefined,
+      page: filters.page,
+      limit: PAGE_SIZE
+    };
+    
+    dispatch(getPublicBlogs(params));
   };
 
   const fetchCategoriesAndTags = async () => {
@@ -130,12 +121,31 @@ const BlogListPage = () => {
 
         {/* MAIN FEED */}
         <main className="flex-1 w-full space-y-10">
-          <div className="flex justify-between items-center pl-4">
-            <h1 className="text-2xl font-bold text-white/90 tracking-tight">Bài viết mới nhất</h1>
-          </div>
+          {/* COMPOSER PLACEHOLDER (Trình tạo bài viết giả lập đã được Glassmorphism hóa) */}
+            {user && (
+              <div className="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-3xl p-5 shadow-xl">
+                <div className="flex items-center space-x-4 mb-4">
+                  <img 
+                    src={user.avatar || 'https://via.placeholder.com/40'} 
+                    alt="User" 
+                    className="w-10 h-10 rounded-full border border-white/10 object-cover ring-2 ring-emerald-500/20"
+                  />
+                  <button 
+                    onClick={handleCreatePost}
+                    className="flex-1 bg-white/5 hover:bg-white/10 border border-white/5 text-gray-400 hover:text-white text-left px-5 py-3 rounded-full transition-all text-sm outline-none"
+                  >
+                    {user.name || user.fullName || user.username} ơi, bạn đang nghĩ gì thế?
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-between items-center pl-4">
+              <h1 className="text-2xl font-bold text-white/90 tracking-tight">Bài viết mới nhất</h1>
+            </div>
 
           <div className="space-y-12">
-            {loading ? (
+            {isLoading ? (
               <div className="text-center py-20 text-emerald-200/50 animate-pulse">Đang tải dữ liệu thủy sinh...</div>
             ) : blogs.map((b) => (
               <BlogCard

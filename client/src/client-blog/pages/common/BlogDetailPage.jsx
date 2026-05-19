@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../../client-eco/services/api';
-import { useParams, useSearchParams, Link } from 'react-router-dom';
+import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { Heart, MessageCircle, Share2, Bookmark, MoreHorizontal, Eye, ShoppingBag, Globe } from 'lucide-react';
 
@@ -37,15 +37,35 @@ const BlogDetailPage = ({ isAdminPreview = false }) => {
   // Component con để hiển thị card sản phẩm liên quan trong bài viết
   const RelatedProductCard = ({ p, handleAddToCart }) => {
     const isOutOfStock = p.stock <= 0 && p.totalStock <= 0;
+    const navigate = useNavigate();
+
+    // Kiểm tra an toàn xem sản phẩm thực sự có biến thể hay không
+    console.log("Dữ liệu sản phẩm từ BE:", p);
+    const hasVariants = p.hasVariants === true || (p.variants && p.variants.length > 0);
+
+    const handleButtonClick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (hasVariants) {
+        // Có biến thể -> Chuyển hướng sang trang chi tiết để chọn loại
+        navigate(`/product/${p._id}`);
+      } else {
+        // Không có biến thể -> Thêm thẳng vào giỏ hàng
+        handleAddToCart(p);
+      }
+    };
     
     return (
       <div className="bg-white/5 border border-white/10 rounded-[2rem] p-4 hover:bg-white/10 hover:shadow-[0_0_20px_rgba(16,185,129,0.1)] transition-all duration-500 group flex flex-col h-full">
         <div className="relative overflow-hidden rounded-[1.5rem] mb-4 aspect-square">
-          <img 
-            src={p.images?.[0] || '/placeholder-product.jpg'} 
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
-            alt={p.name} 
-          />
+          <Link to={`/product/${p._id}`}>
+            <img 
+              src={p.images?.[0] || '/placeholder-product.jpg'} 
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+              alt={p.name} 
+            />
+          </Link>
           {isOutOfStock && (
             <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-xs font-bold uppercase tracking-widest">
               Hết hàng
@@ -54,24 +74,35 @@ const BlogDetailPage = ({ isAdminPreview = false }) => {
         </div>
 
         <div className="flex-1 flex flex-col">
-          <p className="font-bold text-sm text-white line-clamp-2 mb-2 group-hover:text-emerald-400 transition-colors" title={p.name}>
-            {p.name}
-          </p>
+          <Link to={`/product/${p._id}`}>
+            <p className="font-bold text-sm text-white line-clamp-2 mb-2 group-hover:text-emerald-400 transition-colors" title={p.name}>
+              {p.name}
+            </p>
+          </Link>
+          
           <p className="text-emerald-400 font-bold text-lg mt-auto">
-            {(p.displayPrice || p.price)?.toLocaleString('vi-VN')}₫
+            {p.minPrice && p.maxPrice && p.minPrice !== p.maxPrice ? (
+              // Nếu có khoảng giá của biến thể (Ví dụ: 150.000₫ - 250.000₫)
+              `${p.minPrice.toLocaleString('vi-VN')}₫ - ${p.maxPrice.toLocaleString('vi-VN')}₫`
+            ) : (
+              // Nếu là sản phẩm đơn giá hoặc min == max
+              `${(p.displayPrice || p.minPrice || p.price)?.toLocaleString('vi-VN')}₫`
+            )}
           </p>
         </div>
         
         <button 
-          onClick={() => handleAddToCart(p)}
+          onClick={handleButtonClick} // 🔥 CHÚ Ý: Phải gọi đúng hàm handleButtonClick ở đây!
           disabled={isOutOfStock}
           className={`w-full mt-4 text-white text-xs font-bold py-3 rounded-2xl transition-all active:scale-95 ${
             isOutOfStock 
               ? 'bg-gray-700 cursor-not-allowed opacity-50' 
-              : 'bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-900/20'
+              : hasVariants
+                ? 'bg-cyan-600 hover:bg-cyan-500 shadow-lg shadow-cyan-900/20' // Nút màu xanh cyan cho sản phẩm có biến thể
+                : 'bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-900/20' // Nút màu xanh lá cho sản phẩm thường
           }`}
         >
-          {isOutOfStock ? 'Hết hàng' : 'Thêm vào giỏ'}
+          {isOutOfStock ? 'Hết hàng' : hasVariants ? 'Xem chi tiết' : 'Thêm vào giỏ'}
         </button>
       </div>
     );
@@ -520,35 +551,21 @@ const BlogDetailPage = ({ isAdminPreview = false }) => {
 
         {/* RELATED PRODUCTS */}
         {blog.relatedProducts?.length > 0 && (
-          <div className="mt-4 bg-white rounded-xl shadow-sm p-4">
-            <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2"><ShoppingBag size={20} className="text-blue-600" /> Sản phẩm được nhắc đến</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {blog.relatedProducts.map(p => {
-                const isOutOfStock = p.stock <= 0 && p.totalStock <= 0;
-                return (
-                  <div key={p._id} className="border border-gray-100 rounded-xl p-3 hover:shadow-md transition-shadow group flex flex-col justify-between">
-                    <div>
-                      <img src={p.images?.[0]} className="w-full h-40 object-cover rounded-lg mb-3" alt={p.name} />
-                      <p className="font-bold text-sm text-gray-900 line-clamp-2" title={p.name}>{p.name}</p>
-                      <p className="text-red-500 font-bold text-sm mt-1">
-                        {(p.displayPrice || p.price)?.toLocaleString('vi-VN')}₫
-                      </p>
-                    </div>
-                    
-                    <button 
-                      onClick={() => handleAddToCart(p)}
-                      disabled={isOutOfStock}
-                      className={`w-full mt-3 text-white text-xs font-bold py-2 rounded-lg transition-colors ${
-                        isOutOfStock ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
-                      }`}
-                    >
-                      {isOutOfStock ? 'Hết hàng' : 'Thêm vào giỏ'}
-                    </button>
-                  </div>
-                );
-              })}
+          <section className="mt-12">
+            <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3 px-4">
+              <ShoppingBag className="text-emerald-400" size={22} /> 
+              Sản phẩm được nhắc đến
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {blog.relatedProducts.map(p => (
+                <RelatedProductCard 
+                  key={p._id} 
+                  p={p} 
+                  handleAddToCart={handleAddToCart} 
+                />
+              ))}
             </div>
-          </div>
+          </section>
         )}
       </div>
 
