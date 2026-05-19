@@ -44,8 +44,18 @@ const BlogCard = ({ blog }) => {
   });
 
   useEffect(() => {
+    // 🔥 BƯỚC THẦN KỲ: Kiểm tra xem có token trong máy hay không
     const token = localStorage.getItem('token');
-    if (!token || !_id) return;
+    
+    // Nếu KHÔNG có token (tức là khách vãng lai) -> Chặn luôn, không cho gọi API check status nữa!
+    if (!token) {
+      setIsLiked(false);
+      setBookmarked(false);
+      return; // Dừng chạy hàm useEffect tại đây
+    }
+
+    // Nếu CÓ token (đã đăng nhập) -> Thực hiện gọi API check trạng thái như bình thường
+    if (!_id) return;
 
     const fetchInteractionStatus = async () => {
       try {
