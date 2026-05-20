@@ -422,7 +422,7 @@ notificationSchema.statics.createBlogSubmissionNotificationForAdmins = async fun
           message: `Tác giả ${authorName} vừa gửi bài viết "${blogTitle}" để duyệt.`,
           relatedId: blogId,
           relatedType: 'blog',
-          actionUrl: `/admin/blogs/${blogId}`,
+          actionUrl: '/admin/blogs/pending',
           actionText: 'Duyệt bài',
           icon: '📝',
           channels: ['IN_APP', 'EMAIL']

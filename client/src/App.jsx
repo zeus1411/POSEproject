@@ -79,18 +79,18 @@ function App() {
               <Route path="admin/manage-users" element={<ManageUsers />} />
               <Route path="admin/statistics" element={<Statistics />} />
               <Route path="admin/orders" element={<AdminOrders />} />
-              <Route path="/admin/orders/:id" element={<AdminOrderDetail />} />
-              <Route path="/admin/my-orders" element={<AdminLayout> <MyOrders /> </AdminLayout>} />
+              <Route path="admin/orders/:id" element={<AdminOrderDetail />} />
+              <Route path="admin/my-orders" element={<AdminLayout> <MyOrders /> </AdminLayout>} />
               <Route path="admin/promotions" element={<AdminPromotions />} />
 
               {/* Blog management routes */}
               <Route path="admin/blog-categories" element={<AdminBlogCategories />} />
               <Route path="admin/tags" element={<AdminBlogTags />} />
-              <Route path="/admin/blogs/create" element={<BlogEditor />} />
-              <Route path="/admin/blogs/edit/:id" element={<BlogEditor />} />
-              <Route path="/admin/blogs" element={<BlogList />} />
-              <Route path="/admin/blogs/pending" element={<PendingBlogList />} />
-              <Route path="/admin/blogs/preview/:id" element={<BlogDetailPage isAdminPreview />} />
+              <Route path="admin/blogs/create" element={<BlogEditor />} />
+              <Route path="admin/blogs/edit/:id" element={<BlogEditor />} />
+              <Route path="admin/blogs" element={<BlogList />} />
+              <Route path="admin/blogs/pending" element={<PendingBlogList />} />
+              <Route path="admin/blogs/preview/:id" element={<BlogDetailPage isAdminPreview />} />
             </Route>
 
             {/* PUBLIC BLOG ROUTES */}

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom'; // 1. Thêm import useNavigate
 import { toast } from 'react-toastify';
 
 import AdminLayout from '../../../client-eco/components/admin/AdminLayout';
@@ -15,6 +16,7 @@ import {
  */
 const PendingBlogList = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate(); // 2. Khởi tạo hook điều hướng
 
   // Lấy dữ liệu từ Redux store
   const {
@@ -22,7 +24,7 @@ const PendingBlogList = () => {
     isLoading,
     page,
     totalPages
-    } = useSelector((state) => state.blog);
+  } = useSelector((state) => state.blog);
 
   // Trạng thái để hiển thị loading trên từng dòng cụ thể khi đang thực hiện action
   const [processingId, setProcessingId] = useState(null);
@@ -42,6 +44,11 @@ const PendingBlogList = () => {
         limit: 10
       })
     );
+  };
+
+  // 3. Hàm xử lý điều hướng sang trang xem chi tiết/preview của admin
+  const handleViewPreview = (blogId) => {
+    navigate(`/admin/blogs/preview/${blogId}`);
   };
 
   const handleApprove = async (id) => {
@@ -136,7 +143,11 @@ const PendingBlogList = () => {
                   <tr key={blog._id} className="hover:bg-slate-50/50 transition-colors group">
                     <td className="px-6 py-5">
                       <div className="max-w-md">
-                        <h3 className="font-bold text-[#1e293b] group-hover:text-[#4f46e5] transition-colors mb-1 line-clamp-1">
+                        {/* 4. Thêm sự kiện onClick vào thẻ tiêu đề để click là xem được luôn */}
+                        <h3 
+                          onClick={() => handleViewPreview(blog._id)}
+                          className="font-bold text-[#1e293b] group-hover:text-[#4f46e5] cursor-pointer transition-colors mb-1 line-clamp-1 decoration-[#4f46e5] hover:underline"
+                        >
                           {blog.title}
                         </h3>
                         <p className="text-sm text-slate-400 line-clamp-1">
@@ -170,6 +181,14 @@ const PendingBlogList = () => {
                     </td>
                     <td className="px-6 py-5">
                       <div className="flex items-center justify-center gap-2">
+                        {/* 5. Thêm nút "Xem bài" riêng biệt kế bên cụm nút Duyệt / Từ chối */}
+                        <button
+                          onClick={() => handleViewPreview(blog._id)}
+                          className="px-3 py-1.5 rounded-lg text-sm font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-all shadow-sm"
+                        >
+                          👁️ Xem bài
+                        </button>
+                        
                         <button
                           disabled={processingId === blog._id}
                           onClick={() => handleApprove(blog._id)}
@@ -208,7 +227,6 @@ const PendingBlogList = () => {
             </p>
 
             <div className="flex gap-2">
-
                 <button
                 disabled={page === 1}
                 onClick={() => fetchPendingBlogs(page - 1)}
