@@ -31,24 +31,37 @@ let isRedirecting = false;
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Không log lỗi 401 từ endpoint /auth/me vì đây là hành vi bình thường khi chưa đăng nhập
-    const is401FromAuthMe = 
-      error.response?.status === 401 && 
-      error.config?.url?.includes('/auth/me');
+    // 1. Lấy ra URL của request vừa bị lỗi
+    const requestUrl = error.config?.url || '';
+
+    // 🔥 CẢI TIẾN: Chặt đứt toàn bộ phần tham số chống cache (?_t=...) trước khi so sánh chuỗi
+    const cleanUrl = requestUrl.split('?')[0];
+
+    // 2. 🔥 DANH SÁCH WHITE-LIST: Dùng .includes() để bao quát toàn bộ Endpoint công khai
+    const isPublicEndpoint = 
+      cleanUrl.includes('/auth/me') ||
+      cleanUrl.includes('/blogs/public') ||
+      cleanUrl.includes('/blog-categories') || 
+      cleanUrl.includes('/tags') ||
+      cleanUrl.includes('/blog-tags') ||
+      cleanUrl.includes('/blog-interactions/status');
     
-    // ✅ Xử lý token hết hạn hoặc không hợp lệ
-    if (!is401FromAuthMe && error.response?.status === 401) {
+    // 3. Nếu lỗi 401 thuộc danh sách công khai trên thì KHÔNG được phép redirect, cho phép đi tiếp
+    if (error.response?.status === 401 && isPublicEndpoint) {
+      return Promise.reject(error);
+    }
+
+    // 4. Nếu lỗi 401 nằm ngoài danh sách công khai (ví dụ: vào trang cá nhân, giỏ hàng, thanh toán...) thì bắt đăng nhập lại
+    if (error.response?.status === 401 && !isPublicEndpoint) {
       // Xóa thông tin user khỏi localStorage
       localStorage.removeItem('user');
       
-      // ✅ Chỉ hiển thị toast và redirect 1 lần
+      // Chỉ hiển thị toast và redirect 1 lần
       if (!isRedirecting) {
         isRedirecting = true;
         
-        // Lấy message từ backend hoặc dùng message mặc định
-        const errorMessage = error.response?.data?.message || 
-                            'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục!';
-        
+        const errorMessage = error.response?.data?.message || 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại để tiếp tục!';
+
         // Hiển thị thông báo
         toast.warning(errorMessage, {
           position: 'top-center',

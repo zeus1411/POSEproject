@@ -94,7 +94,7 @@ router.post('/bookmark/:blogId', authenticateUser, toggleBookmark);
  *       200:
  *         description: Map of interaction statuses
  */
-router.post('/status', authenticateUser, getMyInteractions);
+router.post('/status', getMyInteractions);
 
 router.get('/my-bookmarks', authenticateUser, getMyBookmarks);
 
