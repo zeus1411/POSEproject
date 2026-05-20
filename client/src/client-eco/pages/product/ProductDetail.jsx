@@ -347,7 +347,7 @@ const ProductDetail = () => {
           <div className="space-y-6">
             {/* Product Title */}
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              <h1 className="text-3xl font-bold text-[#fff8e7] drop-shadow-[0_10px_24px_rgba(0,0,0,0.42)] mb-2">
                 {currentProduct.name}
               </h1>
               
