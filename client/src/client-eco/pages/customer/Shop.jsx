@@ -21,13 +21,15 @@ const Shop = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
 
   const category = searchParams.get('category') || '';
+  const search = searchParams.get('search') || '';
+  const sort = searchParams.get('sort') || filters.sort || 'createdAt:desc';
 
   useEffect(() => {
     dispatch(getRootCategories());
-    const initialFilters = { ...filters, categoryId: category };
+    const initialFilters = { ...filters, categoryId: category, search, sort };
     dispatch(setFilters(initialFilters));
     dispatch(searchProducts({ ...initialFilters, page: 1 }));
-  }, [dispatch, category]);
+  }, [dispatch, category, search, sort]);
 
   useEffect(() => {
     setSelectedCategory(category || null);
@@ -107,7 +109,7 @@ const Shop = () => {
           </div>
 
           {/* Main Content Area */}
-          <div className="flex-1 min-w-0 overflow-hidden">
+          <div id="shop-products" className="flex-1 min-w-0 scroll-mt-24 overflow-hidden">
             {/* Search and Sort Bar */}
             <SearchFilter
               filters={filters}
