@@ -17,24 +17,83 @@
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
-/* Glass card — slightly more opaque for content cards */
+/* Glass card — lightweight frosted glass with subtle highlights */
 .glass-card {
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 0 4px 2px rgba(255, 255, 255, 0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.8),
+    transparent
+  );
+}
+
+.glass-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 100%;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.8),
+    transparent,
+    rgba(255, 255, 255, 0.3)
+  );
 }
 
 .glass-card:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(0, 255, 209, 0.2);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3), 0 0 20px rgba(0, 255, 209, 0.08);
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(0, 255, 209, 0.3);
+  box-shadow: 
+    0 12px 40px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 0 6px 3px rgba(255, 255, 255, 0.3),
+    0 0 15px rgba(0, 255, 209, 0.08);
 }
 
 /* Neon glow text effect */
 .neon-glow {
   text-shadow: 0 0 10px rgba(0, 255, 209, 0.5), 0 0 20px rgba(0, 255, 209, 0.3), 0 0 40px rgba(0, 255, 209, 0.15);
+}
+
+/* Product description content styling */
+.product-description-content {
+  color: #ffffff !important;
+}
+
+.product-description-content * {
+  color: #ffffff !important;
+}
+
+.product-description-content p,
+.product-description-content span,
+.product-description-content div,
+.product-description-content li,
+.product-description-content a {
+  color: #ffffff !important;
 }
 
 /* Neon border glow */
@@ -694,4 +753,50 @@ html {
   border: none;
   border-top: 1px solid #e5e7eb;
   margin: 2rem 0;
+}
+
+/* ==========================================================================
+   AQUATIC GLASSMORPHISM THEME FOR SWEETALERT2 (SWAL)
+   ========================================================================== */
+.aquatic-swal-popup {
+  background: rgba(5, 28, 28, 0.95) !important; /* Màu rêu tối thẳm đáy hồ */
+  backdrop-filter: blur(20px) !important; /* Hiệu ứng kính mờ xuyên thấu */
+  -webkit-backdrop-filter: blur(20px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important; /* Viền mờ ảo */
+  border-radius: 2rem !important; /* Bo cong mềm mại hạt đậu */
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* Nhuộm sáng màu chữ tiêu đề và nội dung thông báo */
+.aquatic-swal-title {
+  color: #ffffff !important;
+  font-family: inherit;
+  font-weight: 700 !important;
+}
+
+.aquatic-swal-html {
+  color: #9ca3af !important; /* Màu xám bạc dễ đọc */
+  font-size: 0.9rem !important;
+  line-height: 1.6 !important;
+}
+
+/* Custom lại nút xác nhận (Confirm Button) */
+.aquatic-swal-confirm-btn {
+  padding: 0.6rem 2rem !important;
+  font-size: 0.85rem !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  border-radius: 0.75rem !important; /* Đồng bộ bo góc với Form input */
+  transition: all 0.2s ease-in-out !important;
+}
+
+.aquatic-swal-confirm-btn:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.3) !important;
+}
+
+/* Đè màu cho vòng quay thanh tiến trình chạy ngầm (Progress Bar) */
+.aquatic-swal-timer-progress {
+  background: #10b981 !important; /* Thanh màu ngọc lục bảo */
 }

@@ -1,160 +1,142 @@
-import React, { useState, useEffect } from 'react';
-import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  ChevronRightIcon,
+  MapPinIcon,
+  SparklesIcon,
+} from '@heroicons/react/24/solid';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const ShopCarousel = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
-  const [autoPlay, setAutoPlay] = useState(true);
+  const [direction, setDirection] = useState(1);
 
-  // Dữ liệu banner - có thể thay thế hình ảnh tại đây
-  const banners = [
-    {
-      id: 1,
-      title: "Khuyến mãi đặc biệt",
-      subtitle: "Giảm giá lên đến 50%",
-      image: "https://res.cloudinary.com/dxtrwinoc/image/upload/v1763628787/pose/products/p3nxduci3bvndlhdkmzn.jpg",
-      buttonText: "Mua ngay",
-      buttonLink: "#"
-    },
-    {
-      id: 2,
-      title: "Bộ sưu tập mới",
-      subtitle: "Cây thủy sinh cao cấp vừa về",
-      image: "https://res.cloudinary.com/dxtrwinoc/image/upload/v1763658539/Screenshot_2025-11-21_000846_uuz6nt.png",
-      buttonText: "Xem chi tiết",
-      buttonLink: "#"
-    },
-    {
-      id: 3,
-      title: "Thiết bị chuyên dụng",
-      subtitle: "Công nghệ mới nhất cho bể cá",
-      image: "https://res.cloudinary.com/dxtrwinoc/image/upload/v1763699070/Screenshot_2025-11-21_112147_jmz5pe.png",
-      buttonText: "Khám phá",
-      buttonLink: "#"
-    },
-    {
-      id: 4,
-      title: "Cá cảnh nhập khẩu",
-      subtitle: "Các loài cá quý hiếm, chất lượng đảm bảo",
-      image: "https://res.cloudinary.com/dxtrwinoc/image/upload/v1763658505/Screenshot_2025-11-21_000748_s3ueus.png",
-      buttonText: "Xem ngay",
-      buttonLink: "#"
-    }
-  ];
+  const banners = useMemo(
+    () => [
+      {
+        id: 1,
+        eyebrow: 'Signature Collection',
+        location: 'AquaticStore, Viet Nam',
+        title: 'Một bể cá đẹp bắt đầu từ lựa chọn tinh tuyển.',
+        subtitle: 'Cá cảnh khỏe, màu sắc nổi bật và được chọn lọc kỹ cho hồ thủy sinh hiện đại.',
+        description: 'Khám phá các dòng cá cảnh đang được yêu thích với ưu đãi theo mùa, phù hợp cho cả người mới chơi và bể trưng bày cao cấp.',
+        image: 'https://res.cloudinary.com/dxtrwinoc/image/upload/v1763628787/pose/products/p3nxduci3bvndlhdkmzn.jpg',
+      },
+      {
+        id: 2,
+        eyebrow: 'New Arrival',
+        location: 'Planted Aquarium Edit',
+        title: 'Cây thủy sinh tươi cho bố cục tự nhiên hơn.',
+        subtitle: 'Tông xanh sạch, dáng cây khỏe và dễ phối trong nhiều layout hồ.',
+        description: 'Từ tiền cảnh đến hậu cảnh, bộ sưu tập cây mới giúp hồ có chiều sâu, mềm mại và cân bằng ánh nhìn hơn.',
+        image: 'https://res.cloudinary.com/dxtrwinoc/image/upload/v1763658539/Screenshot_2025-11-21_000846_uuz6nt.png',
+      },
+      {
+        id: 3,
+        eyebrow: 'Equipment Edit',
+        location: 'Premium Aquarium Gear',
+        title: 'Thiết bị êm, ổn định và nâng tầm trải nghiệm.',
+        subtitle: 'Lọc, đèn và phụ kiện được chọn theo tiêu chí bền, gọn và hiệu quả.',
+        description: 'Hoàn thiện hệ sinh thái hồ cá với các thiết bị vận hành ổn định, giúp nước trong, ánh sáng đẹp và chăm hồ nhẹ nhàng hơn.',
+        image: 'https://res.cloudinary.com/dxtrwinoc/image/upload/v1763699070/Screenshot_2025-11-21_112147_jmz5pe.png',
+      },
+      {
+        id: 4,
+        eyebrow: 'Rare Selection',
+        location: 'Imported Fish Gallery',
+        title: 'Dòng cá nhập khẩu cho điểm nhấn khác biệt.',
+        subtitle: 'Sắc màu rõ, form đẹp và được chăm theo quy trình an toàn.',
+        description: 'Những lựa chọn hiếm hơn cho người chơi muốn tạo một hồ cá có cá tính riêng, tinh tế nhưng vẫn dễ thưởng thức mỗi ngày.',
+        image: 'https://res.cloudinary.com/dxtrwinoc/image/upload/v1763658505/Screenshot_2025-11-21_000748_s3ueus.png',
+      },
+    ],
+    []
+  );
 
-  // Auto-play carousel
+  const activeBanner = banners[currentSlide];
+
   useEffect(() => {
-    if (!autoPlay) return;
-    
-    const timer = setInterval(() => {
+    const timer = window.setInterval(() => {
+      setDirection(1);
       setCurrentSlide((prev) => (prev + 1) % banners.length);
-    }, 6000);
+    }, 7000);
 
-    return () => clearInterval(timer);
-  }, [autoPlay, banners.length]);
+    return () => window.clearInterval(timer);
+  }, [banners.length]);
 
   const nextSlide = () => {
+    setDirection(1);
     setCurrentSlide((prev) => (prev + 1) % banners.length);
-    setAutoPlay(false);
-    setTimeout(() => setAutoPlay(true), 10000);
-  };
-
-  const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + banners.length) % banners.length);
-    setAutoPlay(false);
-    setTimeout(() => setAutoPlay(true), 10000);
-  };
-
-  const goToSlide = (index) => {
-    setCurrentSlide(index);
-    setAutoPlay(false);
-    setTimeout(() => setAutoPlay(true), 10000);
   };
 
   return (
-    <div className="relative w-full h-80 sm:h-96 lg:h-[450px] overflow-hidden rounded-2xl shadow-2xl mb-8 bg-gray-200">
-      {/* Slides Container */}
-      <div className="relative w-full h-full">
-        {banners.map((banner, index) => (
-          <div
-            key={banner.id}
-            className={`
-              absolute inset-0 transition-all duration-700 ease-in-out
-              ${index === currentSlide ? 'opacity-100 scale-100' : 'opacity-0 scale-105 pointer-events-none'}
-            `}
+    <section className="relative w-full px-3 pt-6 pb-8 sm:px-5 lg:px-6">
+      <div className="relative mx-auto min-h-[430px] max-w-[1380px] overflow-hidden rounded-[28px] border border-[#e8ddbd]/22 bg-[#071411] shadow-[0_22px_70px_rgba(0,0,0,0.34)] sm:min-h-[470px] lg:min-h-[500px]">
+        <AnimatePresence initial={false} mode="wait" custom={direction}>
+          <motion.div
+            key={activeBanner.id}
+            custom={direction}
+            initial={{ opacity: 0, x: direction > 0 ? 56 : -56 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: direction > 0 ? -56 : 56 }}
+            transition={{ duration: 0.58, ease: [0.22, 1, 0.36, 1] }}
+            className="absolute inset-0"
           >
-            {/* Background Image */}
-            <img
-              src={banner.image}
-              alt={banner.title}
-              className="w-full h-full object-cover"
+            <motion.img
+              src={activeBanner.image}
+              alt={activeBanner.title}
+              className="absolute inset-0 h-full w-full object-cover object-center"
+              initial={{ scale: 1.045 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 6.5, ease: 'easeOut' }}
             />
+            <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(4,15,12,0.93)_0%,rgba(5,18,14,0.84)_36%,rgba(5,18,14,0.36)_62%,rgba(5,18,14,0.08)_100%)]" />
+            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,10,8,0.18)_0%,rgba(3,10,8,0)_46%,rgba(3,10,8,0.38)_100%)]" />
+          </motion.div>
+        </AnimatePresence>
 
-            {/* Overlay */}
-            <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-transparent"></div>
-
-            {/* Content */}
-            <div className="absolute inset-0 flex items-center justify-start pl-6 sm:pl-10 lg:pl-16">
-              <div className="max-w-2xl text-white">
-                <p className="text-sm sm:text-base font-semibold text-teal-400 mb-2 uppercase tracking-widest">
-                  Ưu đãi đặc biệt
-                </p>
-                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4 drop-shadow-lg">
-                  {banner.title}
-                </h2>
-                <p className="text-lg sm:text-xl text-gray-100 mb-6 drop-shadow-md max-w-lg">
-                  {banner.subtitle}
-                </p>
+        <div className="relative z-20 flex min-h-[430px] items-center px-5 py-10 sm:min-h-[470px] sm:px-9 lg:min-h-[500px] lg:px-14">
+          <motion.div
+            key={`content-${activeBanner.id}`}
+            initial={{ opacity: 0, y: 26 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.08, duration: 0.54 }}
+            className="max-w-[660px]"
+          >
+            <div className="mb-5 flex flex-wrap items-center gap-3">
+              <div className="inline-flex items-center gap-2 rounded-full border border-[#e6d7aa]/28 bg-[#f7efd8]/12 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-white shadow-[0_10px_30px_rgba(0,0,0,0.18)] backdrop-blur-md">
+                <SparklesIcon className="h-4 w-4 text-[#d6b46c]" />
+                {activeBanner.eyebrow}
+              </div>
+              <div className="inline-flex items-center gap-2 rounded-full border border-[#fff4d8]/28 bg-[#071411]/56 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-white shadow-[0_10px_30px_rgba(0,0,0,0.18)] backdrop-blur-md">
+                <MapPinIcon className="h-4 w-4 text-[#d6b46c]" />
+                {activeBanner.location}
               </div>
             </div>
-          </div>
-        ))}
-      </div>
 
-      {/* Previous Button */}
-      <button
-        onClick={prevSlide}
-        className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-white/20 hover:bg-white/40 backdrop-blur-sm text-white p-2 sm:p-3 rounded-full transition-all duration-300 hover:scale-110 active:scale-95 shadow-lg group"
-        aria-label="Slide trước"
-      >
-        <ChevronLeftIcon className="w-5 sm:w-6 h-5 sm:h-6 group-hover:-translate-x-1 transition-transform" />
-      </button>
+            <h1 className="max-w-3xl font-headline text-[2.45rem] font-bold leading-[1.04] tracking-normal text-[#fff8e7] drop-shadow-[0_12px_28px_rgba(0,0,0,0.5)] sm:text-5xl lg:text-[4rem]">
+              {activeBanner.title}
+            </h1>
 
-      {/* Next Button */}
-      <button
-        onClick={nextSlide}
-        className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-white/20 hover:bg-white/40 backdrop-blur-sm text-white p-2 sm:p-3 rounded-full transition-all duration-300 hover:scale-110 active:scale-95 shadow-lg group"
-        aria-label="Slide tiếp theo"
-      >
-        <ChevronRightIcon className="w-5 sm:w-6 h-5 sm:h-6 group-hover:translate-x-1 transition-transform" />
-      </button>
+            <p className="mt-5 max-w-2xl text-lg font-semibold leading-8 text-[#f2e7cb] drop-shadow-[0_6px_18px_rgba(0,0,0,0.38)] sm:text-xl">
+              {activeBanner.subtitle}
+            </p>
 
-      {/* Dots Indicators */}
-      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex gap-2">
-        {banners.map((_, index) => (
-          <button
-            key={index}
-            onClick={() => goToSlide(index)}
-            className={`
-              transition-all duration-300 rounded-full backdrop-blur-sm
-              ${index === currentSlide 
-                ? 'bg-white w-8 h-3 shadow-lg' 
-                : 'bg-white/50 hover:bg-white/70 w-3 h-3'
-              }
-            `}
-            aria-label={`Đi đến slide ${index + 1}`}
-          />
-        ))}
-      </div>
-
-      
-      {/* Loading dots indicator (auto-play status) */}
-      {autoPlay && (
-        <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-20 flex gap-1">
-          <div className="w-2 h-2 bg-teal-400 rounded-full animate-pulse"></div>
-          <div className="text-white/70 text-xs font-semibold">Tự động</div>
+            <p className="mt-4 max-w-xl rounded-2xl border border-[#fff4d8]/14 bg-[#06130f]/42 px-4 py-3 text-sm font-medium leading-7 text-white shadow-[0_14px_34px_rgba(0,0,0,0.18)] backdrop-blur-sm sm:text-base">
+              {activeBanner.description}
+            </p>
+          </motion.div>
         </div>
-      )}
-    </div>
+
+        <button
+          type="button"
+          onClick={nextSlide}
+          aria-label="Slide tiếp theo"
+          className="absolute right-5 top-1/2 z-30 grid h-12 w-12 -translate-y-1/2 place-items-center rounded-full border border-[#f4e8c8]/28 bg-[#06130f]/54 text-[#fff8e7] shadow-[0_16px_38px_rgba(0,0,0,0.28)] backdrop-blur-md transition duration-300 hover:-translate-y-[52%] hover:border-[#d6b46c]/70 hover:bg-[#f4e8c8]/14 sm:right-7"
+        >
+          <ChevronRightIcon className="h-5 w-5" />
+        </button>
+      </div>
+    </section>
   );
 };
 

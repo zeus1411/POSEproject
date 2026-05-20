@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../../client-eco/services/api';
-import { useParams, useSearchParams, Link } from 'react-router-dom';
+import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { Heart, MessageCircle, Share2, Bookmark, MoreHorizontal, Eye, ShoppingBag, Globe } from 'lucide-react';
 
@@ -33,6 +33,80 @@ const BlogDetailPage = ({ isAdminPreview = false }) => {
 
   // State quản lý Popup Xóa
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, commentId: null });
+
+  // Component con để hiển thị card sản phẩm liên quan trong bài viết
+  const RelatedProductCard = ({ p, handleAddToCart }) => {
+    const isOutOfStock = p.stock <= 0 && p.totalStock <= 0;
+    const navigate = useNavigate();
+
+    // Kiểm tra an toàn xem sản phẩm thực sự có biến thể hay không
+    console.log("Dữ liệu sản phẩm từ BE:", p);
+    const hasVariants = p.hasVariants === true || (p.variants && p.variants.length > 0);
+
+    const handleButtonClick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (hasVariants) {
+        // Có biến thể -> Chuyển hướng sang trang chi tiết để chọn loại
+        navigate(`/product/${p._id}`);
+      } else {
+        // Không có biến thể -> Thêm thẳng vào giỏ hàng
+        handleAddToCart(p);
+      }
+    };
+    
+    return (
+      <div className="bg-white/5 border border-white/10 rounded-[2rem] p-4 hover:bg-white/10 hover:shadow-[0_0_20px_rgba(16,185,129,0.1)] transition-all duration-500 group flex flex-col h-full">
+        <div className="relative overflow-hidden rounded-[1.5rem] mb-4 aspect-square">
+          <Link to={`/product/${p._id}`}>
+            <img 
+              src={p.images?.[0] || '/placeholder-product.jpg'} 
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
+              alt={p.name} 
+            />
+          </Link>
+          {isOutOfStock && (
+            <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-xs font-bold uppercase tracking-widest">
+              Hết hàng
+            </div>
+          )}
+        </div>
+
+        <div className="flex-1 flex flex-col">
+          <Link to={`/product/${p._id}`}>
+            <p className="font-bold text-sm text-white line-clamp-2 mb-2 group-hover:text-emerald-400 transition-colors" title={p.name}>
+              {p.name}
+            </p>
+          </Link>
+          
+          <p className="text-emerald-400 font-bold text-lg mt-auto">
+            {p.minPrice && p.maxPrice && p.minPrice !== p.maxPrice ? (
+              // Nếu có khoảng giá của biến thể (Ví dụ: 150.000₫ - 250.000₫)
+              `${p.minPrice.toLocaleString('vi-VN')}₫ - ${p.maxPrice.toLocaleString('vi-VN')}₫`
+            ) : (
+              // Nếu là sản phẩm đơn giá hoặc min == max
+              `${(p.displayPrice || p.minPrice || p.price)?.toLocaleString('vi-VN')}₫`
+            )}
+          </p>
+        </div>
+        
+        <button 
+          onClick={handleButtonClick} // 🔥 CHÚ Ý: Phải gọi đúng hàm handleButtonClick ở đây!
+          disabled={isOutOfStock}
+          className={`w-full mt-4 text-white text-xs font-bold py-3 rounded-2xl transition-all active:scale-95 ${
+            isOutOfStock 
+              ? 'bg-gray-700 cursor-not-allowed opacity-50' 
+              : hasVariants
+                ? 'bg-cyan-600 hover:bg-cyan-500 shadow-lg shadow-cyan-900/20' // Nút màu xanh cyan cho sản phẩm có biến thể
+                : 'bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-900/20' // Nút màu xanh lá cho sản phẩm thường
+          }`}
+        >
+          {isOutOfStock ? 'Hết hàng' : hasVariants ? 'Xem chi tiết' : 'Thêm vào giỏ'}
+        </button>
+      </div>
+    );
+  };
 
   // Theo dõi cả id và slug
   useEffect(() => { fetchBlog(); }, [slug, id, isAdminPreview]);
@@ -250,19 +324,17 @@ const BlogDetailPage = ({ isAdminPreview = false }) => {
     };
 
     return (
-      <div id={`comment-${c._id}`} className={`flex gap-2 mt-4 ${isReply ? 'ml-8' : ''}`}>
-        <img src={c.author?.avatar || 'https://via.placeholder.com/32'} className="w-8 h-8 rounded-full" alt="Avatar" />
+      <div id={`comment-${c._id}`} className={`flex gap-4 mt-6 ${isReply ? 'ml-12 border-l border-white/10 pl-6' : ''}`}>
+        <img src={c.author?.avatar || 'https://via.placeholder.com/40'} className="w-10 h-10 rounded-full ring-2 ring-white/5" alt="Avatar" />
         <div className="flex-1">
-          
-          <div className="bg-[#F0F2F5] rounded-2xl px-3 py-2 inline-block min-w-[150px]">
-            <p className="font-bold text-sm">{c.author?.fullName || c.author?.username}</p>
-            
+          <div className="bg-white/5 border border-white/5 rounded-3xl px-5 py-4 inline-block min-w-[200px] shadow-sm">
+            <p className="font-bold text-emerald-400 text-sm mb-1">{c.author?.fullName || c.author?.username}</p>
             {isEditing ? (
               <div className="mt-1">
                 <input 
                   value={editText} 
                   onChange={(e) => setEditText(e.target.value)}
-                  className="w-full bg-white px-2 py-1 text-sm border rounded outline-none focus:border-blue-500"
+                  className="bg-black/20 border-white/10 text-white rounded-lg px-2 w-full"
                   autoFocus
                   onKeyPress={(e) => e.key === 'Enter' && handleSaveEdit()}
                 />
@@ -272,28 +344,59 @@ const BlogDetailPage = ({ isAdminPreview = false }) => {
                 </div>
               </div>
             ) : (
-              <p className="text-sm">{c.content}</p>
+              <p className="text-gray-200 text-[15px] leading-relaxed">{c.content}</p>
             )}
           </div>
 
           {!isEditing && (
-            <div className="flex gap-3 text-xs text-gray-500 mt-1 ml-2">
-              <button onClick={() => setShowReplyInput(!showReplyInput)} className="hover:text-black font-medium">Phản hồi</button>
-              {canEdit && <button onClick={() => setIsEditing(true)} className="hover:text-blue-600 font-medium">Sửa</button>}
-              {canDelete && <button onClick={handleDelete} className="hover:text-red-600 font-medium">Xóa</button>}
+            <div className="flex gap-4 text-[12px] text-gray-500 mt-2 ml-4 font-semibold uppercase tracking-wider">
+              <button onClick={() => setShowReplyInput(!showReplyInput)} className="hover:text-emerald-400 transition-colors">Phản hồi</button>
+              {canEdit && <button  onClick={() => setIsEditing(true)} className="hover:text-white transition-colors">Sửa</button>}
+              {canDelete && <button onClick={handleDelete} className="hover:text-rose-400 transition-colors">Xóa</button>}
             </div>
           )}
 
           {showReplyInput && (
-            <div className="flex gap-2 mt-2">
-              <input 
-                value={replyText} 
-                onChange={(e) => setReplyText(e.target.value)} 
-                className="flex-1 bg-gray-100 px-3 py-1.5 rounded-full text-sm outline-none focus:ring-1 focus:ring-blue-500" 
-                placeholder="Viết phản hồi..." 
-                onKeyPress={(e) => e.key === 'Enter' && handleReplySubmit()}
+            <div className="flex gap-3 mt-4 items-start animate-in fade-in slide-in-from-top-2 duration-300">
+              {/* Avatar nhỏ hơn một chút cho phần reply */}
+              <img 
+                src={user?.avatar || 'https://via.placeholder.com/32'} 
+                className="w-8 h-8 rounded-full border border-white/10 object-cover" 
+                alt="My Avatar" 
               />
-              <button onClick={handleReplySubmit} disabled={!replyText.trim()} className="text-blue-600 font-bold text-sm px-2 disabled:opacity-50">Gửi</button>
+              
+              <div className="flex-1 flex flex-col gap-2">
+                <div className="relative group">
+                  <input 
+                    autoFocus
+                    value={replyText} 
+                    onChange={(e) => setReplyText(e.target.value)} 
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-2.5 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/40 focus:bg-white/10 transition-all shadow-inner"
+                    placeholder={`Phản hồi bình luận của ${c.author?.fullName || c.author?.username}...`} 
+                    onKeyPress={(e) => e.key === 'Enter' && handleReplySubmit()}
+                  />
+                </div>
+
+                <div className="flex gap-3 ml-1">
+                  <button 
+                    onClick={handleReplySubmit} 
+                    disabled={!replyText.trim()} 
+                    className="text-[13px] font-bold text-emerald-400 hover:text-emerald-300 disabled:opacity-30 disabled:text-gray-500 transition-colors"
+                  >
+                    Gửi phản hồi
+                  </button>
+                  
+                  <button 
+                    onClick={() => {
+                      setShowReplyInput(false);
+                      setReplyText('');
+                    }} 
+                    className="text-[13px] font-bold text-gray-500 hover:text-white transition-colors"
+                  >
+                    Hủy
+                  </button>
+                </div>
+              </div>
             </div>
           )}
 
@@ -307,78 +410,140 @@ const BlogDetailPage = ({ isAdminPreview = false }) => {
   if (!blog) return <div className="min-h-screen flex items-center justify-center bg-[#F0F2F5]">Không tìm thấy bài viết</div>;
 
   return (
-    <div className="min-h-screen bg-[#F0F2F5] pt-4 pb-12">
-      <div className="container mx-auto max-w-3xl px-4">
-        <main className="bg-white rounded-xl shadow-sm overflow-hidden">
-          {/* HEADER */}
-          <div className="p-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <img src={blog.author?.avatar || 'https://via.placeholder.com/40'} alt="Author" className="w-10 h-10 rounded-full object-cover border border-gray-100" />
+    <div className="relative min-h-screen bg-[#051C1C] text-white">
+      {/* 1. Nền Gradient chính - Cố định (Fixed) */}
+      <div className="fixed inset-0 bg-gradient-to-b from-[#051C1C] via-[#0a2828] to-[#051C1C] z-0"></div>
+      
+      {/* 2. Hệ thống vân sóng vô tận lặp lại toàn trang */}
+      <div 
+        className="absolute inset-0 z-0 opacity-40 pointer-events-none"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='400' height='200' viewBox='0 0 400 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 100 Q 100 50 200 100 T 400 100' fill='none' stroke='%2310b981' stroke-width='1.5' stroke-opacity='0.5'/%3E%3Cpath d='M0 140 Q 100 90 200 140 T 400 140' fill='none' stroke='%2306b6d4' stroke-width='1' stroke-opacity='0.3'/%3E%3C/svg%3E")`,
+          backgroundSize: '1000px 500px', // Cho Detail vân sóng to hơn chút để sang hơn
+        }}
+      ></div>
+
+      {/* 3. Decorative blur spots - Cố định */}
+      <div className="fixed top-0 left-0 w-full h-[500px] bg-emerald-900/10 blur-[120px] pointer-events-none z-0"></div>
+
+      <div className="relative z-10 container mx-auto max-w-4xl px-4 py-12">
+        <main className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[3rem] shadow-2xl overflow-hidden">
+          {/* HEADER: Thông tin tác giả */}
+          <div className="p-8 flex items-center justify-between border-b border-white/5">
+            <div className="flex items-center gap-4">
+              <img 
+                src={blog.author?.avatar || 'https://via.placeholder.com/48'} 
+                alt="Author" 
+                className="w-12 h-12 rounded-full object-cover ring-2 ring-emerald-500/20" 
+              />
               <div>
-                <h3 className="font-bold text-[15px] leading-tight hover:underline cursor-pointer">
+                <h3 className="font-bold text-lg text-white hover:text-emerald-400 transition-colors cursor-pointer">
                   {blog.author?.fullName || blog.author?.username || 'Tác giả'}
                 </h3>
-                <p className="text-[13px] text-gray-500 mt-0.5 flex items-center gap-1">
+                <p className="text-sm text-gray-400 flex items-center gap-2">
                   {new Date(blog.publishedAt || blog.createdAt).toLocaleDateString('vi-VN')}
-                  · <Globe size={12} />
+                  <span className="w-1 h-1 bg-gray-600 rounded-full"></span>
+                  <Globe size={14} className="text-emerald-500" />
                 </p>
               </div>
             </div>
-            <div className="flex items-center space-x-1">
-              {user?.role !== 'admin' && !isAdminPreview && (
-                <button onClick={handleBookmark} className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-full transition-all">
-                  <Bookmark size={20} className={interaction.isBookmarked ? "text-blue-600 fill-blue-600" : ""} />
+            
+            <div className="flex gap-2">
+              {!isAdminPreview && user?.role !== 'admin' && (
+                <button 
+                  onClick={handleBookmark} 
+                  className={`p-3 rounded-2xl transition-all ${
+                    interaction.isBookmarked 
+                      ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' 
+                      : 'bg-white/5 text-gray-400 hover:bg-white/10 border border-white/5'
+                  }`}
+                >
+                  <Bookmark size={22} fill={interaction.isBookmarked ? "currentColor" : "none"} />
                 </button>
-              )}  
+              )}
             </div>
           </div>
 
-          {/* BODY */}
-          <div className="px-4 pb-4">
-            <h1 className="text-[24px] font-bold text-gray-900 mb-4 leading-tight">{blog.title}</h1>
-            <div className="prose max-w-none text-[15px] text-gray-800 mb-6" dangerouslySetInnerHTML={{ __html: blog.content }} />
-            {blog.coverImage?.url && <img src={blog.coverImage.url} alt="Cover" className="w-full rounded-lg mb-6 object-cover" />}
-          </div>
+          {/* BODY: Đã sửa màu chữ text-white và text-gray-200 */}
+          <div className="p-8 md:p-12">
+            <h1 className="text-3xl md:text-5xl font-extrabold text-white mb-8 leading-tight tracking-tight">
+              {blog.title}
+            </h1>
 
-          <div className="px-4 py-3 border-t border-gray-100 flex justify-between items-center text-[14px] text-gray-500">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                {/* 🔥 KHÓA NÚT LIKE KHI PREVIEW */}
-                {!isAdminPreview ? (
-                  <button onClick={handleLike} className="flex items-center gap-1 px-3 py-1 rounded-lg hover:bg-gray-100">
-                    <Heart size={18} className={interaction.isLiked ? "text-red-500 fill-red-500" : ""} />
-                    <span>{blog.likeCount || 0}</span>
-                  </button>
-                ) : (
-                  <div className="flex items-center gap-1 px-3 py-1 rounded-lg opacity-60">
-                    <Heart size={18} />
-                    <span>{blog.likeCount || 0}</span>
-                  </div>
-                )}
+            {blog.coverImage?.url && (
+              <div className="mb-10 rounded-[2rem] overflow-hidden border border-white/10 shadow-2xl">
+                <img src={blog.coverImage.url} alt="Cover" className="w-full h-auto object-cover hover:scale-105 transition-transform duration-700" />
               </div>
-              <span>{blog.commentCount || 0} bình luận</span>
-              <span>{blog.viewCount || 0} lượt xem</span>
+            )}
+
+            {/* Typography: Sử dụng prose-invert để tự làm sáng nội dung HTML */}
+            <div 
+              className="prose prose-invert prose-emerald max-w-none 
+                        text-gray-200 text-lg leading-relaxed
+                        prose-headings:text-white prose-strong:text-emerald-400
+                        prose-img:rounded-3xl prose-img:border prose-img:border-white/10" 
+              dangerouslySetInnerHTML={{ __html: blog.content }} 
+            />
+          </div>
+
+          {/* STATS & INTERACTIONS */}
+          <div className="px-8 py-6 bg-white/5 border-t border-white/5 flex flex-wrap items-center justify-between gap-6">
+            <div className="flex items-center gap-8 text-gray-300">
+              <button 
+                onClick={!isAdminPreview ? handleLike : undefined} 
+                className={`flex items-center gap-2 group transition-colors ${interaction.isLiked ? 'text-rose-400' : 'hover:text-rose-400'}`}
+              >
+                <div className={`p-2 rounded-xl transition-all ${interaction.isLiked ? 'bg-rose-500/20' : 'bg-white/5 group-hover:bg-rose-500/10'}`}>
+                  <Heart size={20} fill={interaction.isLiked ? "currentColor" : "none"} />
+                </div>
+                <span className="font-bold">{blog.likeCount || 0}</span>
+              </button>
+
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-white/5 rounded-xl"><MessageCircle size={20} /></div>
+                <span className="font-bold">{blog.commentCount || 0}</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-white/5 rounded-xl"><Eye size={20} /></div>
+                <span className="font-bold">{blog.viewCount || 0}</span>
+              </div>
             </div>
           </div>
 
-          {/* COMMENT SECTION - 🔥 CHỈ HIỆN KHI KHÔNG PHẢI PREVIEW */}
+          {/* COMMENT SECTION - ĐÃ CHỈNH MÀU MỤC NHẬP COMMENT */}
           {!isAdminPreview && (
-            <div className="p-4 border-t border-gray-100">
-              <div className="flex gap-2 mb-6">
-                <img src={user?.avatar || 'https://via.placeholder.com/32'} alt="User" className="w-8 h-8 rounded-full object-cover" />
-                <div className="flex-1 bg-[#F0F2F5] rounded-2xl flex items-center px-3">
+            <div className="p-8 md:p-12 bg-black/20 border-t border-white/5">
+              <h3 className="text-xl font-bold text-white mb-8 flex items-center gap-3">
+                Bình luận <span className="px-3 py-1 bg-white/10 rounded-full text-xs">{comments.length}</span>
+              </h3>
+              
+              <div className="flex gap-4 mb-10">
+                <img src={user?.avatar || 'https://via.placeholder.com/40'} className="w-10 h-10 rounded-full border border-white/10 object-cover" alt="Me" />
+                <div className="flex-1 relative">
                   <input 
                     value={newComment} 
-                    onChange={(e) => setNewComment(e.target.value)} 
-                    placeholder="Viết bình luận..." 
-                    className="flex-1 bg-transparent py-2 text-[14px] focus:outline-none" 
-                    onKeyPress={(e) => e.key === 'Enter' && handleAddComment()} 
+                    onChange={(e) => setNewComment(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 focus:bg-white/10 transition-all"
+                    placeholder="Chia sẻ ý kiến của bạn..."
+                    onKeyPress={(e) => e.key === 'Enter' && handleAddComment()}
                   />
-                  <button onClick={handleAddComment} disabled={!newComment.trim()} className="text-blue-600 font-bold text-sm ml-2 disabled:opacity-50">Gửi</button>
+                  <button 
+                    onClick={handleAddComment} 
+                    disabled={!newComment.trim()} 
+                    className="absolute right-2 top-2 bg-emerald-500 hover:bg-emerald-600 disabled:opacity-30 text-white font-bold px-4 py-1.5 rounded-xl transition-all"
+                  >
+                    Gửi
+                  </button>
                 </div>
               </div>
-              <div className="space-y-4">
-                {loadingComments ? <p className="text-sm text-gray-500 text-center">Đang tải...</p> : comments.map(c => <CommentItem key={c._id} c={c} />)}
+
+              <div className="space-y-6 text-white">
+                {loadingComments ? (
+                  <p className="text-sm text-gray-500 text-center">Đang tải bình luận...</p> 
+                ) : (
+                  comments.map(c => <CommentItem key={c._id} c={c} />)
+                )}
               </div>
             </div>
           )}
@@ -386,35 +551,21 @@ const BlogDetailPage = ({ isAdminPreview = false }) => {
 
         {/* RELATED PRODUCTS */}
         {blog.relatedProducts?.length > 0 && (
-          <div className="mt-4 bg-white rounded-xl shadow-sm p-4">
-            <h3 className="font-bold text-gray-900 mb-4 flex items-center gap-2"><ShoppingBag size={20} className="text-blue-600" /> Sản phẩm được nhắc đến</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {blog.relatedProducts.map(p => {
-                const isOutOfStock = p.stock <= 0 && p.totalStock <= 0;
-                return (
-                  <div key={p._id} className="border border-gray-100 rounded-xl p-3 hover:shadow-md transition-shadow group flex flex-col justify-between">
-                    <div>
-                      <img src={p.images?.[0]} className="w-full h-40 object-cover rounded-lg mb-3" alt={p.name} />
-                      <p className="font-bold text-sm text-gray-900 line-clamp-2" title={p.name}>{p.name}</p>
-                      <p className="text-red-500 font-bold text-sm mt-1">
-                        {(p.displayPrice || p.price)?.toLocaleString('vi-VN')}₫
-                      </p>
-                    </div>
-                    
-                    <button 
-                      onClick={() => handleAddToCart(p)}
-                      disabled={isOutOfStock}
-                      className={`w-full mt-3 text-white text-xs font-bold py-2 rounded-lg transition-colors ${
-                        isOutOfStock ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700'
-                      }`}
-                    >
-                      {isOutOfStock ? 'Hết hàng' : 'Thêm vào giỏ'}
-                    </button>
-                  </div>
-                );
-              })}
+          <section className="mt-12">
+            <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-3 px-4">
+              <ShoppingBag className="text-emerald-400" size={22} /> 
+              Sản phẩm được nhắc đến
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {blog.relatedProducts.map(p => (
+                <RelatedProductCard 
+                  key={p._id} 
+                  p={p} 
+                  handleAddToCart={handleAddToCart} 
+                />
+              ))}
             </div>
-          </div>
+          </section>
         )}
       </div>
 

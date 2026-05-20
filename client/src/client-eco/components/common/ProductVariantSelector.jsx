@@ -126,10 +126,10 @@ const ProductVariantSelector = ({ product, selectedVariant, onVariantChange }) =
   };
 
   return (
-    <div className="space-y-4 py-4 border-t border-b border-gray-200">
+    <div className="space-y-4 py-4 border-t border-b border-cyan-800/20">
       {product.options.map((option, index) => (
         <div key={index}>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+          <label className="block text-sm font-medium text-cyan-200 mb-2">
             {option.name}
           </label>
           <div className="flex flex-wrap gap-2">
@@ -148,11 +148,11 @@ const ProductVariantSelector = ({ product, selectedVariant, onVariantChange }) =
                   className={`relative px-4 py-2 border rounded-lg font-medium transition-all ${
                     isSelected
                       ? inStock
-                        ? 'border-primary-600 bg-primary-50 text-primary-700 ring-2 ring-primary-600'
-                        : 'border-red-400 bg-red-50 text-red-700 ring-2 ring-red-400'
+                        ? 'border-cyan-300 bg-cyan-900/10 text-cyan-100 ring-2 ring-cyan-300'
+                        : 'border-red-400 bg-red-900/10 text-red-200 ring-2 ring-red-400'
                       : inStock
-                      ? 'border-gray-300 hover:border-gray-400 text-gray-700 hover:bg-gray-50'
-                      : 'border-gray-300 bg-gray-50 text-gray-500 opacity-60 hover:opacity-80'
+                      ? 'border-cyan-700 text-cyan-100 hover:bg-cyan-900/6'
+                      : 'border-gray-600 bg-transparent text-cyan-200/60 opacity-70'
                   }`}
                 >
                   {value}
@@ -170,17 +170,17 @@ const ProductVariantSelector = ({ product, selectedVariant, onVariantChange }) =
 
       {/* Selected Variant Info */}
       {selectedVariant && (
-        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+        <div className="mt-4 p-3 bg-white/5 backdrop-blur-md border border-cyan-300/20 rounded-lg text-cyan-100">
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-2">
               {Object.entries(selectedVariant.optionValues || {}).map(([key, value]) => (
-                <span key={key} className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                <span key={key} className="px-2 py-1 bg-cyan-900/10 text-cyan-100 rounded-full text-xs font-medium">
                   {key}: {value}
                 </span>
               ))}
             </div>
             <span className={`font-medium ${
-              selectedVariant.stock > 0 ? 'text-green-600' : 'text-red-600'
+              selectedVariant.stock > 0 ? 'text-emerald-300' : 'text-red-400'
             }`}>
               {selectedVariant.stock > 0 
                 ? `Còn ${selectedVariant.stock} sản phẩm` 

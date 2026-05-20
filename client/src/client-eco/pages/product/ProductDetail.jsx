@@ -10,6 +10,7 @@ import ReviewList from '../../components/review/ReviewList';
 import { checkReviewStatus } from "../../redux/slices/reviewSlice";
 import ProductVariantSelector from '../../components/common/ProductVariantSelector';
 import Swal from 'sweetalert2';
+import { motion } from 'framer-motion';
 
 import { 
   StarIcon, 
@@ -278,19 +279,19 @@ const ProductDetail = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-b from-[#021717] via-[#042a2a] to-[#062f2f] text-white">
       {/* Breadcrumb */}
-      <div className="bg-white border-b border-gray-200">
+      <div className="border-b border-cyan-800/40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center space-x-2 text-sm text-gray-600">
+          <div className="flex items-center space-x-2 text-sm text-cyan-200">
             <button
               onClick={() => navigate('/shop')}
-              className="hover:text-primary-600 transition-colors duration-200"
+              className="hover:text-white/90 transition-colors duration-200"
             >
               Cửa hàng
             </button>
             <span>/</span>
-            <span className="text-gray-900">{currentProduct.name}</span>
+            <span className="font-semibold text-white">{currentProduct.name}</span>
           </div>
         </div>
       </div>
@@ -300,17 +301,22 @@ const ProductDetail = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Product Images */}
           <div className="space-y-4">
-            {/* Main Image */}
-            <div className="aspect-square bg-white rounded-lg overflow-hidden border border-gray-200">
-              <img
+            {/* Main Image - glass centerpiece */}
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="aspect-square rounded-2xl overflow-hidden border border-cyan-300/30 bg-white/3 backdrop-blur-md shadow-lg"
+            >
+              <motion.img
                 src={currentProduct.images?.[selectedImageIndex] || '/placeholder-product.jpg'}
                 alt={currentProduct.name}
                 className="w-full h-full object-cover"
-                onError={(e) => {
-                  e.target.src = '/placeholder-product.jpg';
-                }}
+                onError={(e) => { e.target.src = '/placeholder-product.jpg'; }}
+                animate={{ rotateY: [0, 6, -6, 0], scale: [1, 1.02, 0.99, 1] }}
+                transition={{ duration: 6, repeat: Infinity }}
               />
-            </div>
+            </motion.div>
 
             {/* Thumbnail Images */}
             {currentProduct.images && currentProduct.images.length > 1 && (
@@ -319,19 +325,17 @@ const ProductDetail = () => {
                   <button
                     key={index}
                     onClick={() => setSelectedImageIndex(index)}
-                    className={`aspect-square bg-white rounded-lg overflow-hidden border-2 transition-colors duration-200 ${
+                    className={`aspect-square rounded-md overflow-hidden border-2 transition-all duration-200 ${
                       selectedImageIndex === index 
-                        ? 'border-primary-600' 
-                        : 'border-gray-200 hover:border-gray-300'
+                        ? 'border-cyan-300 shadow-[0_4px_20px_rgba(0,255,209,0.08)]' 
+                        : 'border-transparent hover:border-cyan-300/40'
                     }`}
                   >
                     <img
                       src={image}
                       alt={`${currentProduct.name} ${index + 1}`}
                       className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.target.src = '/placeholder-product.jpg';
-                      }}
+                      onError={(e) => { e.target.src = '/placeholder-product.jpg'; }}
                     />
                   </button>
                 ))}
@@ -343,84 +347,70 @@ const ProductDetail = () => {
           <div className="space-y-6">
             {/* Product Title */}
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              <h1 className="text-3xl font-bold text-[#fff8e7] drop-shadow-[0_10px_24px_rgba(0,0,0,0.42)] mb-2">
                 {currentProduct.name}
               </h1>
               
               {/* Rating */}
-              <div className="flex items-center gap-2 mb-4">
-                <div className="flex items-center">
+              <div className="flex items-center gap-3 mb-4">
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }} className="flex items-center">
                   {renderStars(currentProduct.rating?.average || 0)}
-                </div>
-                <span className="text-sm text-gray-600">
-                  ({currentProduct.rating?.count || 0} đánh giá)
-                </span>
+                </motion.div>
+                <span className="text-sm text-cyan-200/80">({currentProduct.rating?.count || 0} đánh giá)</span>
               </div>
 
               {/* Price */}
               <div className="flex items-center gap-4 mb-4">
-                <span className="text-3xl font-bold text-primary-600">
-                  {formatPrice(currentPrice)}
-                </span>
+                <div className="text-3xl font-extrabold text-cyan-200">{formatPrice(currentPrice)}</div>
                 {currentProduct.originalPrice && currentProduct.originalPrice > currentPrice && (
                   <>
-                    <span className="text-xl text-gray-500 line-through">
-                      {formatPrice(currentProduct.originalPrice)}
-                    </span>
-                    <span className="bg-red-100 text-red-800 text-sm font-medium px-2 py-1 rounded-full">
-                      -{discountPercentage}%
-                    </span>
+                    <span className="text-lg text-cyan-200/60 line-through">{formatPrice(currentProduct.originalPrice)}</span>
+                    <span className="ml-2 inline-block px-3 py-1 rounded-full bg-gradient-to-r from-red-400 to-pink-400 text-white text-sm font-semibold">-{discountPercentage}%</span>
                   </>
                 )}
               </div>
 
               {/* Stock Status */}
-              <div className="flex items-center gap-2 mb-6">
-                <div className={`w-3 h-3 rounded-full ${
-                  availableStock > 0 ? 'bg-green-500' : 'bg-red-500'
-                }`}></div>
-                <span className="text-sm text-gray-600">
-                  {availableStock > 0 ? `Còn ${availableStock} sản phẩm` : 'Hết hàng'}
-                </span>
+              <div className="flex items-center gap-3 mb-6">
+                <div className={`w-3 h-3 rounded-full ${availableStock > 0 ? 'bg-emerald-400' : 'bg-red-500'}`}></div>
+                <span className="text-sm text-cyan-200">{availableStock > 0 ? `Còn ${availableStock} sản phẩm` : 'Hết hàng'}</span>
                 {currentStock > availableStock && (
-                  <span className="text-xs text-blue-600">
-                    ({currentStock - availableStock} trong giỏ hàng)
-                  </span>
+                  <span className="text-xs text-cyan-100/70">({currentStock - availableStock} trong giỏ hàng)</span>
                 )}
               </div>
             </div>
 
             {/* Variant Selector */}
-            <ProductVariantSelector
-              product={currentProduct}
-              selectedVariant={selectedVariant}
-              onVariantChange={handleVariantChange}
-            />
+            <div className="bg-white/3 backdrop-blur-md border border-cyan-300/20 p-4 rounded-lg">
+              <ProductVariantSelector
+                product={currentProduct}
+                selectedVariant={selectedVariant}
+                onVariantChange={handleVariantChange}
+              />
+            </div>
 
             {/* Quantity Selector */}
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Số lượng
-                </label>
+                <label className="block text-sm font-medium text-cyan-200 mb-2">Số lượng</label>
                 <div className="flex items-center gap-2">
-                  <button
+                  <motion.button
                     onClick={() => handleQuantityChange(-1)}
                     disabled={quantity <= 1}
-                    className="p-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    whileTap={{ scale: 0.95 }}
+                    className="p-2 rounded-md bg-white/5 border border-cyan-300/20 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <MinusIcon className="w-4 h-4" />
-                  </button>
-                  <span className="px-4 py-2 border border-gray-300 rounded-md min-w-[60px] text-center">
-                    {quantity}
-                  </span>
-                  <button
+                    <MinusIcon className="w-4 h-4 text-cyan-100" />
+                  </motion.button>
+                  <span className="px-4 py-2 border border-cyan-300/20 rounded-md min-w-[60px] text-center text-white">{quantity}</span>
+                  <motion.button
                     onClick={() => handleQuantityChange(1)}
                     disabled={quantity >= currentStock}
-                    className="p-2 border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    whileTap={{ scale: 0.95 }}
+                    className="p-2 rounded-md bg-white/5 border border-cyan-300/20 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <PlusIcon className="w-4 h-4" />
-                  </button>
+                    <PlusIcon className="w-4 h-4 text-cyan-100" />
+                  </motion.button>
                 </div>
               </div>
 
@@ -436,10 +426,11 @@ const ProductDetail = () => {
                 )}
 
                 <div className="flex gap-4">
-                  <button
+                  <motion.button
                     onClick={handleAddToCart}
                     disabled={availableStock === 0 || (currentProduct?.hasVariants && !selectedVariant)}
-                    className="flex-1 bg-primary-600 hover:bg-primary-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white py-3 px-6 rounded-lg font-medium transition-colors duration-200 flex items-center justify-center gap-2"
+                    whileTap={{ scale: 0.98 }}
+                    className="flex-1 bg-gradient-to-r from-emerald-400 to-cyan-300 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed text-abyss-800 py-3 px-6 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center gap-2 shadow-md"
                   >
                     <ShoppingCartIcon className="w-5 h-5" />
                     {availableStock === 0 
@@ -447,7 +438,7 @@ const ProductDetail = () => {
                       : currentProduct?.hasVariants && !selectedVariant
                       ? 'Chọn biến thể'
                       : 'Thêm vào giỏ hàng'}
-                  </button>
+                  </motion.button>
                 </div>
               </div>
             </div>
@@ -482,24 +473,24 @@ const ProductDetail = () => {
         </div>
 
         {/* Product Description */}
-        <div className="mt-12 bg-white rounded-lg p-6 border border-gray-200">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Mô tả sản phẩm</h2>
+        <div className="glass-card mt-12 p-6 text-white">
+          <h2 className="text-2xl font-bold mb-4 text-white">Mô Tả Sản Phẩm</h2>
           <div 
-            className="product-description-content"
+            className="product-description-content text-white leading-relaxed text-base"
             dangerouslySetInnerHTML={{ __html: currentProduct.description }}
           />
         </div>
 
         {/* Đánh giá sản phẩm */}
-        <div id="review-section" className="mt-12 bg-white rounded-lg p-6 border border-gray-200">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Đánh giá sản phẩm</h2>
+        <div id="review-section" className="glass-card mt-12 p-6 text-white">
+          <h2 className="text-2xl font-bold mb-4 text-white">Đánh Giá Sản Phẩm</h2>
 
           {/* Form gửi đánh giá - Show if coming from order or if user purchased */}
           {user && (orderIdFromUrl || (reviews.purchased && !reviews.hasReviewed)) && (
             <div className="mb-6">
               {orderIdFromUrl && (
-                <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                  <p className="text-sm text-amber-800">
+                <div className="mb-4 p-4 bg-amber-900/10 border border-amber-700/20 rounded-lg">
+                  <p className="text-sm text-amber-200">
                     ⭐ Bạn đang viết đánh giá cho sản phẩm này từ đơn hàng đã hoàn thành. 
                     Hãy chia sẻ trải nghiệm của bạn!
                   </p>
@@ -518,13 +509,13 @@ const ProductDetail = () => {
           )}
 
           {user && reviews.purchased && reviews.hasReviewed && !orderIdFromUrl && (
-            <p className="text-gray-500 mb-4">
+            <p className="text-cyan-100/80 mb-4">
               Bạn đã gửi đánh giá cho sản phẩm này rồi. Cảm ơn bạn!
             </p>
           )}
 
           {user && !reviews.purchased && !orderIdFromUrl && (
-            <p className="text-gray-500 mb-4">
+            <p className="text-cyan-100/80 mb-4">
               Bạn chỉ có thể gửi đánh giá sau khi đã mua sản phẩm này.
             </p>
           )}

@@ -1,48 +1,39 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { FileText, Clock, XCircle, Bookmark, Edit, Eye, MessageCircle } from 'lucide-react';
+import { FileText, Clock, XCircle, Bookmark, Edit, Eye, MessageCircle, AlertCircle } from 'lucide-react';
 import blogService from '../../services/blogService';
 import blogInteractionService from '../../services/blogInteractionService';
 
 const MyBlogs = () => {
-  // 1. Khai báo hook để lấy param từ URL
   const [searchParams, setSearchParams] = useSearchParams();
-
-  // 2. Lấy giá trị tab từ URL (mặc định là 'published' nếu không có)
   const tabFromUrl = searchParams.get('tab') || 'published';
 
-  // 3. Vẫn giữ state để component phản ứng nhanh, nhưng khởi tạo bằng giá trị từ URL
   const [activeTab, setActiveTab] = useState(tabFromUrl);
   const [blogs, setBlogs] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // 4. Khi user click chuyển tab, cập nhật cả state lẫn URL
   const handleTabChange = (tabId) => {
     setActiveTab(tabId);
-    setSearchParams({ tab: tabId }); // Đẩy lên URL: ?tab=pending
+    setSearchParams({ tab: tabId });
   };
 
-  // 5. Nếu URL thay đổi (do user bấm Back), cập nhật lại state activeTab
   useEffect(() => {
     setActiveTab(tabFromUrl);
   }, [tabFromUrl]);
 
   useEffect(() => {
     fetchData();
-  }, [activeTab]); // fetchData vẫn chạy mỗi khi activeTab thay đổi
-
-  // ... (Phần code fetchData giữ nguyên) ...
+  }, [activeTab]);
 
   const fetchData = async () => {
     setLoading(true);
-    setBlogs([]); // Xóa data cũ mượt hơn
+    setBlogs([]);
     try {
       let res;
       if (activeTab === 'bookmarks') {
         res = await blogInteractionService.getMyBookmarks();
         setBlogs(res.bookmarks || []);
       } else {
-        // activeTab map trực tiếp với status: PUBLISHED, PENDING, DRAFT
         res = await blogService.getMyBlogs({ status: activeTab.toUpperCase() });
         setBlogs(res.blogs || []);
       }
@@ -54,140 +45,186 @@ const MyBlogs = () => {
   };
 
   const tabs = [
-    { id: 'published', label: 'Đã đăng', icon: <FileText size={18} /> },
-    { id: 'pending', label: 'Chờ duyệt', icon: <Clock size={18} /> },
-    { id: 'draft', label: 'Bị từ chối / Nháp', icon: <XCircle size={18} /> },
-    { id: 'bookmarks', label: 'Đã lưu', icon: <Bookmark size={18} /> },
+    { id: 'published', label: 'Đã đăng', icon: <FileText size={16} /> },
+    { id: 'pending', label: 'Chờ duyệt', icon: <Clock size={16} /> },
+    { id: 'draft', label: 'Bị Từ chối / Nháp', icon: <XCircle size={16} /> },
+    { id: 'bookmarks', label: 'Đã lưu', icon: <Bookmark size={16} /> },
   ];
 
   return (
-    <div className="min-h-screen bg-[#F0F2F5] py-8">
-      <div className="container mx-auto max-w-5xl px-4">
+    <div className="relative min-h-screen bg-[#051C1C] py-12 overflow-hidden">
+      {/* 1. Nền Gradient cố định tạo chiều sâu nước sâu */}
+      <div className="fixed inset-0 bg-gradient-to-b from-[#051C1C] via-[#0a2828] to-[#051C1C] z-0"></div>
+
+      {/* 2. Hệ thống vân sóng thủy sinh vô tận đồng bộ toàn trang */}
+      <div 
+        className="absolute inset-0 z-0 opacity-30 pointer-events-none"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg width='400' height='200' viewBox='0 0 400 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 100 Q 100 50 200 100 T 400 100' fill='none' stroke='%2310b981' stroke-width='1.5' stroke-opacity='0.5'/%3E%3Cpath d='M0 140 Q 100 90 200 140 T 400 140' fill='none' stroke='%2306b6d4' stroke-width='1' stroke-opacity='0.3'/%3E%3C/svg%3E")`,
+          backgroundSize: '800px 400px',
+        }}
+      ></div>
+
+      {/* 3. Các đốm sáng phát quang sinh học (Bioluminescent Glow) */}
+      <div className="fixed top-[15%] right-[-10%] w-[450px] h-[450px] bg-emerald-900/15 blur-[120px] rounded-full z-0 pointer-events-none"></div>
+      <div className="fixed bottom-[15%] left-[-10%] w-[450px] h-[450px] bg-cyan-900/15 blur-[120px] rounded-full z-0 pointer-events-none"></div>
+
+      {/* NỘI DUNG CHÍNH */}
+      <div className="relative z-10 container mx-auto max-w-4xl px-4">
         
-        {/* HEADER & TABS */}
-        <div className="bg-white rounded-xl shadow-sm mb-6 overflow-hidden">
-          <div className="p-6 border-b border-gray-100">
-            <h1 className="text-2xl font-bold text-gray-900">Quản lý bài viết</h1>
-            <p className="text-gray-500 text-sm mt-1">Theo dõi trạng thái và bài viết bạn đã lưu</p>
+        {/* PANEL ĐIỀU HƯỚNG TABS (GLASSMORPHISM) */}
+        <div className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] shadow-2xl mb-8 overflow-hidden transition-all duration-300">
+          <div className="p-8 border-b border-white/5">
+            <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2">
+              🗂️ Không gian bài viết của bạn
+            </h1>
+            <p className="text-gray-400 text-sm mt-1.5 pl-1">
+              Theo dõi tiến trình duyệt bài viết thủy sinh và kho lưu trữ cá nhân
+            </p>
           </div>
           
-          <div className="flex overflow-x-auto">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => handleTabChange(tab.id)}
-                className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors border-b-2 whitespace-nowrap ${
-                  activeTab === tab.id
-                    ? 'border-blue-600 text-blue-600 bg-blue-50/50'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'
-                }`}
-              >
-                {tab.icon}
-                {tab.label}
-              </button>
-            ))}
+          {/* THANH TABS NÊN TRONG SUỐT */}
+          <div className="flex overflow-x-auto scrollbar-none px-4 bg-black/10">
+            {tabs.map((tab) => {
+              const isSelected = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => handleTabChange(tab.id)}
+                  className={`flex items-center gap-2 px-6 py-4 text-xs font-semibold tracking-wide uppercase transition-all duration-300 border-b-2 whitespace-nowrap ${
+                    isSelected
+                      ? 'border-emerald-500 text-emerald-400 bg-white/[0.02] shadow-[inner_0_-4px_10px_rgba(16,185,129,0.05)]'
+                      : 'border-transparent text-gray-400 hover:text-white hover:bg-white/[0.01]'
+                  }`}
+                >
+                  <span className={isSelected ? 'text-emerald-400' : 'text-gray-500'}>
+                    {tab.icon}
+                  </span>
+                  {tab.label}
+                </button>
+              );
+            })}
           </div>
         </div>
 
-        {/* DANH SÁCH BÀI VIẾT */}
+        {/* MÀN HÌNH DANH SÁCH BÀI VIẾT */}
         {loading ? (
-          <div className="text-center py-12 text-gray-500">Đang tải dữ liệu...</div>
+          <div className="text-center py-20 text-emerald-300/50 font-medium tracking-wide animate-pulse">
+            Đang lọc dòng chảy dữ liệu bài viết...
+          </div>
         ) : blogs.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-sm p-12 text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-4 text-gray-400">
-              <FileText size={32} />
+          // TRẠNG THÁI TRỐNG RỖNG (EMPTY STATE)
+          <div className="bg-white/5 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-16 text-center shadow-xl animate-in fade-in duration-300">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-white/5 border border-white/5 mb-4 text-gray-500">
+              <FileText size={26} />
             </div>
-            <h3 className="text-lg font-bold text-gray-900">Không có bài viết nào</h3>
-            <p className="text-gray-500 mt-2">Bạn chưa có bài viết nào trong mục này.</p>
+            <h3 className="text-lg font-bold text-white/90">Vùng nước trống rỗng</h3>
+            <p className="text-gray-400 text-sm mt-2 max-w-sm mx-auto">
+              Bạn chưa có dữ liệu hoặc bài viết nào thuộc trạng thái này trong nhật ký.
+            </p>
           </div>
         ) : (
-          <div className="grid gap-4">
+          // DANH SÁCH BÀI VIẾT KHỐI KÍNH MỜ
+          <div className="space-y-4">
             {blogs.map((blog) => {
-                const detailUrl = (activeTab === 'pending' || activeTab === 'draft') 
+              const detailUrl = (activeTab === 'pending' || activeTab === 'draft') 
                 ? `/my-blogs/preview/${blog._id}` 
                 : `/blogs/${blog.slug || blog._id}`;
 
-                return (
-                    <div key={blog._id} className="bg-white rounded-xl shadow-sm p-5 flex flex-col sm:flex-row gap-5 hover:shadow-md transition-shadow">
-                        
-                        {/* Ảnh cover */}
-                        <Link to={detailUrl} className="shrink-0">
-                        <img 
-                            src={blog.coverImage?.url || 'https://via.placeholder.com/150'} 
-                            alt={blog.title} 
-                            className="w-full sm:w-40 h-32 object-cover rounded-lg border border-gray-100"
-                        />
+              return (
+                <div 
+                  key={blog._id} 
+                  className="group bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-3xl p-5 flex flex-col sm:flex-row gap-6 hover:bg-white/[0.06] hover:border-white/20 hover:shadow-[0_15px_30px_rgba(0,0,0,0.3)] transition-all duration-300 shadow-lg relative overflow-hidden"
+                >
+                  {/* Ảnh cover có hover phóng to mềm mại */}
+                  <Link to={detailUrl} className="shrink-0 overflow-hidden rounded-2xl border border-white/5 block bg-black/20">
+                    <img 
+                      src={blog.coverImage?.url || 'https://via.placeholder.com/150'} 
+                      alt={blog.title} 
+                      className="w-full sm:w-44 h-32 object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
+                  </Link>
+
+                  {/* Vùng thông tin văn bản */}
+                  <div className="flex-1 flex flex-col justify-between py-1">
+                    <div>
+                      <div className="flex justify-between items-start gap-4 mb-2">
+                        {/* Tiêu đề đổi màu khi hover thẻ cha */}
+                        <Link to={detailUrl} className="text-lg font-bold text-white group-hover:text-emerald-400 transition-colors line-clamp-2 leading-snug">
+                          {blog.title}
                         </Link>
+                        
+                        {/* Thẻ trạng thái phát quang (Badges Status) */}
+                        {activeTab === 'draft' && (
+                          <span className="flex items-center gap-1 px-3 py-1 bg-rose-500/15 text-rose-400 border border-rose-500/20 text-[11px] font-bold uppercase tracking-wider rounded-full whitespace-nowrap shadow-[0_0_10px_rgba(244,63,94,0.1)]">
+                            <AlertCircle size={12} /> Bị từ chối
+                          </span>
+                        )}
+                        {activeTab === 'pending' && (
+                          <span className="px-3 py-1 bg-amber-500/15 text-amber-400 border border-amber-500/20 text-[11px] font-bold uppercase tracking-wider rounded-full whitespace-nowrap shadow-[0_0_10px_rgba(245,158,11,0.1)]">
+                            Chờ duyệt
+                          </span>
+                        )}
+                      </div>
 
-                        {/* Info */}
-                        <div className="flex-1 flex flex-col">
-                            <div className="flex justify-between items-start gap-2">
-                                {/* Link ở Tiêu đề */}
-                                <Link to={detailUrl} className="text-lg font-bold text-gray-900 hover:text-blue-600 line-clamp-2">
-                                    {blog.title}
-                                </Link>
-                                
-                                {/* Badge trạng thái (nếu ở tab draft/pending) */}
-                                {activeTab === 'draft' && (
-                                <span className="px-2.5 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-full whitespace-nowrap">
-                                    Bị từ chối
-                                </span>
-                                )}
-                                {activeTab === 'pending' && (
-                                <span className="px-2.5 py-1 bg-yellow-100 text-yellow-700 text-xs font-bold rounded-full whitespace-nowrap">
-                                    Đang chờ duyệt
-                                </span>
-                                )}
-                            </div>
+                      <p className="text-sm text-gray-400 line-clamp-2 leading-relaxed">
+                        {blog.excerpt || "Không có tóm tắt ngắn nào cho nhật ký bài viết này..."}
+                      </p>
 
-                            <p className="text-sm text-gray-500 mt-2 line-clamp-2">
-                                {blog.excerpt || "Không có mô tả..."}
-                            </p>
-
-                            {/* Hiển thị lý do từ chối nếu có */}
-                            {activeTab === 'draft' && blog.rejectionReason && (
-                                <div className="mt-3 p-3 bg-red-50 border border-red-100 rounded-lg text-sm text-red-600">
-                                    <strong>Lý do từ chối:</strong> {blog.rejectionReason}
-                                </div>
-                            )}
-
-                            <div className="mt-auto pt-4 flex items-center justify-between">
-                                <div className="flex items-center gap-4 text-xs text-gray-500 font-medium">
-                                    <span>{new Date(blog.createdAt).toLocaleDateString('vi-VN')}</span>
-                                    {activeTab === 'published' && (
-                                        <>
-                                        <span className="flex items-center gap-1"><Eye size={14} /> {blog.viewCount || 0}</span>
-                                        <span className="flex items-center gap-1"><MessageCircle size={14} /> {blog.commentCount || 0}</span>
-                                        </>
-                                    )}
-                                </div>
-
-                                {/* Nút hành động */}
-                                <div className="flex gap-2">
-                                    {/* Nút xem chi tiết */}
-                                    <Link 
-                                        to={detailUrl}
-                                        className="px-4 py-1.5 text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
-                                    >
-                                        Xem
-                                    </Link>
-                                    
-                                    {/* Nút sửa (Chỉ hiện ở Tab Bị từ chối/Nháp) */}
-                                    {activeTab === 'draft' && (
-                                        <Link 
-                                            to={`/blogs/edit/${blog._id}`} 
-                                            className="px-4 py-1.5 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors flex items-center gap-1"
-                                            >
-                                            <Edit size={14} /> Sửa bài
-                                        </Link>
-                                    )}
-                                </div>
-                            </div>
+                      {/* Lý do từ chối đồng bộ tone màu Rose mờ */}
+                      {activeTab === 'draft' && blog.rejectionReason && (
+                        <div className="mt-3 p-3.5 bg-rose-950/20 border border-rose-500/10 rounded-2xl text-xs text-rose-300 leading-relaxed flex gap-2 items-start">
+                          <AlertCircle size={14} className="shrink-0 text-rose-400 mt-0.5" />
+                          <div>
+                            <strong className="text-rose-400 font-semibold">Lý do điều chỉnh:</strong> {blog.rejectionReason}
+                          </div>
                         </div>
+                      )}
                     </div>
-                );
+
+                    {/* Footer của Thẻ: Thống kê & Nút nhấn */}
+                    <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between gap-4">
+                      {/* Thống kê bài viết dạng font chữ Monospace */}
+                      <div className="flex items-center gap-4 text-xs font-medium text-gray-500 font-mono">
+                        <span className="bg-white/5 px-2.5 py-0.5 rounded-md text-gray-400">
+                          {new Date(blog.createdAt).toLocaleDateString('vi-VN')}
+                        </span>
+                        {activeTab === 'published' && (
+                          <>
+                            <span className="flex items-center gap-1.5 hover:text-cyan-400 transition-colors">
+                              <Eye size={13} className="text-gray-600" /> {blog.viewCount || 0}
+                            </span>
+                            <span className="flex items-center gap-1.5 hover:text-emerald-400 transition-colors">
+                              <MessageCircle size={13} className="text-gray-600" /> {blog.commentCount || 0}
+                            </span>
+                          </>
+                        )}
+                      </div>
+
+                      {/* Nhóm nút tác vụ bọc khối kính mờ */}
+                      <div className="flex gap-2.5">
+                        <Link 
+                          to={detailUrl}
+                          className="px-4 py-1.5 text-xs font-bold text-cyan-400 bg-cyan-500/10 border border-cyan-500/20 hover:bg-cyan-500/20 rounded-xl transition-all"
+                        >
+                          Đọc bài
+                        </Link>
+                        
+                        {activeTab === 'draft' && (
+                          <Link 
+                            to={`/blogs/edit/${blog._id}`} 
+                            className="px-4 py-1.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-500 rounded-xl transition-all shadow-md shadow-emerald-900/20 flex items-center gap-1"
+                          >
+                            <Edit size={12} /> Sửa đổi
+                          </Link>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
             })}
-            </div>
+          </div>
         )}
       </div>
     </div>

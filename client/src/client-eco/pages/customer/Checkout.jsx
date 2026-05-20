@@ -195,15 +195,16 @@ const EditAddressModal = ({ isOpen, onClose, currentAddress, onSuccess }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b sticky top-0 bg-white">
-          <h2 className="text-xl font-bold text-gray-900">Cập nhật địa chỉ giao hàng</h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+      <div className="glass-card max-w-2xl w-full max-h-[90vh] overflow-y-auto p-0">
+        <div className="flex items-center justify-between p-5 border-b sticky top-0 bg-white/4 backdrop-blur-md">
+          <h2 className="text-lg font-bold text-white">Cập nhật địa chỉ giao hàng</h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            className="p-2 hover:bg-white/6 rounded-full transition-colors"
+            aria-label="Đóng"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
@@ -211,23 +212,23 @@ const EditAddressModal = ({ isOpen, onClose, currentAddress, onSuccess }) => {
 
         <div className="p-6 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-white/90 mb-1">
               Tỉnh/Thành phố *
             </label>
             <select
               value={formData.cityId}
               onChange={handleProvinceChange}
               disabled={loadingLocation}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-                errors.city ? 'border-red-500' : 'border-gray-300'
-              }`}
+              className={`w-full px-3 py-2 bg-transparent border rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 ${
+                errors.city ? 'border-red-500' : 'border-white/30'
+              } text-white`}
             >
-              <option value="">-- Chọn tỉnh/thành phố --</option>
-              {provinces.map(province => (
-                <option key={province.id} value={province.id}>
-                  {province.name}
-                </option>
-              ))}
+                <option value="" style={{ color: '#0f172a' }}>-- Chọn tỉnh/thành phố --</option>
+                {provinces.map(province => (
+                  <option key={province.id} value={province.id} style={{ color: '#0f172a' }}>
+                    {province.name}
+                  </option>
+                ))}
             </select>
             {errors.city && (
               <p className="text-red-500 text-xs mt-1">{errors.city}</p>
@@ -235,20 +236,20 @@ const EditAddressModal = ({ isOpen, onClose, currentAddress, onSuccess }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-white/90 mb-1">
               Quận/Huyện *
             </label>
             <select
               value={formData.districtId}
               onChange={handleDistrictChange}
               disabled={!formData.cityId || loadingLocation}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-                errors.district ? 'border-red-500' : 'border-gray-300'
-              }`}
+              className={`w-full px-3 py-2 bg-transparent border rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 ${
+                errors.district ? 'border-red-500' : 'border-white/30'
+              } text-white`}
             >
-              <option value="">-- Chọn quận/huyện --</option>
+              <option value="" style={{ color: '#0f172a' }}>-- Chọn quận/huyện --</option>
               {districts.map(district => (
-                <option key={district.id} value={district.id}>
+                <option key={district.id} value={district.id} style={{ color: '#0f172a' }}>
                   {district.name}
                 </option>
               ))}
@@ -259,20 +260,20 @@ const EditAddressModal = ({ isOpen, onClose, currentAddress, onSuccess }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-white/90 mb-1">
               Phường/Xã *
             </label>
             <select
               value={formData.wardCode}
               onChange={handleWardChange}
               disabled={!formData.districtId || loadingLocation}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-                errors.ward ? 'border-red-500' : 'border-gray-300'
-              }`}
+              className={`w-full px-3 py-2 bg-transparent border rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 ${
+                errors.ward ? 'border-red-500' : 'border-white/30'
+              } text-white`}
             >
-              <option value="">-- Chọn phường/xã --</option>
+              <option value="" style={{ color: '#0f172a' }}>-- Chọn phường/xã --</option>
               {wards.map(ward => (
-                <option key={ward.id} value={ward.id}>
+                <option key={ward.id} value={ward.id} style={{ color: '#0f172a' }}>
                   {ward.name}
                 </option>
               ))}
@@ -283,7 +284,7 @@ const EditAddressModal = ({ isOpen, onClose, currentAddress, onSuccess }) => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-white/90 mb-1">
               Địa chỉ cụ thể (số nhà, tên đường) *
             </label>
             <input
@@ -291,28 +292,28 @@ const EditAddressModal = ({ isOpen, onClose, currentAddress, onSuccess }) => {
               name="street"
               value={formData.street}
               onChange={handleChange}
-              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 ${
-                errors.street ? 'border-red-500' : 'border-gray-300'
-              }`}
+              className={`w-full px-3 py-2 bg-transparent border rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-400 ${
+                errors.street ? 'border-red-500' : 'border-white/30'
+              } text-white`}
               placeholder="Số 123, Đường Nguyễn Văn Linh"
             />
             {errors.street && (
-              <p className="text-red-500 text-xs mt-1">{errors.street}</p>
+              <p className="text-red-400 text-xs mt-1">{errors.street}</p>
             )}
           </div>
 
-          <div className="flex gap-3 pt-4 border-t">
+          <div className="flex gap-3 pt-4 border-t border-white/6">
             <button
               onClick={onClose}
               disabled={loading}
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors disabled:opacity-50"
+              className="flex-1 px-4 py-2 border border-white/20 rounded-lg hover:bg-white/6 transition-colors disabled:opacity-50 text-white"
             >
               Hủy
             </button>
             <button
               onClick={handleSubmit}
               disabled={loading}
-              className="flex-1 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:bg-gray-400 transition-colors"
+              className="flex-1 px-4 py-2 bg-gradient-to-r from-emerald-400 to-cyan-300 text-abyss-800 rounded-lg hover:shadow-md disabled:opacity-50 transition-colors"
             >
               {loading ? 'Đang lưu...' : 'Cập nhật địa chỉ'}
             </button>
@@ -394,12 +395,12 @@ const VNPayPaymentModal = ({ order, paymentData, onClose, onSuccess, onError }) 
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto">
-      <div className="bg-white rounded-2xl max-w-md w-full shadow-2xl overflow-hidden my-auto max-h-[98vh] overflow-y-auto">
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 p-4 sm:p-6 text-white relative">
+    <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto">
+      <div className="glass-card rounded-2xl max-w-md w-full shadow-2xl overflow-hidden my-auto max-h-[98vh] overflow-y-auto">
+        <div className="bg-gradient-to-r from-cyan-600 to-emerald-500 p-4 sm:p-6 text-white relative">
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 text-white hover:bg-white/20 rounded-full p-1 transition"
+            className="absolute top-4 right-4 text-white hover:bg-white/10 rounded-full p-1 transition"
             disabled={paymentStatus === 'processing' || paymentStatus === 'success'}
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -408,29 +409,29 @@ const VNPayPaymentModal = ({ order, paymentData, onClose, onSuccess, onError }) 
           </button>
           
           <div className="flex items-center justify-center mb-3">
-            <div className="bg-white rounded px-4 py-2">
-              <span className="text-blue-600 font-bold text-xl">VNPAY</span>
+            <div className="bg-white/10 rounded px-4 py-2">
+              <span className="text-white font-bold text-xl">VNPAY</span>
             </div>
           </div>
           
           <h2 className="text-lg sm:text-xl font-bold text-center">Thanh toán VNPay</h2>
-          <p className="text-blue-100 text-xs sm:text-sm text-center mt-1">
+          <p className="text-white/80 text-xs sm:text-sm text-center mt-1">
             Đơn hàng: {order?.orderNumber || 'N/A'}
           </p>
         </div>
-        
+
         <div className="p-4 sm:p-6">
           {paymentStatus === 'pending' && (
             <>
-              <div className="bg-blue-50 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 text-center">
-                <p className="text-xs sm:text-sm text-gray-600 mb-1">Số tiền thanh toán</p>
-                <p className="text-2xl sm:text-3xl font-bold text-blue-600">
+              <div className="bg-white/6 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6 text-center">
+                <p className="text-xs sm:text-sm text-white/70 mb-1">Số tiền thanh toán</p>
+                <p className="text-2xl sm:text-3xl font-bold text-white">
                   {formatCurrency(order?.totalPrice || 0)}
                 </p>
               </div>
               
-              <div className="bg-white border-2 border-dashed border-gray-300 rounded-lg p-3 sm:p-6 mb-4 sm:mb-6">
-                <p className="text-center text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">
+              <div className="bg-white/6 border-2 border-white/10 rounded-lg p-3 sm:p-6 mb-4 sm:mb-6">
+                <p className="text-center text-xs sm:text-sm text-white/70 mb-3 sm:mb-4">
                   Quét mã QR để thanh toán
                 </p>
                 {qrCodeUrl ? (
@@ -438,17 +439,17 @@ const VNPayPaymentModal = ({ order, paymentData, onClose, onSuccess, onError }) 
                     <img 
                       src={qrCodeUrl} 
                       alt="QR Code" 
-                      className="w-48 h-48 sm:w-64 sm:h-64 border border-gray-200 rounded-lg"
+                      className="w-48 h-48 sm:w-64 sm:h-64 border border-white/10 rounded-lg"
                     />
                   </div>
                 ) : (
-                  <div className="flex justify-center items-center h-48 sm:h-64 bg-gray-100 rounded-lg">
-                    <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-blue-600"></div>
+                  <div className="flex justify-center items-center h-48 sm:h-64 bg-white/6 rounded-lg">
+                    <div className="animate-spin rounded-full h-10 w-10 sm:h-12 sm:w-12 border-b-2 border-white"></div>
                   </div>
                 )}
               </div>
               
-              <div className="flex items-center justify-center gap-2 mb-4 sm:mb-6 text-gray-600">
+              <div className="flex items-center justify-center gap-2 mb-4 sm:mb-6 text-white/80">
                 <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -457,11 +458,11 @@ const VNPayPaymentModal = ({ order, paymentData, onClose, onSuccess, onError }) 
                 </span>
               </div>
               
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
-                <p className="text-xs sm:text-sm text-amber-800 font-medium mb-2">
+              <div className="bg-white/6 border border-white/6 rounded-lg p-3 sm:p-4 mb-4 sm:mb-6">
+                <p className="text-xs sm:text-sm text-white font-medium mb-2">
                   📌 Hướng dẫn thanh toán:
                 </p>
-                <ol className="text-xs sm:text-sm text-amber-700 space-y-1 ml-4 list-decimal">
+                <ol className="text-xs sm:text-sm text-white/80 space-y-1 ml-4 list-decimal">
                   <li>Mở ứng dụng ngân hàng hoặc ví điện tử</li>
                   <li>Quét mã QR ở trên</li>
                   <li>Xác nhận thanh toán</li>
@@ -473,7 +474,7 @@ const VNPayPaymentModal = ({ order, paymentData, onClose, onSuccess, onError }) 
                 <button
                   onClick={openVNPayWindow}
                   disabled={isRedirecting}
-                  className="w-full px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition font-medium shadow-md text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                  className="w-full px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-emerald-400 to-cyan-300 text-abyss-800 rounded-lg hover:shadow-md transition font-medium text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {isRedirecting ? (
                     <>
@@ -488,7 +489,7 @@ const VNPayPaymentModal = ({ order, paymentData, onClose, onSuccess, onError }) 
                 <button
                   onClick={handleTestPayment}
                   disabled={isRedirecting}
-                  className="w-full px-4 sm:px-6 py-2.5 sm:py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition font-medium text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-4 sm:px-6 py-2.5 sm:py-3 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition font-medium text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   ✓ Test: Giả lập thanh toán thành công
                 </button>
@@ -496,13 +497,13 @@ const VNPayPaymentModal = ({ order, paymentData, onClose, onSuccess, onError }) 
                 <button
                   onClick={onClose}
                   disabled={isRedirecting}
-                  className="w-full px-4 sm:px-6 py-2.5 sm:py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition font-medium text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-4 sm:px-6 py-2.5 sm:py-3 border border-white/20 text-white rounded-lg hover:bg-white/6 transition font-medium text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Hủy thanh toán
                 </button>
               </div>
               
-              <p className="text-xs text-gray-500 text-center mt-3 sm:mt-4">
+              <p className="text-xs text-white/70 text-center mt-3 sm:mt-4">
                 Lưu ý: Bạn sẽ được chuyển đến trang thanh toán VNPay. Sau khi thanh toán xong, bạn sẽ được tự động chuyển về trang đơn hàng.
               </p>
             </>
@@ -870,12 +871,12 @@ const Checkout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b border-gray-200">
+    <div className="min-h-screen bg-gradient-to-b from-[#021717] via-[#042a2a] to-[#062f2f] text-white">
+      <div className="bg-transparent border-b border-white/6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Xác nhận đơn hàng</h1>
-            <p className="text-gray-600 mt-1">Xác nhận thông tin đơn hàng, thông tin cá nhân và đặt hàng</p>
+            <h1 className="text-2xl font-bold text-white">Xác nhận đơn hàng</h1>
+            <p className="text-white/70 mt-1">Xác nhận thông tin đơn hàng, thông tin cá nhân và đặt hàng</p>
           </div>
         </div>
       </div>
@@ -891,30 +892,30 @@ const Checkout = () => {
           )}
 
           {/* Thông tin cá nhân */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Thông tin cá nhân</h2>
+          <div className="glass-card p-6">
+            <h2 className="text-lg font-semibold text-white mb-4">Thông tin cá nhân</h2>
             {user ? (
               <div className="space-y-3">
                 <div className="flex items-center gap-3 text-sm">
                   <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
-                  <span className="text-gray-600">Họ và tên:</span>
-                  <span className="font-medium text-gray-900">{user.fullName || user.username}</span>
+                  <span className="text-white/80">Họ và tên:</span>
+                  <span className="font-medium text-white">{user.fullName || user.username}</span>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
                   <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                   </svg>
-                  <span className="text-gray-600">Email:</span>
-                  <span className="font-medium text-gray-900">{user.email}</span>
+                  <span className="text-white/80">Email:</span>
+                  <span className="font-medium text-white">{user.email}</span>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
                   <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                   </svg>
-                  <span className="text-gray-600">Số điện thoại:</span>
-                  <span className="font-medium text-gray-900">{user.phone || 'Chưa cập nhật'}</span>
+                  <span className="text-white/80">Số điện thoại:</span>
+                  <span className="font-medium text-white">{user.phone || 'Chưa cập nhật'}</span>
                 </div>
               </div>
             ) : (
@@ -925,12 +926,12 @@ const Checkout = () => {
           </div>
 
           {/* Địa chỉ giao hàng */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
+          <div className="glass-card p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900">Địa chỉ giao hàng</h2>
+              <h2 className="text-lg font-semibold text-white">Địa chỉ giao hàng</h2>
               <button
                 onClick={() => setShowEditAddressModal(true)}
-                className="text-sm text-primary-600 hover:text-primary-700 font-medium flex items-center gap-1"
+                className="text-sm text-cyan-200 hover:text-white font-medium flex items-center gap-1"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -940,14 +941,14 @@ const Checkout = () => {
             </div>
             
             {user?.address ? (
-              <div className="bg-gray-50 rounded-lg p-4">
+              <div className="bg-white/4 rounded-lg p-4">
                 <div className="flex items-start gap-3">
-                  <svg className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-white/60 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">{formatAddress()}</p>
+                    <p className="text-sm font-medium text-white">{formatAddress()}</p>
                   </div>
                 </div>
               </div>
@@ -969,10 +970,10 @@ const Checkout = () => {
           />
 
           {/* Payment Method */}
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Phương thức thanh toán</h2>
+          <div className="glass-card p-6">
+            <h2 className="text-lg font-semibold text-white mb-4">Phương thức thanh toán</h2>
             <div className="space-y-3">
-              <div className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+              <div className="flex items-center p-3 border border-white/10 rounded-lg hover:bg-white/4 cursor-pointer">
                 <input 
                   id="cod" 
                   type="radio" 
@@ -980,14 +981,14 @@ const Checkout = () => {
                   value="COD" 
                   checked={paymentMethod === 'COD'} 
                   onChange={() => setPaymentMethod('COD')} 
-                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
+                  className="h-4 w-4 text-cyan-300 focus:ring-cyan-300 border-white/30"
                 />
-                <label htmlFor="cod" className="ml-3 block text-sm text-gray-900 cursor-pointer flex-1">
+                <label htmlFor="cod" className="ml-3 block text-sm text-white cursor-pointer flex-1">
                   <span className="font-medium">Thanh toán khi nhận hàng (COD)</span>
-                  <p className="text-xs text-gray-500 mt-1">Thanh toán bằng tiền mặt khi nhận hàng</p>
+                  <p className="text-xs text-white/70 mt-1">Thanh toán bằng tiền mặt khi nhận hàng</p>
                 </label>
               </div>
-              <div className="flex items-center p-3 border border-gray-200 rounded-lg hover:bg-gray-50 cursor-pointer">
+              <div className="flex items-center p-3 border border-white/10 rounded-lg hover:bg-white/4 cursor-pointer">
                 <input 
                   id="vnpay" 
                   type="radio" 
@@ -995,11 +996,11 @@ const Checkout = () => {
                   value="VNPAY" 
                   checked={paymentMethod === 'VNPAY'} 
                   onChange={() => setPaymentMethod('VNPAY')} 
-                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300"
+                  className="h-4 w-4 text-cyan-300 focus:ring-cyan-300 border-white/30"
                 />
-                <label htmlFor="vnpay" className="ml-3 block text-sm text-gray-900 cursor-pointer flex-1">
+                <label htmlFor="vnpay" className="ml-3 block text-sm text-white cursor-pointer flex-1">
                   <span className="font-medium">Thanh toán qua VNPay</span>
-                  <p className="text-xs text-gray-500 mt-1">Thanh toán trực tuyến qua VNPay</p>
+                  <p className="text-xs text-white/70 mt-1">Thanh toán trực tuyến qua VNPay</p>
                 </label>
               </div>
             </div>
@@ -1009,7 +1010,7 @@ const Checkout = () => {
           <div className="flex flex-col sm:flex-row justify-between gap-3">
             <button
               onClick={() => navigate('/shop')}
-              className="px-6 py-3 text-white bg-gradient-to-r from-green-600 to-emerald-600 rounded-lg hover:from-green-700 hover:to-emerald-700 transition font-medium shadow-sm flex items-center justify-center gap-2"
+              className="px-6 py-3 text-white bg-gradient-to-r from-emerald-400 to-cyan-300 rounded-lg hover:from-emerald-500 hover:to-cyan-400 transition font-medium shadow-sm flex items-center justify-center gap-2"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -1017,11 +1018,11 @@ const Checkout = () => {
               Tiếp tục mua sắm
             </button>
             
-            <div className="relative group">
+              <div className="relative group">
               <button 
                 onClick={handleSubmit}
                 disabled={submitting || items.length === 0 || !user?.address} 
-                className="w-full sm:w-auto px-6 py-3 text-white bg-gradient-to-r from-primary-600 to-purple-600 rounded-lg hover:from-primary-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-sm transition-all"
+                className="w-full sm:w-auto px-6 py-3 text-abyss-800 bg-gradient-to-r from-emerald-400 to-cyan-300 rounded-lg hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-sm transition-all"
               >
                 {submitting ? 'Đang tạo đơn hàng...' : 'Đặt hàng'}
               </button>
@@ -1042,8 +1043,8 @@ const Checkout = () => {
         </div>
 
         {/* Summary Section */}
-        <div className="bg-white rounded-lg border border-gray-200 p-6 h-fit">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Tóm tắt đơn hàng</h2>
+        <div className="glass-card p-6 h-fit">
+          <h2 className="text-lg font-semibold text-white mb-4">Tóm tắt đơn hàng</h2>
           {loading ? (
             <div className="text-center py-8">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
@@ -1061,7 +1062,7 @@ const Checkout = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              <ul className="divide-y divide-gray-100 max-h-64 overflow-y-auto">
+              <ul className="divide-y divide-white/6 max-h-64 overflow-y-auto">
                 {items.map((it) => {
                   // Get price - use variant price if available
                   let price = it.productId?.salePrice || it.productId?.price;
@@ -1087,7 +1088,7 @@ const Checkout = () => {
                         }}
                       />
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium text-gray-900 line-clamp-2">{it.productId?.name}</div>
+                        <div className="text-sm font-medium text-white line-clamp-2">{it.productId?.name}</div>
                         
                         {/* Display selected variant options */}
                         {it.selectedVariant && it.selectedVariant.optionValues && (
@@ -1103,9 +1104,9 @@ const Checkout = () => {
                           </div>
                         )}
                         
-                        <div className="text-xs text-gray-500">x{it.quantity}</div>
+                        <div className="text-xs text-white/70">x{it.quantity}</div>
                       </div>
-                      <div className="text-sm font-semibold text-gray-900 flex-shrink-0">
+                      <div className="text-sm font-semibold text-white flex-shrink-0">
                         {formatCurrency(itemTotal)}
                       </div>
                     </li>
@@ -1114,13 +1115,13 @@ const Checkout = () => {
               </ul>
               <div className="space-y-2 text-sm pt-4 border-t">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Tạm tính</span>
-                  <span className="font-medium">{formatCurrency(displayTotals.subtotal)}</span>
+                  <span className="text-white/70">Tạm tính</span>
+                  <span className="font-medium text-white">{formatCurrency(displayTotals.subtotal)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Phí vận chuyển</span>
-                  <span className="font-medium">
-                    {displayTotals.shippingFee === 0 ? <span className="text-green-600">Miễn phí</span> : formatCurrency(displayTotals.shippingFee)}
+                  <span className="text-white/70">Phí vận chuyển</span>
+                  <span className="font-medium text-white">
+                    {displayTotals.shippingFee === 0 ? <span className="text-emerald-300">Miễn phí</span> : formatCurrency(displayTotals.shippingFee)}
                   </span>
                 </div>
                 
@@ -1166,8 +1167,8 @@ const Checkout = () => {
                 )}
                 
                 <div className="pt-3 mt-3 border-t flex justify-between text-base">
-                  <span className="font-semibold text-gray-900">Tổng cộng</span>
-                  <span className="font-bold text-primary-600 text-lg">{formatCurrency(displayTotals.total)}</span>
+                  <span className="font-semibold text-white">Tổng cộng</span>
+                  <span className="font-bold text-emerald-300 text-lg">{formatCurrency(displayTotals.total)}</span>
                 </div>
               </div>
             </div>

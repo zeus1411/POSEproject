@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { motion, useReducedMotion } from 'framer-motion';
 import { 
   ArrowRightIcon, 
   StarIcon, 
@@ -17,6 +18,7 @@ import {
 const Home = () => {
   const navigate = useNavigate();
   const [activeSection, setActiveSection] = React.useState('hero');
+  const prefersReducedMotion = useReducedMotion();
 
   const scrollToSection = (sectionId) => {
     const element = document.getElementById(sectionId);
@@ -202,7 +204,7 @@ const Home = () => {
       </section>
 
       {/* Collections Section */}
-      <section id="collections" className="py-20 relative overflow-hidden">
+      <section id="collections" className="py-24 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-[#051C1C] via-[#0a2828] to-[#051C1C]"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
           <div className="text-center mb-16 animate-on-scroll">
@@ -272,40 +274,68 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Showcase Gallery Section */}
-      <section className="py-20 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#061e2e] via-[#0a2a2a] to-[#051C1C]"></div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center mb-16 animate-on-scroll">
-            <h2 className="text-3xl md:text-4xl font-headline font-bold text-white mb-4">Gallery Layout Thủy Sinh</h2>
-            <p className="text-lg text-gray-400 font-body max-w-3xl mx-auto">Khám phá những bể thủy sinh đẹp mắt được setup bởi cộng đồng</p>
-          </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              { src: '/images/nature-style.jpg', title: 'Nature Style', sub: 'Phong cách tự nhiên' },
-              { src: '/images/dutch-style.jpg', title: 'Dutch Style', sub: 'Phong cách Hà Lan' },
-              { src: '/images/planted-tank.jpg', title: 'Planted Tank', sub: 'Bể thủy sinh trồng cây' },
-              { src: '/images/iwagumi.jpg', title: 'Iwagumi', sub: 'Phong cách đá' },
-              { src: '/images/community-tank.jpg', title: 'Community Tank', sub: 'Bể cộng đồng' },
-              { src: '/images/biotope.jpg', title: 'Biotope', sub: 'Sinh cảnh tự nhiên' },
-            ].map((item, i) => (
-              <div key={i} className="animate-on-scroll group relative overflow-hidden rounded-2xl glass-card transition-all duration-500">
-                <div className="aspect-[4/3] overflow-hidden">
-                  <img src={item.src} alt={item.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-t from-abyss/90 via-abyss/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                  <div className="absolute bottom-0 left-0 right-0 p-6">
-                    <div className="glass-panel rounded-xl p-4 transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                      <h3 className="text-white text-lg font-headline font-bold mb-1">{item.title}</h3>
-                      <p className="text-gray-300 font-body text-sm">{item.sub}</p>
-                    </div>
-                  </div>
-                </div>
+          {/* Showcase Slider Section */}
+          <section className="py-20 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-br from-[#061e2e] via-[#0a2a2a] to-[#051C1C]"></div>
+            <div className="absolute inset-0 pointer-events-none">
+              <div className="absolute left-1/2 top-20 h-80 w-[42rem] -translate-x-1/2 rounded-full bg-cyan-400/10 blur-3xl"></div>
+              <div className="absolute right-[-8rem] top-32 h-72 w-72 rounded-full bg-emerald-400/10 blur-3xl"></div>
+              <div className="absolute left-[-8rem] bottom-[-6rem] h-72 w-72 rounded-full bg-teal-500/10 blur-3xl"></div>
+            </div>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+              <div className="text-center mb-10 sm:mb-14 animate-on-scroll">
+                <p className="text-xs uppercase tracking-[0.4em] text-neon-cyan/70 mb-3">Gallery Layout Thủy Sinh</p>
+                <h2 className="text-3xl md:text-4xl font-headline font-bold text-white mb-4">Dòng chảy hình ảnh aquascape</h2>
+                <p className="text-lg text-gray-400 font-body max-w-3xl mx-auto">Một dải ảnh chuyển động theo kiểu editorial, khớp với tông tối và sang của trang chủ.</p>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
+
+              <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-black/20 backdrop-blur-xl shadow-[0_30px_120px_rgba(0,0,0,0.35)] px-4 sm:px-6 py-6 sm:py-8">
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(34,211,238,0.12),transparent_35%),radial-gradient(circle_at_50%_100%,rgba(16,185,129,0.10),transparent_32%)] pointer-events-none"></div>
+                <motion.div
+                  className="flex w-max gap-4 sm:gap-5 will-change-transform"
+                  animate={prefersReducedMotion ? { x: 0 } : { x: ['0%', '-50%'] }}
+                  transition={{ duration: prefersReducedMotion ? 0 : 34, ease: 'linear', repeat: Infinity }}
+                >
+                  {[
+                    { src: '/images/nature-style.jpg', title: 'Nature Style', sub: 'Phong cách tự nhiên' },
+                    { src: '/images/dutch-style.jpg', title: 'Dutch Style', sub: 'Phong cách Hà Lan' },
+                    { src: '/images/planted-tank.jpg', title: 'Planted Tank', sub: 'Bể thủy sinh trồng cây' },
+                    { src: '/images/iwagumi.jpg', title: 'Iwagumi', sub: 'Phong cách đá' },
+                    { src: '/images/community-tank.jpg', title: 'Community Tank', sub: 'Bể cộng đồng' },
+                    { src: '/images/biotope.jpg', title: 'Biotope', sub: 'Sinh cảnh tự nhiên' },
+                  ].concat([
+                    { src: '/images/nature-style.jpg', title: 'Nature Style', sub: 'Phong cách tự nhiên' },
+                    { src: '/images/dutch-style.jpg', title: 'Dutch Style', sub: 'Phong cách Hà Lan' },
+                    { src: '/images/planted-tank.jpg', title: 'Planted Tank', sub: 'Bể thủy sinh trồng cây' },
+                    { src: '/images/iwagumi.jpg', title: 'Iwagumi', sub: 'Phong cách đá' },
+                    { src: '/images/community-tank.jpg', title: 'Community Tank', sub: 'Bể cộng đồng' },
+                    { src: '/images/biotope.jpg', title: 'Biotope', sub: 'Sinh cảnh tự nhiên' },
+                  ]).map((item, i) => (
+                    <motion.div
+                      key={`${item.title}-${i}`}
+                      whileHover={prefersReducedMotion ? undefined : { y: -10, scale: 1.02, rotateY: 6 }}
+                      transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+                      className="group relative shrink-0 w-[16rem] sm:w-[18rem] lg:w-[19rem] overflow-hidden rounded-[1.6rem] border border-white/10 bg-[#071616] shadow-[0_20px_50px_rgba(0,0,0,0.35)]"
+                      style={{ transformStyle: 'preserve-3d', perspective: 1200 }}
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-b from-cyan-400/10 via-transparent to-transparent opacity-70"></div>
+                      <img src={item.src} alt={item.title} className="h-[23rem] w-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/92 via-black/20 to-transparent"></div>
+                      <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
+                        <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/25 px-3 py-1 text-[10px] uppercase tracking-[0.35em] text-cyan-100/75 backdrop-blur-md">
+                          Aquascape
+                        </div>
+                        <h3 className="mt-3 text-2xl sm:text-3xl font-headline font-semibold text-white leading-tight drop-shadow-[0_2px_18px_rgba(0,0,0,0.45)]">
+                          {item.title}
+                        </h3>
+                        <p className="mt-2 text-sm text-white/65 font-body">{item.sub}</p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              </div>
+            </div>
+          </section>
 
       {/* Features Section */}
       <section id="features" className="py-20 relative overflow-hidden">

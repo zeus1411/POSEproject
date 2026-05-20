@@ -285,6 +285,7 @@ class ProductService {
       minPrice,
       maxPrice,
       inStock,
+      minRating,
       page = 1,
       limit = 12,
       sort,
@@ -331,10 +332,18 @@ class ProductService {
     }
 
     // Price range
-    if (minPrice || maxPrice) {
+    if (minPrice !== undefined && minPrice !== null && minPrice !== '' || maxPrice !== undefined && maxPrice !== null && maxPrice !== '') {
       query.price = {};
-      if (minPrice) query.price.$gte = Number(minPrice);
-      if (maxPrice) query.price.$lte = Number(maxPrice);
+      if (minPrice !== undefined && minPrice !== null && minPrice !== '') query.price.$gte = Number(minPrice);
+      if (maxPrice !== undefined && maxPrice !== null && maxPrice !== '') query.price.$lte = Number(maxPrice);
+    }
+
+    // Rating filter
+    if (minRating !== undefined && minRating !== null && minRating !== '') {
+      const ratingValue = Number(minRating);
+      if (!Number.isNaN(ratingValue)) {
+        query['rating.average'] = { $gte: ratingValue };
+      }
     }
 
     // Stock filter

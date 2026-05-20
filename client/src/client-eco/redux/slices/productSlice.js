@@ -20,6 +20,7 @@ const initialState = {
     minPrice: '',
     maxPrice: '',
     inStock: '',
+    minRating: '',
     sort: 'createdAt:desc'
   }
 };
@@ -152,6 +153,7 @@ export const productSlice = createSlice({
         minPrice: '',
         maxPrice: '',
         inStock: '',
+        minRating: '',
         sort: 'createdAt:desc'
       };
     },

@@ -37,7 +37,7 @@ import BlogListPage from './client-blog/pages/common/BlogListPage';
 import BlogDetailPage from './client-blog/pages/common/BlogDetailPage';
 import CreateUserBlog from './client-blog/pages/common/CreateUserBlog.jsx';
 
-// Customer blog pages
+// Customer blog management page
 import MyBlogs from './client-blog/pages/customer/MyBlogs.jsx';
 
 import ScrollToTop from './client-blog/components/ScrollToTop.jsx';
@@ -102,9 +102,7 @@ function App() {
                 element={<CreateUserBlog />}
               />
             </Route>
-          </Route>
-
-          
+          </Route>      
 
           {/* Catch-all: mọi đường dẫn lạ → /shop */}
           <Route path="*" element={<Navigate to="/shop" replace />} />

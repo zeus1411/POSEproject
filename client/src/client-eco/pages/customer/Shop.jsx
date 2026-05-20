@@ -7,8 +7,8 @@ import { addToCart } from '../../redux/slices/cartSlice';
 import ProductGrid from '../../components/common/ProductGrid';
 import SearchFilter from '../../components/common/SearchFilter';
 import CategorySidebar from '../../components/common/CategorySidebar';
-import Pagination from '../../components/common/Pagination';
 import ShopCarousel from '../../components/common/ShopCarousel';
+import Pagination from '../../components/common/Pagination';
 import Swal from 'sweetalert2';
 
 const Shop = () => {
@@ -21,16 +21,15 @@ const Shop = () => {
   const [selectedCategory, setSelectedCategory] = useState(null);
 
   const category = searchParams.get('category') || '';
+  const search = searchParams.get('search') || '';
+  const sort = searchParams.get('sort') || filters.sort || 'createdAt:desc';
 
   useEffect(() => {
-    // Load categories
     dispatch(getRootCategories());
-    
-    // Load products with category from URL
-    const initialFilters = { ...filters, categoryId: category };
+    const initialFilters = { ...filters, categoryId: category, search, sort };
     dispatch(setFilters(initialFilters));
     dispatch(searchProducts({ ...initialFilters, page: 1 }));
-  }, [dispatch, category]);
+  }, [dispatch, category, search, sort]);
 
   useEffect(() => {
     setSelectedCategory(category || null);
@@ -69,7 +68,6 @@ const Shop = () => {
       });
       return;
     }
-
     try {
       await dispatch(addToCart({ productId: product._id, quantity: 1 })).unwrap();
     } catch (error) {
@@ -83,21 +81,17 @@ const Shop = () => {
   };
 
   const handleToggleWishlist = (productId) => {
-    setWishlistItems(prev => 
-      prev.includes(productId) 
+    setWishlistItems(prev =>
+      prev.includes(productId)
         ? prev.filter(id => id !== productId)
         : [...prev, productId]
     );
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Banner Carousel */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-[95%] 2xl:max-w-[90%] mx-auto px-2 sm:px-4 py-4">
-          <ShopCarousel />
-        </div>
-      </div>
+    <div className="min-h-screen bg-gradient-to-b from-[#051C1C] via-[#0a2828] to-[#061e2e]">
+      {/* Premium Carousel Banner */}
+      <ShopCarousel />
 
       {/* Main Content */}
       <div className="max-w-[95%] 2xl:max-w-[90%] mx-auto px-2 sm:px-4 py-6">
@@ -108,13 +102,15 @@ const Shop = () => {
               categories={categories}
               selectedCategory={selectedCategory}
               onCategoryChange={handleCategoryChange}
+              filters={filters}
+              onFiltersChange={handleFiltersChange}
               isLoading={isLoading}
             />
           </div>
 
           {/* Main Content Area */}
-          <div className="flex-1 min-w-0 overflow-hidden">
-            {/* Search and Filter */}
+          <div id="shop-products" className="flex-1 min-w-0 scroll-mt-24 overflow-hidden">
+            {/* Search and Sort Bar */}
             <SearchFilter
               filters={filters}
               onFiltersChange={handleFiltersChange}
@@ -123,18 +119,17 @@ const Shop = () => {
             />
 
             {/* Results Summary */}
-            <div className="flex flex-col xs:flex-row items-start xs:items-center justify-between gap-2 mb-4 pl-4 lg:pl-6">
-              <div className="text-sm text-gray-600">
+            <div className="flex flex-col xs:flex-row items-start xs:items-center justify-between gap-2 mb-4 px-1">
+              <div className="text-sm text-gray-400 font-body">
                 {isLoading ? (
                   <span>Đang tải...</span>
                 ) : (
                   <span>
-                    Hiển thị {products.length} sản phẩm trong tổng số {pagination.total} sản phẩm
+                    Hiển thị <span className="text-neon-cyan font-semibold">{products.length}</span> / {pagination.total} sản phẩm
                   </span>
                 )}
               </div>
-              
-              <div className="text-sm text-gray-500 whitespace-nowrap">
+              <div className="text-sm text-gray-500 font-body whitespace-nowrap">
                 Trang {pagination.page} / {pagination.pages}
               </div>
             </div>

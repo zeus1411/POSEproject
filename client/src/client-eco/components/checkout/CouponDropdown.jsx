@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import api from '../../services/api';
 import { toast } from 'react-toastify';
 
@@ -14,6 +15,8 @@ const CouponDropdown = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isOpen, setIsOpen] = useState(false);
+  const triggerRef = useRef(null);
+  const [panelPos, setPanelPos] = useState(null);
   const [eligibilityStatus, setEligibilityStatus] = useState({}); // Track eligibility for each coupon
 
   // Load available coupons and check eligibility
@@ -57,6 +60,26 @@ const CouponDropdown = ({
 
     loadCoupons();
   }, [cartTotal]); // Re-check when cart total changes
+
+  // Update panel position on resize/scroll while open
+  useEffect(() => {
+    if (!isOpen || !triggerRef.current) return;
+    const updatePos = () => {
+      const rect = triggerRef.current.getBoundingClientRect();
+      setPanelPos({
+        left: rect.left + window.scrollX,
+        top: rect.bottom + window.scrollY,
+        width: rect.width
+      });
+    };
+
+    window.addEventListener('resize', updatePos);
+    window.addEventListener('scroll', updatePos, true);
+    return () => {
+      window.removeEventListener('resize', updatePos);
+      window.removeEventListener('scroll', updatePos, true);
+    };
+  }, [isOpen]);
 
   const handleCouponToggle = (coupon) => {
     const isSelected = selectedCoupons.some(c => c.code === coupon.code);
@@ -190,16 +213,16 @@ const CouponDropdown = ({
 
   if (loading) {
     return (
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="glass-card p-6">
         <div className="flex items-center gap-2 mb-4">
-          <svg className="w-5 h-5 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
           </svg>
-          <h2 className="text-lg font-semibold text-gray-900">Mã giảm giá</h2>
+          <h2 className="text-lg font-semibold text-white">Mã giảm giá</h2>
         </div>
         <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-pink-600"></div>
-          <span className="ml-3 text-gray-600">Đang tải mã giảm giá...</span>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-emerald-300"></div>
+          <span className="ml-3 text-white/70">Đang tải mã giảm giá...</span>
         </div>
       </div>
     );
@@ -207,12 +230,12 @@ const CouponDropdown = ({
 
   if (error) {
     return (
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="glass-card p-6">
         <div className="flex items-center gap-2 mb-4">
-          <svg className="w-5 h-5 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-5 h-5 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
           </svg>
-          <h2 className="text-lg font-semibold text-gray-900">Mã giảm giá</h2>
+          <h2 className="text-lg font-semibold text-white">Mã giảm giá</h2>
         </div>
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
           <p className="text-red-700 text-sm">{error}</p>
@@ -229,13 +252,13 @@ const CouponDropdown = ({
   const totalCoupons = availableCoupons.freeShipping.length + availableCoupons.discount.length;
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
+    <div className="glass-card p-6">
       <div className="flex items-center gap-2 mb-4">
-        <svg className="w-5 h-5 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg className="w-5 h-5 text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
         </svg>
-        <h2 className="text-lg font-semibold text-gray-900">Mã giảm giá</h2>
-        <span className="text-xs text-gray-500">(Không bắt buộc)</span>
+        <h2 className="text-lg font-semibold text-white">Mã giảm giá</h2>
+        <span className="text-xs text-white/70">(Không bắt buộc)</span>
       </div>
 
       {totalCoupons === 0 ? (
@@ -247,18 +270,29 @@ const CouponDropdown = ({
         </div>
       ) : (
         <>
-          <div className="relative">
+          <div className="relative" ref={triggerRef}>
             <button
               type="button"
-              onClick={() => setIsOpen(!isOpen)}
+              onClick={() => {
+                const nextOpen = !isOpen;
+                setIsOpen(nextOpen);
+                if (nextOpen && triggerRef.current) {
+                  const rect = triggerRef.current.getBoundingClientRect();
+                  setPanelPos({
+                    left: rect.left + window.scrollX,
+                    top: rect.bottom + window.scrollY,
+                    width: rect.width
+                  });
+                }
+              }}
               disabled={isValidating}
-              className="w-full flex items-center justify-between p-3 border-2 border-gray-300 rounded-lg bg-white hover:border-pink-400 focus:border-pink-500 focus:ring-2 focus:ring-pink-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex items-center justify-between p-3 border-2 border-white/20 rounded-lg bg-transparent hover:border-emerald-300 focus:border-emerald-300 focus:ring-2 focus:ring-emerald-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-white"
             >
-              <span className={selectedCount > 0 ? 'font-semibold text-gray-900' : 'text-gray-500'}>
+              <span className={selectedCount > 0 ? 'font-semibold text-white' : 'text-white/70'}>
                 {displayText}
               </span>
               <svg 
-                className={`w-5 h-5 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} 
+                className={`w-5 h-5 text-white/60 transition-transform ${isOpen ? 'rotate-180' : ''}`} 
                 fill="none" 
                 stroke="currentColor" 
                 viewBox="0 0 24 24"
@@ -267,13 +301,22 @@ const CouponDropdown = ({
               </svg>
             </button>
 
-            {isOpen && (
-              <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-10 max-h-96 overflow-y-auto">
+            {isOpen && panelPos && createPortal(
+              <div
+                style={{
+                  position: 'absolute',
+                  left: panelPos.left,
+                  top: panelPos.top,
+                  width: panelPos.width,
+                  zIndex: 9999
+                }}
+              >
+                <div className="mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-96 overflow-y-auto">
                 {/* Free Shipping Section */}
                 {availableCoupons.freeShipping.length > 0 && (
                   <div className="p-4 border-b border-gray-100">
-                    <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center">
+                    <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-emerald-400 flex items-center justify-center">
                         <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                         </svg>
@@ -295,8 +338,8 @@ const CouponDropdown = ({
                 {/* Discount Section */}
                 {availableCoupons.discount.length > 0 && (
                   <div className="p-4">
-                    <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-pink-500 flex items-center justify-center">
+                    <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-cyan-400 flex items-center justify-center">
                         <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                         </svg>
@@ -314,25 +357,27 @@ const CouponDropdown = ({
                     </div>
                   </div>
                 )}
-              </div>
+                </div>
+              </div>,
+              document.body
             )}
           </div>
 
           {/* Selected Coupons Display */}
           {selectedCount > 0 && (
             <div className="mt-4 space-y-2">
-              <p className="text-sm font-medium text-gray-700">Mã đã chọn:</p>
+              <p className="text-sm font-medium text-white">Mã đã chọn:</p>
               <div className="flex flex-wrap gap-2">
                 {selectedCoupons.map(coupon => (
                   <div 
                     key={coupon.code}
-                    className="inline-flex items-center gap-2 bg-gradient-to-r from-pink-100 to-purple-100 text-pink-800 px-3 py-1 rounded-full text-sm font-medium border border-pink-200"
+                    className="inline-flex items-center gap-2 bg-gradient-to-r from-emerald-300 to-cyan-300 text-abyss-800 px-3 py-1 rounded-full text-sm font-medium border border-white/10"
                   >
                     <span>{coupon.code}</span>
                     <button
                       type="button"
                       onClick={() => handleCouponToggle(coupon)}
-                      className="text-pink-600 hover:text-pink-800 ml-1"
+                      className="text-abyss-800 hover:opacity-80 ml-1"
                     >
                       <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
@@ -345,9 +390,9 @@ const CouponDropdown = ({
           )}
 
           {/* Instructions */}
-          <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-3">
-            <p className="text-xs text-blue-800 flex items-start gap-2">
-              <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+          <div className="mt-4 bg-white/6 border border-white/6 rounded-lg p-3">
+            <p className="text-xs text-white/80 flex items-start gap-2">
+              <svg className="w-4 h-4 mt-0.5 flex-shrink-0 text-white/80" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
               </svg>
               <span>

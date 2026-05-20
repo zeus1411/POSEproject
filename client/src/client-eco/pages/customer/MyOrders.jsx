@@ -69,11 +69,11 @@ const MyOrders = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-white border-b border-gray-200">
+    <div className="min-h-screen bg-transparent">
+      <div className="glass-card border-b border-white/6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <h1 className="text-2xl font-bold text-gray-900">Đơn hàng của tôi</h1>
-          <p className="text-gray-600 mt-1">Theo dõi và quản lý các đơn hàng đã đặt</p>
+          <h1 className="text-2xl font-bold text-white">Đơn hàng của tôi</h1>
+          <p className="text-white/70 mt-1">Theo dõi và quản lý các đơn hàng đã đặt</p>
         </div>
       </div>
 
@@ -86,8 +86,8 @@ const MyOrders = () => {
               onClick={() => onFilterChange(opt.key)}
               className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
                 filter.status === opt.key
-                  ? 'bg-primary-600 text-white border-primary-600'
-                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                  ? 'bg-emerald-400 text-abyss-800 border-emerald-400'
+                  : 'bg-transparent text-white/80 border-white/10 hover:bg-white/6'
               }`}
             >
               {opt.label}
@@ -96,30 +96,30 @@ const MyOrders = () => {
         </div>
 
         {/* Orders List */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+        <div className="glass-card rounded-lg shadow-sm border border-white/10">
           {loading ? (
             <div className="p-12 text-center">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary-600 mx-auto"></div>
-              <p className="mt-4 text-gray-600">Đang tải đơn hàng...</p>
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-300 mx-auto"></div>
+              <p className="mt-4 text-white/70">Đang tải đơn hàng...</p>
             </div>
           ) : error ? (
-            <div className="p-6 text-center text-red-600">{error}</div>
+            <div className="p-6 text-center text-red-400">{error}</div>
           ) : orders.length === 0 ? (
             <div className="p-12 text-center">
-              <p className="text-gray-600">Bạn chưa có đơn hàng nào.</p>
+              <p className="text-white/70">Bạn chưa có đơn hàng nào.</p>
             </div>
           ) : (
-            <ul className="divide-y divide-gray-100">
+            <ul className="divide-y divide-white/6">
               {orders.map((order) => (
-                <li key={order._id} className="p-4 sm:p-6 hover:bg-gray-50 transition">
+                <li key={order._id} className="p-4 sm:p-6 hover:bg-white/6 transition-colors rounded-lg">
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     {/* Left: Order meta */}
                     <div>
                       <div className="flex items-center gap-3">
-                        <h3 className="text-base font-semibold text-gray-900">#{order.orderNumber || order._id.slice(-6)}</h3>
+                        <h3 className="text-base font-semibold text-white">#{order.orderNumber || order._id.slice(-6)}</h3>
                         <StatusBadge status={order.status} />
                       </div>
-                      <p className="text-sm text-gray-500 mt-1">{formatDate(order.createdAt)}</p>
+                      <p className="text-sm text-white/70 mt-1">{formatDate(order.createdAt)}</p>
 
                       {/* Thumbnails */}
                       <div className="flex gap-2 mt-3">
@@ -149,7 +149,7 @@ const MyOrders = () => {
                               key={it._id}
                               src={imgSrc}
                               alt={it.productName || it.productId?.name || 'Sản phẩm'}
-                              className="w-12 h-12 rounded object-cover border"
+                              className="w-12 h-12 rounded object-cover border border-white/6"
                               onError={(e) => {
                                 e.target.src = '/placeholder-product.jpg';
                               }}
@@ -157,20 +157,20 @@ const MyOrders = () => {
                           );
                         })}
                         {order.items?.length > 4 && (
-                          <span className="text-xs text-gray-500 self-center">+{order.items.length - 4} nữa</span>
+                          <span className="text-xs text-white/60 self-center">+{order.items.length - 4} nữa</span>
                         )}
                       </div>
                     </div>
 
                     {/* Right: Summary */}
-                    <div className="text-right">
-                      <div className="text-sm text-gray-600">Tổng thanh toán</div>
-                      <div className="text-lg font-bold text-primary-600">{formatCurrency(order.totalPrice)}</div>
-                      <div className="mt-2 text-sm text-gray-500">{order.items?.reduce((s, i)=> s + i.quantity, 0)} sản phẩm</div>
+                      <div className="text-right">
+                      <div className="text-sm text-white/70">Tổng thanh toán</div>
+                      <div className="text-lg font-bold text-emerald-300">{formatCurrency(order.totalPrice)}</div>
+                      <div className="mt-2 text-sm text-white/60">{order.items?.reduce((s, i)=> s + i.quantity, 0)} sản phẩm</div>
                       <div className="mt-3">
                         <button 
                           onClick={() => navigate(`/orders/${order._id}`)}
-                          className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary-600 to-purple-600 rounded-lg hover:from-primary-700 hover:to-purple-700 transition shadow-sm"
+                          className="px-4 py-2 text-sm font-medium text-abyss-800 bg-gradient-to-r from-emerald-400 to-cyan-300 rounded-lg hover:shadow-md transition shadow-sm"
                         >
                           Xem chi tiết
                         </button>
@@ -185,21 +185,25 @@ const MyOrders = () => {
 
         {/* Pagination */}
         {pagination.pages > 1 && (
-          <div className="flex justify-center items-center gap-2 mt-6">
+          <div className="flex justify-center items-center gap-4 mt-6">
             <button
               onClick={() => onPageChange(Math.max(1, pagination.page - 1))}
               disabled={pagination.page === 1}
-              className="px-3 py-1.5 border rounded disabled:opacity-50"
+              className={`w-10 h-10 flex items-center justify-center rounded-full border transition-colors ${pagination.page === 1 ? 'border-white/10 text-white/40 bg-transparent cursor-not-allowed' : 'border-white/20 text-white hover:bg-white/6'}`}
+              aria-label="Trang trước"
             >
-              Trước
+              &lt;
             </button>
-            <span className="text-sm text-gray-600">Trang {pagination.page} / {pagination.pages}</span>
+
+            <span className="text-sm text-white/70">Trang {pagination.page} / {pagination.pages}</span>
+
             <button
               onClick={() => onPageChange(Math.min(pagination.pages, pagination.page + 1))}
               disabled={pagination.page === pagination.pages}
-              className="px-3 py-1.5 border rounded disabled:opacity-50"
+              className={`w-10 h-10 flex items-center justify-center rounded-full border transition-colors ${pagination.page === pagination.pages ? 'border-white/10 text-white/40 bg-transparent cursor-not-allowed' : 'border-white/20 text-white hover:bg-white/6'}`}
+              aria-label="Trang sau"
             >
-              Sau
+              &gt;
             </button>
           </div>
         )}
