@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { resetChat } from '../../redux/slices/chatSlice'; // Import resetChat
+import { resetChat } from '../../redux/slices/chatSlice'; 
 import { 
   ShoppingCartIcon, 
   UserCircleIcon,
@@ -11,7 +11,7 @@ import {
   ArrowRightOnRectangleIcon,
   DocumentTextIcon
 } from '@heroicons/react/24/outline';
-import { User } from 'lucide-react';
+import { User, AlertCircle } from 'lucide-react';
 
 import { fetchCart } from '../../redux/slices/cartSlice';
 import { logout as logoutAction } from '../../redux/slices/authSlice';
@@ -30,14 +30,12 @@ const Header = () => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
 
-  // Khi đã đăng nhập thì load giỏ hàng (để có totalItems trên icon)
   useEffect(() => {
     if (user) {
       dispatch(fetchCart());
     }
   }, [user, dispatch]);
 
-  // Nhấn giỏ hàng
   const handleOpenCart = () => {
     if (!user) {
       const redirect = encodeURIComponent(location.pathname + location.search);
@@ -47,10 +45,8 @@ const Header = () => {
     setIsMiniCartOpen(true);
   };
 
-  // Đăng xuất sau khi confirm
   const handleLogout = async () => {
     setIsLogoutConfirmOpen(false);
-    // Call logout API first (needs token), then clear chat state
     await dispatch(logoutAction());
     dispatch(resetChat());
     setIsUserMenuOpen(false);
@@ -143,7 +139,6 @@ const Header = () => {
 
             {/* Menu bên phải */}
             <div className="flex items-center gap-4 min-w-[200px] justify-end">
-              {/* Mobile shop button - visible on small screens only - Ẩn với admin */}
               {!isAdmin && (
                 <div className="md:hidden">
                   <Link
@@ -155,10 +150,8 @@ const Header = () => {
                 </div>
               )}
               
-              {/* Icon thông báo - Hiển thị cho cả user và admin */}
               {user && <NotificationIcon />}
               
-              {/* Nút Giỏ hàng - Ẩn với admin */}
               {!isAdmin && (
                 <button
                   type="button"
@@ -174,7 +167,6 @@ const Header = () => {
                 </button>
               )}
 
-              {/* Nếu chưa đăng nhập → Hiển thị Login / Register */}
               {!user && (
                 <div className="flex items-center gap-2">
                   <Link
@@ -192,7 +184,6 @@ const Header = () => {
                 </div>
               )}
 
-              {/* Nếu đã đăng nhập → Hiển thị dropdown Trang cá nhân + Đăng xuất */}
               {user && (
                 <div className="relative">
                   <button
@@ -204,7 +195,7 @@ const Header = () => {
                       <img 
                         src={user.avatar} 
                         alt={user.username} 
-                        className="w-8 h-8 rounded-full object-cover"
+                        className="w-8 h-8 rounded-full object-cover border border-white/10"
                         onError={(e) => {
                           e.target.onerror = null;
                           e.target.style.display = 'none';
@@ -219,8 +210,9 @@ const Header = () => {
                     </span>
                   </button>
 
+                  {/* 🔥 CẢI TIẾN 1: DROPDOWN USER MENU (AQUATIC GLASSMORPHISM) */}
                   {isUserMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-100 rounded-xl shadow-xl z-20">
+                    <div className="absolute right-0 mt-3 w-56 bg-[#041a1a]/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.5)] z-20 py-1.5 animate-in fade-in slide-in-from-top-2 duration-150">
                       {user.role === 'admin' && (
                         <button
                           type="button"
@@ -228,35 +220,37 @@ const Header = () => {
                             setIsUserMenuOpen(false);
                             navigate('/admin/products');
                           }}
-                          className="w-full text-left px-4 py-3 text-sm text-teal-600 hover:bg-teal-50 border-b border-gray-100 rounded-t-xl flex items-center gap-3"
+                          className="w-full text-left px-4 py-3 text-sm text-emerald-400 hover:bg-white/5 border-b border-white/5 flex items-center gap-3 font-semibold transition-colors"
                         >
-                          <Cog6ToothIcon className="w-5 h-5" />
-                          <span>Quản lý</span>
+                          <Cog6ToothIcon className="w-5 h-5 text-emerald-400" />
+                          <span>Hệ thống Quản lý</span>
                         </button>
                       )}
+                      
                       <button
                         type="button"
                         onClick={() => {
                           setIsUserMenuOpen(false);
                           navigate('/profile');
                         }}
-                        className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100 flex items-center gap-3"
+                        className="w-full text-left px-4 py-3 text-sm text-gray-200 hover:bg-white/5 border-b border-white/5 flex items-center gap-3 transition-colors hover:text-neon-cyan"
                       >
-                        <UserCircleIcon className="w-5 h-5" />
+                        <UserCircleIcon className="w-5 h-5 text-gray-400 group-hover:text-neon-cyan" />
                         <span>Thông tin cá nhân</span>
                       </button>
-                      {/* NÚT QUẢN LÝ BÀI VIẾT (Cho cả Admin và User) */}
+
                       <button
                         type="button"
                         onClick={() => {
                           setIsUserMenuOpen(false);
-                          navigate('/my-blogs'); // Chuyển hướng tới trang MyBlogs
+                          navigate('/my-blogs');
                         }}
-                        className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100 flex items-center gap-3"
+                        className="w-full text-left px-4 py-3 text-sm text-gray-200 hover:bg-white/5 border-b border-white/5 flex items-center gap-3 transition-colors hover:text-neon-cyan"
                       >
-                        <DocumentTextIcon className="w-5 h-5" />
+                        <DocumentTextIcon className="w-5 h-5 text-gray-400" />
                         <span>Bài viết của tôi</span>
                       </button>
+
                       {user.role !== 'admin' && (
                         <button
                           type="button"
@@ -264,19 +258,20 @@ const Header = () => {
                             setIsUserMenuOpen(false);
                             navigate('/orders');
                           }}
-                          className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 border-b border-gray-100 flex items-center gap-3"
+                          className="w-full text-left px-4 py-3 text-sm text-gray-200 hover:bg-white/5 border-b border-white/5 flex items-center gap-3 transition-colors hover:text-neon-cyan"
                         >
-                          <ShoppingBagIcon className="w-5 h-5" />
+                          <ShoppingBagIcon className="w-5 h-5 text-gray-400" />
                           <span>Đơn hàng của tôi</span>
                         </button>
                       )}
+
                       <button
                         type="button"
                         onClick={() => setIsLogoutConfirmOpen(true)}
-                        className="w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 rounded-b-xl flex items-center gap-3"
+                        className="w-full text-left px-4 py-3 text-sm text-rose-400 hover:bg-rose-500/10 flex items-center gap-3 font-semibold transition-colors"
                       >
-                        <ArrowRightOnRectangleIcon className="w-5 h-5" />
-                        <span>Đăng xuất</span>
+                        <ArrowRightOnRectangleIcon className="w-5 h-5 text-rose-400" />
+                        <span>Đăng xuất tài khoản</span>
                       </button>
                     </div>
                   )}
@@ -292,28 +287,29 @@ const Header = () => {
         <MiniCart isOpen={isMiniCartOpen} onClose={() => setIsMiniCartOpen(false)} />
       )}
 
-      {/* Popup xác nhận đăng xuất */}
+      {/* 🔥 CẢI TIẾN 2: POPUP XÁC NHẬN ĐĂNG XUẤT (KÍNH MỜ GLASSMORPHISM ĐỒNG BỘ 100%) */}
       {isLogoutConfirmOpen && (
-        <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Xác nhận đăng xuất
-            </h3>
-            <p className="text-sm text-gray-600 mb-4">
-              Bạn có chắc chắn muốn đăng xuất khỏi tài khoản không?
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-md p-4 animate-in fade-in duration-200">
+          <div className="bg-[#051c1c]/95 border border-white/10 rounded-[2rem] p-6 w-full max-w-sm shadow-2xl animate-in fade-in zoom-in-95 duration-250 text-white">
+            <div className="flex items-center gap-3 text-rose-400 mb-3">
+              <AlertCircle size={24} className="shadow-glow-rose" />
+              <h3 className="text-lg font-bold text-white">Xác nhận đăng xuất</h3>
+            </div>
+            <p className="text-sm text-gray-300 mb-6 leading-relaxed">
+              Bạn có chắc chắn muốn đăng xuất khỏi tài khoản không? Toàn bộ phiên làm việc hiện tại của bạn trên AquaticPose sẽ kết thúc.
             </p>
-            <div className="flex justify-end gap-3">
+            <div className="flex gap-3 justify-end">
               <button
                 type="button"
                 onClick={() => setIsLogoutConfirmOpen(false)}
-                className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+                className="px-4 py-2.5 text-sm font-medium text-gray-300 border border-white/5 bg-white/5 hover:bg-white/10 rounded-xl transition-colors"
               >
-                Hủy
+                Hủy bỏ
               </button>
               <button
                 type="button"
                 onClick={handleLogout}
-                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700"
+                className="px-4 py-2.5 text-sm font-bold text-white bg-rose-600 hover:bg-rose-500 rounded-xl transition-colors shadow-md shadow-rose-900/20"
               >
                 Đăng xuất
               </button>
