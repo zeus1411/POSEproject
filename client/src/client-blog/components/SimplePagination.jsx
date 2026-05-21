@@ -1,7 +1,10 @@
 import React from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { useTheme } from '../../client-eco/context/ThemeContext';
 
 const SimplePagination = ({ current, total, onPageChange }) => {
+  const { isDark } = useTheme();
+
   // Hàm logic để hiển thị số trang (ví dụ: 1, 2, ..., 10) nếu quá nhiều trang
   const getPageNumbers = () => {
     const pages = [];
@@ -36,27 +39,26 @@ const SimplePagination = ({ current, total, onPageChange }) => {
         disabled={current === 1}
         className={`p-2.5 rounded-xl border transition-all ${
           current === 1 
-            ? 'border-white/5 text-gray-600 cursor-not-allowed' 
-            : 'border-white/10 text-white hover:bg-white/10 hover:border-emerald-500/50'
+            ? 'border-water/10 dark:border-white/5 text-muted-foreground/40 cursor-not-allowed' 
+            : 'border-water/30 dark:border-white/10 text-foreground hover:bg-aqua/10 dark:hover:bg-white/10 hover:border-nature dark:hover:border-emerald-500/50'
         }`}
       >
         <ChevronLeft size={20} />
       </button>
 
       {/* Danh sách số trang */}
-      <div className="flex items-center gap-2 bg-white/5 backdrop-blur-md border border-white/10 p-1.5 rounded-2xl">
+      <div className="flex items-center gap-2 bg-aqua/5 dark:bg-white/5 backdrop-blur-md border border-water/30 dark:border-white/10 p-1.5 rounded-2xl">
         {getPageNumbers().map((p, index) => (
           <React.Fragment key={index}>
             {p === '...' ? (
-              <span className="px-2 text-gray-500">...</span>
+              <span className="px-2 text-muted-foreground font-semibold">...</span>
             ) : (
               <button
                 onClick={() => onPageChange(p)}
                 className={`min-w-[40px] h-10 flex items-center justify-center rounded-xl text-sm font-bold transition-all duration-300 ${
-                  // ÉP KIỂU Ở ĐÂY ĐỂ ĐẢM BẢO LUÔN ĐÚNG
                   Number(p) === Number(current)
-                    ? 'bg-emerald-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.5)] scale-110 z-10'
-                    : 'text-gray-400 hover:text-white hover:bg-white/10'
+                    ? 'bg-nature dark:bg-emerald-500 text-white shadow-[0_0_20px_rgba(16,185,129,0.5)] scale-110 z-10'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-aqua/10 dark:hover:bg-white/10'
                 }`}
               >
                 {p}
@@ -72,8 +74,8 @@ const SimplePagination = ({ current, total, onPageChange }) => {
         disabled={current === total}
         className={`p-2.5 rounded-xl border transition-all ${
           current === total 
-            ? 'border-white/5 text-gray-600 cursor-not-allowed' 
-            : 'border-white/10 text-white hover:bg-white/10 hover:border-emerald-500/50'
+            ? 'border-water/10 dark:border-white/5 text-muted-foreground/40 cursor-not-allowed' 
+            : 'border-water/30 dark:border-white/10 text-foreground hover:bg-aqua/10 dark:hover:bg-white/10 hover:border-nature dark:hover:border-emerald-500/50'
         }`}
       >
         <ChevronRight size={20} />

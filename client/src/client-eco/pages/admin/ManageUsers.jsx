@@ -7,6 +7,7 @@ import AdminUserForm from '../../components/admin/AdminUserForm';
 import AdminUserFilters from '../../components/admin/AdminUserFilters';
 import ConfirmDialog from "../../components/common/ConfirmDialog";
 import { Users } from 'lucide-react';
+import { useTheme } from '../../context/ThemeContext';
 import {
   getAllUsersAdmin,
   getUserByIdAdmin,
@@ -20,6 +21,7 @@ import {
 
 const ManageUsers = () => {
   const dispatch = useDispatch();
+  const { isDark } = useTheme();
   const {
     users,
     currentUser,
@@ -128,40 +130,49 @@ const ManageUsers = () => {
 
   return (
     <AdminLayout>
-      <div className="min-h-screen bg-[#f8f9ff] p-8">
+      <div className="min-h-screen bg-transparent p-4 sm:p-8">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <div className="p-3 bg-blue-100 rounded-lg">
-                <Users className="text-blue-600" size={28} />
+              <div className="p-3 bg-blue-100/80 dark:bg-blue-900/30 rounded-xl border border-blue-200/50 dark:border-blue-700/30 shadow-inner">
+                <Users className="text-blue-600 dark:text-blue-400" size={28} />
               </div>
               <div>
-                <h1 className="text-3xl font-black tracking-tight text-[#1e293b]">
+                <h1 className="text-3xl font-black tracking-tight text-slate-800 dark:text-white">
                   Quản lý người dùng
                 </h1>
-                <p className="text-gray-600 mt-1">Quản lý danh sách người dùng, chỉnh sửa thông tin hoặc xóa tài khoản</p>
+                <p className="text-slate-600 dark:text-slate-300 mt-1">Quản lý danh sách người dùng, chỉnh sửa thông tin hoặc xóa tài khoản</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Statistics Cards */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="text-sm font-medium text-gray-500 mb-2">Tổng người dùng</div>
-            <div className="text-3xl font-bold text-gray-900">{pagination.totalUsers || 0}</div>
-          </div>
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="text-sm font-medium text-gray-500 mb-2">Người dùng hoạt động</div>
-            <div className="text-3xl font-bold text-green-600">
-              {users.filter(u => u.isActive).length}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="glass-panel rounded-3xl p-6 border border-water/30 dark:border-white/10 shadow-lg relative overflow-hidden group hover:scale-[1.02] transition-transform duration-300">
+            <div className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-2">Tổng người dùng</div>
+            <div className="text-3xl font-black text-slate-800 dark:text-white">{pagination.totalUsers || 0}</div>
+            <div className="absolute right-4 bottom-4 text-blue-500/10 dark:text-blue-400/10 group-hover:scale-110 transition-transform duration-300">
+              <Users size={64} />
             </div>
           </div>
-          <div className="bg-white rounded-lg shadow-sm p-6">
-            <div className="text-sm font-medium text-gray-500 mb-2">Quản trị viên</div>
-            <div className="text-3xl font-bold text-purple-600">
+          <div className="glass-panel rounded-3xl p-6 border border-water/30 dark:border-white/10 shadow-lg relative overflow-hidden group hover:scale-[1.02] transition-transform duration-300">
+            <div className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-2">Người dùng hoạt động</div>
+            <div className="text-3xl font-black text-emerald-600 dark:text-emerald-400">
+              {users.filter(u => u.isActive).length}
+            </div>
+            <div className="absolute right-4 bottom-4 text-emerald-500/10 group-hover:scale-110 transition-transform duration-300">
+              <Users size={64} />
+            </div>
+          </div>
+          <div className="glass-panel rounded-3xl p-6 border border-water/30 dark:border-white/10 shadow-lg relative overflow-hidden group hover:scale-[1.02] transition-transform duration-300">
+            <div className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-2">Quản trị viên</div>
+            <div className="text-3xl font-black text-purple-600 dark:text-purple-400">
               {users.filter(u => u.role === 'admin').length}
+            </div>
+            <div className="absolute right-4 bottom-4 text-purple-500/10 group-hover:scale-110 transition-transform duration-300">
+              <Users size={64} />
             </div>
           </div>
         </div>
@@ -175,76 +186,77 @@ const ManageUsers = () => {
         />
 
         {/* Users Table */}
-        <div className="bg-white rounded-lg shadow overflow-hidden mb-6">
+        <div className="glass-panel rounded-3xl shadow-xl overflow-hidden mb-6 border border-water/30 dark:border-white/10">
           <AdminUserTable
             users={users}
             onEdit={handleEditUser}
             onDelete={handleDeleteUser}
             isLoading={isLoading}
           />
-        </div>
 
-        {/* Pagination */}
-        {pagination.totalPages >= 1 && (
-          <div className="flex justify-between items-center px-6 py-4 bg-white border-t border-gray-200 rounded-b-lg shadow-sm">
-            <div className="text-sm text-gray-600">
-              Hiển thị <span className="font-medium">{users.length}</span> trong tổng số{' '}
-              <span className="font-medium">{pagination.totalUsers}</span> người dùng
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => handlePageChange(pagination.currentPage - 1)}
-                disabled={pagination.currentPage === 1}
-                className={`px-3 py-1 border rounded-md text-sm ${
-                  pagination.currentPage === 1
-                    ? 'text-gray-400 border-gray-200 cursor-not-allowed'
-                    : 'text-gray-700 border-gray-300 hover:bg-gray-50'
-                }`}
-              >
-                Trước
-              </button>
-              <div className="flex items-center gap-1">
-                {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
-                  let pageNum;
-                  if (pagination.totalPages <= 5) {
-                    pageNum = i + 1;
-                  } else if (pagination.currentPage <= 3) {
-                    pageNum = i + 1;
-                  } else if (pagination.currentPage > pagination.totalPages - 3) {
-                    pageNum = pagination.totalPages - 4 + i;
-                  } else {
-                    pageNum = pagination.currentPage - 2 + i;
-                  }
-
-                  return (
-                    <button
-                      key={pageNum}
-                      onClick={() => handlePageChange(pageNum)}
-                      className={`w-8 h-8 rounded-md text-sm ${
-                        pagination.currentPage === pageNum
-                          ? 'bg-blue-600 text-white'
-                          : 'text-gray-700 hover:bg-gray-100'
-                      }`}
-                    >
-                      {pageNum}
-                    </button>
-                  );
-                })}
+          {/* Pagination inside the card container */}
+          {pagination.totalPages >= 1 && (
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-4 px-6 py-5 bg-transparent border-t border-water/20 dark:border-white/10">
+              <div className="text-sm text-slate-600 dark:text-slate-300">
+                Hiển thị <span className="font-semibold text-slate-800 dark:text-white">{users.length}</span> trong tổng số{' '}
+                <span className="font-semibold text-slate-800 dark:text-white">{pagination.totalUsers}</span> người dùng
               </div>
-              <button
-                onClick={() => handlePageChange(pagination.currentPage + 1)}
-                disabled={pagination.currentPage === pagination.totalPages}
-                className={`px-3 py-1 border rounded-md text-sm ${
-                  pagination.currentPage === pagination.totalPages
-                    ? 'text-gray-400 border-gray-200 cursor-not-allowed'
-                    : 'text-gray-700 border-gray-300 hover:bg-gray-50'
-                }`}
-              >
-                Tiếp
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => handlePageChange(pagination.currentPage - 1)}
+                  disabled={pagination.currentPage === 1}
+                  className={`px-4 py-2 border rounded-xl text-sm font-medium transition-all ${
+                    pagination.currentPage === 1
+                      ? 'text-slate-400 dark:text-slate-600 border-slate-200/50 dark:border-slate-800 cursor-not-allowed'
+                      : 'text-slate-700 dark:text-slate-200 border-water/30 dark:border-white/10 hover:bg-water/10 dark:hover:bg-white/5 active:scale-95'
+                  }`}
+                >
+                  Trước
+                </button>
+                <div className="flex items-center gap-1.5">
+                  {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                    let pageNum;
+                    if (pagination.totalPages <= 5) {
+                      pageNum = i + 1;
+                    } else if (pagination.currentPage <= 3) {
+                      pageNum = i + 1;
+                    } else if (pagination.currentPage > pagination.totalPages - 3) {
+                      pageNum = pagination.totalPages - 4 + i;
+                    } else {
+                      pageNum = pagination.currentPage - 2 + i;
+                    }
+
+                    const isActive = pagination.currentPage === pageNum;
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => handlePageChange(pageNum)}
+                        className={`w-9 h-9 rounded-xl text-sm font-semibold transition-all ${
+                          isActive
+                            ? 'bg-gradient-to-r from-primary to-water text-white shadow-md shadow-primary/20'
+                            : 'text-slate-700 dark:text-slate-200 hover:bg-water/10 dark:hover:bg-white/5 border border-transparent'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
+                <button
+                  onClick={() => handlePageChange(pagination.currentPage + 1)}
+                  disabled={pagination.currentPage === pagination.totalPages}
+                  className={`px-4 py-2 border rounded-xl text-sm font-medium transition-all ${
+                    pagination.currentPage === pagination.totalPages
+                      ? 'text-slate-400 dark:text-slate-600 border-slate-200/50 dark:border-slate-800 cursor-not-allowed'
+                      : 'text-slate-700 dark:text-slate-200 border-water/30 dark:border-white/10 hover:bg-water/10 dark:hover:bg-white/5 active:scale-95'
+                  }`}
+                >
+                  Tiếp
+                </button>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* User Form Modal */}
         {showForm && (

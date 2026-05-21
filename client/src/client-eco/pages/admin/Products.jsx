@@ -10,6 +10,7 @@ import CategoryTable from '../../components/admin/CategoryTable';
 import CategoryForm from '../../components/admin/CategoryForm';
 import ConfirmDialog from "../../components/common/ConfirmDialog";
 import { Plus, Package, FolderTree } from 'lucide-react';
+import { useTheme } from '../../context/ThemeContext';
 import {
   getAllProductsAdmin,
   getProductByIdAdmin,
@@ -34,6 +35,7 @@ import {
 } from '../../redux/slices/categorySlice';
 
 const Products = () => {
+  const { isDark } = useTheme();
   const dispatch = useDispatch();
   const { 
     products, 
@@ -127,12 +129,9 @@ const Products = () => {
   };
 
   const handlePageChange = (page) => {
-    // Ensure page is a number and at least 1
     const newPage = Math.max(1, parseInt(page) || 1);
-    // Update filters with the new page number
     const newFilters = { ...filters, page: newPage };
     dispatch(setFilters(newFilters));
-    // The useEffect that watches filters will trigger the API call
   };
 
   const handleResetFilters = () => {
@@ -249,32 +248,38 @@ const Products = () => {
 
   return (
     <AdminLayout>
-      <div className="min-h-screen bg-[#f8f9ff] p-8">
+      <div className="min-h-screen bg-transparent p-8">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div>
-            <h1 className="text-3xl font-black tracking-tight text-[#1e293b]">
-              Quản lý sản phẩm & danh mục
+            <h1 className={`text-3xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-800'}`}>
+              📂 Quản lý sản phẩm & danh mục
             </h1>
           </div>
           <button
             onClick={activeTab === 'products' ? handleAddProduct : handleAddCategory}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
+            className={`flex items-center gap-2 px-5 py-2.5 text-white rounded-xl transition-all duration-200 font-semibold text-sm active:scale-95 shadow-lg ${
+              isDark 
+                ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-emerald-500/10 hover:shadow-emerald-500/20'
+                : 'bg-gradient-to-r from-primary to-water hover:opacity-90 shadow-primary/10 hover:shadow-primary/20'
+            }`}
           >
             <Plus size={20} />
-            {activeTab === 'products' ? 'Thêm sản phẩm' : 'Thêm danh mục'}
+            {activeTab === 'products' ? 'Thêm sản phẩm mới' : 'Thêm danh mục mới'}
           </button>
         </div>
 
         {/* Tabs */}
-        <div className="mb-6 border-b border-gray-200">
+        <div className={`mb-6 border-b transition-colors duration-300 ${
+          isDark ? 'border-white/10' : 'border-water/20'
+        }`}>
           <nav className="-mb-px flex space-x-8">
             <button
               onClick={() => setActiveTab('products')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
+              className={`py-4 px-1 border-b-2 font-black text-sm flex items-center gap-2 transition-all ${
                 activeTab === 'products'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? (isDark ? 'border-emerald-500 text-emerald-400' : 'border-primary text-primary')
+                  : (isDark ? 'border-transparent text-gray-400 hover:text-white hover:border-white/10' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-water/20')
               }`}
             >
               <Package size={20} />
@@ -282,10 +287,10 @@ const Products = () => {
             </button>
             <button
               onClick={() => setActiveTab('categories')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm flex items-center gap-2 ${
+              className={`py-4 px-1 border-b-2 font-black text-sm flex items-center gap-2 transition-all ${
                 activeTab === 'categories'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  ? (isDark ? 'border-emerald-500 text-emerald-400' : 'border-primary text-primary')
+                  : (isDark ? 'border-transparent text-gray-400 hover:text-white hover:border-white/10' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-water/20')
               }`}
             >
               <FolderTree size={20} />
@@ -307,7 +312,9 @@ const Products = () => {
             />
 
             {/* Products Table */}
-            <div className="bg-white rounded-lg shadow overflow-hidden mb-6">
+            <div className={`glass-panel rounded-3xl overflow-hidden mb-6 border transition-all duration-300 ${
+              isDark ? 'border-white/10 shadow-black/40' : 'border-water/30 shadow-slate-900/5'
+            }`}>
               <ProductTable
                 products={products}
                 onEdit={handleEditProduct}
@@ -319,24 +326,26 @@ const Products = () => {
 
             {/* Pagination */}
             {pagination.pages > 1 && (
-              <div className="flex justify-between items-center px-2 py-3 bg-white border-t border-gray-200 rounded-b-lg">
-                <div className="text-sm text-gray-600">
-                  Hiển thị <span className="font-medium">{products.length}</span> trong tổng số{' '}
-                  <span className="font-medium">{pagination.total}</span> sản phẩm
+              <div className={`flex flex-col sm:flex-row justify-between items-center gap-4 px-6 py-4.5 rounded-3xl border transition-all duration-300 ${
+                isDark ? 'glass-panel border-white/10 text-gray-300' : 'glass-panel border-water/30 text-slate-600'
+              }`}>
+                <div className="text-sm font-semibold">
+                  Hiển thị <span className={isDark ? 'text-white' : 'text-slate-800'}>{products.length}</span> trong tổng số{' '}
+                  <span className={isDark ? 'text-white' : 'text-slate-800'}>{pagination.total}</span> sản phẩm
                 </div>
                 <div className="flex items-center gap-2">
                   <button
                     onClick={() => handlePageChange(pagination.page - 1)}
                     disabled={pagination.page === 1}
-                    className={`px-3 py-1 border rounded-md text-sm ${
+                    className={`px-4 py-2 border rounded-xl text-sm font-semibold transition-all duration-200 ${
                       pagination.page === 1
-                        ? 'text-gray-400 border-gray-200 cursor-not-allowed'
-                        : 'text-gray-700 border-gray-300 hover:bg-gray-50'
+                        ? 'opacity-40 cursor-not-allowed border-transparent bg-transparent'
+                        : (isDark ? 'border-white/10 text-gray-300 hover:bg-white/10 hover:text-white' : 'border-water/20 text-slate-700 hover:bg-water/10 hover:text-slate-900')
                     }`}
                   >
                     Trước
                   </button>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1.5">
                     {Array.from({ length: Math.min(5, pagination.pages) }, (_, i) => {
                       let pageNum;
                       if (pagination.pages <= 5) {
@@ -353,10 +362,10 @@ const Products = () => {
                         <button
                           key={pageNum}
                           onClick={() => handlePageChange(pageNum)}
-                          className={`w-8 h-8 rounded-md text-sm ${
+                          className={`w-9 h-9 rounded-xl text-sm font-semibold transition-all duration-200 ${
                             pagination.page === pageNum
-                              ? 'bg-blue-600 text-white'
-                              : 'text-gray-700 hover:bg-gray-100'
+                              ? (isDark ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/20' : 'bg-primary text-white shadow-lg shadow-primary/20')
+                              : (isDark ? 'text-gray-300 hover:bg-white/5 hover:text-white' : 'text-slate-700 hover:bg-water/10 hover:text-slate-900')
                           }`}
                         >
                           {pageNum}
@@ -369,10 +378,10 @@ const Products = () => {
                     {pagination.pages > 5 && pagination.page < pagination.pages - 2 && (
                       <button
                         onClick={() => handlePageChange(pagination.pages)}
-                        className={`w-8 h-8 rounded-md text-sm ${
+                        className={`w-9 h-9 rounded-xl text-sm font-semibold transition-all duration-200 ${
                           pagination.page === pagination.pages
-                            ? 'bg-blue-600 text-white'
-                            : 'text-gray-700 hover:bg-gray-100'
+                            ? (isDark ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-500/20' : 'bg-primary text-white shadow-lg shadow-primary/20')
+                            : (isDark ? 'text-gray-300 hover:bg-white/5 hover:text-white' : 'text-slate-700 hover:bg-water/10 hover:text-slate-900')
                         }`}
                       >
                         {pagination.pages}
@@ -382,10 +391,10 @@ const Products = () => {
                   <button
                     onClick={() => handlePageChange(pagination.page + 1)}
                     disabled={pagination.page === pagination.pages}
-                    className={`px-3 py-1 border rounded-md text-sm ${
+                    className={`px-4 py-2 border rounded-xl text-sm font-semibold transition-all duration-200 ${
                       pagination.page === pagination.pages
-                        ? 'text-gray-400 border-gray-200 cursor-not-allowed'
-                        : 'text-gray-700 border-gray-300 hover:bg-gray-50'
+                        ? 'opacity-40 cursor-not-allowed border-transparent bg-transparent'
+                        : (isDark ? 'border-white/10 text-gray-300 hover:bg-white/10 hover:text-white' : 'border-water/20 text-slate-700 hover:bg-water/10 hover:text-slate-900')
                     }`}
                   >
                     Tiếp
@@ -398,7 +407,9 @@ const Products = () => {
 
         {/* Categories Tab Content */}
         {activeTab === 'categories' && (
-          <div className="bg-white rounded-lg shadow overflow-hidden">
+          <div className={`glass-panel rounded-3xl overflow-hidden border transition-all duration-300 ${
+            isDark ? 'border-white/10 shadow-black/40' : 'border-water/30 shadow-slate-900/5'
+          }`}>
             <CategoryTable
               categories={categories}
               onEdit={handleEditCategory}

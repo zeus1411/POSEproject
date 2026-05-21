@@ -6,8 +6,9 @@ import {
     setFilters,
 } from "../../redux/slices/adminOrderSlice";
 import AdminLayout from "../../components/admin/AdminLayout";
-import { CheckCircleIcon } from "@heroicons/react/24/outline";
+import ConfirmDialog from "../../components/common/ConfirmDialog";
 import Pagination from "../../components/common/Pagination";
+import { useTheme } from "../../context/ThemeContext";
 
 // Status definitions with Vietnamese labels
 const ORDER_STATUSES = [
@@ -19,12 +20,12 @@ const ORDER_STATUSES = [
     { key: "CANCELLED", label: "Đã hủy", color: "red" },
 ];
 
-// Status transition rules - ✅ Fixed logic
+// Status transition rules
 const validTransitions = {
     PENDING: ["CONFIRMED", "CANCELLED"],
-    CONFIRMED: ["SHIPPING", "CANCELLED"], // ✅ Từ Đã xác nhận → Đang giao (bỏ PROCESSING)
+    CONFIRMED: ["SHIPPING", "CANCELLED"],
     SHIPPING: ["COMPLETED", "CANCELLED"],
-    COMPLETED: [], // ✅ Hoàn thành là trạng thái cuối (bỏ REFUNDED)
+    COMPLETED: [],
     CANCELLED: [],
 };
 
@@ -39,16 +40,17 @@ const STATUS_LABELS = {
 
 // Status badge colors
 const statusColors = {
-    PENDING: "bg-yellow-100 text-yellow-800",
-    CONFIRMED: "bg-blue-100 text-blue-800",
-    PROCESSING: "bg-purple-100 text-purple-800",
-    SHIPPING: "bg-indigo-100 text-indigo-800",
-    COMPLETED: "bg-green-100 text-green-800",
-    CANCELLED: "bg-red-100 text-red-800",
+    PENDING: "bg-yellow-100/80 text-yellow-800 border border-yellow-200/50 dark:bg-yellow-950/30 dark:text-yellow-300 dark:border-yellow-900/30",
+    CONFIRMED: "bg-blue-100/80 text-blue-800 border border-blue-200/50 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-700/30",
+    PROCESSING: "bg-purple-100/80 text-purple-800 border border-purple-200/50 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800/30",
+    SHIPPING: "bg-indigo-100/80 text-indigo-800 border border-indigo-200/50 dark:bg-indigo-900/30 dark:text-indigo-300 dark:border-indigo-800/30",
+    COMPLETED: "bg-green-100/80 text-green-800 border border-green-200/50 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800/30",
+    CANCELLED: "bg-red-100/80 text-red-800 border border-red-200/50 dark:bg-red-950/30 dark:text-red-300 dark:border-red-900/30",
 };
 
 const AdminOrdersPage = () => {
     const dispatch = useDispatch();
+    const { isDark } = useTheme();
     const { list, loading, error, filters, pagination } = useSelector((state) => state.adminOrders);
     const [confirmingOrder, setConfirmingOrder] = useState(null);
     const [confirmingStatus, setConfirmingStatus] = useState(null);
@@ -100,150 +102,154 @@ const AdminOrdersPage = () => {
 
     return (
         <AdminLayout>
-            <div className="admin-orders-page min-h-screen bg-[#f8f9ff] p-8">
+            <div className="admin-orders-page min-h-screen bg-transparent p-4 sm:p-8">
                 {/* Header */}
                 <div className="mb-8">
-                    <h1 className="text-3xl font-black tracking-tight text-[#1e293b]">
+                    <h1 className="text-3xl font-black tracking-tight text-slate-800 dark:text-white">
                         Quản lý đơn hàng
                     </h1>
                 </div>
 
                 {/* Status Filter Tabs */}
                 <div className="mb-6 flex flex-wrap gap-2">
-                    {ORDER_STATUSES.map((status) => (
-                        <button
-                            key={status.key}
-                            onClick={() => handleStatusChange(status.key)}
-                            className={`px-4 py-2 rounded-full font-medium transition-all ${filters.status === status.key
-                                    ? "bg-blue-600 text-white shadow-md"
-                                    : "bg-white text-gray-700 border border-gray-300 hover:border-blue-500"
+                    {ORDER_STATUSES.map((status) => {
+                        const isActive = (filters.status || "ALL") === status.key;
+                        return (
+                            <button
+                                key={status.key}
+                                onClick={() => handleStatusChange(status.key)}
+                                className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
+                                    isActive
+                                        ? "bg-gradient-to-r from-primary to-water text-white shadow-md shadow-primary/20 scale-105"
+                                        : "glass-card text-slate-700 dark:text-slate-200 border border-water/30 dark:border-white/10 hover:bg-water/10 dark:hover:bg-white/5"
                                 }`}
-                        >
-                            {status.label}
-                        </button>
-                    ))}
+                            >
+                                {status.label}
+                            </button>
+                        );
+                    })}
                 </div>
 
                 {/* Orders Table */}
                 {loading ? (
-                    <div className="flex justify-center items-center py-12">
-                        <div className="text-gray-600">Đang tải đơn hàng...</div>
+                    <div className="flex justify-center items-center py-24">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
                     </div>
                 ) : error ? (
-                    <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
+                    <div className="bg-red-50/80 dark:bg-red-950/20 border-l-4 border-red-500 p-4 rounded-r-xl max-w-7xl mx-auto my-8 font-semibold text-red-700 dark:text-red-400">
                         Lỗi: {error}
                     </div>
                 ) : list.length === 0 ? (
-                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-8 text-center text-gray-600">
+                    <div className="glass-panel border border-water/30 dark:border-white/10 rounded-3xl p-12 text-center text-slate-500 dark:text-slate-400 font-bold shadow-xl">
                         Không có đơn hàng nào
                     </div>
                 ) : (
                     <>
-                        <div className="bg-white shadow-md rounded-lg overflow-hidden">
-                            <table className="w-full">
-                                <thead className="bg-gray-100 border-b">
-                                    <tr>
-                                        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                                            Mã Đơn
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                                            Khách hàng
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                                            Tổng tiền
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                                            Trạng thái
-                                        </th>
-                                        <th className="px-6 py-3 text-left text-sm font-semibold text-gray-900">
-                                            Hành động
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y">
-                                    {list.map((order) => {
-                                    const nextStatuses = getNextStatuses(order.status);
-                                    // Kiểm tra xem có phải trạng thái cuối cùng không
-                                    const isFinalStatus = nextStatuses.length === 0;
-
-                                    return (
-                                        <tr
-                                            key={order._id}
-                                            className="hover:bg-gray-50 transition-colors"
-                                        >
-                                            <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                                                {order.orderNumber}
-                                            </td>
-                                            <td className="px-6 py-4 text-sm text-gray-700">
-                                                {order.userId?.username || "N/A"}
-                                            </td>
-                                            <td className="px-6 py-4 text-sm font-semibold text-gray-900">
-                                                {order.totalPrice?.toLocaleString("vi-VN", {
-                                                    style: "currency",
-                                                    currency: "VND",
-                                                })}
-                                            </td>
-                                            <td className="px-6 py-4 text-sm">
-                                                <span
-                                                    className={`px-3 py-1 rounded-full text-xs font-semibold ${statusColors[order.status] ||
-                                                        "bg-gray-100 text-gray-800"
-                                                        }`}
-                                                >
-                                                    {STATUS_LABELS[order.status] || order.status}
-                                                </span>
-                                            </td>
-                                            <td className="px-6 py-4 text-sm space-y-2">
-                                                <div className="flex gap-2">
-                                                    {/* Status Change Dropdown 
-                              - Luôn hiển thị kể cả khi hết trạng thái tiếp theo 
-                              - Disabled nếu isFinalStatus = true
-                          */}
-                                                    <select
-                                                        value={order.status}
-                                                        onChange={(e) =>
-                                                            handleOrderStatusChange(
-                                                                order._id,
-                                                                order.status,
-                                                                e.target.value
-                                                            )
-                                                        }
-                                                        disabled={isFinalStatus}
-                                                        className={`w-40 px-3 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${isFinalStatus
-                                                                ? "bg-gray-100 text-gray-500 cursor-not-allowed opacity-70"
-                                                                : "bg-white hover:border-blue-500"
-                                                            }`}
-                                                    >
-                                                        <option value={order.status}>
-                                                            {STATUS_LABELS[order.status] || order.status}
-                                                        </option>
-                                                        {nextStatuses.map((status) => (
-                                                            <option key={status} value={status}>
-                                                                {STATUS_LABELS[status] || status}
-                                                            </option>
-                                                        ))}
-                                                    </select>
-
-                                                    {/* View Details Button */}
-                                                    <button
-                                                        onClick={() =>
-                                                            (window.location.href = `/admin/orders/${order._id}`)
-                                                        }
-                                                        className="px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors whitespace-nowrap"
-                                                    >
-                                                        Xem chi tiết
-                                                    </button>
-                                                </div>
-                                            </td>
+                        <div className="glass-panel rounded-3xl shadow-xl overflow-hidden border border-water/30 dark:border-white/10">
+                            <div className="overflow-x-auto">
+                                <table className="w-full">
+                                    <thead className="bg-water/10 dark:bg-white/5 border-b border-water/20 dark:border-white/10">
+                                        <tr>
+                                            <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                                Mã Đơn
+                                            </th>
+                                            <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                                Khách hàng
+                                            </th>
+                                            <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                                Tổng tiền
+                                            </th>
+                                            <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                                Trạng thái
+                                            </th>
+                                            <th className="px-6 py-4 text-right text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                                                Hành động
+                                            </th>
                                         </tr>
-                                    );
-                                    })}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody className="divide-y divide-water/10 dark:divide-white/5">
+                                        {list.map((order) => {
+                                            const nextStatuses = getNextStatuses(order.status);
+                                            // Kiểm tra xem có phải trạng thái cuối cùng không
+                                            const isFinalStatus = nextStatuses.length === 0;
+
+                                            return (
+                                                <tr
+                                                    key={order._id}
+                                                    className="hover:bg-water/5 dark:hover:bg-white/5 transition-colors"
+                                                >
+                                                    <td className="px-6 py-4 text-sm font-bold text-slate-800 dark:text-slate-200">
+                                                        {order.orderNumber}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-sm font-semibold text-slate-600 dark:text-slate-300">
+                                                        {order.userId?.username || "N/A"}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-sm font-black text-slate-800 dark:text-white">
+                                                        {order.totalPrice?.toLocaleString("vi-VN", {
+                                                            style: "currency",
+                                                            currency: "VND",
+                                                        })}
+                                                    </td>
+                                                    <td className="px-6 py-4 text-sm">
+                                                        <span
+                                                            className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold shadow-sm border ${
+                                                                statusColors[order.status] || "bg-gray-100/80 text-gray-800 border-gray-200/50"
+                                                            }`}
+                                                        >
+                                                            {STATUS_LABELS[order.status] || order.status}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-sm whitespace-nowrap text-right">
+                                                        <div className="flex items-center justify-end gap-3">
+                                                            {/* Status Change Dropdown */}
+                                                            <select
+                                                                value={order.status}
+                                                                onChange={(e) =>
+                                                                    handleOrderStatusChange(
+                                                                        order._id,
+                                                                        order.status,
+                                                                        e.target.value
+                                                                    )
+                                                                }
+                                                                disabled={isFinalStatus}
+                                                                className={`px-3 py-2 bg-aqua/5 border border-water/30 dark:bg-white/5 dark:border-white/10 text-slate-800 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-primary text-xs font-bold transition-all cursor-pointer ${
+                                                                    isFinalStatus
+                                                                        ? "opacity-50 cursor-not-allowed"
+                                                                        : "hover:scale-[1.02]"
+                                                                }`}
+                                                            >
+                                                                <option value={order.status} className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">
+                                                                    {STATUS_LABELS[order.status] || order.status}
+                                                                </option>
+                                                                {nextStatuses.map((status) => (
+                                                                    <option key={status} value={status} className="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">
+                                                                        {STATUS_LABELS[status] || status}
+                                                                    </option>
+                                                                ))}
+                                                            </select>
+
+                                                            {/* View Details Button */}
+                                                            <button
+                                                                onClick={() =>
+                                                                    (window.location.href = `/admin/orders/${order._id}`)
+                                                                }
+                                                                className="px-4 py-2 bg-gradient-to-r from-primary to-water text-white rounded-xl hover:shadow-lg hover:shadow-primary/20 active:scale-95 transition-all text-xs font-bold whitespace-nowrap"
+                                                            >
+                                                                Xem chi tiết
+                                                            </button>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
 
                         {/* Pagination */}
                         {pagination.pages > 1 && (
-                            <div className="mt-6">
+                            <div className="mt-6 flex justify-end">
                                 <Pagination
                                     currentPage={pagination.page}
                                     totalPages={pagination.pages}
@@ -254,39 +260,17 @@ const AdminOrdersPage = () => {
                     </>
                 )}
 
-                {/* Confirmation Dialog */}
+                {/* Elevated Confirmation Dialog */}
                 {confirmingOrder && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                        <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm mx-4">
-                            <div className="flex items-center gap-3 mb-4">
-                                <CheckCircleIcon className="w-6 h-6 text-blue-600" />
-                                <h3 className="text-lg font-semibold text-gray-900">
-                                    Xác nhận cập nhật trạng thái
-                                </h3>
-                            </div>
-                            <p className="text-gray-600 mb-6">
-                                Bạn có chắc muốn cập nhật trạng thái đơn hàng sang{" "}
-                                <span className="font-semibold text-gray-900">
-                                    {STATUS_LABELS[confirmingStatus] || confirmingStatus}
-                                </span>{" "}
-                                không?
-                            </p>
-                            <div className="flex gap-3 justify-end">
-                                <button
-                                    onClick={cancelStatusChange}
-                                    className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
-                                >
-                                    Hủy
-                                </button>
-                                <button
-                                    onClick={confirmStatusChange}
-                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                                >
-                                    Xác nhận
-                                </button>
-                            </div>
-                        </div>
-                    </div>
+                    <ConfirmDialog
+                        isOpen={!!confirmingOrder}
+                        title="Xác nhận cập nhật trạng thái"
+                        message={`Bạn có chắc muốn cập nhật trạng thái đơn hàng sang ${STATUS_LABELS[confirmingStatus] || confirmingStatus} không?`}
+                        confirmText="Xác nhận"
+                        cancelText="Hủy"
+                        onConfirm={confirmStatusChange}
+                        onCancel={cancelStatusChange}
+                    />
                 )}
             </div>
         </AdminLayout>

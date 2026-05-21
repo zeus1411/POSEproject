@@ -3,8 +3,11 @@ import { X, Upload } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import ProductVariantsManager from './ProductVariantsManager';
 import RichTextEditor from './RichTextEditor';
+import { useTheme } from '../../context/ThemeContext';
 
 const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => {
+  const { isDark } = useTheme();
+  
   const [formData, setFormData] = useState({
     name: '',
     sku: '',
@@ -201,24 +204,28 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
   }, [formData.hasVariants, formData.variants]);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-start justify-center z-50 overflow-y-auto pt-8 pb-8">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-lg m-4 overflow-hidden">
-        <div className="flex justify-between items-center p-4 border-b">
-          <h2 className="text-lg font-semibold text-gray-900">
-            {product ? 'Chỉnh sửa sản phẩm' : 'Tạo sản phẩm mới'}
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-start justify-center z-[100] overflow-y-auto pt-8 pb-8 transition-all duration-300">
+      <div className={`glass-panel solid-modal w-full max-w-2xl m-4 overflow-hidden rounded-3xl border shadow-2xl transition-all duration-300 ${
+        isDark ? 'border-white/10 text-white shadow-black/40' : 'border-water/40 text-slate-800 shadow-slate-900/10'
+      }`}>
+        <div className={`flex justify-between items-center p-5 border-b transition-colors duration-300 ${
+          isDark ? 'border-white/5 bg-white/5' : 'border-water/10 bg-water/5'
+        }`}>
+          <h2 className={`text-lg font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-800'}`}>
+            {product ? '✏️ Chỉnh sửa sản phẩm' : '✨ Tạo sản phẩm mới'}
           </h2>
           <button
             onClick={onCancel}
-            className="text-gray-400 hover:text-gray-600"
+            className={`transition-colors duration-200 ${isDark ? 'text-gray-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'}`}
           >
             <X size={24} />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-4 space-y-4 max-h-[80vh] overflow-y-auto">
+        <form onSubmit={handleSubmit} className="p-6 space-y-5 max-h-[75vh] overflow-y-auto custom-scrollbar">
           {/* Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className={`block text-xs font-black uppercase tracking-wider mb-2 ${isDark ? 'text-emerald-400' : 'text-primary'}`}>
               Tên sản phẩm *
             </label>
             <input
@@ -226,8 +233,10 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
               name="name"
               value={formData.name}
               onChange={handleInputChange}
-              className={`w-full px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 ${
-                errors.name ? 'border-red-500' : 'border-gray-300'
+              className={`w-full px-4 py-2.5 text-sm rounded-xl border focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 ${
+                errors.name 
+                  ? 'border-red-500 bg-red-500/5' 
+                  : (isDark ? 'bg-white/5 border-white/10 text-white focus:bg-white/10' : 'bg-water/5 border-water/20 text-slate-800 focus:bg-water/10')
               }`}
               placeholder="Nhập tên sản phẩm"
             />
@@ -235,9 +244,9 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
           </div>
 
           {/* SKU and Price */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className={`block text-xs font-black uppercase tracking-wider mb-2 ${isDark ? 'text-emerald-400' : 'text-primary'}`}>
                 SKU *
               </label>
               <input
@@ -245,8 +254,10 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
                 name="sku"
                 value={formData.sku}
                 onChange={handleInputChange}
-                className={`w-full px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 ${
-                  errors.sku ? 'border-red-500' : 'border-gray-300'
+                className={`w-full px-4 py-2.5 text-sm rounded-xl border focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 ${
+                  errors.sku 
+                    ? 'border-red-500 bg-red-500/5' 
+                    : (isDark ? 'bg-white/5 border-white/10 text-white focus:bg-white/10' : 'bg-water/5 border-water/20 text-slate-800 focus:bg-water/10')
                 }`}
                 placeholder="Nhập SKU"
               />
@@ -255,7 +266,7 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
 
             {!formData.hasVariants && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className={`block text-xs font-black uppercase tracking-wider mb-2 ${isDark ? 'text-emerald-400' : 'text-primary'}`}>
                   Giá (₫) *
                 </label>
                 <input
@@ -263,8 +274,10 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
                   name="price"
                   value={formData.price}
                   onChange={handleInputChange}
-                  className={`w-full px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 ${
-                    errors.price ? 'border-red-500' : 'border-gray-300'
+                  className={`w-full px-4 py-2.5 text-sm rounded-xl border focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 ${
+                    errors.price 
+                      ? 'border-red-500 bg-red-500/5' 
+                      : (isDark ? 'bg-white/5 border-white/10 text-white focus:bg-white/10' : 'bg-water/5 border-water/20 text-slate-800 focus:bg-water/10')
                   }`}
                   placeholder="0"
                   min="0"
@@ -275,12 +288,12 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
           </div>
 
           {/* Stock and Category */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className={`block text-xs font-black uppercase tracking-wider mb-2 ${isDark ? 'text-emerald-400' : 'text-primary'}`}>
                 Tồn kho *
                 {formData.hasVariants && (
-                  <span className="ml-2 text-xs text-blue-600">(Tự động tính từ variants)</span>
+                  <span className={`ml-2 text-xs italic ${isDark ? 'text-cyan-400' : 'text-primary'}`}>(Tự động tính)</span>
                 )}
               </label>
               <input
@@ -289,9 +302,11 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
                 value={formData.stock}
                 onChange={handleInputChange}
                 disabled={formData.hasVariants}
-                className={`w-full px-3 py-1.5 text-sm border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 ${
-                  errors.stock ? 'border-red-500' : 'border-gray-300'
-                } ${formData.hasVariants ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                className={`w-full px-4 py-2.5 text-sm rounded-xl border focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 ${
+                  errors.stock 
+                    ? 'border-red-500 bg-red-500/5' 
+                    : (isDark ? 'bg-white/5 border-white/10 text-white focus:bg-white/10' : 'bg-water/5 border-water/20 text-slate-800 focus:bg-water/10')
+                } ${formData.hasVariants ? 'opacity-60 cursor-not-allowed' : ''}`}
                 placeholder="0"
                 min="0"
               />
@@ -299,20 +314,22 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className={`block text-xs font-black uppercase tracking-wider mb-2 ${isDark ? 'text-emerald-400' : 'text-primary'}`}>
                 Danh mục *
               </label>
               <select
                 name="categoryId"
                 value={formData.categoryId}
                 onChange={handleInputChange}
-                className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                  errors.categoryId ? 'border-red-500' : 'border-gray-300'
+                className={`w-full px-4 py-2.5 text-sm rounded-xl border focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 ${
+                  errors.categoryId 
+                    ? 'border-red-500 bg-red-500/5' 
+                    : (isDark ? 'bg-white/5 border-white/10 text-white focus:bg-white/10 dark:text-white dark:bg-card' : 'bg-water/5 border-water/20 text-slate-800 focus:bg-water/10 bg-white')
                 }`}
               >
-                <option value="">Chọn danh mục</option>
+                <option value="" className={isDark ? 'bg-card text-white' : 'bg-white text-slate-800'}>Chọn danh mục</option>
                 {categories.map(cat => (
-                  <option key={cat._id} value={cat._id}>
+                  <option key={cat._id} value={cat._id} className={isDark ? 'bg-card text-white' : 'bg-white text-slate-800'}>
                     {cat.name}
                   </option>
                 ))}
@@ -323,45 +340,53 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Mô tả <span className="text-red-500">*</span>
+            <label className={`block text-xs font-black uppercase tracking-wider mb-2 ${isDark ? 'text-emerald-400' : 'text-primary'}`}>
+              Mô tả chi tiết *
             </label>
-            <RichTextEditor
-              value={formData.description}
-              onChange={(content) => {
-                setFormData(prev => ({ ...prev, description: content }));
-                if (errors.description) {
-                  setErrors(prev => ({ ...prev, description: '' }));
-                }
-              }}
-              placeholder="Nhập mô tả sản phẩm chi tiết..."
-              error={errors.description}
-            />
+            <div className={`editor-wrapper rounded-2xl overflow-hidden border ${
+              isDark ? 'border-white/10 invert-[0.90] hue-rotate-[165deg] sepia-[0.3] contrast-[1.1] brightness-[0.95]' : 'border-water/20 bg-white'
+            }`}>
+              <RichTextEditor
+                value={formData.description}
+                onChange={(content) => {
+                  setFormData(prev => ({ ...prev, description: content }));
+                  if (errors.description) {
+                    setErrors(prev => ({ ...prev, description: '' }));
+                  }
+                }}
+                placeholder="Nhập mô tả chi tiết sản phẩm thủy sinh cao cấp..."
+                error={errors.description}
+              />
+            </div>
           </div>
 
           {/* Status */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Trạng thái
+            <label className={`block text-xs font-black uppercase tracking-wider mb-2 ${isDark ? 'text-emerald-400' : 'text-primary'}`}>
+              Trạng thái kinh doanh
             </label>
             <select
               name="status"
               value={formData.status}
               onChange={handleInputChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className={`w-full px-4 py-2.5 text-sm rounded-xl border focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 ${
+                isDark ? 'bg-white/5 border-white/10 text-white focus:bg-white/10 dark:text-white dark:bg-card' : 'bg-water/5 border-water/20 text-slate-800 focus:bg-water/10 bg-white'
+              }`}
             >
-              <option value="ACTIVE">Đang hoạt động</option>
-              <option value="INACTIVE">Ngừng kinh doanh</option>
+              <option value="ACTIVE" className={isDark ? 'bg-card text-white' : 'bg-white text-slate-800'}>Đang hoạt động</option>
+              <option value="INACTIVE" className={isDark ? 'bg-card text-white' : 'bg-white text-slate-800'}>Ngừng kinh doanh</option>
             </select>
           </div>
 
           {/* Images */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className={`block text-xs font-black uppercase tracking-wider mb-2 ${isDark ? 'text-emerald-400' : 'text-primary'}`}>
               Ảnh sản phẩm {!product && '*'}
             </label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-              <Upload className="mx-auto h-12 w-12 text-gray-400 mb-2" />
+            <div className={`border-2 border-dashed rounded-2xl p-6 text-center transition-all ${
+              isDark ? 'border-white/10 hover:border-emerald-500/50 bg-white/5' : 'border-water/20 hover:border-primary/50 bg-water/5'
+            }`}>
+              <Upload className={`mx-auto h-10 w-10 mb-2 ${isDark ? 'text-white/40' : 'text-water/60'}`} />
               <input
                 type="file"
                 multiple
@@ -371,36 +396,36 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
                 id="image-input"
               />
               <label htmlFor="image-input" className="cursor-pointer">
-                <span className="text-blue-600 hover:text-blue-700 font-medium">
+                <span className={`font-bold transition-all ${isDark ? 'text-emerald-400 hover:text-emerald-300' : 'text-primary hover:text-primary-hover'}`}>
                   Chọn ảnh
                 </span>
-                <span className="text-gray-500"> hoặc kéo thả</span>
+                <span className={isDark ? 'text-gray-400' : 'text-slate-500'}> hoặc kéo thả vào đây</span>
               </label>
-              <p className="text-xs text-gray-500 mt-1">PNG, JPG, GIF tối đa 10MB</p>
+              <p className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-slate-400'}`}>PNG, JPG, GIF tối đa 10MB</p>
             </div>
             {errors.images && <p className="text-red-500 text-sm mt-1">{errors.images}</p>}
 
             {/* Image Preview */}
             {(existingImages.length > 0 || imagePreview.length > 0) && (
-              <div className="mt-4">
+              <div className="mt-4 space-y-4">
                 {/* ✅ Existing Images */}
                 {existingImages.length > 0 && (
                   <div>
-                    <p className="text-sm font-medium text-gray-700 mb-2">Ảnh hiện tại</p>
-                    <div className="grid grid-cols-4 gap-4 mb-4">
+                    <p className={`text-xs font-bold uppercase tracking-wider mb-2 ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>Ảnh hiện tại</p>
+                    <div className="grid grid-cols-4 gap-3">
                       {existingImages.map((imageUrl, index) => (
-                        <div key={`existing-${index}`} className="relative">
+                        <div key={`existing-${index}`} className="relative group overflow-hidden rounded-xl aspect-square border border-water/20">
                           <img
                             src={imageUrl}
                             alt={`Existing ${index}`}
-                            className="w-full h-24 object-cover rounded border-2 border-blue-200"
+                            className="w-full h-full object-cover"
                           />
                           <button
                             type="button"
                             onClick={() => removeExistingImage(index)}
-                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition shadow active:scale-90"
                           >
-                            <X size={16} />
+                            <X size={14} />
                           </button>
                         </div>
                       ))}
@@ -411,21 +436,21 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
                 {/* ✅ New Images */}
                 {imagePreview.length > 0 && (
                   <div>
-                    <p className="text-sm font-medium text-gray-700 mb-2">Ảnh mới</p>
-                    <div className="grid grid-cols-4 gap-4">
+                    <p className={`text-xs font-bold uppercase tracking-wider mb-2 ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>Ảnh mới thêm</p>
+                    <div className="grid grid-cols-4 gap-3">
                       {imagePreview.map((preview, index) => (
-                        <div key={`new-${index}`} className="relative">
+                        <div key={`new-${index}`} className="relative overflow-hidden rounded-xl aspect-square border border-emerald-500/20">
                           <img
                             src={preview}
                             alt={`New ${index}`}
-                            className="w-full h-24 object-cover rounded border-2 border-green-200"
+                            className="w-full h-full object-cover"
                           />
                           <button
                             type="button"
                             onClick={() => removeNewImage(index)}
-                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition shadow active:scale-90"
                           >
-                            <X size={16} />
+                            <X size={14} />
                           </button>
                         </div>
                       ))}
@@ -437,31 +462,45 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
           </div>
 
           {/* Product Variants Manager */}
-          <ProductVariantsManager 
-            product={product} 
-            onUpdate={handleVariantsUpdate}
-          />
+          <div className={`p-4.5 rounded-2xl border ${
+            isDark ? 'border-white/5 bg-white/5' : 'border-water/10 bg-water/5'
+          }`}>
+            <ProductVariantsManager 
+              product={product} 
+              onUpdate={handleVariantsUpdate}
+            />
+          </div>
           {errors.variants && (
-            <div className="p-3 bg-red-50 border border-red-300 rounded-lg">
-              <p className="text-red-700 text-sm font-medium">{errors.variants}</p>
+            <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
+              <p className="text-red-500 text-sm font-medium">{errors.variants}</p>
             </div>
           )}
 
           {/* Buttons */}
-          <div className="flex gap-3 justify-end pt-6 border-t">
+          <div className={`flex gap-3 justify-end pt-5 border-t transition-colors duration-300 ${
+            isDark ? 'border-white/5' : 'border-water/10'
+          }`}>
             <button
               type="button"
               onClick={onCancel}
-              className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition"
+              className={`px-5 py-2.5 rounded-xl border text-sm font-semibold transition-all duration-200 active:scale-95 ${
+                isDark 
+                  ? 'border-white/10 text-gray-300 hover:bg-white/10 hover:text-white' 
+                  : 'border-water/20 text-slate-700 hover:bg-water/10 hover:text-slate-900'
+              }`}
             >
               Hủy
             </button>
             <button
               type="submit"
               disabled={isLoading}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+              className={`px-5 py-2.5 text-white rounded-xl transition-all duration-200 font-semibold text-sm active:scale-95 shadow-lg disabled:opacity-50 ${
+                isDark 
+                  ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-emerald-500/10 hover:shadow-emerald-500/20'
+                  : 'bg-gradient-to-r from-primary to-water hover:opacity-90 shadow-primary/10 hover:shadow-primary/20'
+              }`}
             >
-              {isLoading ? 'Đang xử lý...' : product ? 'Cập nhật' : 'Tạo'}
+              {isLoading ? 'Đang xử lý...' : product ? 'Cập nhật' : 'Tạo mới'}
             </button>
           </div>
         </form>
