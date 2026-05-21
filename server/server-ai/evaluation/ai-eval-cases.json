@@ -1,0 +1,46 @@
+[
+  {
+    "id": "behavior_greeting",
+    "mode": "auto",
+    "message": "Xin chao",
+    "expectedIntent": "behavior",
+    "shouldSearch": false
+  },
+  {
+    "id": "document_pollution_causes",
+    "mode": "document_rag",
+    "message": "Hay cho toi biet nguyen nhan lam o nhiem nuoc be thuy sinh",
+    "expectedIntent": "knowledge_query",
+    "shouldSearch": true,
+    "expectedFacts": [
+      "bun",
+      "thuc an thua",
+      "chat thai"
+    ],
+    "expectedCitation": true
+  },
+  {
+    "id": "document_follow_up_longer",
+    "mode": "document_rag",
+    "message": "Hay tra loi dai hon va chi tiet hon",
+    "expectedIntent": "knowledge_query",
+    "shouldSearch": true,
+    "requiresChatHistory": true
+  },
+  {
+    "id": "catalog_discount",
+    "mode": "catalog_qa",
+    "message": "San pham nao dang co khuyen mai hom nay?",
+    "expectedIntent": "knowledge_query",
+    "shouldSearch": true,
+    "expectedCitation": true
+  },
+  {
+    "id": "out_of_scope",
+    "mode": "document_rag",
+    "message": "Tai lieu co noi ve cach sua xe may khong?",
+    "expectedIntent": "knowledge_query",
+    "shouldSearch": true,
+    "expectedFallbackIfNoSource": true
+  }
+]

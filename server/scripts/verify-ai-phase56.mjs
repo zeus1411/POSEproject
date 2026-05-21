@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import { chunkText } from '../server-ai/utils/textUtils.js';
 import {
   buildPromptHistory,
@@ -7,6 +8,8 @@ import {
   normalizeMode
 } from '../server-ai/orchestrators/aiOrchestrator.js';
 import { buildDocumentPrompt } from '../server-ai/services/documentPrompt.js';
+import { detectAiIntent } from '../server-ai/services/intentRouter.js';
+import { attachCitationIds, rerankMatchesByLexicalOverlap } from '../server-ai/utils/ragUtils.js';
 
 const history = [
   {
@@ -21,6 +24,8 @@ const history = [
 
 assert.equal(normalizeMode('auto', 'San pham nao dang giam gia?'), 'catalog_qa');
 assert.equal(normalizeMode('auto', 'Nguyen nhan lam ban ho ca la gi?'), 'document_rag');
+assert.equal(detectAiIntent('Xin chao').intent, 'behavior');
+assert.equal(detectAiIntent('Nguyen nhan lam o nhiem nuoc la gi?').intent, 'knowledge_query');
 
 const followUpQuery = buildRetrievalQuery({
   message: 'Hay tra loi dai hon va chi tiet hon',
@@ -58,5 +63,24 @@ assert.equal(
 const chunks = chunkText('a '.repeat(1200), 500, 100);
 assert.ok(chunks.length > 1);
 assert.ok(chunks.every((chunk) => chunk.length <= 500));
+
+const citedSources = attachCitationIds([{ title: 'doc.pdf' }, { title: 'catalog item' }]);
+assert.equal(citedSources[0].citationId, 'S1');
+assert.equal(citedSources[1].citationId, 'S2');
+
+const reranked = rerankMatchesByLexicalOverlap({
+  query: 'nguyen nhan o nhiem nuoc',
+  matches: [
+    { score: 0.7, payload: { text: 'cay thuy sinh can anh sang' } },
+    { score: 0.6, payload: { text: 'nguyen nhan o nhiem nuoc gom bun va chat thai' } }
+  ]
+});
+assert.match(reranked[0].payload.text, /o nhiem nuoc/);
+
+const evalCases = JSON.parse(
+  fs.readFileSync(new URL('../server-ai/evaluation/ai-eval-cases.json', import.meta.url), 'utf8')
+);
+assert.ok(evalCases.length >= 4);
+assert.ok(evalCases.every((item) => item.id && item.message && item.expectedIntent));
 
 console.log('AI phase 5/6 verification passed.');

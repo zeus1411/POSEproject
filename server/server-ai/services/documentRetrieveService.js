@@ -1,6 +1,7 @@
 import { DOC_TOP_K, DOC_SCORE_THRESHOLD } from '../config/aiConfig.js';
 import { embedText } from './geminiService.js';
 import { searchDocumentChunks } from './qdrantService.js';
+import { attachCitationIds, rerankMatchesByLexicalOverlap } from '../utils/ragUtils.js';
 
 const normalizeValue = (value) => String(value || '').toLowerCase().trim();
 
@@ -9,18 +10,22 @@ const mapSource = (match) => {
   return {
     title: payload.fileName || payload.title || 'Document',
     uri: payload.filePath || '',
+    docId: payload.docId || '',
+    fileHash: payload.fileHash || '',
     chunkId: payload.chunkId || String(match.id || ''),
     score: match.score
   };
 };
 
-const buildContextText = (matches) => {
+const buildContextText = (matches, sources) => {
   const blocks = matches
     .map((match, index) => {
       const payload = match?.payload || {};
       const text = payload.text || '';
       if (!text) return '';
-      return `[${index + 1}] ${text}`;
+      const citationId = sources[index]?.citationId || `S${index + 1}`;
+      const title = sources[index]?.title || payload.fileName || 'Document';
+      return `Source [${citationId}] (${title}, chunk ${payload.chunkId || index + 1}):\n${text}`;
     })
     .filter(Boolean);
 
@@ -80,16 +85,37 @@ const applyConversationBias = (matches, preferredSources = []) => {
   });
 };
 
-const retrieveDocumentContext = async ({ query, preferredSources = [] }) => {
+const getDocumentScopeFromSources = (sources = []) => {
+  return {
+    fileNames: sources.map((source) => source.title).filter(Boolean),
+    docIds: sources.map((source) => source.docId).filter(Boolean),
+    fileHashes: sources.map((source) => source.fileHash).filter(Boolean)
+  };
+};
+
+const retrieveDocumentContext = async ({
+  query,
+  preferredSources = [],
+  documentScope = null
+}) => {
   const vector = await embedText(query);
+  const inferredScope = documentScope || (
+    preferredSources.length ? getDocumentScopeFromSources(preferredSources) : {}
+  );
   const matches = await searchDocumentChunks(vector, {
     limit: Math.max(DOC_TOP_K * 4, DOC_TOP_K),
-    scoreThreshold: DOC_SCORE_THRESHOLD
+    scoreThreshold: DOC_SCORE_THRESHOLD,
+    ...inferredScope
   });
-  const rankedMatches = applyConversationBias(matches, preferredSources).slice(0, DOC_TOP_K);
+  const biasedMatches = applyConversationBias(matches, preferredSources);
+  const rankedMatches = rerankMatchesByLexicalOverlap({
+    matches: biasedMatches,
+    query,
+    preferredSources
+  }).slice(0, DOC_TOP_K);
 
-  const sources = rankedMatches.map(mapSource).filter((item) => item.chunkId);
-  const contextText = buildContextText(rankedMatches);
+  const sources = attachCitationIds(rankedMatches.map(mapSource).filter((item) => item.chunkId));
+  const contextText = buildContextText(rankedMatches, sources);
 
   return {
     contextText,

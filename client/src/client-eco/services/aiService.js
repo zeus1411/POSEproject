@@ -12,9 +12,11 @@ const streamAiChat = async ({
   payload,
   anonymousId,
   onMeta,
+  onStatus,
   onToken,
   onDone,
   onError,
+  onHeartbeat,
   signal
 }) => {
   const headers = {
@@ -56,6 +58,16 @@ const streamAiChat = async ({
   const emitEvent = (eventName, data) => {
     if (eventName === 'meta' && onMeta) {
       onMeta(data);
+      return;
+    }
+
+    if (eventName === 'status' && onStatus) {
+      onStatus(data);
+      return;
+    }
+
+    if (eventName === 'heartbeat' && onHeartbeat) {
+      onHeartbeat(data);
       return;
     }
 

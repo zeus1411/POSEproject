@@ -6,6 +6,8 @@ const buildCatalogPrompt = ({ question, context, chatHistory = '' }) => {
     'If the context is insufficient, say you do not have enough information from the catalog.',
     'When possible, include product name, current price, and any promotion details',
     'with conditions and validity dates.',
+    'Each product, price, stock, or promotion claim must cite the relevant source ID like [S1].',
+    'Do not cite sources that do not directly support the claim.',
     '',
     'Recent chat history:',
     chatHistory || '(none)',

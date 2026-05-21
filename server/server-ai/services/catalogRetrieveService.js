@@ -1,6 +1,7 @@
 import { CATALOG_TOP_K, CATALOG_SCORE_THRESHOLD } from '../config/aiConfig.js';
 import { embedText } from './geminiService.js';
 import { searchCatalogItems } from './qdrantService.js';
+import { attachCitationIds, rerankMatchesByLexicalOverlap } from '../utils/ragUtils.js';
 
 const mapSource = (match) => {
   const payload = match?.payload || {};
@@ -13,13 +14,15 @@ const mapSource = (match) => {
   };
 };
 
-const buildContextText = (matches) => {
+const buildContextText = (matches, sources) => {
   const blocks = matches
     .map((match, index) => {
       const payload = match?.payload || {};
       const text = payload.text || '';
       if (!text) return '';
-      return `[${index + 1}] ${text}`;
+      const citationId = sources[index]?.citationId || `S${index + 1}`;
+      const title = sources[index]?.title || payload.title || 'Catalog Item';
+      return `Source [${citationId}] (${title}, ${payload.itemType || payload.source_type || 'catalog'}):\n${text}`;
     })
     .filter(Boolean);
 
@@ -29,12 +32,16 @@ const buildContextText = (matches) => {
 const retrieveCatalogContext = async ({ query }) => {
   const vector = await embedText(query);
   const matches = await searchCatalogItems(vector, {
-    limit: CATALOG_TOP_K,
+    limit: Math.max(CATALOG_TOP_K * 4, CATALOG_TOP_K),
     scoreThreshold: CATALOG_SCORE_THRESHOLD
   });
+  const rankedMatches = rerankMatchesByLexicalOverlap({
+    matches,
+    query
+  }).slice(0, CATALOG_TOP_K);
 
-  const sources = matches.map(mapSource).filter((item) => item.itemId);
-  const contextText = buildContextText(matches);
+  const sources = attachCitationIds(rankedMatches.map(mapSource).filter((item) => item.itemId));
+  const contextText = buildContextText(rankedMatches, sources);
 
   return {
     contextText,

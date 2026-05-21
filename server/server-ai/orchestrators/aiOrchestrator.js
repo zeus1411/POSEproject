@@ -5,6 +5,7 @@ import { buildDocumentPrompt } from '../services/documentPrompt.js';
 import { generateGeminiAnswer } from '../services/geminiService.js';
 import { retrieveCatalogContext } from '../services/catalogRetrieveService.js';
 import { buildCatalogPrompt } from '../services/catalogPrompt.js';
+import { buildBehaviorAnswer, detectAiIntent } from '../services/intentRouter.js';
 
 const DEFAULT_RETRIEVAL_STRATEGY = {
   document_rag: 'document_rag:qdrant_cosine',
@@ -47,7 +48,16 @@ const FOLLOW_UP_KEYWORDS = [
   'no',
   'chung',
   'nhung nguyen nhan',
-  'liet ke tiep'
+  'liet ke tiep',
+  'con gi',
+  'con nua',
+  'tiep tuc',
+  'gia no',
+  'no gia bao nhieu',
+  'no la gi',
+  'san pham do',
+  'tai lieu do',
+  'file do'
 ];
 
 const normalizeText = (value) => {
@@ -78,12 +88,12 @@ const buildRetrievalQuery = ({ message, chatHistory = [] }) => {
     return currentMessage;
   }
 
-  const previousUserMessages = chatHistory
-    .filter((item) => item.role === 'user' && item.content)
+  const previousMessages = chatHistory
+    .filter((item) => ['user', 'assistant'].includes(item.role) && item.content)
     .slice(-2)
-    .map((item) => item.content);
+    .map((item) => `${item.role}: ${item.content}`);
 
-  return [...previousUserMessages, currentMessage].join('\n');
+  return [...previousMessages, `user: ${currentMessage}`].join('\n');
 };
 
 const buildPromptHistory = (chatHistory = []) => {
@@ -167,8 +177,10 @@ const routeAiQuery = async ({
   conversationId,
   chatHistory = [],
   preferredSources = [],
+  documentScope = null,
   onStart,
   onMeta,
+  onStatus,
   onToken
 }) => {
   const normalizedMode = normalizeMode(mode, message);
@@ -176,13 +188,61 @@ const routeAiQuery = async ({
   const startedAt = Date.now();
   const retrievalQuery = buildRetrievalQuery({ message, chatHistory });
   const promptHistory = buildPromptHistory(chatHistory);
+  const intent = detectAiIntent(message);
+
+  if (onStatus) {
+    onStatus({
+      stage: 'analyzing',
+      intent: intent.intent,
+      reason: intent.reason,
+      mode: normalizedMode
+    });
+  }
+
+  if (intent.intent === 'behavior' && !intent.shouldSearch) {
+    const answer = buildBehaviorAnswer(message);
+    const retrievalStrategy = 'behavior:direct';
+    const sourceSummary = 'behavior:no_sources';
+
+    if (onMeta) {
+      onMeta({
+        conversationId,
+        mode: normalizedMode,
+        intent: intent.intent,
+        retrievalStrategy,
+        sourceSummary,
+        sources: []
+      });
+    }
+
+    if (onToken) {
+      onToken(answer);
+    }
+
+    return {
+      answer,
+      retrievalStrategy,
+      sourceSummary,
+      sources: [],
+      intent: intent.intent
+    };
+  }
 
   if (normalizedMode === 'document_rag') {
     const retrievalStrategy = getDefaultRetrievalStrategy(normalizedMode);
     const retrievalStartedAt = Date.now();
+    if (onStatus) {
+      onStatus({
+        stage: 'retrieving',
+        intent: intent.intent,
+        mode: normalizedMode,
+        retrievalQuery
+      });
+    }
     const retrieval = await retrieveDocumentContext({
       query: retrievalQuery,
-      preferredSources
+      preferredSources,
+      documentScope
     });
     const retrievalMs = Date.now() - retrievalStartedAt;
     const sourceSummary = `document_rag:${retrieval.sources.length}_sources`;
@@ -191,8 +251,10 @@ const routeAiQuery = async ({
       onMeta({
         conversationId,
         mode: normalizedMode,
+        intent: intent.intent,
         retrievalStrategy,
         sourceSummary,
+        retrievalQuery,
         sources: retrieval.sources
       });
     }
@@ -202,7 +264,8 @@ const routeAiQuery = async ({
         answer: EMPTY_CONTEXT_ANSWER,
         retrievalStrategy,
         sourceSummary,
-        sources: []
+        sources: [],
+        intent: intent.intent
       };
     }
 
@@ -213,6 +276,14 @@ const routeAiQuery = async ({
     });
 
     const generationStartedAt = Date.now();
+    if (onStatus) {
+      onStatus({
+        stage: 'generating',
+        intent: intent.intent,
+        mode: normalizedMode,
+        sourceCount: retrieval.sources.length
+      });
+    }
     const answer = await generateAnswerWithRecovery({ prompt, onToken });
     const generationMs = Date.now() - generationStartedAt;
     console.info('[ai-chat] document_rag completed', {
@@ -228,13 +299,22 @@ const routeAiQuery = async ({
       answer: answer || EMPTY_CONTEXT_ANSWER,
       retrievalStrategy,
       sourceSummary,
-      sources: retrieval.sources
+      sources: retrieval.sources,
+      intent: intent.intent
     };
   }
 
   if (normalizedMode === 'catalog_qa') {
     const retrievalStrategy = getDefaultRetrievalStrategy(normalizedMode);
     const retrievalStartedAt = Date.now();
+    if (onStatus) {
+      onStatus({
+        stage: 'retrieving',
+        intent: intent.intent,
+        mode: normalizedMode,
+        retrievalQuery
+      });
+    }
     const retrieval = await retrieveCatalogContext({
       query: retrievalQuery
     });
@@ -245,8 +325,10 @@ const routeAiQuery = async ({
       onMeta({
         conversationId,
         mode: normalizedMode,
+        intent: intent.intent,
         retrievalStrategy,
         sourceSummary,
+        retrievalQuery,
         sources: retrieval.sources
       });
     }
@@ -256,7 +338,8 @@ const routeAiQuery = async ({
         answer: EMPTY_CATALOG_ANSWER,
         retrievalStrategy,
         sourceSummary,
-        sources: []
+        sources: [],
+        intent: intent.intent
       };
     }
 
@@ -267,6 +350,14 @@ const routeAiQuery = async ({
     });
 
     const generationStartedAt = Date.now();
+    if (onStatus) {
+      onStatus({
+        stage: 'generating',
+        intent: intent.intent,
+        mode: normalizedMode,
+        sourceCount: retrieval.sources.length
+      });
+    }
     const answer = await generateAnswerWithRecovery({ prompt, onToken });
     const generationMs = Date.now() - generationStartedAt;
     console.info('[ai-chat] catalog_qa completed', {
@@ -282,7 +373,8 @@ const routeAiQuery = async ({
       answer: answer || EMPTY_CATALOG_ANSWER,
       retrievalStrategy,
       sourceSummary,
-      sources: retrieval.sources
+      sources: retrieval.sources,
+      intent: intent.intent
     };
   }
 

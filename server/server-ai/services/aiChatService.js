@@ -102,8 +102,10 @@ const handleAiChat = async ({
   mode,
   userId,
   anonymousId,
+  documentScope,
   onStart,
   onMeta,
+  onStatus,
   onToken
 }) => {
   if (!message || !String(message).trim()) {
@@ -142,8 +144,10 @@ const handleAiChat = async ({
     conversationId: conversation._id.toString(),
     chatHistory,
     preferredSources,
+    documentScope,
     onStart,
     onMeta,
+    onStatus,
     onToken
   });
 
@@ -165,7 +169,8 @@ const handleAiChat = async ({
     answer: result.answer,
     retrievalStrategy: result.retrievalStrategy,
     sourceSummary: result.sourceSummary,
-    sources: result.sources
+    sources: result.sources,
+    intent: result.intent || null
   };
 };
 

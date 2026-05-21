@@ -30,9 +30,14 @@ const aiMessageSchema = new mongoose.Schema(
     },
     sources: [
       {
+        citationId: String,
         title: String,
         uri: String,
+        docId: String,
+        fileHash: String,
         chunkId: String,
+        itemId: String,
+        itemType: String,
         score: Number
       }
     ]

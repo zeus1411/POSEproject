@@ -39,6 +39,7 @@ const AiAssistant = () => {
   const [anonymousId, setAnonymousId] = useState(getOrCreateAnonymousId());
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamError, setStreamError] = useState('');
+  const [streamStatus, setStreamStatus] = useState('');
 
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
@@ -54,6 +55,7 @@ const AiAssistant = () => {
     setMessages([]);
     setConversationId(null);
     setStreamError('');
+    setStreamStatus('');
   };
 
   const updateMessage = (id, updater) => {
@@ -68,6 +70,7 @@ const AiAssistant = () => {
     if (!trimmed || isStreaming) return;
 
     setStreamError('');
+    setStreamStatus('');
 
     const userMessage = {
       id: `user_${Date.now()}`,
@@ -119,6 +122,9 @@ const AiAssistant = () => {
             sourceSummary: meta?.sourceSummary || ''
           }));
         },
+        onStatus: (status) => {
+          setStreamStatus(status?.stage || '');
+        },
         onToken: (delta) => {
           if (!delta) return;
           updateMessage(assistantId, (msg) => ({
@@ -143,6 +149,7 @@ const AiAssistant = () => {
       }
     } finally {
       setIsStreaming(false);
+      setStreamStatus('');
       abortRef.current = null;
     }
   };
@@ -197,6 +204,9 @@ const AiAssistant = () => {
                 {streamError && (
                   <span className="text-xs text-rose-600 font-semibold">{streamError}</span>
                 )}
+                {!streamError && streamStatus && (
+                  <span className="text-xs text-slate-500 font-semibold">{streamStatus}</span>
+                )}
               </div>
             </div>
 
@@ -233,6 +243,7 @@ const AiAssistant = () => {
                             >
                               <div>
                                 <p className="font-semibold text-slate-700">
+                                  {source.citationId ? `[${source.citationId}] ` : ''}
                                   {source.title || source.uri || 'Nguon'}
                                 </p>
                                 <p className="text-[11px] text-slate-400">

@@ -15,8 +15,9 @@ const extractAnonymousId = (req) => {
 };
 
 export const streamAiChat = async (req, res, next) => {
+  let heartbeatTimer = null;
   try {
-    const { conversationId, message, mode } = req.body || {};
+    const { conversationId, message, mode, documentScope } = req.body || {};
     const userId = req.user?.userId || null;
     const anonymousId = extractAnonymousId(req);
     let sseStarted = false;
@@ -34,12 +35,21 @@ export const streamAiChat = async (req, res, next) => {
       if (res.flushHeaders) {
         res.flushHeaders();
       }
+
+      heartbeatTimer = setInterval(() => {
+        writeSseEvent(res, 'heartbeat', { ts: Date.now() });
+      }, 15000);
     };
 
     const onMeta = (meta) => {
       metaSent = true;
       startSse();
       writeSseEvent(res, 'meta', meta);
+    };
+
+    const onStatus = (status) => {
+      startSse();
+      writeSseEvent(res, 'status', status);
     };
 
     const onToken = (delta) => {
@@ -55,8 +65,10 @@ export const streamAiChat = async (req, res, next) => {
       mode,
       userId,
       anonymousId,
+      documentScope,
       onStart: startSse,
       onMeta,
+      onStatus,
       onToken
     });
 
@@ -66,6 +78,7 @@ export const streamAiChat = async (req, res, next) => {
         conversationId: result.conversationId,
         anonymousId: result.anonymousId,
         mode: result.mode,
+        intent: result.intent,
         retrievalStrategy: result.retrievalStrategy,
         sourceSummary: result.sourceSummary,
         sources: result.sources
@@ -83,13 +96,21 @@ export const streamAiChat = async (req, res, next) => {
       conversationId: result.conversationId,
       anonymousId: result.anonymousId,
       mode: result.mode,
+      intent: result.intent,
       retrievalStrategy: result.retrievalStrategy,
       sourceSummary: result.sourceSummary,
       sources: result.sources
     });
 
+    if (heartbeatTimer) {
+      clearInterval(heartbeatTimer);
+    }
     res.end();
   } catch (error) {
+    if (heartbeatTimer) {
+      clearInterval(heartbeatTimer);
+    }
+
     const statusCode = error.statusCode || StatusCodes.INTERNAL_SERVER_ERROR;
     if (!res.headersSent) {
       return res.status(statusCode).json({
@@ -108,7 +129,7 @@ export const streamAiChat = async (req, res, next) => {
 
 export const chatOnce = async (req, res, next) => {
   try {
-    const { conversationId, message, mode } = req.body || {};
+    const { conversationId, message, mode, documentScope } = req.body || {};
     const userId = req.user?.userId || null;
     const anonymousId = extractAnonymousId(req);
 
@@ -117,7 +138,8 @@ export const chatOnce = async (req, res, next) => {
       message,
       mode,
       userId,
-      anonymousId
+      anonymousId,
+      documentScope
     });
 
     res.status(StatusCodes.OK).json({

@@ -42,6 +42,7 @@ const AiChatBubble = () => {
   const [conversationId, setConversationId] = useState(null);
   const [anonymousId, setAnonymousId] = useState(getOrCreateAnonymousId());
   const [isStreaming, setIsStreaming] = useState(false);
+  const [streamStatus, setStreamStatus] = useState('');
   const [streamError, setStreamError] = useState('');
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
@@ -88,6 +89,7 @@ const AiChatBubble = () => {
     if (!trimmed || isStreaming) return;
 
     setStreamError('');
+    setStreamStatus('');
     if (showSuggestions) {
       markSuggestionsUsed();
     }
@@ -137,6 +139,9 @@ const AiChatBubble = () => {
             sources: meta?.sources || []
           }));
         },
+        onStatus: (status) => {
+          setStreamStatus(status?.stage || '');
+        },
         onToken: (delta) => {
           if (!delta) return;
           updateMessage(assistantId, (msg) => ({
@@ -159,6 +164,7 @@ const AiChatBubble = () => {
       }
     } finally {
       setIsStreaming(false);
+      setStreamStatus('');
       abortRef.current = null;
     }
   };
@@ -217,7 +223,7 @@ const AiChatBubble = () => {
               <div>
                 <h3 className="font-bold text-lg">Trợ lý AI</h3>
                 <p className="text-xs text-emerald-100">
-                  {isStreaming ? 'Đang trả lời...' : 'Sẵn sàng hỗ trợ'}
+                  {isStreaming ? (streamStatus || 'Đang trả lời...') : 'Sẵn sàng hỗ trợ'}
                 </p>
               </div>
             </div>
@@ -313,6 +319,7 @@ const AiChatBubble = () => {
                                       className="flex items-center justify-between gap-2 bg-white border border-gray-200 rounded-lg px-2 py-1"
                                     >
                                       <span className="font-semibold">
+                                        {source.citationId ? `[${source.citationId}] ` : ''}
                                         {source.title || source.uri || 'Nguon'}
                                       </span>
                                       <span>

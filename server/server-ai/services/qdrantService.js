@@ -185,7 +185,54 @@ const upsertCatalogItems = async (points) => {
   }
 };
 
-const searchDocumentChunks = async (vector, { limit, scoreThreshold }) => {
+const buildDocumentFilter = ({ fileNames = [], docIds = [], fileHashes = [] } = {}) => {
+  const must = [
+    {
+      key: 'source_type',
+      match: { value: 'document' }
+    }
+  ];
+
+  const should = [];
+  fileNames
+    .filter(Boolean)
+    .forEach((fileName) => {
+      should.push({
+        key: 'fileName',
+        match: { value: fileName }
+      });
+    });
+  docIds
+    .filter(Boolean)
+    .forEach((docId) => {
+      should.push({
+        key: 'docId',
+        match: { value: docId }
+      });
+    });
+  fileHashes
+    .filter(Boolean)
+    .forEach((fileHash) => {
+      should.push({
+        key: 'fileHash',
+        match: { value: fileHash }
+      });
+    });
+
+  if (should.length) {
+    return {
+      must,
+      should
+    };
+  }
+
+  return { must };
+};
+
+const searchDocumentChunks = async (
+  vector,
+  { limit, scoreThreshold, fileNames = [], docIds = [], fileHashes = [] }
+) => {
   const exists = await collectionExists(QDRANT_DOCS_COLLECTION);
   if (!exists) {
     return [];
@@ -196,14 +243,7 @@ const searchDocumentChunks = async (vector, { limit, scoreThreshold }) => {
     limit,
     with_payload: true,
     score_threshold: scoreThreshold,
-    filter: {
-      must: [
-        {
-          key: 'source_type',
-          match: { value: 'document' }
-        }
-      ]
-    }
+    filter: buildDocumentFilter({ fileNames, docIds, fileHashes })
   });
 };
 
