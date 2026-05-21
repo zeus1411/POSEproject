@@ -17,6 +17,7 @@ import { fetchCart } from '../../redux/slices/cartSlice';
 import { logout as logoutAction } from '../../redux/slices/authSlice';
 import MiniCart from './MiniCart';
 import NotificationIcon from './NotificationIcon';
+import ThemeToggle from './ThemeToggle';
 
 const Header = () => {
   const dispatch = useDispatch();
@@ -58,7 +59,7 @@ const Header = () => {
 
   return (
     <>
-      <header className="bg-abyss/60 backdrop-blur-xl border-b border-white/10 shadow-lg fixed w-full z-50">
+      <header className="bg-card/88 backdrop-blur-xl border-b border-water/40 shadow-[0_10px_35px_rgb(var(--deep-ocean)/0.10)] fixed w-full z-50 dark:bg-background/80 dark:border-border/20 dark:shadow-lg">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex items-center justify-between h-20">
             {/* Logo / Brand */}
@@ -67,7 +68,7 @@ const Header = () => {
                 to={isAdmin ? "/admin/products" : "/"} 
                 className="flex items-center space-x-3 group"
               >
-                <div className="w-10 h-10 bg-neon-cyan/10 border border-neon-cyan/30 rounded-xl flex items-center justify-center backdrop-blur-sm group-hover:bg-neon-cyan/20 group-hover:rotate-12 transition-all duration-300 shadow-glow-cyan">
+                <div className="w-10 h-10 bg-nature border border-nature rounded-xl flex items-center justify-center backdrop-blur-sm group-hover:bg-ocean group-hover:rotate-12 transition-all duration-300 shadow-[0_12px_24px_rgb(var(--natural-green)/0.22)] dark:bg-neon-cyan/10 dark:border-neon-cyan/30 dark:group-hover:bg-neon-cyan/20 dark:shadow-glow-cyan">
                   <svg className="w-6 h-6 text-white" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
                     <path d="M811.1 354.7L767.5 331c-24.8-13.5-45-35-56.9-60.6l-20.9-45c-11.8-25.5-18.8-52.7-20.7-80.8-1.2-17.1-13.8-31.2-30.6-34.4-19.5-3.6-38.5 8.6-43.3 27.8l-1 3.9c-8.1 32.4-9.8 65.5-5 98.6l11.3 78-272.7 115.8c-81.6 34.7-145.4 99.1-180 178.7-0.9 2.1-1.9 4.3-2.8 6.4-1.2 2.9-2.3 5.9-3.4 8.8-1.2 3.3-2.5 6.6-3.6 9.9-0.9 2.5-1.7 5.1-2.5 7.6-1.3 4-2.5 8.1-3.6 12.2-0.6 2.1-1.2 4.1-1.7 6.2-1.6 6.2-3.1 12.5-4.4 18.9L98.1 821.6c-0.8 4.2 0.4 8.6 3.3 11.7l21 22.4-16.3 15.3c-5 4.7-5.6 12.4-1.4 17.8 12.6 16.4 32.1 24.5 52.3 21.8l162-21.7c9.7-1.3 19.2-3.1 28.6-5.2 2.1-0.5 4.2-0.9 6.3-1.5 9.5-2.3 18.9-4.9 28-7.9 0.2-0.1 0.4-0.2 0.6-0.2 9.7-3.2 19.1-7 28.4-11.1 0.7-0.3 1.4-0.6 2.2-0.9 71.4-31.9 130.7-87.5 166.7-159.3l132.7-264.7 77.2 16.1c32.7 6.8 65.9 7.2 98.7 1.2l4-0.7c7.3-1.3 13.8-4.8 18.8-9.5 8.5-7.9 13.1-19.7 11.6-32-2.1-17-15.4-30.4-32.4-32.7-27.9-3.7-54.6-12.4-79.3-25.8z" fill="currentColor" />
                     <path d="M218.6 729.1m-25.5 0a25.5 25.5 0 1 0 51 0 25.5 25.5 0 1 0-51 0Z" fill="currentColor" />
@@ -82,10 +83,10 @@ const Header = () => {
                   </svg>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-xl font-headline font-bold text-white tracking-tight">
+                  <span className="text-xl font-headline font-bold text-foreground tracking-tight">
                     AquaticPose
                   </span>
-                  <span className="text-xs text-neon-cyan/70">Thủy Sinh Cao Cấp</span>
+                  <span className="text-xs font-medium text-nature dark:text-primary/80">Thủy Sinh Cao Cấp</span>
                 </div>
               </Link>
             </div>
@@ -98,39 +99,39 @@ const Header = () => {
                     to="/" 
                     className={`relative px-6 py-2 text-sm font-body font-semibold rounded-lg transition-all duration-200 ${
                       location.pathname === '/' 
-                        ? 'text-neon-cyan bg-neon-cyan/10 border border-neon-cyan/20' 
-                        : 'text-gray-300 hover:text-neon-cyan hover:bg-white/5'
+                        ? 'text-ocean bg-aqua/35 border border-water/40 dark:text-primary dark:bg-primary/10 dark:border-primary/20' 
+                        : 'text-foreground/80 hover:text-ocean hover:bg-aqua/20 dark:text-muted-foreground dark:hover:text-primary dark:hover:bg-muted/60'
                     }`}
                   >
                     Trang chủ
                     {location.pathname === '/' && (
-                      <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-0.5 bg-neon-cyan rounded-full shadow-glow-cyan"></span>
+                      <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-0.5 bg-nature rounded-full dark:bg-primary dark:shadow-glow-cyan"></span>
                     )}
                   </Link>
                   <Link 
                     to="/shop" 
                     className={`relative px-6 py-2 text-sm font-body font-semibold rounded-lg transition-all duration-200 ${
                       location.pathname.startsWith('/shop')
-                        ? 'text-neon-cyan bg-neon-cyan/10 border border-neon-cyan/20' 
-                        : 'text-gray-300 hover:text-neon-cyan hover:bg-white/5'
+                        ? 'text-ocean bg-aqua/35 border border-water/40 dark:text-primary dark:bg-primary/10 dark:border-primary/20' 
+                        : 'text-foreground/80 hover:text-ocean hover:bg-aqua/20 dark:text-muted-foreground dark:hover:text-primary dark:hover:bg-muted/60'
                     }`}
                   >
                     Cửa hàng
                     {location.pathname.startsWith('/shop') && (
-                      <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-0.5 bg-neon-cyan rounded-full shadow-glow-cyan"></span>
+                      <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-0.5 bg-nature rounded-full dark:bg-primary dark:shadow-glow-cyan"></span>
                     )}
                   </Link>
                   <Link 
                     to="/blogs" 
                     className={`relative px-6 py-2 text-sm font-body font-semibold rounded-lg transition-all duration-200 ${
                       location.pathname.startsWith('/blogs')
-                        ? 'text-neon-cyan bg-neon-cyan/10 border border-neon-cyan/20' 
-                        : 'text-gray-300 hover:text-neon-cyan hover:bg-white/5'
+                        ? 'text-ocean bg-aqua/35 border border-water/40 dark:text-primary dark:bg-primary/10 dark:border-primary/20' 
+                        : 'text-foreground/80 hover:text-ocean hover:bg-aqua/20 dark:text-muted-foreground dark:hover:text-primary dark:hover:bg-muted/60'
                     }`}
                   >
                     Blog
                     {location.pathname.startsWith('/blogs') && (
-                      <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-0.5 bg-neon-cyan rounded-full shadow-glow-cyan"></span>
+                      <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-12 h-0.5 bg-nature rounded-full dark:bg-primary dark:shadow-glow-cyan"></span>
                     )}
                   </Link>
                 </nav>
@@ -143,7 +144,7 @@ const Header = () => {
                 <div className="md:hidden">
                   <Link
                     to="/shop"
-                    className="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold text-white bg-white/10 rounded-lg hover:bg-white/20 transition-colors"
+                    className="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold text-primary-foreground bg-ocean rounded-lg hover:bg-primary-hover transition-colors dark:bg-primary/90 dark:hover:bg-primary"
                   >
                     Shop
                   </Link>
@@ -151,16 +152,17 @@ const Header = () => {
               )}
               
               {user && <NotificationIcon />}
+              <ThemeToggle />
               
               {!isAdmin && (
                 <button
                   type="button"
                   onClick={handleOpenCart}
-                  className="relative p-2 rounded-lg hover:bg-white/10 transition-colors"
+                  className="relative p-2 rounded-lg text-foreground hover:bg-muted/60 transition-colors"
                 >
-                  <ShoppingCartIcon className="w-6 h-6 text-white" />
+                  <ShoppingCartIcon className="w-6 h-6" />
                   {cartCount > 0 && (
-                    <span className="absolute -top-1 -right-1 inline-flex items-center justify-center w-5 h-5 text-xs font-bold leading-none text-white bg-red-500 rounded-full shadow-md">
+                    <span className="absolute -top-1 -right-1 inline-flex items-center justify-center w-5 h-5 text-xs font-bold leading-none text-destructive-foreground bg-destructive rounded-full shadow-md">
                       {cartCount}
                     </span>
                   )}
@@ -171,13 +173,13 @@ const Header = () => {
                 <div className="flex items-center gap-2">
                   <Link
                     to="/login"
-                    className="px-5 py-2 text-sm font-body font-semibold text-gray-300 hover:text-neon-cyan hover:bg-white/5 rounded-lg transition-all duration-200"
+                    className="px-5 py-2 text-sm font-body font-semibold text-foreground/80 hover:text-ocean hover:bg-aqua/20 rounded-lg transition-all duration-200 dark:text-muted-foreground dark:hover:text-primary dark:hover:bg-muted/60"
                   >
                     Đăng nhập
                   </Link>
                   <Link
                     to="/register"
-                    className="px-5 py-2 text-sm font-body font-semibold text-abyss bg-neon-cyan hover:bg-neon-teal rounded-lg shadow-glow-cyan hover:shadow-lg transition-all duration-200"
+                    className="px-5 py-2 text-sm font-body font-semibold text-primary-foreground bg-ocean hover:bg-primary-hover rounded-lg shadow-[0_12px_24px_rgb(var(--deep-ocean)/0.18)] hover:shadow-lg transition-all duration-200 dark:bg-primary dark:hover:bg-primary/90 dark:shadow-glow-cyan"
                   >
                     Đăng ký
                   </Link>
@@ -189,7 +191,7 @@ const Header = () => {
                   <button
                     type="button"
                     onClick={() => setIsUserMenuOpen((prev) => !prev)}
-                    className="flex items-center gap-3 px-4 py-2 rounded-full hover:bg-white/10 transition-colors"
+                    className="flex items-center gap-3 px-4 py-2 rounded-full hover:bg-muted/60 transition-colors"
                   >
                     {user.avatar ? (
                       <img 
@@ -203,16 +205,16 @@ const Header = () => {
                         }}
                       />
                     ) : (
-                      <UserCircleIcon className="w-8 h-8 text-white" />
+                      <UserCircleIcon className="w-8 h-8 text-foreground" />
                     )}
-                    <span className="text-base font-medium text-white">
+                    <span className="text-base font-medium text-foreground">
                       {user.username}
                     </span>
                   </button>
 
                   {/* 🔥 CẢI TIẾN 1: DROPDOWN USER MENU (AQUATIC GLASSMORPHISM) */}
                   {isUserMenuOpen && (
-                    <div className="absolute right-0 mt-3 w-56 bg-[#041a1a]/95 backdrop-blur-2xl border border-white/10 rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.5)] z-20 py-1.5 animate-in fade-in slide-in-from-top-2 duration-150">
+                    <div className="absolute right-0 mt-2 w-48 bg-card border border-border/30 rounded-xl shadow-xl z-20">
                       {user.role === 'admin' && (
                         <button
                           type="button"
@@ -220,7 +222,7 @@ const Header = () => {
                             setIsUserMenuOpen(false);
                             navigate('/admin/products');
                           }}
-                          className="w-full text-left px-4 py-3 text-sm text-emerald-400 hover:bg-white/5 border-b border-white/5 flex items-center gap-3 font-semibold transition-colors"
+                          className="w-full text-left px-4 py-3 text-sm text-primary hover:bg-muted border-b border-border/30 rounded-t-xl flex items-center gap-3"
                         >
                           <Cog6ToothIcon className="w-5 h-5 text-emerald-400" />
                           <span>Hệ thống Quản lý</span>
@@ -233,7 +235,7 @@ const Header = () => {
                           setIsUserMenuOpen(false);
                           navigate('/profile');
                         }}
-                        className="w-full text-left px-4 py-3 text-sm text-gray-200 hover:bg-white/5 border-b border-white/5 flex items-center gap-3 transition-colors hover:text-neon-cyan"
+                        className="w-full text-left px-4 py-3 text-sm text-card-foreground hover:bg-muted border-b border-border/30 flex items-center gap-3"
                       >
                         <UserCircleIcon className="w-5 h-5 text-gray-400 group-hover:text-neon-cyan" />
                         <span>Thông tin cá nhân</span>
@@ -245,7 +247,7 @@ const Header = () => {
                           setIsUserMenuOpen(false);
                           navigate('/my-blogs');
                         }}
-                        className="w-full text-left px-4 py-3 text-sm text-gray-200 hover:bg-white/5 border-b border-white/5 flex items-center gap-3 transition-colors hover:text-neon-cyan"
+                        className="w-full text-left px-4 py-3 text-sm text-card-foreground hover:bg-muted border-b border-border/30 flex items-center gap-3"
                       >
                         <DocumentTextIcon className="w-5 h-5 text-gray-400" />
                         <span>Bài viết của tôi</span>
@@ -258,7 +260,7 @@ const Header = () => {
                             setIsUserMenuOpen(false);
                             navigate('/orders');
                           }}
-                          className="w-full text-left px-4 py-3 text-sm text-gray-200 hover:bg-white/5 border-b border-white/5 flex items-center gap-3 transition-colors hover:text-neon-cyan"
+                          className="w-full text-left px-4 py-3 text-sm text-card-foreground hover:bg-muted border-b border-border/30 flex items-center gap-3"
                         >
                           <ShoppingBagIcon className="w-5 h-5 text-gray-400" />
                           <span>Đơn hàng của tôi</span>
@@ -268,7 +270,7 @@ const Header = () => {
                       <button
                         type="button"
                         onClick={() => setIsLogoutConfirmOpen(true)}
-                        className="w-full text-left px-4 py-3 text-sm text-rose-400 hover:bg-rose-500/10 flex items-center gap-3 font-semibold transition-colors"
+                        className="w-full text-left px-4 py-3 text-sm text-destructive hover:bg-muted rounded-b-xl flex items-center gap-3"
                       >
                         <ArrowRightOnRectangleIcon className="w-5 h-5 text-rose-400" />
                         <span>Đăng xuất tài khoản</span>
@@ -289,27 +291,26 @@ const Header = () => {
 
       {/* 🔥 CẢI TIẾN 2: POPUP XÁC NHẬN ĐĂNG XUẤT (KÍNH MỜ GLASSMORPHISM ĐỒNG BỘ 100%) */}
       {isLogoutConfirmOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 backdrop-blur-md p-4 animate-in fade-in duration-200">
-          <div className="bg-[#051c1c]/95 border border-white/10 rounded-[2rem] p-6 w-full max-w-sm shadow-2xl animate-in fade-in zoom-in-95 duration-250 text-white">
-            <div className="flex items-center gap-3 text-rose-400 mb-3">
-              <AlertCircle size={24} className="shadow-glow-rose" />
-              <h3 className="text-lg font-bold text-white">Xác nhận đăng xuất</h3>
-            </div>
-            <p className="text-sm text-gray-300 mb-6 leading-relaxed">
-              Bạn có chắc chắn muốn đăng xuất khỏi tài khoản không? Toàn bộ phiên làm việc hiện tại của bạn trên AquaticPose sẽ kết thúc.
+        <div className="fixed inset-0 z-30 flex items-center justify-center bg-background/70 backdrop-blur-sm">
+          <div className="bg-card text-card-foreground border border-border/30 rounded-xl shadow-xl max-w-sm w-full p-6">
+            <h3 className="text-lg font-semibold mb-2">
+              Xác nhận đăng xuất
+            </h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Bạn có chắc chắn muốn đăng xuất khỏi tài khoản không?
             </p>
             <div className="flex gap-3 justify-end">
               <button
                 type="button"
                 onClick={() => setIsLogoutConfirmOpen(false)}
-                className="px-4 py-2.5 text-sm font-medium text-gray-300 border border-white/5 bg-white/5 hover:bg-white/10 rounded-xl transition-colors"
+                className="px-4 py-2 text-sm font-medium text-card-foreground bg-muted rounded-lg hover:bg-muted/80"
               >
                 Hủy bỏ
               </button>
               <button
                 type="button"
                 onClick={handleLogout}
-                className="px-4 py-2.5 text-sm font-bold text-white bg-rose-600 hover:bg-rose-500 rounded-xl transition-colors shadow-md shadow-rose-900/20"
+                className="px-4 py-2 text-sm font-medium text-destructive-foreground bg-destructive rounded-lg hover:bg-destructive/90"
               >
                 Đăng xuất
               </button>

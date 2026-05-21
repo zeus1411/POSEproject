@@ -87,7 +87,7 @@ const Home = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#051C1C] via-[#0a2e2e] to-[#061e2e]">
+    <div className="home-page min-h-screen bg-background text-foreground">
       {/* Floating Navigation Sidebar */}
       <nav className="hidden lg:block fixed left-8 top-1/2 -translate-y-1/2 z-30">
         <div className="glass-panel rounded-2xl p-4">

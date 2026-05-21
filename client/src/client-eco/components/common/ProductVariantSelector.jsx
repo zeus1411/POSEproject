@@ -126,10 +126,10 @@ const ProductVariantSelector = ({ product, selectedVariant, onVariantChange }) =
   };
 
   return (
-    <div className="space-y-4 py-4 border-t border-b border-cyan-800/20">
+    <div className="space-y-4 py-4 border-t border-b border-water/45 dark:border-cyan-800/20">
       {product.options.map((option, index) => (
         <div key={index}>
-          <label className="block text-sm font-medium text-cyan-200 mb-2">
+          <label className="block text-sm font-medium text-ocean mb-2 dark:text-cyan-200">
             {option.name}
           </label>
           <div className="flex flex-wrap gap-2">
@@ -148,11 +148,11 @@ const ProductVariantSelector = ({ product, selectedVariant, onVariantChange }) =
                   className={`relative px-4 py-2 border rounded-lg font-medium transition-all ${
                     isSelected
                       ? inStock
-                        ? 'border-cyan-300 bg-cyan-900/10 text-cyan-100 ring-2 ring-cyan-300'
+                        ? 'border-ocean bg-aqua/25 text-ocean ring-2 ring-aqua/55 dark:border-cyan-300 dark:bg-cyan-900/10 dark:text-cyan-100 dark:ring-cyan-300'
                         : 'border-red-400 bg-red-900/10 text-red-200 ring-2 ring-red-400'
                       : inStock
-                      ? 'border-cyan-700 text-cyan-100 hover:bg-cyan-900/6'
-                      : 'border-gray-600 bg-transparent text-cyan-200/60 opacity-70'
+                      ? 'border-water/70 text-foreground hover:bg-aqua/18 hover:border-ocean/70 dark:border-cyan-700 dark:text-cyan-100 dark:hover:bg-cyan-900/6'
+                      : 'border-border bg-transparent text-muted-foreground opacity-70 dark:border-gray-600 dark:text-cyan-200/60'
                   }`}
                 >
                   {value}
@@ -170,17 +170,17 @@ const ProductVariantSelector = ({ product, selectedVariant, onVariantChange }) =
 
       {/* Selected Variant Info */}
       {selectedVariant && (
-        <div className="mt-4 p-3 bg-white/5 backdrop-blur-md border border-cyan-300/20 rounded-lg text-cyan-100">
+        <div className="mt-4 p-3 bg-aqua/15 backdrop-blur-md border border-water/45 rounded-lg text-foreground dark:bg-white/5 dark:border-cyan-300/20 dark:text-cyan-100">
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-2">
               {Object.entries(selectedVariant.optionValues || {}).map(([key, value]) => (
-                <span key={key} className="px-2 py-1 bg-cyan-900/10 text-cyan-100 rounded-full text-xs font-medium">
+                <span key={key} className="px-2 py-1 bg-aqua/25 text-ocean rounded-full text-xs font-medium dark:bg-cyan-900/10 dark:text-cyan-100">
                   {key}: {value}
                 </span>
               ))}
             </div>
             <span className={`font-medium ${
-              selectedVariant.stock > 0 ? 'text-emerald-300' : 'text-red-400'
+              selectedVariant.stock > 0 ? 'text-nature dark:text-emerald-300' : 'text-red-600 dark:text-red-400'
             }`}>
               {selectedVariant.stock > 0 
                 ? `Còn ${selectedVariant.stock} sản phẩm` 

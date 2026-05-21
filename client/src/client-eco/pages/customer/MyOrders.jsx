@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { fetchUserOrders, setOrderStatusFilter } from '../../redux/slices/orderSlice';
+import { useTheme } from '../../context/ThemeContext';
 
 const statusOptions = [
   { key: '', label: 'Tất cả' },
@@ -43,6 +44,7 @@ const StatusBadge = ({ status }) => {
 };
 
 const MyOrders = () => {
+  const { isDark } = useTheme();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user } = useSelector((s) => s.auth);
@@ -69,15 +71,43 @@ const MyOrders = () => {
   }
 
   return (
-    <div className="min-h-screen bg-transparent">
-      <div className="glass-card border-b border-white/6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <h1 className="text-2xl font-bold text-white">Đơn hàng của tôi</h1>
-          <p className="text-white/70 mt-1">Theo dõi và quản lý các đơn hàng đã đặt</p>
-        </div>
-      </div>
+    <div className={`my-orders-page relative min-h-screen transition-colors duration-300 ${isDark ? 'bg-[#051C1C] text-white' : 'bg-background text-foreground'}`}>
+      {/* 1. Nền Gradient chính - Cố định (Fixed) */}
+      <div className={`fixed inset-0 z-0 transition-colors duration-300 ${
+        isDark 
+          ? 'bg-gradient-to-b from-[#051C1C] via-[#0a2828] to-[#051C1C]' 
+          : 'bg-gradient-to-b from-[#FFFDF0] via-[#E8F6F6] to-[#FFFDF0]'
+      }`}></div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* 2. Hệ thống vân sóng vô tận lặp lại toàn trang */}
+      <div 
+        className="absolute inset-0 z-0 pointer-events-none transition-opacity duration-300"
+        style={{
+          backgroundImage: isDark
+            ? `url("data:image/svg+xml,%3Csvg width='400' height='200' viewBox='0 0 400 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 100 Q 100 50 200 100 T 400 100' fill='none' stroke='%2310b981' stroke-width='1.5' stroke-opacity='0.5'/%3E%3Cpath d='M0 140 Q 100 90 200 140 T 400 140' fill='none' stroke='%2306b6d4' stroke-width='1' stroke-opacity='0.3'/%3E%3C/svg%3E")`
+            : `url("data:image/svg+xml,%3Csvg width='400' height='200' viewBox='0 0 400 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 100 Q 100 50 200 100 T 400 100' fill='none' stroke='%234682A9' stroke-width='1.5' stroke-opacity='0.25'/%3E%3Cpath d='M0 140 Q 100 90 200 140 T 400 140' fill='none' stroke='%23749BC2' stroke-width='1' stroke-opacity='0.2'/%3E%3C/svg%3E")`,
+          backgroundSize: '800px 400px',
+          opacity: isDark ? 0.4 : 0.25,
+        }}
+      ></div>
+
+      {/* 3. Các đốm sáng Glow cố định tạo chiều sâu */}
+      <div className={`fixed top-[20%] left-[-10%] w-[500px] h-[500px] rounded-full z-0 pointer-events-none blur-[120px] transition-colors duration-300 ${
+        isDark ? 'bg-emerald-900/20' : 'bg-emerald-200/35'
+      }`}></div>
+      <div className={`fixed bottom-[10%] right-[-10%] w-[400px] h-[400px] rounded-full z-0 pointer-events-none blur-[100px] transition-colors duration-300 ${
+        isDark ? 'bg-cyan-900/20' : 'bg-cyan-200/35'
+      }`}></div>
+
+      <div className="relative z-10">
+        <div className="glass-card border-b border-water/35 dark:border-white/6">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <h1 className="text-2xl font-bold text-white">Đơn hàng của tôi</h1>
+            <p className="text-white/70 mt-1">Theo dõi và quản lý các đơn hàng đã đặt</p>
+          </div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Filters */}
         <div className="flex flex-wrap gap-2 mb-6">
           {statusOptions.map((opt) => (
@@ -86,8 +116,8 @@ const MyOrders = () => {
               onClick={() => onFilterChange(opt.key)}
               className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
                 filter.status === opt.key
-                  ? 'bg-emerald-400 text-abyss-800 border-emerald-400'
-                  : 'bg-transparent text-white/80 border-white/10 hover:bg-white/6'
+                  ? 'bg-ocean text-primary-foreground border-ocean shadow-sm dark:bg-emerald-400 dark:text-abyss-800 dark:border-emerald-400'
+                  : 'bg-card/80 text-foreground border-water/45 hover:bg-aqua/20 hover:border-ocean/60 dark:bg-transparent dark:text-white/80 dark:border-white/10 dark:hover:bg-white/6'
               }`}
             >
               {opt.label}
@@ -96,30 +126,30 @@ const MyOrders = () => {
         </div>
 
         {/* Orders List */}
-        <div className="glass-card rounded-lg shadow-sm border border-white/10">
+        <div className="glass-card rounded-lg shadow-sm border border-water/40 dark:border-white/10">
           {loading ? (
             <div className="p-12 text-center">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-300 mx-auto"></div>
-              <p className="mt-4 text-white/70">Đang tải đơn hàng...</p>
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-ocean mx-auto dark:border-emerald-300"></div>
+              <p className="mt-4 text-muted-foreground dark:text-white/70">Đang tải đơn hàng...</p>
             </div>
           ) : error ? (
             <div className="p-6 text-center text-red-400">{error}</div>
           ) : orders.length === 0 ? (
             <div className="p-12 text-center">
-              <p className="text-white/70">Bạn chưa có đơn hàng nào.</p>
+              <p className="text-muted-foreground dark:text-white/70">Bạn chưa có đơn hàng nào.</p>
             </div>
           ) : (
-            <ul className="divide-y divide-white/6">
+            <ul className="divide-y divide-water/30 dark:divide-white/6">
               {orders.map((order) => (
-                <li key={order._id} className="p-4 sm:p-6 hover:bg-white/6 transition-colors rounded-lg">
+                <li key={order._id} className="p-4 sm:p-6 hover:bg-aqua/14 transition-colors rounded-lg dark:hover:bg-white/6">
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     {/* Left: Order meta */}
                     <div>
                       <div className="flex items-center gap-3">
-                        <h3 className="text-base font-semibold text-white">#{order.orderNumber || order._id.slice(-6)}</h3>
+                        <h3 className="text-base font-semibold text-foreground dark:text-white">#{order.orderNumber || order._id.slice(-6)}</h3>
                         <StatusBadge status={order.status} />
                       </div>
-                      <p className="text-sm text-white/70 mt-1">{formatDate(order.createdAt)}</p>
+                      <p className="text-sm text-muted-foreground mt-1 dark:text-white/70">{formatDate(order.createdAt)}</p>
 
                       {/* Thumbnails */}
                       <div className="flex gap-2 mt-3">
@@ -149,7 +179,7 @@ const MyOrders = () => {
                               key={it._id}
                               src={imgSrc}
                               alt={it.productName || it.productId?.name || 'Sản phẩm'}
-                              className="w-12 h-12 rounded object-cover border border-white/6"
+                              className="w-12 h-12 rounded object-cover border border-water/35 dark:border-white/6"
                               onError={(e) => {
                                 e.target.src = '/placeholder-product.jpg';
                               }}
@@ -157,20 +187,20 @@ const MyOrders = () => {
                           );
                         })}
                         {order.items?.length > 4 && (
-                          <span className="text-xs text-white/60 self-center">+{order.items.length - 4} nữa</span>
+                          <span className="text-xs text-muted-foreground self-center dark:text-white/60">+{order.items.length - 4} nữa</span>
                         )}
                       </div>
                     </div>
 
                     {/* Right: Summary */}
                       <div className="text-right">
-                      <div className="text-sm text-white/70">Tổng thanh toán</div>
-                      <div className="text-lg font-bold text-emerald-300">{formatCurrency(order.totalPrice)}</div>
-                      <div className="mt-2 text-sm text-white/60">{order.items?.reduce((s, i)=> s + i.quantity, 0)} sản phẩm</div>
+                      <div className="text-sm text-muted-foreground dark:text-white/70">Tổng thanh toán</div>
+                      <div className="text-lg font-bold text-nature dark:text-emerald-300">{formatCurrency(order.totalPrice)}</div>
+                      <div className="mt-2 text-sm text-muted-foreground dark:text-white/60">{order.items?.reduce((s, i)=> s + i.quantity, 0)} sản phẩm</div>
                       <div className="mt-3">
                         <button 
                           onClick={() => navigate(`/orders/${order._id}`)}
-                          className="px-4 py-2 text-sm font-medium text-abyss-800 bg-gradient-to-r from-emerald-400 to-cyan-300 rounded-lg hover:shadow-md transition shadow-sm"
+                          className="px-4 py-2 text-sm font-medium text-primary-foreground bg-gradient-to-r from-nature to-ocean rounded-lg hover:shadow-md transition shadow-sm dark:text-abyss-800 dark:from-emerald-400 dark:to-cyan-300"
                         >
                           Xem chi tiết
                         </button>
@@ -189,24 +219,25 @@ const MyOrders = () => {
             <button
               onClick={() => onPageChange(Math.max(1, pagination.page - 1))}
               disabled={pagination.page === 1}
-              className={`w-10 h-10 flex items-center justify-center rounded-full border transition-colors ${pagination.page === 1 ? 'border-white/10 text-white/40 bg-transparent cursor-not-allowed' : 'border-white/20 text-white hover:bg-white/6'}`}
+              className={`w-10 h-10 flex items-center justify-center rounded-full border transition-colors ${pagination.page === 1 ? 'border-water/30 text-muted-foreground/60 bg-transparent cursor-not-allowed dark:border-white/10 dark:text-white/40' : 'border-water/45 text-foreground hover:bg-aqua/20 dark:border-white/20 dark:text-white dark:hover:bg-white/6'}`}
               aria-label="Trang trước"
             >
               &lt;
             </button>
 
-            <span className="text-sm text-white/70">Trang {pagination.page} / {pagination.pages}</span>
+            <span className="text-sm text-muted-foreground dark:text-white/70">Trang {pagination.page} / {pagination.pages}</span>
 
             <button
               onClick={() => onPageChange(Math.min(pagination.pages, pagination.page + 1))}
               disabled={pagination.page === pagination.pages}
-              className={`w-10 h-10 flex items-center justify-center rounded-full border transition-colors ${pagination.page === pagination.pages ? 'border-white/10 text-white/40 bg-transparent cursor-not-allowed' : 'border-white/20 text-white hover:bg-white/6'}`}
+              className={`w-10 h-10 flex items-center justify-center rounded-full border transition-colors ${pagination.page === pagination.pages ? 'border-water/30 text-muted-foreground/60 bg-transparent cursor-not-allowed dark:border-white/10 dark:text-white/40' : 'border-water/45 text-foreground hover:bg-aqua/20 dark:border-white/20 dark:text-white dark:hover:bg-white/6'}`}
               aria-label="Trang sau"
             >
               &gt;
             </button>
           </div>
         )}
+      </div>
       </div>
     </div>
   );

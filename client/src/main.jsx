@@ -5,6 +5,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google'
 import App from './App.jsx'
 import store from '../src/shared/redux/store'
 import { AuthProvider } from '../src/client-eco/context/AuthContext.jsx'
+import { ThemeProvider } from '../src/client-eco/context/ThemeContext.jsx'
 import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
@@ -12,9 +13,11 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   // <React.StrictMode>
     <GoogleOAuthProvider clientId="1041136174971-jqsg5dtr01c0rr556b4q2lpifuk3n11u.apps.googleusercontent.com">
       <Provider store={store}>
-        <AuthProvider>
-          <App />
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <App />
+          </AuthProvider>
+        </ThemeProvider>
       </Provider>
     </GoogleOAuthProvider>
   // </React.StrictMode>,

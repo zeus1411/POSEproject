@@ -354,7 +354,7 @@ if (!validatePersonalInfo()) {
         icon: 'error',
         title: 'Cập nhật thất bại',
         text: errorMessage,
-        confirmButtonColor: '#EF4444'
+        confirmButtonColor: 'rgb(var(--destructive))'
       });
     } finally {
       setLoading(false);
@@ -389,7 +389,7 @@ if (!validatePersonalInfo()) {
           icon: 'success',
           title: 'Thành công!',
           text: 'Cập nhật địa chỉ thành công',
-          confirmButtonColor: '#10B981',
+          confirmButtonColor: 'rgb(var(--natural-green))',
           timer: 2000,
           timerProgressBar: true,
           customClass: {
@@ -487,7 +487,7 @@ if (!validatePersonalInfo()) {
           icon: 'success',
           title: 'Thành công!',
           text: 'Đổi mật khẩu thành công',
-          confirmButtonColor: '#10B981',
+          confirmButtonColor: 'rgb(var(--natural-green))',
           timer: 2000,
           timerProgressBar: true,
           customClass: {
@@ -569,7 +569,7 @@ if (!validatePersonalInfo()) {
           icon: 'success',
           title: 'Thành công!',
           text: 'Cập nhật ảnh đại diện thành công',
-          confirmButtonColor: '#10B981',
+          confirmButtonColor: 'rgb(var(--natural-green))',
           timer: 2000,
           timerProgressBar: true,
           allowOutsideClick: false,
