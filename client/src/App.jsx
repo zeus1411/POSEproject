@@ -41,8 +41,11 @@ import CreateUserBlog from './client-blog/pages/common/CreateUserBlog.jsx';
 import MyBlogs from './client-blog/pages/customer/MyBlogs.jsx';
 
 import ScrollToTop from './client-blog/components/ScrollToTop.jsx';
+import { useTheme } from './client-eco/context/ThemeContext.jsx';
 
 function App() {
+  const { theme } = useTheme();
+
   return (
     <Provider store={store}>
       <Router>
@@ -121,7 +124,7 @@ function App() {
           pauseOnFocusLoss
           draggable
           pauseOnHover
-          theme="light"
+          theme={theme}
           icon={({ type }) => {
             if (type === 'error') {
               return (

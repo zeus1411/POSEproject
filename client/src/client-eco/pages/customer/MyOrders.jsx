@@ -69,11 +69,11 @@ const MyOrders = () => {
   }
 
   return (
-    <div className="min-h-screen bg-transparent">
-      <div className="glass-card border-b border-white/6">
+    <div className="my-orders-page min-h-screen bg-transparent text-foreground">
+      <div className="glass-card border-b border-water/35 dark:border-white/6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <h1 className="text-2xl font-bold text-white">Đơn hàng của tôi</h1>
-          <p className="text-white/70 mt-1">Theo dõi và quản lý các đơn hàng đã đặt</p>
+          <h1 className="text-2xl font-bold text-foreground dark:text-white">Đơn hàng của tôi</h1>
+          <p className="text-muted-foreground mt-1 dark:text-white/70">Theo dõi và quản lý các đơn hàng đã đặt</p>
         </div>
       </div>
 
@@ -86,8 +86,8 @@ const MyOrders = () => {
               onClick={() => onFilterChange(opt.key)}
               className={`px-3 py-1.5 rounded-full text-sm border transition-colors ${
                 filter.status === opt.key
-                  ? 'bg-emerald-400 text-abyss-800 border-emerald-400'
-                  : 'bg-transparent text-white/80 border-white/10 hover:bg-white/6'
+                  ? 'bg-ocean text-primary-foreground border-ocean shadow-sm dark:bg-emerald-400 dark:text-abyss-800 dark:border-emerald-400'
+                  : 'bg-card/80 text-foreground border-water/45 hover:bg-aqua/20 hover:border-ocean/60 dark:bg-transparent dark:text-white/80 dark:border-white/10 dark:hover:bg-white/6'
               }`}
             >
               {opt.label}
@@ -96,30 +96,30 @@ const MyOrders = () => {
         </div>
 
         {/* Orders List */}
-        <div className="glass-card rounded-lg shadow-sm border border-white/10">
+        <div className="glass-card rounded-lg shadow-sm border border-water/40 dark:border-white/10">
           {loading ? (
             <div className="p-12 text-center">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-300 mx-auto"></div>
-              <p className="mt-4 text-white/70">Đang tải đơn hàng...</p>
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-ocean mx-auto dark:border-emerald-300"></div>
+              <p className="mt-4 text-muted-foreground dark:text-white/70">Đang tải đơn hàng...</p>
             </div>
           ) : error ? (
             <div className="p-6 text-center text-red-400">{error}</div>
           ) : orders.length === 0 ? (
             <div className="p-12 text-center">
-              <p className="text-white/70">Bạn chưa có đơn hàng nào.</p>
+              <p className="text-muted-foreground dark:text-white/70">Bạn chưa có đơn hàng nào.</p>
             </div>
           ) : (
-            <ul className="divide-y divide-white/6">
+            <ul className="divide-y divide-water/30 dark:divide-white/6">
               {orders.map((order) => (
-                <li key={order._id} className="p-4 sm:p-6 hover:bg-white/6 transition-colors rounded-lg">
+                <li key={order._id} className="p-4 sm:p-6 hover:bg-aqua/14 transition-colors rounded-lg dark:hover:bg-white/6">
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     {/* Left: Order meta */}
                     <div>
                       <div className="flex items-center gap-3">
-                        <h3 className="text-base font-semibold text-white">#{order.orderNumber || order._id.slice(-6)}</h3>
+                        <h3 className="text-base font-semibold text-foreground dark:text-white">#{order.orderNumber || order._id.slice(-6)}</h3>
                         <StatusBadge status={order.status} />
                       </div>
-                      <p className="text-sm text-white/70 mt-1">{formatDate(order.createdAt)}</p>
+                      <p className="text-sm text-muted-foreground mt-1 dark:text-white/70">{formatDate(order.createdAt)}</p>
 
                       {/* Thumbnails */}
                       <div className="flex gap-2 mt-3">
@@ -149,7 +149,7 @@ const MyOrders = () => {
                               key={it._id}
                               src={imgSrc}
                               alt={it.productName || it.productId?.name || 'Sản phẩm'}
-                              className="w-12 h-12 rounded object-cover border border-white/6"
+                              className="w-12 h-12 rounded object-cover border border-water/35 dark:border-white/6"
                               onError={(e) => {
                                 e.target.src = '/placeholder-product.jpg';
                               }}
@@ -157,20 +157,20 @@ const MyOrders = () => {
                           );
                         })}
                         {order.items?.length > 4 && (
-                          <span className="text-xs text-white/60 self-center">+{order.items.length - 4} nữa</span>
+                          <span className="text-xs text-muted-foreground self-center dark:text-white/60">+{order.items.length - 4} nữa</span>
                         )}
                       </div>
                     </div>
 
                     {/* Right: Summary */}
                       <div className="text-right">
-                      <div className="text-sm text-white/70">Tổng thanh toán</div>
-                      <div className="text-lg font-bold text-emerald-300">{formatCurrency(order.totalPrice)}</div>
-                      <div className="mt-2 text-sm text-white/60">{order.items?.reduce((s, i)=> s + i.quantity, 0)} sản phẩm</div>
+                      <div className="text-sm text-muted-foreground dark:text-white/70">Tổng thanh toán</div>
+                      <div className="text-lg font-bold text-nature dark:text-emerald-300">{formatCurrency(order.totalPrice)}</div>
+                      <div className="mt-2 text-sm text-muted-foreground dark:text-white/60">{order.items?.reduce((s, i)=> s + i.quantity, 0)} sản phẩm</div>
                       <div className="mt-3">
                         <button 
                           onClick={() => navigate(`/orders/${order._id}`)}
-                          className="px-4 py-2 text-sm font-medium text-abyss-800 bg-gradient-to-r from-emerald-400 to-cyan-300 rounded-lg hover:shadow-md transition shadow-sm"
+                          className="px-4 py-2 text-sm font-medium text-primary-foreground bg-gradient-to-r from-nature to-ocean rounded-lg hover:shadow-md transition shadow-sm dark:text-abyss-800 dark:from-emerald-400 dark:to-cyan-300"
                         >
                           Xem chi tiết
                         </button>
@@ -189,18 +189,18 @@ const MyOrders = () => {
             <button
               onClick={() => onPageChange(Math.max(1, pagination.page - 1))}
               disabled={pagination.page === 1}
-              className={`w-10 h-10 flex items-center justify-center rounded-full border transition-colors ${pagination.page === 1 ? 'border-white/10 text-white/40 bg-transparent cursor-not-allowed' : 'border-white/20 text-white hover:bg-white/6'}`}
+              className={`w-10 h-10 flex items-center justify-center rounded-full border transition-colors ${pagination.page === 1 ? 'border-water/30 text-muted-foreground/60 bg-transparent cursor-not-allowed dark:border-white/10 dark:text-white/40' : 'border-water/45 text-foreground hover:bg-aqua/20 dark:border-white/20 dark:text-white dark:hover:bg-white/6'}`}
               aria-label="Trang trước"
             >
               &lt;
             </button>
 
-            <span className="text-sm text-white/70">Trang {pagination.page} / {pagination.pages}</span>
+            <span className="text-sm text-muted-foreground dark:text-white/70">Trang {pagination.page} / {pagination.pages}</span>
 
             <button
               onClick={() => onPageChange(Math.min(pagination.pages, pagination.page + 1))}
               disabled={pagination.page === pagination.pages}
-              className={`w-10 h-10 flex items-center justify-center rounded-full border transition-colors ${pagination.page === pagination.pages ? 'border-white/10 text-white/40 bg-transparent cursor-not-allowed' : 'border-white/20 text-white hover:bg-white/6'}`}
+              className={`w-10 h-10 flex items-center justify-center rounded-full border transition-colors ${pagination.page === pagination.pages ? 'border-water/30 text-muted-foreground/60 bg-transparent cursor-not-allowed dark:border-white/10 dark:text-white/40' : 'border-water/45 text-foreground hover:bg-aqua/20 dark:border-white/20 dark:text-white dark:hover:bg-white/6'}`}
               aria-label="Trang sau"
             >
               &gt;

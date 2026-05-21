@@ -100,7 +100,7 @@ const AdminOrdersPage = () => {
 
     return (
         <AdminLayout>
-            <div className="min-h-screen bg-[#f8f9ff] p-8">
+            <div className="admin-orders-page min-h-screen bg-[#f8f9ff] p-8">
                 {/* Header */}
                 <div className="mb-8">
                     <h1 className="text-3xl font-black tracking-tight text-[#1e293b]">

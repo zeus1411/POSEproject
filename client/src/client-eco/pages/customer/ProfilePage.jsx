@@ -299,7 +299,7 @@ const ProfilePage = () => {
         icon: 'error',
         title: 'Thông tin không hợp lệ',
         text: 'Vui lòng kiểm tra lại các thông tin đã nhập',
-        confirmButtonColor: '#3B82F6'
+        confirmButtonColor: 'rgb(var(--primary))'
       });
       return;
     }
@@ -330,7 +330,7 @@ const ProfilePage = () => {
           icon: 'success',
           title: 'Thành công!',
           text: 'Cập nhật thông tin cá nhân thành công',
-          confirmButtonColor: '#10B981',
+          confirmButtonColor: 'rgb(var(--natural-green))',
           timer: 2000,
           timerProgressBar: true
         });
@@ -341,7 +341,7 @@ const ProfilePage = () => {
         icon: 'error',
         title: 'Cập nhật thất bại',
         text: errorMessage,
-        confirmButtonColor: '#EF4444'
+        confirmButtonColor: 'rgb(var(--destructive))'
       });
     } finally {
       setLoading(false);
@@ -355,7 +355,7 @@ const ProfilePage = () => {
         icon: 'error',
         title: 'Thông tin không hợp lệ',
         text: 'Vui lòng kiểm tra lại các thông tin địa chỉ',
-        confirmButtonColor: '#3B82F6'
+        confirmButtonColor: 'rgb(var(--primary))'
       });
       return;
     }
@@ -370,14 +370,14 @@ const ProfilePage = () => {
           icon: 'success',
           title: 'Thành công!',
           text: 'Cập nhật địa chỉ thành công',
-          confirmButtonColor: '#10B981',
+          confirmButtonColor: 'rgb(var(--natural-green))',
           timer: 2000,
           timerProgressBar: true
         });
       }
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra khi cập nhật địa chỉ';
-      Swal.fire({ icon: 'error', title: 'Cập nhật thất bại', text: errorMessage, confirmButtonColor: '#EF4444' });
+      Swal.fire({ icon: 'error', title: 'Cập nhật thất bại', text: errorMessage, confirmButtonColor: 'rgb(var(--destructive))' });
     } finally {
       setLoading(false);
     }
@@ -426,7 +426,7 @@ const ProfilePage = () => {
   const handleChangePassword = async () => {
     setErrors({});
     if (!validatePassword()) {
-      Swal.fire({ icon: 'error', title: 'Thông tin không hợp lệ', text: 'Vui lòng kiểm tra lại thông tin mật khẩu', confirmButtonColor: '#3B82F6' });
+      Swal.fire({ icon: 'error', title: 'Thông tin không hợp lệ', text: 'Vui lòng kiểm tra lại thông tin mật khẩu', confirmButtonColor: 'rgb(var(--primary))' });
       return;
     }
 
@@ -438,7 +438,7 @@ const ProfilePage = () => {
           icon: 'success',
           title: 'Thành công!',
           text: 'Đổi mật khẩu thành công',
-          confirmButtonColor: '#10B981',
+          confirmButtonColor: 'rgb(var(--natural-green))',
           timer: 2000,
           timerProgressBar: true
         });
@@ -447,7 +447,7 @@ const ProfilePage = () => {
       }
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'Có lỗi xảy ra khi đổi mật khẩu';
-      Swal.fire({ icon: 'error', title: 'Đổi mật khẩu thất bại', text: errorMessage, confirmButtonColor: '#EF4444' });
+      Swal.fire({ icon: 'error', title: 'Đổi mật khẩu thất bại', text: errorMessage, confirmButtonColor: 'rgb(var(--destructive))' });
     } finally {
       setLoading(false);
     }
@@ -458,12 +458,12 @@ const ProfilePage = () => {
     if (!file) return;
 
     if (!file.type.match('image.*')) {
-      Swal.fire({ icon: 'error', title: 'File không hợp lệ', text: 'Vui lòng chọn file ảnh (JPEG, PNG)', confirmButtonColor: '#EF4444' });
+      Swal.fire({ icon: 'error', title: 'File không hợp lệ', text: 'Vui lòng chọn file ảnh (JPEG, PNG)', confirmButtonColor: 'rgb(var(--destructive))' });
       return;
     }
 
     if (file.size > 2 * 1024 * 1024) {
-      Swal.fire({ icon: 'error', title: 'File quá lớn', text: 'Kích thước ảnh không được vượt quá 2MB', confirmButtonColor: '#EF4444' });
+      Swal.fire({ icon: 'error', title: 'File quá lớn', text: 'Kích thước ảnh không được vượt quá 2MB', confirmButtonColor: 'rgb(var(--destructive))' });
       return;
     }
 
@@ -479,14 +479,14 @@ const ProfilePage = () => {
           icon: 'success',
           title: 'Thành công!',
           text: 'Cập nhật ảnh đại diện thành công',
-          confirmButtonColor: '#10B981',
+          confirmButtonColor: 'rgb(var(--natural-green))',
           timer: 2000,
           timerProgressBar: true
         });
       }
     } catch (error) {
       const errorMessage = error.response?.data?.message || error.message || 'Có lỗi xảy ra khi tải lên ảnh đại diện';
-      await Swal.fire({ icon: 'error', title: 'Tải lên thất bại', text: errorMessage, confirmButtonColor: '#EF4444' });
+      await Swal.fire({ icon: 'error', title: 'Tải lên thất bại', text: errorMessage, confirmButtonColor: 'rgb(var(--destructive))' });
     } finally {
       setIsUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -499,7 +499,7 @@ const ProfilePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="profile-page min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4 space-y-6">
         
         {/* Header */}

@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: "class",
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
@@ -7,7 +8,21 @@ export default {
   theme: {
     extend: {
       colors: {
+        background: 'rgb(var(--background) / <alpha-value>)',
+        foreground: 'rgb(var(--foreground) / <alpha-value>)',
+        card: 'rgb(var(--card) / <alpha-value>)',
+        'card-foreground': 'rgb(var(--card-foreground) / <alpha-value>)',
+        muted: 'rgb(var(--muted) / <alpha-value>)',
+        'muted-foreground': 'rgb(var(--muted-foreground) / <alpha-value>)',
+        border: 'rgb(var(--border) / <alpha-value>)',
+        aqua: 'rgb(var(--aqua-blue) / <alpha-value>)',
+        water: 'rgb(var(--water-blue) / <alpha-value>)',
+        ocean: 'rgb(var(--deep-ocean) / <alpha-value>)',
+        nature: 'rgb(var(--natural-green) / <alpha-value>)',
         primary: {
+          DEFAULT: 'rgb(var(--primary) / <alpha-value>)',
+          hover: 'rgb(var(--primary-hover) / <alpha-value>)',
+          foreground: 'rgb(var(--primary-foreground) / <alpha-value>)',
           50: '#f0f9ff',
           100: '#e0f2fe',
           200: '#bae6fd',
@@ -18,6 +33,18 @@ export default {
           700: '#0369a1',
           800: '#075985',
           900: '#0c4a6e',
+        },
+        secondary: {
+          DEFAULT: 'rgb(var(--secondary) / <alpha-value>)',
+          foreground: 'rgb(var(--secondary-foreground) / <alpha-value>)',
+        },
+        accent: {
+          DEFAULT: 'rgb(var(--accent) / <alpha-value>)',
+          foreground: 'rgb(var(--accent-foreground) / <alpha-value>)',
+        },
+        destructive: {
+          DEFAULT: 'rgb(var(--destructive) / <alpha-value>)',
+          foreground: 'rgb(var(--destructive-foreground) / <alpha-value>)',
         },
         // AquaticPose deep underwater palette
         abyss: {

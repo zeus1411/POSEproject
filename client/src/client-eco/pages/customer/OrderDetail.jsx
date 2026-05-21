@@ -100,7 +100,7 @@ const OrderDetail = () => {
           <p class="text-gray-600 text-sm">Cảm ơn bạn đã mua hàng!</p>
         `,
         confirmButtonText: 'Đóng',
-        confirmButtonColor: '#10B981',
+        confirmButtonColor: 'rgb(var(--natural-green))',
         timer: 5000,
         timerProgressBar: true
       });
@@ -115,7 +115,7 @@ const OrderDetail = () => {
           ? `<p class="text-gray-700">${decodeURIComponent(error)}</p>`
           : '<p class="text-gray-700">Thanh toán VNPay không thành công. Vui lòng thử lại.</p>',
         confirmButtonText: 'Đóng',
-        confirmButtonColor: '#EF4444'
+        confirmButtonColor: 'rgb(var(--destructive))'
       });
       
       // Clear query params and redirect to checkout
@@ -129,7 +129,7 @@ const OrderDetail = () => {
         title: '⏰ Phiên thanh toán hết hạn',
         text: 'Dữ liệu đơn hàng đã hết hạn. Vui lòng đặt hàng lại.',
         confirmButtonText: 'Về trang thanh toán',
-        confirmButtonColor: '#F59E0B'
+        confirmButtonColor: 'rgb(202 138 4)'
       }).then(() => {
         navigate('/checkout');
       });
@@ -304,7 +304,7 @@ const OrderDetail = () => {
   }
 
   return (
-    <div className="bg-transparent min-h-screen">
+    <div className="order-detail-page bg-transparent min-h-screen text-foreground">
       <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
         {/* Order Header */}
         <div className="glass-card shadow overflow-hidden sm:rounded-lg mb-6">

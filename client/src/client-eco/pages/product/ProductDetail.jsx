@@ -144,7 +144,7 @@ const ProductDetail = () => {
         icon: 'warning',
         title: 'Chưa chọn biến thể',
         text: 'Vui lòng chọn biến thể sản phẩm trước khi thêm vào giỏ hàng',
-        confirmButtonColor: '#3b82f6'
+        confirmButtonColor: 'rgb(var(--primary))'
       });
       return;
     }
@@ -168,7 +168,7 @@ const ProductDetail = () => {
         icon: 'error',
         title: 'Không thể thêm vào giỏ hàng',
         text: error || 'Đã có lỗi xảy ra. Vui lòng thử lại sau.',
-        confirmButtonColor: '#3b82f6'
+        confirmButtonColor: 'rgb(var(--primary))'
       });
     }
   };
@@ -253,10 +253,10 @@ const ProductDetail = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Đang tải sản phẩm...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-ocean mx-auto dark:border-primary-600"></div>
+          <p className="mt-4 text-muted-foreground">Đang tải sản phẩm...</p>
         </div>
       </div>
     );
@@ -264,12 +264,12 @@ const ProductDetail = () => {
 
   if (!currentProduct) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Không tìm thấy sản phẩm</h2>
+          <h2 className="text-2xl font-bold text-foreground mb-4">Không tìm thấy sản phẩm</h2>
           <button
             onClick={() => navigate('/shop')}
-            className="px-4 py-2 bg-primary-600 text-white rounded-md hover:bg-primary-700 transition-colors duration-200"
+            className="px-4 py-2 bg-ocean text-primary-foreground rounded-md hover:bg-primary-hover transition-colors duration-200 dark:bg-primary-600 dark:hover:bg-primary-700"
           >
             Quay lại cửa hàng
           </button>
@@ -279,7 +279,7 @@ const ProductDetail = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#021717] via-[#042a2a] to-[#062f2f] text-white">
+    <div className="product-detail-page min-h-screen bg-gradient-to-b from-[#021717] via-[#042a2a] to-[#062f2f] text-white">
       {/* Breadcrumb */}
       <div className="border-b border-cyan-800/40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">

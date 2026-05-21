@@ -114,11 +114,11 @@ const NotificationIcon = () => {
       {/* Icon chuông thông báo */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 rounded-full hover:bg-white/10 transition-colors"
+        className="relative p-2 rounded-full text-ocean hover:bg-aqua/25 hover:text-nature transition-colors dark:text-white dark:hover:bg-white/10 dark:hover:text-white"
         aria-label="Thông báo"
       >
         <svg
-          className="w-8 h-8 text-white"
+          className="w-8 h-8 drop-shadow-[0_6px_14px_rgb(var(--deep-ocean)/0.18)]"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -148,7 +148,7 @@ const NotificationIcon = () => {
             {unreadCount > 0 && (
               <button
                 onClick={handleMarkAllAsRead}
-                className="text-xs text-primary-600 hover:text-primary-700 font-medium"
+                className="text-xs text-ocean hover:text-primary-hover font-medium"
               >
                 Đánh dấu tất cả đã đọc
               </button>
@@ -160,7 +160,7 @@ const NotificationIcon = () => {
             {notifications.length === 0 ? (
               <div className="px-4 py-8 text-center text-gray-500">
                 <svg
-                  className="w-12 h-12 mx-auto mb-2 text-gray-300"
+                  className="w-12 h-12 mx-auto mb-2 text-ocean"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"

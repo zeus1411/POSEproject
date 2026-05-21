@@ -60,7 +60,7 @@ const Shop = () => {
         showCancelButton: true,
         confirmButtonText: 'Đăng nhập',
         cancelButtonText: 'Hủy',
-        confirmButtonColor: '#3b82f6'
+        confirmButtonColor: 'rgb(var(--primary))'
       }).then((result) => {
         if (result.isConfirmed) {
           window.location.href = '/login';
@@ -75,7 +75,7 @@ const Shop = () => {
         icon: 'error',
         title: 'Không thể thêm vào giỏ hàng',
         text: error || 'Đã có lỗi xảy ra. Vui lòng thử lại sau.',
-        confirmButtonColor: '#3b82f6'
+        confirmButtonColor: 'rgb(var(--primary))'
       });
     }
   };
@@ -89,7 +89,7 @@ const Shop = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#051C1C] via-[#0a2828] to-[#061e2e]">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_10%_0%,rgb(var(--aqua-blue)/0.36),transparent_28%),radial-gradient(circle_at_90%_8%,rgb(var(--natural-green)/0.12),transparent_30%),linear-gradient(180deg,rgb(var(--background))_0%,rgb(236_249_247)_48%,rgb(var(--background))_100%)] text-foreground dark:bg-gradient-to-b dark:from-[#051C1C] dark:via-[#0a2828] dark:to-[#061e2e]">
       {/* Premium Carousel Banner */}
       <ShopCarousel />
 
@@ -120,16 +120,16 @@ const Shop = () => {
 
             {/* Results Summary */}
             <div className="flex flex-col xs:flex-row items-start xs:items-center justify-between gap-2 mb-4 px-1">
-              <div className="text-sm text-gray-400 font-body">
+              <div className="text-sm text-muted-foreground font-body">
                 {isLoading ? (
                   <span>Đang tải...</span>
                 ) : (
                   <span>
-                    Hiển thị <span className="text-neon-cyan font-semibold">{products.length}</span> / {pagination.total} sản phẩm
+                    Hiển thị <span className="text-nature font-semibold dark:text-primary">{products.length}</span> / {pagination.total} sản phẩm
                   </span>
                 )}
               </div>
-              <div className="text-sm text-gray-500 font-body whitespace-nowrap">
+              <div className="text-sm text-muted-foreground font-body whitespace-nowrap">
                 Trang {pagination.page} / {pagination.pages}
               </div>
             </div>

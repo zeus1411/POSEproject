@@ -9,12 +9,12 @@ const SectionHeader = ({ title, isOpen, onToggle }) => (
     onClick={onToggle}
     className="w-full flex items-center justify-between py-3 text-left group"
   >
-    <span className="text-sm font-body font-semibold text-white uppercase tracking-widest">
+    <span className="text-sm font-body font-semibold text-foreground uppercase tracking-widest dark:text-white">
       {title}
     </span>
     {isOpen
-      ? <ChevronUpIcon className="w-4 h-4 text-gray-400 group-hover:text-neon-cyan transition-colors" />
-      : <ChevronDownIcon className="w-4 h-4 text-gray-400 group-hover:text-neon-cyan transition-colors" />
+      ? <ChevronUpIcon className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors dark:text-gray-400 dark:group-hover:text-neon-cyan" />
+      : <ChevronDownIcon className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors dark:text-gray-400 dark:group-hover:text-neon-cyan" />
     }
   </button>
 );
@@ -74,23 +74,23 @@ const CategorySidebar = ({
   if (isLoading && (!categories || categories.length === 0)) {
     return (
       <div className="glass-panel rounded-2xl p-6 sticky top-6 space-y-4 animate-pulse">
-        <div className="h-5 bg-white/10 rounded w-1/2"></div>
+        <div className="h-5 bg-muted rounded w-1/2 dark:bg-white/10"></div>
         {[...Array(5)].map((_, i) => (
-          <div key={i} className="h-8 bg-white/5 rounded-lg"></div>
+          <div key={i} className="h-8 bg-muted rounded-lg dark:bg-white/5"></div>
         ))}
       </div>
     );
   }
 
   return (
-    <div className="glass-panel rounded-2xl sticky top-6 overflow-hidden">
+    <div className="glass-panel rounded-2xl sticky top-6 overflow-hidden border-water/45 shadow-[0_18px_44px_rgb(var(--deep-ocean)/0.10)] dark:border-white/10 dark:shadow-glass">
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-white/10">
-        <span className="text-base font-headline font-bold text-white">Bộ lọc</span>
+      <div className="flex items-center justify-between px-5 py-4 border-b border-border dark:border-white/10">
+        <span className="text-base font-headline font-bold text-foreground dark:text-white">Bộ lọc</span>
         {hasActiveFilters && (
           <button
             onClick={clearAll}
-            className="flex items-center gap-1 text-xs text-neon-cyan hover:text-white transition-colors font-body"
+            className="flex items-center gap-1 text-xs text-primary hover:text-primary-hover transition-colors font-body dark:text-neon-cyan dark:hover:text-white"
           >
             <XMarkIcon className="w-3.5 h-3.5" />
             Xóa tất cả
@@ -98,7 +98,7 @@ const CategorySidebar = ({
         )}
       </div>
 
-      <div className="px-5 py-2 divide-y divide-white/5">
+      <div className="px-5 py-2 divide-y divide-border dark:divide-white/5">
 
         {/* ── Category ── */}
         <div>
@@ -110,13 +110,13 @@ const CategorySidebar = ({
                 onClick={() => onCategoryChange(null)}
                 className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-body transition-all duration-200
                   ${!selectedCategory
-                    ? 'bg-neon-cyan/15 text-neon-cyan border border-neon-cyan/30'
-                    : 'text-gray-400 hover:text-white hover:bg-white/5'
+                    ? 'bg-aqua/35 text-ocean border border-water/45 dark:bg-neon-cyan/15 dark:text-neon-cyan dark:border-neon-cyan/30'
+                    : 'text-muted-foreground hover:text-ocean hover:bg-aqua/20 dark:text-gray-400 dark:hover:text-white dark:hover:bg-white/5'
                   }`}
               >
                 <span className="text-base">🏪</span>
                 <span className="flex-1 text-left">Tất cả sản phẩm</span>
-                {!selectedCategory && <span className="w-1.5 h-1.5 rounded-full bg-neon-cyan"></span>}
+                {!selectedCategory && <span className="w-1.5 h-1.5 rounded-full bg-nature dark:bg-neon-cyan"></span>}
               </button>
 
               {categories.map((cat) => (
@@ -125,15 +125,15 @@ const CategorySidebar = ({
                   onClick={() => handleCategoryClick(cat._id)}
                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-body transition-all duration-200
                     ${selectedCategory === cat._id
-                      ? 'bg-neon-cyan/15 text-neon-cyan border border-neon-cyan/30'
-                      : 'text-gray-400 hover:text-white hover:bg-white/5'
+                      ? 'bg-aqua/35 text-ocean border border-water/45 dark:bg-neon-cyan/15 dark:text-neon-cyan dark:border-neon-cyan/30'
+                      : 'text-muted-foreground hover:text-ocean hover:bg-aqua/20 dark:text-gray-400 dark:hover:text-white dark:hover:bg-white/5'
                     }`}
                 >
                   <span className="text-base">{cat.icon || '📦'}</span>
                   <span className="flex-1 text-left truncate">{cat.name}</span>
                   {cat.productCount > 0 && (
                     <span className={`text-xs px-1.5 py-0.5 rounded-full ${
-                      selectedCategory === cat._id ? 'bg-neon-cyan/20 text-neon-cyan' : 'bg-white/10 text-gray-500'
+                      selectedCategory === cat._id ? 'bg-water/20 text-ocean dark:bg-neon-cyan/20 dark:text-neon-cyan' : 'bg-muted text-muted-foreground dark:bg-white/10 dark:text-gray-500'
                     }`}>
                       {cat.productCount}
                     </span>
@@ -181,12 +181,12 @@ const CategorySidebar = ({
                     onClick={() => handleFilterChange('inStock', opt.value)}
                     className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-all duration-200 cursor-pointer
                       ${filters.inStock === opt.value
-                        ? 'bg-neon-cyan border-neon-cyan'
-                        : 'border-gray-600 group-hover:border-neon-cyan/50'
+                        ? 'bg-nature border-nature dark:bg-neon-cyan dark:border-neon-cyan'
+                        : 'border-border group-hover:border-ocean/60 dark:border-gray-600 dark:group-hover:border-neon-cyan/50'
                       }`}
                   >
                     {filters.inStock === opt.value && (
-                      <svg className="w-2.5 h-2.5 text-abyss" fill="none" viewBox="0 0 10 10">
+                      <svg className="w-2.5 h-2.5 text-primary-foreground dark:text-abyss" fill="none" viewBox="0 0 10 10">
                         <path d="M1.5 5L4 7.5 8.5 2.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                       </svg>
                     )}
@@ -194,7 +194,7 @@ const CategorySidebar = ({
                   <span
                     onClick={() => handleFilterChange('inStock', opt.value)}
                     className={`text-sm font-body cursor-pointer transition-colors ${
-                      filters.inStock === opt.value ? 'text-neon-cyan' : 'text-gray-400 group-hover:text-white'
+                      filters.inStock === opt.value ? 'text-nature dark:text-neon-cyan' : 'text-muted-foreground group-hover:text-ocean dark:text-gray-400 dark:group-hover:text-white'
                     }`}
                   >
                     {opt.label}
@@ -225,8 +225,8 @@ const CategorySidebar = ({
                     whileTap={{ scale: 0.98 }}
                     className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl border text-left transition-all duration-200
                       ${isActive
-                        ? 'bg-cyan-300/10 border-cyan-300/25 shadow-[0_0_24px_rgba(34,211,238,0.08)]'
-                        : 'border-white/5 bg-white/0 hover:bg-white/5 hover:border-white/10'
+                        ? 'bg-aqua/30 border-water/50 shadow-sm dark:bg-cyan-300/10 dark:border-cyan-300/25 dark:shadow-[0_0_24px_rgba(34,211,238,0.08)]'
+                        : 'border-border bg-card hover:bg-aqua/15 hover:border-water/60 dark:border-white/5 dark:bg-white/0 dark:hover:bg-white/5 dark:hover:border-white/10'
                       }`}
                     aria-pressed={isActive}
                   >
@@ -240,16 +240,16 @@ const CategorySidebar = ({
                             animate={isActive ? { scale: [1, 1.08, 1] } : { scale: 1 }}
                             transition={{ duration: 1.8, repeat: isActive ? Infinity : 0, delay: i * 0.04 }}
                           >
-                            <StarIcon className={`w-4 h-4 transition-colors duration-200 ${filled ? (isActive ? 'text-cyan-300 drop-shadow-[0_0_10px_rgba(103,232,249,0.65)]' : 'text-amber-300') : 'text-white/15'}`} />
+                            <StarIcon className={`w-4 h-4 transition-colors duration-200 ${filled ? (isActive ? 'text-ocean dark:text-cyan-300 dark:drop-shadow-[0_0_10px_rgba(103,232,249,0.65)]' : 'text-amber-500 dark:text-amber-300') : 'text-border dark:text-white/15'}`} />
                           </motion.div>
                         );
                       })}
                     </div>
-                    <span className={`flex-1 text-sm font-medium ${isActive ? 'text-cyan-50' : 'text-white/70'}`}>
+                    <span className={`flex-1 text-sm font-medium ${isActive ? 'text-foreground dark:text-cyan-50' : 'text-muted-foreground dark:text-white/70'}`}>
                       {option.label}
-                      <span className="block text-[11px] text-white/40">{option.hint}</span>
+                      <span className="block text-[11px] text-muted-foreground dark:text-white/40">{option.hint}</span>
                     </span>
-                    {isActive && <span className="h-2 w-2 rounded-full bg-cyan-300 shadow-[0_0_16px_rgba(103,232,249,0.9)]" />}
+                    {isActive && <span className="h-2 w-2 rounded-full bg-nature dark:bg-cyan-300 dark:shadow-[0_0_16px_rgba(103,232,249,0.9)]" />}
                   </motion.button>
                 );
               })}

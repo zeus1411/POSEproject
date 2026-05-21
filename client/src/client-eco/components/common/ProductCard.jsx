@@ -51,7 +51,7 @@ const ProductCard = ({ product, onToggleWishlist, isInWishlist = false }) => {
     : product.discount || 0;
 
   return (
-    <div className="group glass-card rounded-2xl overflow-hidden transition-all duration-500 hover:scale-[1.02]">
+    <div className="group overflow-hidden rounded-2xl border border-water/45 bg-card text-card-foreground shadow-[0_14px_35px_rgb(var(--deep-ocean)/0.08)] transition-all duration-500 hover:scale-[1.02] hover:border-ocean/45 hover:shadow-[0_20px_45px_rgb(var(--deep-ocean)/0.14)] dark:glass-card">
       {/* Product Image */}
       <div className="relative aspect-square overflow-hidden">
         <Link to={`/product/${product._id}`}>
@@ -64,22 +64,22 @@ const ProductCard = ({ product, onToggleWishlist, isInWishlist = false }) => {
         </Link>
 
         {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-abyss/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 dark:from-abyss/60"></div>
 
         {/* Badges */}
         <div className="absolute top-2.5 left-2.5 flex flex-col gap-1.5">
           {product.isNew && (
-            <span className="bg-neon-cyan text-abyss text-xs px-2.5 py-1 rounded-full font-body font-bold shadow-glow-cyan">
+            <span className="bg-ocean text-primary-foreground text-xs px-2.5 py-1 rounded-full font-body font-bold shadow-sm dark:bg-neon-cyan dark:text-abyss dark:shadow-glow-cyan">
               Mới
             </span>
           )}
           {product.isFeatured && (
-            <span className="bg-emerald-500/80 backdrop-blur-sm text-white text-xs px-2.5 py-1 rounded-full font-body font-medium">
+            <span className="bg-nature backdrop-blur-sm text-accent-foreground text-xs px-2.5 py-1 rounded-full font-body font-medium dark:bg-emerald-500/80 dark:text-white">
               Nổi bật
             </span>
           )}
           {discountPercentage > 0 && (
-            <span className="bg-coral text-white text-xs px-2.5 py-1 rounded-full font-body font-bold shadow-glow-coral">
+            <span className="bg-secondary text-secondary-foreground text-xs px-2.5 py-1 rounded-full font-body font-bold shadow-sm dark:bg-coral dark:text-white dark:shadow-glow-coral">
               -{discountPercentage}%
             </span>
           )}
@@ -87,8 +87,8 @@ const ProductCard = ({ product, onToggleWishlist, isInWishlist = false }) => {
 
         {/* Stock badge */}
         {totalStock === 0 && (
-          <div className="absolute inset-0 bg-abyss/60 flex items-center justify-center">
-            <span className="glass-panel text-gray-300 font-body font-semibold text-sm px-4 py-2 rounded-full">
+          <div className="absolute inset-0 bg-background/75 flex items-center justify-center dark:bg-abyss/60">
+            <span className="rounded-full border border-border bg-card text-muted-foreground font-body font-semibold text-sm px-4 py-2 shadow-sm dark:glass-panel dark:text-gray-300">
               Hết hàng
             </span>
           </div>
@@ -99,8 +99,9 @@ const ProductCard = ({ product, onToggleWishlist, isInWishlist = false }) => {
           <button
             onClick={handleViewDetail}
             disabled={totalStock === 0}
-            className="w-full py-3 px-4 bg-neon-cyan/90 backdrop-blur-sm hover:bg-neon-cyan disabled:bg-gray-700 disabled:cursor-not-allowed
-                       text-abyss text-sm font-body font-bold transition-colors duration-200 flex items-center justify-center gap-2"
+            className="w-full py-3 px-4 bg-ocean/95 backdrop-blur-sm hover:bg-primary-hover disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed
+                       text-primary-foreground text-sm font-body font-bold transition-colors duration-200 flex items-center justify-center gap-2
+                       dark:bg-neon-cyan/90 dark:hover:bg-neon-cyan dark:disabled:bg-gray-700 dark:text-abyss"
           >
             <EyeIcon className="w-4 h-4" />
             Xem chi tiết
@@ -112,14 +113,14 @@ const ProductCard = ({ product, onToggleWishlist, isInWishlist = false }) => {
       <div className="p-4 space-y-2">
         {/* Category tag */}
         {product.categoryId && (
-          <span className="inline-block text-xs text-neon-cyan/70 font-body px-2 py-0.5 rounded-full bg-neon-cyan/10 border border-neon-cyan/20">
+          <span className="inline-block text-xs text-nature font-body font-semibold px-2 py-0.5 rounded-full bg-aqua/25 border border-water/45 dark:text-neon-cyan/70 dark:bg-neon-cyan/10 dark:border-neon-cyan/20">
             {product.categoryId.name}
           </span>
         )}
 
         {/* Product Name */}
         <Link to={`/product/${product._id}`}>
-          <h3 className="font-body font-semibold text-sm text-gray-200 line-clamp-2 hover:text-neon-cyan transition-colors duration-200 leading-snug">
+          <h3 className="font-body font-semibold text-sm text-foreground line-clamp-2 hover:text-ocean transition-colors duration-200 leading-snug dark:text-gray-200 dark:hover:text-neon-cyan">
             {product.name}
           </h3>
         </Link>
@@ -130,23 +131,23 @@ const ProductCard = ({ product, onToggleWishlist, isInWishlist = false }) => {
             {[...Array(5)].map((_, i) => (
               <StarSolid
                 key={i}
-                className={`w-3.5 h-3.5 ${i < Math.round(rating) ? 'text-yellow-400' : 'text-gray-700'}`}
+                className={`w-3.5 h-3.5 ${i < Math.round(rating) ? 'text-yellow-500 dark:text-yellow-400' : 'text-border dark:text-gray-700'}`}
               />
             ))}
           </div>
-          <span className="text-xs text-gray-500 font-body">{rating > 0 ? rating.toFixed(1) : '—'}</span>
+          <span className="text-xs text-muted-foreground font-body">{rating > 0 ? rating.toFixed(1) : '—'}</span>
           {ratingCount > 0 && (
-            <span className="text-xs text-gray-600 font-body">({ratingCount})</span>
+            <span className="text-xs text-muted-foreground font-body">({ratingCount})</span>
           )}
         </div>
 
         {/* Price row */}
         <div className="flex items-center gap-2 pt-1">
-          <span className="text-base font-headline font-bold text-neon-cyan">
+          <span className="text-base font-headline font-bold text-ocean dark:text-neon-cyan">
             {renderPrice()}
           </span>
           {product.originalPrice && product.originalPrice > product.price && (
-            <span className="text-xs text-gray-600 line-through font-body">
+            <span className="text-xs text-muted-foreground line-through font-body">
               {formatPrice(product.originalPrice)}
             </span>
           )}
@@ -154,12 +155,12 @@ const ProductCard = ({ product, onToggleWishlist, isInWishlist = false }) => {
 
         {/* Stock status */}
         <div className="flex items-center gap-1.5 pt-0.5">
-          <div className={`w-2 h-2 rounded-full flex-shrink-0 ${totalStock > 0 ? 'bg-neon-cyan' : 'bg-red-500'}`}></div>
-          <span className="text-xs text-gray-500 font-body">
+          <div className={`w-2 h-2 rounded-full flex-shrink-0 ${totalStock > 0 ? 'bg-nature dark:bg-neon-cyan' : 'bg-destructive'}`}></div>
+          <span className="text-xs text-muted-foreground font-body">
             {totalStock > 0 ? `Còn ${totalStock} sản phẩm` : 'Hết hàng'}
           </span>
           {product.soldCount > 0 && (
-            <span className="text-xs text-gray-600 font-body ml-auto">Đã bán {product.soldCount}</span>
+            <span className="text-xs text-muted-foreground font-body ml-auto">Đã bán {product.soldCount}</span>
           )}
         </div>
       </div>

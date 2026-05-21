@@ -653,7 +653,7 @@ const Checkout = () => {
           <p class="text-sm text-gray-500">Vui lòng cập nhật trong <strong>Thông tin cá nhân</strong> để tiếp tục đặt hàng.</p>
         `,
         confirmButtonText: 'Cập nhật ngay',
-        confirmButtonColor: '#3B82F6',
+        confirmButtonColor: 'rgb(var(--primary))',
         showCancelButton: true,
         cancelButtonText: 'Đóng',
         cancelButtonColor: '#6B7280'
@@ -674,7 +674,7 @@ const Checkout = () => {
           <p class="text-sm text-gray-500">Vui lòng cập nhật trong <strong>Thông tin cá nhân</strong> để tiếp tục đặt hàng.</p>
         `,
         confirmButtonText: 'Cập nhật ngay',
-        confirmButtonColor: '#3B82F6',
+        confirmButtonColor: 'rgb(var(--primary))',
         showCancelButton: true,
         cancelButtonText: 'Đóng',
         cancelButtonColor: '#6B7280'
@@ -696,7 +696,7 @@ const Checkout = () => {
           <p class="text-sm text-gray-500">Vui lòng cập nhật <strong>Địa chỉ giao hàng</strong> trong trang Thông tin cá nhân để tiếp tục.</p>
         `,
         confirmButtonText: 'Cập nhật ngay',
-        confirmButtonColor: '#3B82F6',
+        confirmButtonColor: 'rgb(var(--primary))',
         showCancelButton: true,
         cancelButtonText: 'Đóng',
         cancelButtonColor: '#6B7280'
@@ -727,7 +727,7 @@ const Checkout = () => {
           <p class="text-sm text-gray-500">Vui lòng cập nhật đầy đủ thông tin trong trang Thông tin cá nhân.</p>
         `,
         confirmButtonText: 'Cập nhật ngay',
-        confirmButtonColor: '#3B82F6',
+        confirmButtonColor: 'rgb(var(--primary))',
         showCancelButton: true,
         cancelButtonText: 'Đóng',
         cancelButtonColor: '#6B7280'
@@ -793,7 +793,7 @@ const Checkout = () => {
           title: '🎉 Chúc mừng!',
           text: 'Bạn đã đặt hàng thành công! Cảm ơn bạn đã mua hàng.',
           confirmButtonText: 'Xem đơn hàng',
-          confirmButtonColor: '#10B981',
+          confirmButtonColor: 'rgb(var(--natural-green))',
           showCancelButton: true,
           cancelButtonText: 'Tiếp tục mua sắm',
           cancelButtonColor: '#6B7280'
@@ -871,7 +871,7 @@ const Checkout = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#021717] via-[#042a2a] to-[#062f2f] text-white">
+    <div className="checkout-page min-h-screen bg-gradient-to-b from-[#021717] via-[#042a2a] to-[#062f2f] text-white">
       <div className="bg-transparent border-b border-white/6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div>
@@ -1133,7 +1133,7 @@ const Checkout = () => {
                         {preview.promotion.promotions.map((promo, index) => (
                           <div key={index} className="flex justify-between">
                             <span className="text-gray-600 flex items-center gap-1">
-                              <svg className="w-4 h-4 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg className="w-4 h-4 text-ocean dark:text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                               </svg>
                               <span className="text-xs">
@@ -1151,7 +1151,7 @@ const Checkout = () => {
                       <div className="flex justify-between">
                         <span className="text-gray-600 flex items-center gap-1">
                           {displayTotals.hasCoupons && (
-                            <svg className="w-4 h-4 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-4 h-4 text-ocean dark:text-emerald-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                             </svg>
                           )}

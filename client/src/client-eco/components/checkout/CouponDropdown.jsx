@@ -151,10 +151,10 @@ const CouponDropdown = ({
         onClick={() => isEligible && handleCouponToggle(coupon)}
         className={`p-3 border rounded-lg transition-all ${
           !isEligible 
-            ? 'opacity-60 cursor-not-allowed bg-gray-50 border-gray-300' 
+            ? 'opacity-60 cursor-not-allowed bg-muted border-border' 
             : isSelected 
-              ? 'border-pink-500 bg-pink-50 cursor-pointer hover:shadow-md' 
-              : 'border-gray-200 hover:border-gray-300 cursor-pointer hover:shadow-md'
+              ? 'border-ocean bg-aqua/25 cursor-pointer hover:shadow-md' 
+              : 'border-border hover:border-ocean/60 cursor-pointer hover:shadow-md'
         }`}
       >
         <div className="flex items-center justify-between">
@@ -162,10 +162,10 @@ const CouponDropdown = ({
             <div className="flex items-center gap-3">
               <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
                 !isEligible 
-                  ? 'border-gray-400 bg-gray-200'
+                  ? 'border-muted-foreground/40 bg-muted'
                   : isSelected 
-                    ? 'border-pink-500 bg-pink-500' 
-                    : 'border-gray-300'
+                    ? 'border-ocean bg-ocean' 
+                    : 'border-border'
               }`}>
                 {isSelected && isEligible && (
                   <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -173,17 +173,17 @@ const CouponDropdown = ({
                   </svg>
                 )}
                 {!isEligible && (
-                  <svg className="w-3 h-3 text-gray-500" fill="currentColor" viewBox="0 0 20 20">
+                  <svg className="w-3 h-3 text-muted-foreground" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clipRule="evenodd" />
                   </svg>
                 )}
               </div>
               <div>
-                <div className={`font-semibold ${isEligible ? 'text-gray-900' : 'text-gray-500'}`}>
+                <div className={`font-semibold ${isEligible ? 'text-foreground' : 'text-muted-foreground'}`}>
                   {coupon.code}
                 </div>
                 {coupon.description && (
-                  <div className="text-xs text-gray-600 mt-0.5">{coupon.description}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">{coupon.description}</div>
                 )}
                 {!isEligible && eligibilityReason && (
                   <div className="text-xs text-red-600 mt-1 flex items-center gap-1">
@@ -197,11 +197,11 @@ const CouponDropdown = ({
             </div>
           </div>
           <div className="text-right ml-3">
-            <div className={`font-semibold text-sm ${isEligible ? 'text-pink-600' : 'text-gray-500'}`}>
+            <div className={`font-semibold text-sm ${isEligible ? 'text-ocean' : 'text-muted-foreground'}`}>
               {getDiscountDisplay()}
             </div>
             {getConditionDisplay() && (
-              <div className={`text-xs mt-0.5 ${isEligible ? 'text-orange-600' : 'text-gray-500'}`}>
+              <div className={`text-xs mt-0.5 ${isEligible ? 'text-nature' : 'text-muted-foreground'}`}>
                 {getConditionDisplay()}
               </div>
             )}
@@ -286,13 +286,13 @@ const CouponDropdown = ({
                 }
               }}
               disabled={isValidating}
-              className="w-full flex items-center justify-between p-3 border-2 border-white/20 rounded-lg bg-transparent hover:border-emerald-300 focus:border-emerald-300 focus:ring-2 focus:ring-emerald-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-white"
+              className="w-full flex items-center justify-between p-3 border-2 border-water/45 rounded-lg bg-card/80 hover:border-ocean focus:border-ocean focus:ring-2 focus:ring-aqua/40 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-foreground dark:border-white/20 dark:bg-transparent dark:hover:border-emerald-300 dark:focus:border-emerald-300 dark:focus:ring-emerald-200 dark:text-white"
             >
-              <span className={selectedCount > 0 ? 'font-semibold text-white' : 'text-white/70'}>
+              <span className={selectedCount > 0 ? 'font-semibold text-foreground dark:text-white' : 'text-muted-foreground dark:text-white/70'}>
                 {displayText}
               </span>
               <svg 
-                className={`w-5 h-5 text-white/60 transition-transform ${isOpen ? 'rotate-180' : ''}`} 
+                className={`w-5 h-5 text-muted-foreground transition-transform dark:text-white/60 ${isOpen ? 'rotate-180' : ''}`} 
                 fill="none" 
                 stroke="currentColor" 
                 viewBox="0 0 24 24"
@@ -311,12 +311,12 @@ const CouponDropdown = ({
                   zIndex: 9999
                 }}
               >
-                <div className="mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-96 overflow-y-auto">
+                <div className="coupon-portal-panel mt-2 bg-card border border-border rounded-lg shadow-lg max-h-96 overflow-y-auto">
                 {/* Free Shipping Section */}
                 {availableCoupons.freeShipping.length > 0 && (
-                  <div className="p-4 border-b border-gray-100">
-                    <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-emerald-400 flex items-center justify-center">
+                  <div className="p-4 border-b border-border">
+                    <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-nature flex items-center justify-center">
                         <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                         </svg>
@@ -338,8 +338,8 @@ const CouponDropdown = ({
                 {/* Discount Section */}
                 {availableCoupons.discount.length > 0 && (
                   <div className="p-4">
-                    <h3 className="font-semibold text-slate-900 mb-3 flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-full bg-cyan-400 flex items-center justify-center">
+                    <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-ocean flex items-center justify-center">
                         <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                         </svg>
