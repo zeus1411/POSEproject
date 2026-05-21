@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import AdminShell from '../../components/admin/AdminShell';
 import { getOrderStatistics } from '../../services/orderService';
+import { useTheme } from '../../context/ThemeContext';
 import {
   LineChart,
   Line,
@@ -25,6 +26,7 @@ import {
 } from '@heroicons/react/24/outline';
 
 const Statistics = () => {
+  const { isDark } = useTheme();
   const [statistics, setStatistics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -67,28 +69,30 @@ const Statistics = () => {
   };
 
   const KPICard = ({ icon: Icon, title, value, subtitle, color }) => (
-    <div className="bg-white rounded-lg shadow p-6 border-l-4" style={{ borderLeftColor: color }}>
+    <div className="glass-panel rounded-3xl p-6 border border-water/30 dark:border-white/10 shadow-lg relative overflow-hidden group hover:scale-[1.02] transition-transform duration-300">
       <div className="flex items-center justify-between">
-        <div>
-          <p className="text-gray-500 text-sm font-medium">{title}</p>
-          <p className="text-2xl font-bold text-gray-900 mt-2">{value}</p>
-          {subtitle && <p className="text-xs text-gray-400 mt-1">{subtitle}</p>}
+        <div className="z-10">
+          <p className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">{title}</p>
+          <p className="text-2xl font-black text-slate-800 dark:text-white mt-2 tracking-tight">{value}</p>
+          {subtitle && <p className="text-xs text-slate-400 dark:text-slate-500 mt-1 font-semibold">{subtitle}</p>}
         </div>
-        <div className="p-3 rounded-full" style={{ backgroundColor: `${color}20` }}>
+        <div className="p-3 rounded-2xl z-10 transition-colors" style={{ backgroundColor: `${color}15` }}>
           <Icon className="h-6 w-6" style={{ color }} />
         </div>
       </div>
+      {/* Dynamic background glowing accent */}
+      <div className="absolute right-0 bottom-0 w-24 h-24 rounded-full filter blur-2xl opacity-10 group-hover:opacity-20 transition-opacity duration-300" style={{ backgroundColor: color }} />
     </div>
   );
 
   if (loading) {
     return (
       <AdminShell>
-        <div className="min-h-screen bg-[#f8f9ff] p-8">
+        <div className="min-h-screen bg-transparent p-4 sm:p-8">
           <div className="flex items-center justify-center h-96">
             <div className="text-center">
-              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-              <p className="mt-4 text-gray-600">Đang tải thống kê...</p>
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+              <p className="mt-4 text-slate-600 dark:text-slate-300 font-semibold">Đang tải thống kê...</p>
             </div>
           </div>
         </div>
@@ -99,12 +103,12 @@ const Statistics = () => {
   if (error) {
     return (
       <AdminShell>
-        <div className="min-h-screen bg-[#f8f9ff] p-8">
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-red-800">Lỗi: {error}</p>
+        <div className="min-h-screen bg-transparent p-4 sm:p-8 flex items-center justify-center">
+          <div className="glass-panel border border-rose-500/20 dark:border-rose-500/30 rounded-3xl p-6 max-w-lg mx-auto text-center shadow-2xl">
+            <p className="text-rose-800 dark:text-rose-400 font-bold text-lg mb-4">Lỗi: {error}</p>
             <button
               onClick={fetchStatistics}
-              className="mt-4 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+              className="px-5 py-2.5 bg-gradient-to-r from-rose-500 to-rose-600 hover:shadow-lg hover:shadow-rose-500/20 text-white font-bold rounded-xl active:scale-95 transition-all text-sm"
             >
               Thử lại
             </button>
@@ -116,45 +120,45 @@ const Statistics = () => {
 
   return (
     <AdminShell>
-      <div className="min-h-screen bg-[#f8f9ff] p-8">
+      <div className="min-h-screen bg-transparent p-4 sm:p-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-black tracking-tight text-[#1e293b]">
+          <h1 className="text-3xl font-black tracking-tight text-slate-800 dark:text-white">
             Xem thống kê
           </h1>
-          <p className="text-gray-600 mt-2">Phân tích dữ liệu bán hàng và hiệu suất kinh doanh</p>
+          <p className="text-slate-600 dark:text-slate-300 mt-2 font-medium">Phân tích dữ liệu bán hàng và hiệu suất kinh doanh</p>
         </div>
 
         {/* Date Range Filter */}
-        <div className="bg-white rounded-lg shadow p-6 mb-8">
+        <div className="glass-panel rounded-3xl shadow-xl p-6 mb-8 border border-water/30 dark:border-white/10">
           <div className="flex flex-col md:flex-row gap-4 items-end">
             <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <CalendarIcon className="h-4 w-4 inline mr-2" />
+              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 flex items-center">
+                <CalendarIcon className="h-4 w-4 inline mr-2 text-slate-400 dark:text-slate-500" />
                 Từ ngày
               </label>
               <input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2.5 bg-aqua/5 border border-water/30 dark:bg-white/5 dark:border-white/10 text-slate-800 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent placeholder-slate-400 dark:placeholder-slate-500 text-sm font-semibold transition-all cursor-pointer"
               />
             </div>
             <div className="flex-1">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                <CalendarIcon className="h-4 w-4 inline mr-2" />
+              <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 flex items-center">
+                <CalendarIcon className="h-4 w-4 inline mr-2 text-slate-400 dark:text-slate-500" />
                 Đến ngày
               </label>
               <input
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full px-4 py-2.5 bg-aqua/5 border border-water/30 dark:bg-white/5 dark:border-white/10 text-slate-800 dark:text-white rounded-xl focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent placeholder-slate-400 dark:placeholder-slate-500 text-sm font-semibold transition-all cursor-pointer"
               />
             </div>
             <button
               onClick={fetchStatistics}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-6 py-2.5 bg-gradient-to-r from-primary to-water text-white rounded-xl hover:shadow-lg hover:shadow-primary/20 active:scale-95 transition-all font-bold text-sm h-11"
             >
               Cập nhật
             </button>
@@ -189,7 +193,7 @@ const Statistics = () => {
           />
           <KPICard
             icon={ShoppingBagIcon}
-            title="Đơn Hàng Hoàn Thành"
+            title="Đơn Hàng Đã Giao"
             value={formatNumber(
               statistics?.byStatus?.find((s) => s._id === 'COMPLETED')?.count || 0
             )}
@@ -201,21 +205,33 @@ const Statistics = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           {/* Daily Revenue Chart */}
           {statistics?.dailyRevenue && statistics.dailyRevenue.length > 0 && (
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Doanh Thu Theo Ngày</h2>
+            <div className="glass-panel rounded-3xl shadow-xl p-6 border border-water/30 dark:border-white/10">
+              <h2 className="text-lg font-bold text-slate-800 dark:text-white mb-4">Doanh Thu Theo Ngày</h2>
               <ResponsiveContainer width="100%" height={300}>
                 <LineChart data={statistics.dailyRevenue}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="_id" />
-                  <YAxis />
-                  <Tooltip formatter={(value) => formatCurrency(value)} />
-                  <Legend />
+                  <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)"} />
+                  <XAxis dataKey="_id" stroke={isDark ? "#94a3b8" : "#64748b"} tick={{ fontSize: 11, fontWeight: 500 }} />
+                  <YAxis stroke={isDark ? "#94a3b8" : "#64748b"} tick={{ fontSize: 11, fontWeight: 500 }} />
+                  <Tooltip 
+                    formatter={(value) => formatCurrency(value)}
+                    contentStyle={{ 
+                      backgroundColor: isDark ? '#022329' : '#faf6f0', 
+                      borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)', 
+                      borderRadius: '16px', 
+                      color: isDark ? '#ffffff' : '#1e293b',
+                      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                      fontWeight: 600
+                    }} 
+                  />
+                  <Legend wrapperStyle={{ paddingTop: 10, fontSize: 12, fontWeight: 600 }} />
                   <Line
                     type="monotone"
                     dataKey="revenue"
                     stroke="#3b82f6"
                     name="Doanh Thu"
-                    strokeWidth={2}
+                    strokeWidth={3}
+                    dot={{ r: 4 }}
+                    activeDot={{ r: 6 }}
                   />
                   <Line
                     type="monotone"
@@ -223,7 +239,9 @@ const Statistics = () => {
                     stroke="#10b981"
                     name="Số Đơn"
                     yAxisId="right"
-                    strokeWidth={2}
+                    strokeWidth={3}
+                    dot={{ r: 4 }}
+                    activeDot={{ r: 6 }}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -232,8 +250,8 @@ const Statistics = () => {
 
           {/* Order Status Distribution */}
           {statistics?.byStatus && statistics.byStatus.length > 0 && (
-            <div className="bg-white rounded-lg shadow p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Phân Bố Trạng Thái Đơn Hàng</h2>
+            <div className="glass-panel rounded-3xl shadow-xl p-6 border border-water/30 dark:border-white/10">
+              <h2 className="text-lg font-bold text-slate-800 dark:text-white mb-4">Phân Bố Trạng Thái Đơn Hàng</h2>
               <ResponsiveContainer width="100%" height={300}>
                 <PieChart>
                   <Pie
@@ -242,15 +260,24 @@ const Statistics = () => {
                     nameKey="_id"
                     cx="50%"
                     cy="50%"
-                    outerRadius={100}
-                    label
+                    outerRadius={90}
+                    label={{ fill: isDark ? '#e2e8f0' : '#475569', fontSize: 11, fontWeight: 'bold' }}
                   >
                     {statistics.byStatus.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip />
-                  <Legend />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: isDark ? '#022329' : '#faf6f0', 
+                      borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)', 
+                      borderRadius: '16px', 
+                      color: isDark ? '#ffffff' : '#1e293b',
+                      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                      fontWeight: 600
+                    }} 
+                  />
+                  <Legend wrapperStyle={{ paddingTop: 10, fontSize: 12, fontWeight: 600 }} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -259,52 +286,62 @@ const Statistics = () => {
 
         {/* Top Products */}
         {statistics?.topProducts && statistics.topProducts.length > 0 && (
-          <div className="bg-white rounded-lg shadow p-6 mb-8">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Sản Phẩm Bán Chạy Nhất</h2>
-            <div className="overflow-x-auto">
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={statistics.topProducts}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="productName" angle={-45} textAnchor="end" height={100} />
-                  <YAxis />
-                  <Tooltip formatter={(value) => formatNumber(value)} />
-                  <Legend />
-                  <Bar dataKey="totalQuantity" fill="#3b82f6" name="Số Lượng Bán" />
-                  <Bar dataKey="totalRevenue" fill="#10b981" name="Doanh Thu" />
+          <div className="glass-panel rounded-3xl shadow-xl p-6 mb-8 border border-water/30 dark:border-white/10">
+            <h2 className="text-lg font-bold text-slate-800 dark:text-white mb-6">Sản Phẩm Bán Chạy Nhất</h2>
+            <div className="overflow-x-auto mb-6">
+              <ResponsiveContainer width="100%" height={320}>
+                <BarChart data={statistics.topProducts} margin={{ bottom: 20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={isDark ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)"} />
+                  <XAxis dataKey="productName" angle={-45} textAnchor="end" height={80} stroke={isDark ? "#94a3b8" : "#64748b"} tick={{ fontSize: 10, fontWeight: 500 }} />
+                  <YAxis stroke={isDark ? "#94a3b8" : "#64748b"} tick={{ fontSize: 10, fontWeight: 500 }} />
+                  <Tooltip 
+                    formatter={(value) => formatNumber(value)}
+                    contentStyle={{ 
+                      backgroundColor: isDark ? '#022329' : '#faf6f0', 
+                      borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)', 
+                      borderRadius: '16px', 
+                      color: isDark ? '#ffffff' : '#1e293b',
+                      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                      fontWeight: 600
+                    }} 
+                  />
+                  <Legend wrapperStyle={{ paddingTop: 10, fontSize: 12, fontWeight: 600 }} />
+                  <Bar dataKey="totalQuantity" fill="#3b82f6" name="Số Lượng Bán" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="totalRevenue" fill="#10b981" name="Doanh Thu" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
-            <div className="mt-6 overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+            <div className="overflow-x-auto rounded-2xl border border-water/20 dark:border-white/10">
+              <table className="min-w-full divide-y divide-water/10 dark:divide-white/5">
+                <thead className="bg-water/10 dark:bg-white/5">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                       Sản Phẩm
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                       Số Lượng
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                       Doanh Thu
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                       Số Đơn
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="divide-y divide-water/10 dark:divide-white/5 bg-transparent">
                   {statistics.topProducts.map((product, index) => (
-                    <tr key={index} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                    <tr key={index} className="hover:bg-water/5 dark:hover:bg-white/5 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-800 dark:text-slate-200">
                         {product.productName}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-slate-600 dark:text-slate-300">
                         {formatNumber(product.totalQuantity)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-slate-600 dark:text-slate-300">
                         {formatCurrency(product.totalRevenue)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-slate-600 dark:text-slate-300">
                         {formatNumber(product.orderCount)}
                       </td>
                     </tr>
@@ -317,52 +354,53 @@ const Statistics = () => {
 
       {/* Order Status Details Table */}
         {statistics?.byStatus && statistics.byStatus.length > 0 && (
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Chi Tiết Trạng Thái Đơn Hàng</h2>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
+          <div className="glass-panel rounded-3xl shadow-xl p-6 border border-water/30 dark:border-white/10">
+            <h2 className="text-lg font-bold text-slate-800 dark:text-white mb-6">Chi Tiết Trạng Thái Đơn Hàng</h2>
+            <div className="overflow-x-auto rounded-2xl border border-water/20 dark:border-white/10">
+              <table className="min-w-full divide-y divide-water/10 dark:divide-white/5">
+                <thead className="bg-water/10 dark:bg-white/5">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                       Trạng Thái
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                       Số Lượng
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                       Doanh Thu
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <th className="px-6 py-4 text-left text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                       Tỷ Lệ
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="divide-y divide-water/10 dark:divide-white/5 bg-transparent">
                   {statistics.byStatus.map((status, index) => {
                     const total = statistics.byStatus.reduce((sum, s) => sum + s.count, 0);
                     const percentage = ((status.count / total) * 100).toFixed(1);
                     return (
-                      <tr key={index} className="hover:bg-gray-50">
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                      <tr key={index} className="hover:bg-water/5 dark:hover:bg-white/5 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-800 dark:text-slate-200">
                           <span
-                            className="px-3 py-1 rounded-full text-xs font-semibold"
+                            className="px-3 py-1 rounded-full text-xs font-bold border"
                             style={{
-                              backgroundColor: `${COLORS[index % COLORS.length]}20`,
+                              backgroundColor: `${COLORS[index % COLORS.length]}15`,
                               color: COLORS[index % COLORS.length],
+                              borderColor: `${COLORS[index % COLORS.length]}30`
                             }}
                           >
                             {status._id}
                           </span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-slate-600 dark:text-slate-300">
                           {formatNumber(status.count)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-slate-600 dark:text-slate-300">
                           {formatCurrency(status.totalRevenue)}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-slate-600 dark:text-slate-300">
                           <div className="flex items-center">
-                            <div className="w-full bg-gray-200 rounded-full h-2 mr-2">
+                            <div className="w-32 bg-water/20 dark:bg-white/5 rounded-full h-2 mr-3 border border-water/10">
                               <div
                                 className="h-2 rounded-full"
                                 style={{
@@ -371,7 +409,7 @@ const Statistics = () => {
                                 }}
                               ></div>
                             </div>
-                            <span className="text-xs font-semibold">{percentage}%</span>
+                            <span className="text-xs font-bold">{percentage}%</span>
                           </div>
                         </td>
                       </tr>

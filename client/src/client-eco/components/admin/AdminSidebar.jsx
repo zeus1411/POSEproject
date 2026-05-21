@@ -11,129 +11,150 @@ import {
   NewspaperIcon 
 } from '@heroicons/react/24/outline';
 import { FileClock } from 'lucide-react';
+import { useTheme } from '../../context/ThemeContext';
 
 const AdminSidebar = () => {
   const location = useLocation();
+  const { isDark } = useTheme();
   
   const navigation = [
     { 
       name: 'Sản phẩm', 
       href: '/admin/products', 
       icon: CubeIcon,
-      color: 'from-indigo-500 to-blue-500',
-      bg: 'bg-gradient-to-br from-indigo-50 to-blue-50',
-      iconColor: 'text-indigo-600',
-   
+      subtitle: 'Quản lý kho hàng'
     },
     { 
       name: 'Đơn hàng', 
       href: '/admin/orders', 
       icon: ShoppingBagIcon,
-      color: 'from-emerald-500 to-teal-500',
-      bg: 'bg-gradient-to-br from-emerald-50 to-teal-50',
-      iconColor: 'text-emerald-600',
-      
+      subtitle: 'Đơn đặt hàng'
     },
     { 
       name: 'Khuyến mãi', 
       href: '/admin/promotions', 
       icon: TicketIcon,
-      color: 'from-pink-500 to-rose-500',
-      bg: 'bg-gradient-to-br from-pink-50 to-rose-50',
-      iconColor: 'text-pink-600',
-   
+      subtitle: 'Mã giảm giá'
     },
     { 
       name: 'Người dùng', 
       href: '/admin/manage-users', 
       icon: UsersIcon,
-      color: 'from-amber-500 to-orange-500',
-      bg: 'bg-gradient-to-br from-amber-50 to-orange-50',
-      iconColor: 'text-amber-600',
-   
+      subtitle: 'Khách hàng & Staff'
     },
     { 
       name: 'Thống kê', 
       href: '/admin/statistics', 
       icon: ChartBarIcon,
-      color: 'from-purple-500 to-fuchsia-500',
-      bg: 'bg-gradient-to-br from-purple-50 to-fuchsia-50',
-      iconColor: 'text-purple-600',
+      subtitle: 'Báo cáo doanh thu'
     },
     { 
       name: 'Blog Categories',
       href: '/admin/blog-categories',
       icon: DocumentTextIcon,
-      color: 'from-cyan-500 to-sky-500',
-      bg: 'bg-gradient-to-br from-cyan-50 to-sky-50',
-      iconColor: 'text-cyan-600',
+      subtitle: 'Danh mục bài viết'
     },
     { 
       name: 'Blog Tags',
       href: '/admin/tags',
       icon: TicketIcon,
-      color: 'from-cyan-500 to-sky-500',
-      bg: 'bg-gradient-to-br from-cyan-50 to-sky-50',
-      iconColor: 'text-cyan-600',
+      subtitle: 'Từ khóa bài viết'
     },
     { 
       name: 'Blog List',
       href: '/admin/blogs',
       icon: NewspaperIcon,
-      color: 'from-cyan-500 to-sky-500',
-      bg: 'bg-gradient-to-br from-cyan-50 to-sky-50',
-      iconColor: 'text-cyan-600',
+      subtitle: 'Danh sách bài viết'
     },
     {
       name: 'Blog Pending',
       href: '/admin/blogs/pending',
       icon: FileClock,
-      color: 'from-cyan-500 to-sky-500',
-      bg: 'bg-gradient-to-br from-cyan-50 to-sky-50',
-      iconColor: 'text-cyan-600',
+      subtitle: 'Duyệt bài viết'
     }
   ];
 
   return (
-    <div className="hidden md:flex md:flex-shrink-0">
-      <div className="flex flex-col w-64 bg-white border-r border-gray-100 h-screen shadow-sm">
+    <div className="hidden md:flex md:flex-shrink-0 z-20">
+      <div className={`flex flex-col w-66 h-screen shadow-2xl transition-all duration-300 border-r ${
+        isDark 
+          ? 'bg-[#062323]/90 backdrop-blur-md border-white/10 text-white' 
+          : 'bg-[#FFFDF0]/95 backdrop-blur-md border-water/30 text-foreground'
+      }`}>
         {/* Header with Logo */}
-        <div className="flex items-center justify-center h-20 px-6 border-b border-gray-100">
-          <div className="flex items-center space-x-2">
-            <div className="p-2 rounded-lg bg-gradient-to-r from-indigo-600 to-blue-500">
+        <div className={`flex items-center justify-center h-20 px-6 border-b transition-colors duration-300 ${
+          isDark ? 'border-white/10' : 'border-water/20'
+        }`}>
+          <div className="flex items-center space-x-3">
+            <div className={`p-2.5 rounded-2xl shadow-lg transition-all ${
+              isDark 
+                ? 'bg-gradient-to-r from-emerald-500 to-teal-500 shadow-emerald-950/20' 
+                : 'bg-gradient-to-r from-primary to-water shadow-water/20'
+            }`}>
               <HomeModernIcon className="h-5 w-5 text-white" />
             </div>
-            <span className="text-lg font-bold text-gray-800">Admin</span>
+            <span className={`text-lg font-black tracking-wide ${
+              isDark 
+                ? 'bg-gradient-to-r from-emerald-400 to-cyan-400 text-transparent bg-clip-text' 
+                : 'bg-gradient-to-r from-primary to-water text-transparent bg-clip-text'
+            }`}>
+              Aquatic Admin
+            </span>
           </div>
         </div>
         
         {/* Main Navigation */}
-        <nav className="flex-1 overflow-y-auto flex flex-col py-4 px-4 space-y-2">
+        <nav className="flex-1 overflow-y-auto flex flex-col py-6 px-4 space-y-2 custom-scrollbar">
           {navigation.map((item) => {
             const isActive = location.pathname === item.href;
             const Icon = item.icon;
             
+            // Dynamic theme class calculations
+            const linkClass = isActive
+              ? (isDark
+                  ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 shadow-lg shadow-emerald-950/10'
+                  : 'bg-water/15 border border-water/35 text-primary shadow-md shadow-water/5')
+              : (isDark
+                  ? 'text-gray-400 border border-transparent hover:bg-white/5 hover:text-white'
+                  : 'text-gray-600 border border-transparent hover:bg-water/5 hover:text-primary');
+
+            const iconContainerClass = isActive
+              ? (isDark ? 'bg-emerald-500/30' : 'bg-water/25')
+              : (isDark ? 'bg-white/5 group-hover:bg-white/10' : 'bg-water/5 group-hover:bg-water/10');
+
+            const iconClass = isActive
+              ? (isDark ? 'text-emerald-400' : 'text-primary')
+              : (isDark ? 'text-gray-400 group-hover:text-white' : 'text-gray-500 group-hover:text-primary');
+
+            const textClass = isActive
+              ? (isDark ? 'font-bold text-white' : 'font-bold text-primary')
+              : (isDark ? 'text-gray-700 group-hover:text-primary' : 'text-gray-700 group-hover:text-primary');
+
             return (
               <NavLink
                 key={item.name}
                 to={item.href}
-                className={`group relative flex items-center p-4 rounded-xl transition-all duration-200 min-h-[72px] ${
-                  isActive 
-                    ? 'bg-gradient-to-r from-indigo-50 to-blue-50 border border-indigo-100 shadow-md'
-                    : 'hover:bg-gray-50 hover:shadow-md'
-                }`}
+                className={`group relative flex items-center p-3.5 rounded-2xl transition-all duration-250 min-h-[68px] ${linkClass}`}
               >
-                <div className={`p-3 rounded-lg ${item.bg} mr-4`}>
-                  <Icon className={`h-5 w-5 ${item.iconColor}`} />
+                <div className={`p-2.5 rounded-xl mr-3.5 transition-colors duration-250 ${iconContainerClass}`}>
+                  <Icon className={`h-5 w-5 transition-colors duration-250 ${iconClass}`} />
                 </div>
-                <div className="flex-1">
-                  <div className="font-medium text-gray-800">{item.name}</div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    {item.count} {item.name === 'Thống kê' ? '' : ''}
+                <div className="flex-1 min-w-0">
+                  <div className={`text-sm font-semibold truncate transition-colors duration-250 ${
+                    isActive ? (isDark ? 'text-emerald-400' : 'text-primary') : (isDark ? 'text-gray-200' : 'text-gray-800')
+                  }`}>
+                    {item.name}
+                  </div>
+                  <div className={`text-[10px] transition-colors duration-250 ${
+                    isActive ? (isDark ? 'text-emerald-500/80' : 'text-primary/70') : 'text-gray-400'
+                  }`}>
+                    {item.subtitle}
                   </div>
                 </div>
                 {isActive && (
-                  <div className="w-1.5 h-8 bg-indigo-600 rounded-l-full"></div>
+                  <div className={`w-1 h-6 rounded-full absolute right-2 ${
+                    isDark ? 'bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.6)]' : 'bg-primary shadow-[0_0_8px_rgba(70,130,169,0.5)]'
+                  }`}></div>
                 )}
               </NavLink>
             );
@@ -141,12 +162,12 @@ const AdminSidebar = () => {
         </nav>
         
         {/* Bottom Section */}
-        <div className="p-4 border-t border-gray-100">
-          <div className="text-center">
-            <p className="text-xs text-gray-400">
-              Phiên bản 1.0.0
-            </p>
-          </div>
+        <div className={`p-5 border-t text-center transition-colors duration-300 ${
+          isDark ? 'border-white/10' : 'border-water/20'
+        }`}>
+          <p className="text-[11px] font-mono tracking-wider text-gray-400 uppercase">
+            Aquatic Portal v1.0.0
+          </p>
         </div>
       </div>
     </div>

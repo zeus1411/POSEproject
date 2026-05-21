@@ -5,10 +5,12 @@ import userService from '../../services/userService';
 import addressService from '../../services/addressService';
 import { setUser } from '../../redux/slices/authSlice';
 import Swal from 'sweetalert2';
+import { useTheme } from '../../context/ThemeContext';
 
 const ProfilePage = () => {
   const { user } = useSelector(state => state.auth);
   const dispatch = useDispatch();
+  const { isDark } = useTheme();
   
   const [isEditingPersonal, setIsEditingPersonal] = useState(false);
   const [isEditingAddress, setIsEditingAddress] = useState(false);
@@ -190,24 +192,20 @@ const ProfilePage = () => {
     }
   };
 
-  // ✅ FIX LỖI 1 & 2 & 3: Cập nhật hàm Validation thông tin cá nhân
   const validatePersonalInfo = () => {
     const newErrors = {};
     
-    // 1. Validate Họ tên (Không trống, không quá 100 ký tự, không chứa số/ký tự đặc biệt)
     if (!personalData.fullName || personalData.fullName.trim().length === 0) {
       newErrors.fullName = 'Họ tên không được để trống';
     } else if (personalData.fullName.length > 100) {
       newErrors.fullName = 'Họ tên không được vượt quá 100 ký tự';
     } else {
-      // Regex cho phép chữ tiếng Việt có dấu và khoảng trắng, không cho phép số & ký tự đặc biệt
       const nameRegex = /^[\p{L}\s]+$/u;
       if (!nameRegex.test(personalData.fullName.trim())) {
         newErrors.fullName = 'Họ tên chỉ được chứa chữ cái và khoảng trắng';
       }
     }
     
-    // 2. Validate Số điện thoại (Sửa regex so khớp từ đầu ^ tới cuối chuỗi $)
     if (!personalData.phone || personalData.phone.trim().length === 0) {
       newErrors.phone = 'Số điện thoại không được để trống';
     } else {
@@ -217,8 +215,6 @@ const ProfilePage = () => {
       }
     }
 
-    // 3. Validate Năm sinh / Ngày sinh
-    // Kiểm tra xem ô input có đang bị nhập dở dang hay không bằng cách bắt sự kiện DOM trực tiếp
     const dateInput = document.querySelector('input[type="date"]');
     const isDateIncomplete = dateInput && dateInput.value === "" && dateInput.validity && !dateInput.validity.valid;
 
@@ -240,7 +236,6 @@ const ProfilePage = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // ✅ FIX LỖI 4: Kiểm tra độ dài địa chỉ cụ thể chặt chẽ hơn
   const validateAddress = () => {
     const newErrors = {};
     
@@ -290,11 +285,9 @@ const ProfilePage = () => {
   };
 
   const handleUpdatePersonal = async () => {
-    // Clear previous errors
     setErrors({});
     
-    // Validate
-if (!validatePersonalInfo()) {
+    if (!validatePersonalInfo()) {
       Swal.fire({
         icon: 'error',
         title: 'Thông tin không hợp lệ',
@@ -328,10 +321,8 @@ if (!validatePersonalInfo()) {
       if (response.success) {
         setPersonalData(cleanData);
         dispatch(setUser(response.data.user));
-        
         setIsEditingPersonal(false);
         
-        // Success alert
         Swal.fire({
           icon: 'success',
           title: 'Thành công!',
@@ -435,7 +426,7 @@ if (!validatePersonalInfo()) {
     setPasswordVisible((prev) => ({ ...prev, [field]: !prev[field] }));
   };
 
-  const [passwordStrength, setPasswordStrength] = useState({ label: '', color: 'border-gray-300', textColor: 'text-gray-400', bar: '', width: '0%' });
+  const [passwordStrength, setPasswordStrength] = useState({ label: '', color: 'border-water/30', textColor: 'text-muted-foreground', bar: '', width: '0%' });
 
   const handlePasswordChange = (value) => {
     setPasswordData({...passwordData, newPassword: value});
@@ -451,13 +442,13 @@ if (!validatePersonalInfo()) {
     if (/[^A-Za-z0-9]/.test(password)) strength++;
 
     if (strength <= 2) {
-      setPasswordStrength({ label: 'Yếu', color: 'border-red-300', textColor: 'text-red-500', bar: 'bg-red-400', width: '25%' });
+      setPasswordStrength({ label: 'Yếu', color: 'border-red-300 dark:border-red-500/50', textColor: 'text-red-500', bar: 'bg-red-400 dark:bg-red-500', width: '25%' });
     } else if (strength === 3) {
-      setPasswordStrength({ label: 'Trung bình', color: 'border-yellow-300', textColor: 'text-yellow-500', bar: 'bg-yellow-400', width: '50%' });
+      setPasswordStrength({ label: 'Trung bình', color: 'border-yellow-300 dark:border-yellow-500/50', textColor: 'text-yellow-500', bar: 'bg-yellow-400 dark:bg-yellow-500', width: '50%' });
     } else if (strength >= 4) {
-      setPasswordStrength({ label: 'Mạnh', color: 'border-green-300', textColor: 'text-green-500', bar: 'bg-green-400', width: '100%' });
+      setPasswordStrength({ label: 'Mạnh', color: 'border-green-300 dark:border-green-500/50', textColor: 'text-green-500', bar: 'bg-green-400 dark:bg-green-500', width: '100%' });
     } else {
-      setPasswordStrength({ label: '', color: 'border-gray-300', textColor: 'text-gray-400', bar: '', width: '0%' });
+      setPasswordStrength({ label: '', color: 'border-water/30 dark:border-white/10', textColor: 'text-muted-foreground', bar: '', width: '0%' });
     }
   };
 
@@ -614,41 +605,53 @@ if (!validatePersonalInfo()) {
   };
 
   return (
-      <div className="relative min-h-screen bg-[#051C1C] py-12 overflow-hidden text-white">
-        {/* 1. Nền Gradient cố định tạo chiều sâu nước sâu */}
-        <div className="fixed inset-0 bg-gradient-to-b from-[#051C1C] via-[#0a2828] to-[#051C1C] z-0"></div>
+    <div className={`profile-page relative min-h-screen transition-colors duration-300 ${isDark ? 'bg-[#051C1C] text-white' : 'bg-background text-foreground'} py-8`}>
+      {/* 1. Nền Gradient chính - Cố định (Fixed) */}
+      <div className={`fixed inset-0 z-0 transition-colors duration-300 ${
+        isDark 
+          ? 'bg-gradient-to-b from-[#051C1C] via-[#0a2828] to-[#051C1C]' 
+          : 'bg-gradient-to-b from-[#FFFDF0] via-[#E8F6F6] to-[#FFFDF0]'
+      }`}></div>
 
-        {/* 2. Hệ thống vân sóng thủy sinh vô tận chạy ngầm đồng bộ trang Blog */}
-        <div 
-          className="absolute inset-0 z-0 opacity-30 pointer-events-none"
-          style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='400' height='200' viewBox='0 0 400 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 100 Q 100 50 200 100 T 400 100' fill='none' stroke='%2310b981' stroke-width='1.5' stroke-opacity='0.5'/%3E%3Cpath d='M0 140 Q 100 90 200 140 T 400 140' fill='none' stroke='%2306b6d4' stroke-width='1' stroke-opacity='0.3'/%3E%3C/svg%3E")`,
-            backgroundSize: '800px 400px',
-          }}
-        ></div>
+      {/* 2. Hệ thống vân sóng vô tận lặp lại toàn trang */}
+      <div 
+        className="absolute inset-0 z-0 pointer-events-none transition-opacity duration-300"
+        style={{
+          backgroundImage: isDark
+            ? `url("data:image/svg+xml,%3Csvg width='400' height='200' viewBox='0 0 400 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 100 Q 100 50 200 100 T 400 100' fill='none' stroke='%2310b981' stroke-width='1.5' stroke-opacity='0.5'/%3E%3Cpath d='M0 140 Q 100 90 200 140 T 400 140' fill='none' stroke='%2306b6d4' stroke-width='1' stroke-opacity='0.3'/%3E%3C/svg%3E")`
+            : `url("data:image/svg+xml,%3Csvg width='400' height='200' viewBox='0 0 400 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 100 Q 100 50 200 100 T 400 100' fill='none' stroke='%234682A9' stroke-width='1.5' stroke-opacity='0.25'/%3E%3Cpath d='M0 140 Q 100 90 200 140 T 400 140' fill='none' stroke='%23749BC2' stroke-width='1' stroke-opacity='0.2'/%3E%3C/svg%3E")`,
+          backgroundSize: '800px 400px',
+          opacity: isDark ? 0.4 : 0.25,
+        }}
+      ></div>
 
-        {/* 3. Các đốm sáng phát quang sinh học (Bioluminescent Glow) */}
-        <div className="fixed top-[20%] left-[-10%] w-[500px] h-[500px] bg-emerald-900/15 blur-[120px] rounded-full z-0 pointer-events-none"></div>
-        <div className="fixed bottom-[10%] right-[-10%] w-[400px] h-[400px] bg-cyan-900/15 blur-[100px] rounded-full z-0 pointer-events-none"></div>
+      {/* 3. Các đốm sáng Glow cố định tạo chiều sâu */}
+      <div className={`fixed top-[20%] left-[-10%] w-[500px] h-[500px] rounded-full z-0 pointer-events-none blur-[120px] transition-colors duration-300 ${
+        isDark ? 'bg-emerald-900/20' : 'bg-emerald-200/35'
+      }`}></div>
+      <div className={`fixed bottom-[10%] right-[-10%] w-[400px] h-[400px] rounded-full z-0 pointer-events-none blur-[100px] transition-colors duration-300 ${
+        isDark ? 'bg-cyan-900/20' : 'bg-cyan-200/35'
+      }`}></div>
 
-        {/* NỘI DUNG CHÍNH (CONTAINER) */}
-        <div className="relative z-10 max-w-4xl mx-auto px-4 space-y-6 animate-in fade-in zoom-in-95 duration-200">
-          
-          {/* BLOCK 1: HEADER USER (GLASSMORPHISM CARD) */}
-          <div className="bg-white/5 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] p-8 shadow-2xl relative overflow-hidden">
-            <div className="flex flex-col sm:flex-row items-center gap-6">
-              {/* Vùng Avatar bọc viền Neon */}
-              <div className="relative group shrink-0">
-                <div 
-                  className="w-24 h-24 rounded-full bg-black/30 border-2 border-emerald-500/50 flex items-center justify-center overflow-hidden cursor-pointer shadow-[0_0_15px_rgba(16,185,129,0.2)] group-hover:border-emerald-400 group-hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all duration-300"
-                  onClick={handleAvatarClick}
-                >
-                  {user?.avatar ? (
-                    <img 
-                      src={user.avatar} 
-                      alt="Avatar" 
-                      className="w-full h-full object-cover"
-                    />
+      {/* Nội dung chính */}
+      <div className="relative z-10 max-w-4xl mx-auto px-4 space-y-6">
+        
+        {/* Header */}
+        <div className="glass-panel shadow-xl rounded-3xl p-6 border border-water/45 dark:border-white/10">
+          <div className="flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
+            <div className="relative group">
+              <div 
+                className="w-24 h-24 rounded-full bg-aqua/10 dark:bg-white/10 border-2 border-water/40 dark:border-white/20 flex items-center justify-center overflow-hidden cursor-pointer shadow-inner transition-all duration-300"
+                onClick={handleAvatarClick}
+              >
+                {user?.avatar ? (
+                  <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <User className="w-12 h-12 text-muted-foreground" />
+                )}
+                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 flex items-center justify-center transition-all duration-300">
+                  {isUploading ? (
+                    <Loader2 className="w-6 h-6 text-white animate-spin" />
                   ) : (
                     <User className="w-12 h-12 text-gray-400" />
                   )}
@@ -1037,168 +1040,9 @@ if (!validatePersonalInfo()) {
               </div>
             )}
           </div>
-
-          {/* BLOCK 4: SECURITY PASSWORD (ĐỔI MẬT KHẨU BẢO MẬT) */}
-          <div className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-8 shadow-xl">
-            <div className="flex items-center justify-between mb-6 border-b border-white/5 pb-4">
-              <h2 className="text-xl font-bold tracking-tight text-white/90">🔒 Bảo mật tài khoản</h2>
-              {!isChangingPassword ? (
-                <button
-                  type="button"
-                  onClick={() => setIsChangingPassword(true)}
-                  className="flex items-center gap-2 text-sm font-bold text-emerald-400 hover:text-emerald-300 transition-colors"
-                >
-                  <Edit2 className="w-4 h-4" />
-                  Đổi mật khẩu
-                </button>
-              ) : (
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setIsChangingPassword(false)}
-                    className="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleChangePassword}
-                    disabled={loading}
-                    className="flex items-center gap-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold rounded-xl transition-colors shadow-md disabled:bg-gray-700 disabled:opacity-50"
-                  >
-                    <Save className="w-4 h-4" />
-                    {loading ? 'Đang lưu...' : 'Cập nhật mật khẩu'}
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {isChangingPassword ? (
-              <div className="space-y-4">
-                {/* Current Password */}
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-semibold text-gray-300 pl-1">Mật khẩu hiện tại *</label>
-                  <div className="relative">
-                    <input
-                      type={passwordVisible.current ? "text" : "password"}
-                      value={passwordData.currentPassword}
-                      onChange={(e) => {
-                        setPasswordData({...passwordData, currentPassword: e.target.value});
-                        if (errors.currentPassword) setErrors({...errors, currentPassword: null});
-                      }}
-                      className={`w-full bg-white/5 border rounded-2xl px-5 py-3 pr-12 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 transition-all shadow-inner text-sm ${
-                        errors.currentPassword ? 'border-rose-500 focus:ring-rose-500/50' : 'border-white/10 focus:ring-emerald-500/50'
-                      }`}
-                      placeholder="Nhập mật khẩu hiện hành..."
-                    />
-                    <button
-                      type="button"
-                      onClick={() => togglePasswordVisibility('current')}
-                      className="absolute inset-y-0 right-4 flex items-center text-gray-400 hover:text-emerald-400 transition-colors"
-                    >
-                      {passwordVisible.current ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                  {errors.currentPassword && (
-                    <p className="text-rose-400 text-xs mt-1 flex items-center gap-1 pl-1">
-                      <span>⚠️</span> {errors.currentPassword}
-                    </p>
-                  )}
-                </div>
-
-                {/* New Password */}
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-semibold text-gray-300 pl-1">Mật khẩu mới *</label>
-                  <div className="relative">
-                    <input
-                      type={passwordVisible.new ? "text" : "password"}
-                      value={passwordData.newPassword}
-                      onChange={(e) => {
-                        handlePasswordChange(e.target.value);
-                        if (errors.newPassword) setErrors({...errors, newPassword: null});
-                      }}
-                      className={`w-full bg-white/5 border rounded-2xl px-5 py-3 pr-12 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 transition-all shadow-inner text-sm border-white/10 focus:ring-emerald-500/50`}
-                      placeholder="Tạo mật khẩu bảo mật mới..."
-                      maxLength={50}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => togglePasswordVisibility('new')}
-                      className="absolute inset-y-0 right-4 flex items-center text-gray-400 hover:text-emerald-400 transition-colors"
-                    >
-                      {passwordVisible.new ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                  {errors.newPassword ? (
-                    <p className="text-rose-400 text-xs mt-1 flex items-center gap-1 pl-1">
-                      <span>⚠️</span> {errors.newPassword}
-                    </p>
-                  ) : (
-                    <p className="text-[11px] text-gray-400 pl-1 mt-0.5 leading-relaxed">
-                      Yêu cầu: Tối thiểu <span className="font-bold text-gray-300">8 ký tự</span>, gồm chữ hoa, chữ thường, chữ số và ký hiệu bảo mật.
-                    </p>
-                  )}
-
-                  {/* Đo lực kế cường độ Mật khẩu bằng dải màu Glass (Strength Meter) */}
-                  {passwordData.newPassword && (
-                    <div className="mt-1 bg-black/20 p-3 rounded-2xl border border-white/5 animate-in fade-in duration-200">
-                      <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full rounded-full transition-all duration-500 ${
-                            passwordStrength.label === 'Yếu' ? 'bg-rose-500' :
-                            passwordStrength.label === 'Trung bình' ? 'bg-amber-500' : 'bg-emerald-500'
-                          }`}
-                          style={{ width: passwordStrength.width }}
-                        ></div>
-                      </div>
-                      <p className={`text-xs mt-2 flex items-center gap-1.5 font-medium ${
-                        passwordStrength.label === 'Yếu' ? 'text-rose-400' :
-                        passwordStrength.label === 'Trung bình' ? 'text-amber-400' : 'text-emerald-400'
-                      }`}>
-                        🛡️ Chỉ số an toàn: <span className="font-bold uppercase tracking-wider">{passwordStrength.label}</span>
-                      </p>
-                    </div>
-                  )}
-                </div>
-
-                {/* Confirm Password */}
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-semibold text-gray-300 pl-1">Xác nhận mật khẩu mới *</label>
-                  <div className="relative">
-                    <input
-                      type={passwordVisible.confirm ? "text" : "password"}
-                      value={passwordData.confirmPassword}
-                      onChange={(e) => {
-                        setPasswordData({...passwordData, confirmPassword: e.target.value});
-                        if (errors.confirmPassword) setErrors({...errors, confirmPassword: null});
-                      }}
-                      className={`w-full bg-white/5 border rounded-2xl px-5 py-3 pr-12 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 transition-all shadow-inner text-sm ${
-                        errors.confirmPassword ? 'border-rose-500 focus:ring-rose-500/50' : 'border-white/10 focus:ring-emerald-500/50'
-                      }`}
-                      placeholder="Gõ lại mật khẩu mới để trùng khớp..."
-                    />
-                    <button
-                      type="button"
-                      onClick={() => togglePasswordVisibility('confirm')}
-                      className="absolute inset-y-0 right-4 flex items-center text-gray-400 hover:text-emerald-400 transition-colors"
-                    >
-                      {passwordVisible.confirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                  {errors.confirmPassword && (
-                    <p className="text-rose-400 text-xs mt-1 flex items-center gap-1 pl-1">
-                      <span>⚠️</span> {errors.confirmPassword}
-                    </p>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <p className="text-sm text-gray-400 pl-1">Nhấn nút “Đổi mật khẩu” để cập nhật lại cấu trúc mã khóa của bạn.</p>
-            )}
-          </div>
-
         </div>
       </div>
+    </div>
   );
 };
 

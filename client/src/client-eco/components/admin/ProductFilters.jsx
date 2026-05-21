@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, X, ChevronDown } from 'lucide-react';
+import { useTheme } from '../../context/ThemeContext';
 
 const SORT_OPTIONS = [
   { value: 'createdAt:desc', label: 'Mới nhất' },
@@ -11,6 +12,7 @@ const SORT_OPTIONS = [
 ];
 
 const ProductFilters = ({ filters, categories, onFilterChange, onSearch, onReset }) => {
+  const { isDark } = useTheme();
   const [searchTerm, setSearchTerm] = useState(filters.search || '');
   const [isSortOpen, setIsSortOpen] = useState(false);
   
@@ -36,33 +38,41 @@ const ProductFilters = ({ filters, categories, onFilterChange, onSearch, onReset
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-4 mb-6">
+    <div className={`glass-panel rounded-3xl p-5 mb-6 border transition-all duration-300 ${
+      isDark ? 'border-white/10 shadow-black/40' : 'border-water/30 shadow-slate-900/5'
+    }`}>
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
         <div className="flex items-center gap-2">
-          <Filter size={18} className="text-gray-600" />
-          <h3 className="text-lg font-semibold text-gray-900">Bộ lọc sản phẩm</h3>
+          <Filter size={18} className={isDark ? 'text-emerald-400' : 'text-primary'} />
+          <h3 className={`text-lg font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-800'}`}>Bộ lọc sản phẩm</h3>
         </div>
         
         <div className="flex items-center gap-2">
           <div className="relative">
             <button
               onClick={() => setIsSortOpen(!isSortOpen)}
-              className="flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg hover:bg-gray-50"
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl border text-sm font-semibold transition-all duration-200 ${
+                isDark 
+                  ? 'border-white/10 text-gray-300 hover:bg-white/10' 
+                  : 'border-water/20 text-slate-700 hover:bg-water/10'
+              }`}
             >
-              <span className="text-sm text-gray-700">{getSortLabel()}</span>
-              <ChevronDown size={16} className="text-gray-500" />
+              <span className="text-sm font-bold">{getSortLabel()}</span>
+              <ChevronDown size={16} className={isDark ? 'text-gray-400' : 'text-slate-500'} />
             </button>
             
             {isSortOpen && (
-              <div className="absolute right-0 mt-1 w-48 bg-white rounded-md shadow-lg z-10 border border-gray-200">
+              <div className={`absolute right-0 mt-1.5 w-48 rounded-xl shadow-xl z-20 border overflow-hidden transition-all duration-200 ${
+                isDark ? 'bg-[#0B2525] border-white/10 text-white' : 'bg-white border-water/30 text-slate-800'
+              }`}>
                 {SORT_OPTIONS.map((option) => (
                   <button
                     key={option.value}
                     onClick={() => handleSortChange(option.value)}
-                    className={`block w-full text-left px-4 py-2 text-sm ${
+                    className={`block w-full text-left px-4 py-2.5 text-sm transition-colors duration-200 ${
                       filters.sort === option.value 
-                        ? 'bg-blue-50 text-blue-700' 
-                        : 'text-gray-700 hover:bg-gray-50'
+                        ? (isDark ? 'bg-emerald-500/20 text-emerald-400 font-bold' : 'bg-primary/10 text-primary font-bold') 
+                        : (isDark ? 'text-gray-300 hover:bg-white/5' : 'text-slate-700 hover:bg-water/5')
                     }`}
                   >
                     {option.label}
@@ -74,7 +84,11 @@ const ProductFilters = ({ filters, categories, onFilterChange, onSearch, onReset
           
           <button
             onClick={onReset}
-            className="flex items-center gap-1 px-3 py-2 text-sm text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition"
+            className={`flex items-center gap-1.5 px-3.5 py-2 text-sm font-bold rounded-xl border transition-all duration-200 ${
+              isDark 
+                ? 'border-white/10 text-gray-300 hover:bg-white/10 hover:text-white' 
+                : 'border-water/20 text-slate-700 hover:bg-water/10 hover:text-slate-900'
+            }`}
           >
             <X size={16} />
             <span>Đặt lại</span>
@@ -85,17 +99,25 @@ const ProductFilters = ({ filters, categories, onFilterChange, onSearch, onReset
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {/* Search */}
         <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className={`block text-xs font-black uppercase tracking-wider mb-2 ${
+            isDark ? 'text-emerald-400' : 'text-primary'
+          }`}>
             Tìm kiếm sản phẩm
           </label>
           <div className="relative">
-            <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <Search size={18} className={`absolute left-3.5 top-1/2 transform -translate-y-1/2 ${
+              isDark ? 'text-gray-400' : 'text-slate-500'
+            }`} />
             <input
               type="text"
               placeholder="Nhập tên hoặc mô tả sản phẩm..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              className={`w-full pl-10 pr-10 py-2.5 text-sm rounded-xl border focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 ${
+                isDark 
+                  ? 'bg-white/5 border-white/10 text-white focus:bg-white/10' 
+                  : 'bg-water/5 border-water/20 text-slate-800 focus:bg-water/10'
+              }`}
             />
             {searchTerm && (
               <button
@@ -103,7 +125,7 @@ const ProductFilters = ({ filters, categories, onFilterChange, onSearch, onReset
                   setSearchTerm('');
                   onSearch('');
                 }}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-3.5 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-white transition-colors"
               >
                 <X size={16} />
               </button>
@@ -113,17 +135,23 @@ const ProductFilters = ({ filters, categories, onFilterChange, onSearch, onReset
 
         {/* Category */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className={`block text-xs font-black uppercase tracking-wider mb-2 ${
+            isDark ? 'text-emerald-400' : 'text-primary'
+          }`}>
             Danh mục
           </label>
           <select
             value={filters.categoryId}
             onChange={(e) => onFilterChange({ categoryId: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            className={`w-full px-3.5 py-2.5 text-sm rounded-xl border focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 ${
+              isDark 
+                ? 'bg-white/5 border-white/10 text-white focus:bg-white/10 dark:text-white dark:bg-[#0B2525]' 
+                : 'bg-water/5 border-water/20 text-slate-800 focus:bg-water/10 bg-white'
+            }`}
           >
-            <option value="">Tất cả danh mục</option>
+            <option value="" className={isDark ? 'bg-[#0B2525] text-white' : 'bg-white text-slate-800'}>Tất cả danh mục</option>
             {categories.map(cat => (
-              <option key={cat._id} value={cat._id}>
+              <option key={cat._id} value={cat._id} className={isDark ? 'bg-[#0B2525] text-white' : 'bg-white text-slate-800'}>
                 {cat.name}
               </option>
             ))}
@@ -132,17 +160,23 @@ const ProductFilters = ({ filters, categories, onFilterChange, onSearch, onReset
 
         {/* Status */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className={`block text-xs font-black uppercase tracking-wider mb-2 ${
+            isDark ? 'text-emerald-400' : 'text-primary'
+          }`}>
             Trạng thái
           </label>
           <select
             value={filters.status}
             onChange={(e) => onFilterChange({ status: e.target.value })}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            className={`w-full px-3.5 py-2.5 text-sm rounded-xl border focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 ${
+              isDark 
+                ? 'bg-white/5 border-white/10 text-white focus:bg-white/10 dark:text-white dark:bg-[#0B2525]' 
+                : 'bg-water/5 border-water/20 text-slate-800 focus:bg-water/10 bg-white'
+            }`}
           >
-            <option value="">Tất cả trạng thái</option>
-            <option value="ACTIVE">Đang hoạt động</option>
-            <option value="INACTIVE">Ngừng kinh doanh</option>
+            <option value="" className={isDark ? 'bg-[#0B2525] text-white' : 'bg-white text-slate-800'}>Tất cả trạng thái</option>
+            <option value="ACTIVE" className={isDark ? 'bg-[#0B2525] text-emerald-400 font-bold' : 'bg-white text-green-700 font-bold'}>Đang hoạt động</option>
+            <option value="INACTIVE" className={isDark ? 'bg-[#0B2525] text-rose-400 font-bold' : 'bg-white text-red-600 font-bold'}>Ngừng kinh doanh</option>
           </select>
         </div>
       </div>

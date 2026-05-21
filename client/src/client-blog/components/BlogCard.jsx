@@ -5,8 +5,10 @@ import Swal from 'sweetalert2';
 import { useDispatch } from 'react-redux';
 import { deleteBlog } from '../redux/slices/blogSlice';
 import blogInteractionService from '../services/blogInteractionService';
+import { useTheme } from '../../client-eco/context/ThemeContext';
 
 const BlogCard = ({ blog }) => {
+  const { isDark } = useTheme();
   const { 
     _id, title, slug, author, coverImage, 
     likeCount = 0, commentCount = 0, viewCount = 0, 
@@ -127,35 +129,35 @@ const BlogCard = ({ blog }) => {
   };
 
   return (
-    <div className="group bg-white/5 backdrop-blur-2xl border border-white/10 rounded-2xl overflow-hidden mb-6 transition-all duration-500 hover:bg-white/10 hover:translate-y-[-4px] shadow-xl hover:shadow-[0_20px_40px_rgba(16,185,129,0.1)]">
+    <div className="group glass-panel rounded-2xl overflow-hidden mb-6 transition-all duration-500 hover:translate-y-[-4px] shadow-xl hover:shadow-[0_20px_40px_rgba(16,185,129,0.1)]">
       
-      {/* 1. CARD HEADER (Dữ liệu cấu trúc Code 1 phối màu Code 2) */}
-      <div className="p-4 flex items-center justify-between border-b border-white/5">
+      {/* 1. CARD HEADER */}
+      <div className="p-4 flex items-center justify-between border-b border-water/20 dark:border-white/5">
         <div className="flex items-center space-x-3">
           <div className="relative">
             <img 
               src={authorAvatar} 
               alt={authorName} 
-              className="w-10 h-10 rounded-full object-cover border border-white/10 hover:opacity-90 transition-opacity cursor-pointer ring-2 ring-emerald-500/20"
+              className="w-10 h-10 rounded-full object-cover border border-water/30 dark:border-white/10 hover:opacity-90 transition-opacity cursor-pointer ring-2 ring-nature/20 dark:ring-emerald-500/20"
             />
-            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 border-2 border-[#051C1C] rounded-full"></div>
+            <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-emerald-500 border-2 border-white dark:border-[#051C1C] rounded-full"></div>
           </div>
           <div>
             <div className="flex items-center space-x-2">
-              <h3 className="font-bold text-white text-[15px] hover:text-emerald-400 hover:underline cursor-pointer leading-none transition-colors">
+              <h3 className="font-bold text-foreground text-[15px] hover:text-nature dark:hover:text-emerald-400 hover:underline cursor-pointer leading-none transition-colors">
                 {authorName}
               </h3>
               {authorRole && (
                 <span className={`px-2 py-0.5 text-[10px] font-bold uppercase rounded-md tracking-wider ${
                   author?.role?.toLowerCase() === 'admin'
-                    ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' // Màu vàng/cam sang trọng cho Admin
-                    : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/10' // Màu xanh cho User
+                    ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30'
+                    : 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/10'
                 }`}>
                   {authorRole}
                 </span>
               )}
             </div>
-            <p className="text-[12px] text-gray-400 mt-1.5 flex items-center">
+            <p className="text-[12px] text-muted-foreground font-semibold mt-1.5 flex items-center">
               {formattedDate} <span className="mx-1.5">·</span> <span className="hover:underline cursor-pointer">Công khai</span>
             </p>
           </div>
@@ -165,7 +167,9 @@ const BlogCard = ({ blog }) => {
           <button
             onClick={handleBookmark}
             className={`p-2 rounded-full transition-all ${
-              bookmarked ? 'bg-emerald-500/20 text-emerald-400' : 'text-gray-400 hover:text-white hover:bg-white/5'
+              bookmarked 
+                ? 'bg-nature/20 dark:bg-emerald-500/20 text-nature dark:text-emerald-400' 
+                : 'text-muted-foreground hover:text-foreground hover:bg-aqua/10 dark:hover:bg-white/5'
             }`}
           >
             <Bookmark
@@ -176,21 +180,21 @@ const BlogCard = ({ blog }) => {
         </div>
       </div>
       
-      {/* 2. CARD CONTENT (Giữ nguyên thứ tự Code 1 nhưng đổi màu text) */}
+      {/* 2. CARD CONTENT */}
       <div className="px-4 pt-4 pb-3">
         <Link to={`/blogs/${slug || _id}`}>
-          <h2 className="text-[20px] font-bold text-white mb-2 leading-snug group-hover:text-cyan-300 transition-colors">
+          <h2 className="text-[20px] font-bold text-foreground mb-2 leading-snug group-hover:text-nature dark:group-hover:text-cyan-300 transition-colors">
             {title}
           </h2>
         </Link>
-        <p className="text-gray-300 text-[14px] leading-relaxed line-clamp-3 font-light">
+        <p className="text-muted-foreground text-[14px] leading-relaxed line-clamp-3 font-medium">
           {excerpt}
         </p>
       </div>
 
-      {/* 3. COVER IMAGE (Đặt ở giữa theo cấu trúc Code 1) */}
+      {/* 3. COVER IMAGE */}
       {coverImage && (
-        <Link to={`/blogs/${slug || _id}`} className="block overflow-hidden border-y border-white/5">
+        <Link to={`/blogs/${slug || _id}`} className="block overflow-hidden border-y border-water/20 dark:border-white/5">
           <img 
             src={coverImage?.url || coverImage}
             alt={title} 
@@ -199,28 +203,28 @@ const BlogCard = ({ blog }) => {
         </Link>
       )}
 
-      {/* 4. STATS SUMMARY (Đổi màu hiển thị sáng hơn) */}
-      <div className="px-4 py-3 border-b border-white/5 flex justify-between items-center text-[13px] text-gray-400 bg-black/10">
+      {/* 4. STATS SUMMARY */}
+      <div className="px-4 py-3 border-b border-water/20 dark:border-white/5 flex justify-between items-center text-[13px] text-muted-foreground font-semibold bg-aqua/5 dark:bg-black/10">
         <div className="flex items-center space-x-2">
           <span className="w-5 h-5 bg-rose-500/20 rounded-full flex items-center justify-center ring-1 ring-rose-500/30">
-            <Heart size={12} className="text-rose-400 fill-current" />
+            <Heart size={12} className="text-rose-600 dark:text-rose-400 fill-current" />
           </span>
-          <span className="hover:text-white transition-colors cursor-pointer font-medium">{likes.toLocaleString()}</span>
+          <span className="hover:text-foreground transition-colors cursor-pointer font-medium">{likes.toLocaleString()}</span>
         </div>
         <div className="flex space-x-4">
-          <span className="hover:text-white transition-colors cursor-pointer">{commentCount.toLocaleString()} bình luận</span>
-          <span className="hover:text-white transition-colors cursor-pointer">{viewCount.toLocaleString()} lượt xem</span>
+          <span className="hover:text-foreground transition-colors cursor-pointer">{commentCount.toLocaleString()} bình luận</span>
+          <span className="hover:text-foreground transition-colors cursor-pointer">{viewCount.toLocaleString()} lượt xem</span>
         </div>
       </div>
 
-      {/* 5. ACTION BUTTONS (Vị trí Code 1, style kính mờ xanh của Code 2) */}
-      <div className="px-2 py-1 flex justify-between space-x-1 bg-white/[0.02]">
+      {/* 5. ACTION BUTTONS */}
+      <div className="px-2 py-1 flex justify-between space-x-1 bg-aqua/5 dark:bg-white/[0.02]">
         <button
           onClick={handleLike}
           className={`flex-1 flex items-center justify-center space-x-2 py-2 font-semibold text-[14px] rounded-lg transition-all ${
             isLiked 
-              ? 'bg-rose-500/10 text-rose-400' 
-              : 'text-gray-300 hover:bg-white/5 hover:text-white'
+              ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400' 
+              : 'text-muted-foreground hover:bg-aqua/10 dark:hover:bg-white/5 hover:text-foreground'
           }`}
         >
           <Heart
@@ -232,7 +236,7 @@ const BlogCard = ({ blog }) => {
         
         <Link 
           to={`/blogs/${slug || _id}`}
-          className="flex-1 flex items-center justify-center space-x-2 py-2 text-emerald-400 font-bold text-[14px] hover:bg-emerald-500/10 rounded-lg transition-all"
+          className="flex-1 flex items-center justify-center space-x-2 py-2 text-nature dark:text-emerald-400 font-bold text-[14px] hover:bg-nature/10 dark:hover:bg-emerald-500/10 rounded-lg transition-all"
         >
           <Eye size={18} />
           <span>Xem thêm</span>

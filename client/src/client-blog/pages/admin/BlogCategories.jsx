@@ -7,6 +7,7 @@ import AdminLayout from '../../../client-eco/components/admin/AdminLayout';
 import ConfirmDialog from '../../../client-eco/components/common/ConfirmDialog';
 import BlogCategoryTable from '../../components/admin/BlogCategoryTable';
 import BlogCategoryForm from '../../components/admin/BlogCategoryForm';
+import { useTheme } from '../../../client-eco/context/ThemeContext';
 
 import {
   getBlogCategories,
@@ -21,8 +22,9 @@ import {
 
 const BlogCategories = () => {
   const dispatch = useDispatch();
-  const [page,setPage]=useState(1);
-  const limit=10;
+  const { isDark } = useTheme();
+  const [page, setPage] = useState(1);
+  const limit = 10;
 
   const {
     blogCategories,
@@ -46,10 +48,10 @@ const BlogCategories = () => {
       getBlogCategories({
         page,
         limit,
-        includeInactive:true
+        includeInactive: true
       })
     );
-  }, [dispatch,page]);
+  }, [dispatch, page]);
 
   // Handle success
   useEffect(() => {
@@ -81,14 +83,14 @@ const BlogCategories = () => {
   };
 
   const handleEditCategory = async (categoryId) => {
-  try {
-    await dispatch(getBlogCategoryById(categoryId)).unwrap();
-    setEditingCategory(categoryId);
-    setShowForm(true);
-  } catch (err) {
-    toast.error('Không lấy được dữ liệu danh mục');
-  }
-};
+    try {
+      await dispatch(getBlogCategoryById(categoryId)).unwrap();
+      setEditingCategory(categoryId);
+      setShowForm(true);
+    } catch (err) {
+      toast.error('Không lấy được dữ liệu danh mục');
+    }
+  };
 
   const handleDeleteCategory = (categoryId) => {
     setDeleteCategoryId(categoryId);
@@ -144,39 +146,49 @@ const BlogCategories = () => {
 
   return (
     <AdminLayout>
-      <div className="min-h-screen bg-[#f8f9ff] p-8">
+      <div className="min-h-screen bg-transparent p-4 sm:p-6 md:p-8 relative z-10">
         {/* HEADER */}
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div>
-            <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-3xl font-black tracking-tight text-[#1e293b]">
+            <div className="flex items-center gap-3 mb-2 flex-wrap">
+              <h1 className={`text-3xl font-black tracking-tight ${
+                isDark ? 'text-white' : 'text-slate-800'
+              }`}>
                 Blog Categories
               </h1>
 
-              <span className="bg-[#4f46e5]/10 text-[#4f46e5] px-3 py-1 rounded-full text-sm font-bold">
+              <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                isDark 
+                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                  : 'bg-water/10 text-primary border border-water/20 font-bold'
+              }`}>
                 {blogCategories?.length || 0} danh mục
               </span>
             </div>
 
-            <p className="text-slate-500 font-medium">
-              Quản lý danh mục dùng để phân loại nội dung bài viết.
+            <p className={`font-medium text-sm ${
+              isDark ? 'text-gray-400' : 'text-slate-600'
+            }`}>
+              Quản lý danh mục dùng để phân loại nội dung bài viết thủy sinh.
             </p>
           </div>
 
           <button
             onClick={handleAddCategory}
-            className="
-              bg-[#4f46e5]
+            className={`
+              ${isDark 
+                ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-emerald-950/20' 
+                : 'bg-gradient-to-r from-primary to-water hover:from-primary/90 hover:to-water/90 shadow-water/20'}
               text-white
-              px-5 py-3
-              rounded-xl
+              px-6 py-3
+              rounded-2xl
               font-bold
-              shadow-md
-              hover:shadow-lg
+              shadow-lg
               hover:scale-[1.02]
+              active:scale-[0.98]
               transition-all
               flex items-center gap-2
-            "
+            `}
           >
             <Plus size={18} />
             Thêm danh mục
@@ -184,15 +196,7 @@ const BlogCategories = () => {
         </div>
 
         {/* TABLE */}
-        <div
-          className="
-            bg-white
-            rounded-2xl
-            shadow-[0_8px_32px_rgba(11,28,48,0.04)]
-            overflow-hidden
-            border border-slate-100
-          "
-        >
+        <div className="glass-panel rounded-[2rem] overflow-hidden shadow-2xl">
           <BlogCategoryTable
             categories={blogCategories}
             onEdit={handleEditCategory}
@@ -215,9 +219,9 @@ const BlogCategories = () => {
         <ConfirmDialog
           isOpen={showConfirm}
           title="Xác nhận xóa danh mục"
-          message="Bạn có chắc muốn xóa danh mục này?"
-          confirmText="Xóa"
-          cancelText="Hủy"
+          message="Bạn có chắc muốn xóa danh mục này? Hành động này không thể hoàn tác."
+          confirmText="Xóa danh mục"
+          cancelText="Hủy bỏ"
           onConfirm={handleConfirmDelete}
           onCancel={() => setShowConfirm(false)}
           isDangerous

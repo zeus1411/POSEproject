@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Search, X } from 'lucide-react';
+import { useTheme } from '../../context/ThemeContext';
 
 // Danh sách icon cho aquatic shop
 const AQUATIC_ICONS = [
@@ -126,6 +127,7 @@ const AQUATIC_ICONS = [
 ];
 
 const IconPicker = ({ selectedIcon, onSelect, onClose }) => {
+  const { isDark } = useTheme();
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredIcons = AQUATIC_ICONS.filter(icon => 
@@ -135,39 +137,49 @@ const IconPicker = ({ selectedIcon, onSelect, onClose }) => {
   );
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-3xl w-full max-h-[80vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-[105] p-4 transition-all duration-300">
+      <div className={`glass-panel solid-modal w-full max-w-3xl max-h-[80vh] overflow-hidden rounded-3xl border shadow-2xl transition-all duration-300 flex flex-col ${
+        isDark ? 'border-white/10 text-white shadow-black/40' : 'border-water/40 text-slate-800 shadow-slate-900/10'
+      }`}>
         {/* Header */}
-        <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-          <h3 className="text-lg font-semibold text-gray-900">Chọn icon cho danh mục</h3>
+        <div className={`p-4 border-b flex justify-between items-center transition-colors duration-300 ${
+          isDark ? 'border-white/5 bg-[#051c1c]/95' : 'border-water/10 bg-[#FFFDF0]/95'
+        }`}>
+          <h3 className={`text-lg font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-800'}`}>
+            Chọn icon cho danh mục
+          </h3>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition"
+            className={`transition-colors duration-200 ${isDark ? 'text-gray-400 hover:text-white' : 'text-slate-500 hover:text-slate-900'}`}
           >
             <X size={24} />
           </button>
         </div>
 
         {/* Search */}
-        <div className="p-4 border-b border-gray-200">
+        <div className={`p-4 border-b transition-colors duration-300 ${
+          isDark ? 'border-white/5' : 'border-water/10'
+        }`}>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+            <Search className={`absolute left-3.5 top-1/2 -translate-y-1/2 ${isDark ? 'text-gray-400' : 'text-slate-500'}`} size={20} />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Tìm kiếm icon... (vd: cá, cây, đèn)"
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className={`w-full pl-11 pr-4 py-2.5 text-sm rounded-xl border focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 ${
+                isDark ? 'bg-white/5 border-white/10 text-white focus:bg-white/10' : 'bg-water/5 border-water/20 text-slate-800 focus:bg-water/10'
+              }`}
             />
           </div>
-          <p className="text-xs text-gray-500 mt-2">
+          <p className={`text-xs mt-2 ${isDark ? 'text-gray-500' : 'text-slate-400'}`}>
             {filteredIcons.length} icon được tìm thấy
           </p>
         </div>
 
         {/* Icon Grid */}
-        <div className="flex-1 overflow-y-auto p-4">
-          <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 gap-2">
+        <div className="flex-1 overflow-y-auto p-4 custom-scrollbar">
+          <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 gap-2.5">
             {filteredIcons.map((icon, index) => (
               <button
                 key={index}
@@ -176,11 +188,11 @@ const IconPicker = ({ selectedIcon, onSelect, onClose }) => {
                   onClose();
                 }}
                 className={`
-                  aspect-square flex items-center justify-center text-3xl rounded-lg
-                  transition-all duration-200 hover:scale-110
+                  aspect-square flex items-center justify-center text-3xl rounded-xl
+                  transition-all duration-200 hover:scale-110 shadow-sm
                   ${selectedIcon === icon.emoji
-                    ? 'bg-blue-100 ring-2 ring-blue-500 scale-105'
-                    : 'bg-gray-50 hover:bg-gray-100'
+                    ? (isDark ? 'bg-emerald-500/20 ring-2 ring-emerald-500 scale-105' : 'bg-primary/10 ring-2 ring-primary scale-105')
+                    : (isDark ? 'bg-white/5 hover:bg-white/10 text-white' : 'bg-water/5 hover:bg-water/10 text-slate-800')
                   }
                 `}
                 title={icon.name}
@@ -193,26 +205,32 @@ const IconPicker = ({ selectedIcon, onSelect, onClose }) => {
           {filteredIcons.length === 0 && (
             <div className="text-center py-12 text-gray-500">
               <div className="text-6xl mb-4">🔍</div>
-              <p className="text-lg font-medium">Không tìm thấy icon phù hợp</p>
-              <p className="text-sm mt-1">Thử tìm kiếm với từ khóa khác</p>
+              <p className={`text-lg font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>Không tìm thấy icon phù hợp</p>
+              <p className={`text-sm mt-1 ${isDark ? 'text-gray-500' : 'text-slate-400'}`}>Thử tìm kiếm với từ khóa khác</p>
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-gray-200 bg-gray-50">
-          <div className="flex items-center justify-between text-sm text-gray-600">
+        <div className={`p-4 border-t transition-colors duration-300 ${
+          isDark ? 'border-white/5 bg-white/5' : 'border-water/10 bg-water/5'
+        }`}>
+          <div className="flex items-center justify-between text-sm">
             <div>
               {selectedIcon && (
                 <span className="flex items-center gap-2">
                   <span className="text-2xl">{selectedIcon}</span>
-                  <span>Icon đã chọn</span>
+                  <span className={`font-semibold ${isDark ? 'text-gray-300' : 'text-slate-700'}`}>Icon đã chọn</span>
                 </span>
               )}
             </div>
             <button
               onClick={onClose}
-              className="px-4 py-2 text-gray-700 hover:bg-gray-200 rounded-lg transition"
+              className={`px-5 py-2 rounded-xl text-sm font-semibold transition-all duration-200 active:scale-95 border ${
+                isDark 
+                  ? 'border-white/10 text-gray-300 hover:bg-white/10 hover:text-white' 
+                  : 'border-water/20 text-slate-700 hover:bg-water/10 hover:text-slate-900'
+              }`}
             >
               Đóng
             </button>
