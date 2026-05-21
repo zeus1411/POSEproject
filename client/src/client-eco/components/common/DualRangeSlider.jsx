@@ -148,21 +148,16 @@ const DualRangeSlider = ({
 
   return (
     <div className="rounded-2xl border border-water/50 bg-card px-4 py-4 shadow-[0_14px_35px_rgb(var(--deep-ocean)/0.08)] backdrop-blur-xl dark:border-white/10 dark:bg-white/5 dark:shadow-[0_18px_60px_rgba(0,0,0,0.22)]">
-      <div className="flex items-center justify-between gap-3 text-sm">
-        <div>
-          <p className="text-xs uppercase tracking-[0.3em] text-nature dark:text-emerald-100/50">Khoảng giá</p>
-          <p className="mt-1 text-foreground dark:text-white/80">Kéo hai đầu để lọc theo ngân sách</p>
-        </div>
-        <div className="rounded-full border border-water/50 bg-aqua/25 px-3 py-1.5 text-right text-xs font-semibold text-ocean dark:border-cyan-300/20 dark:bg-cyan-300/10 dark:text-cyan-100">
-          <div>{formatCurrency(draft.min)}</div>
-          <div className="text-muted-foreground dark:text-white/45">- {formatCurrency(draft.max)}</div>
-        </div>
+      <div className="text-center w-full pb-1">
+        <p className="text-xs uppercase tracking-[0.3em] text-nature dark:text-emerald-100/50 font-bold">Khoảng giá</p>
+        <p className="mt-1.5 text-[11px] text-muted-foreground dark:text-white/60">Kéo hai đầu để lọc theo ngân sách</p>
       </div>
 
-      <div className="mt-6 px-1">
+      <div className="mt-4 px-1">
         <div
           ref={trackRef}
-          className="relative h-10 select-none"
+          className="relative h-
+           select-none"
           onPointerDown={handleTrackPointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
@@ -199,9 +194,9 @@ const DualRangeSlider = ({
         </div>
       </div>
 
-      <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground dark:text-white/40">
-        <span>{formatCurrency(min)}</span>
-        <span>{formatCurrency(max)}</span>
+      <div className="mt-1 flex items-center justify-between text-xs font-bold text-ocean dark:text-cyan-200">
+        <span className="px-2.5 py-1 rounded-full bg-aqua/10 dark:bg-cyan-950/40 border border-water/20 dark:border-cyan-800/30 shadow-sm transition-colors duration-300">{formatCurrency(draft.min)}</span>
+        <span className="px-2.5 py-1 rounded-full bg-aqua/10 dark:bg-cyan-950/40 border border-water/20 dark:border-cyan-800/30 shadow-sm transition-colors duration-300">{formatCurrency(draft.max)}</span>
       </div>
     </div>
   );

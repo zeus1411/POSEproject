@@ -27,7 +27,7 @@ const CategorySidebar = ({
   onFiltersChange,
   isLoading
 }) => {
-  const priceLimits = { min: 0, max: 10000000 };
+  const priceLimits = { min: 0, max: 2000000 };
   const [openSections, setOpenSections] = useState({
     category: true,
     price: true,

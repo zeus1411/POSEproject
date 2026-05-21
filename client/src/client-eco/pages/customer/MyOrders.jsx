@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { fetchUserOrders, setOrderStatusFilter } from '../../redux/slices/orderSlice';
+import { useTheme } from '../../context/ThemeContext';
 
 const statusOptions = [
   { key: '', label: 'Tất cả' },
@@ -43,6 +44,7 @@ const StatusBadge = ({ status }) => {
 };
 
 const MyOrders = () => {
+  const { isDark } = useTheme();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user } = useSelector((s) => s.auth);
@@ -69,15 +71,43 @@ const MyOrders = () => {
   }
 
   return (
-    <div className="my-orders-page min-h-screen bg-transparent text-foreground">
-      <div className="glass-card border-b border-water/35 dark:border-white/6">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <h1 className="text-2xl font-bold text-foreground dark:text-white">Đơn hàng của tôi</h1>
-          <p className="text-muted-foreground mt-1 dark:text-white/70">Theo dõi và quản lý các đơn hàng đã đặt</p>
-        </div>
-      </div>
+    <div className={`my-orders-page relative min-h-screen transition-colors duration-300 ${isDark ? 'bg-[#051C1C] text-white' : 'bg-background text-foreground'}`}>
+      {/* 1. Nền Gradient chính - Cố định (Fixed) */}
+      <div className={`fixed inset-0 z-0 transition-colors duration-300 ${
+        isDark 
+          ? 'bg-gradient-to-b from-[#051C1C] via-[#0a2828] to-[#051C1C]' 
+          : 'bg-gradient-to-b from-[#FFFDF0] via-[#E8F6F6] to-[#FFFDF0]'
+      }`}></div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* 2. Hệ thống vân sóng vô tận lặp lại toàn trang */}
+      <div 
+        className="absolute inset-0 z-0 pointer-events-none transition-opacity duration-300"
+        style={{
+          backgroundImage: isDark
+            ? `url("data:image/svg+xml,%3Csvg width='400' height='200' viewBox='0 0 400 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 100 Q 100 50 200 100 T 400 100' fill='none' stroke='%2310b981' stroke-width='1.5' stroke-opacity='0.5'/%3E%3Cpath d='M0 140 Q 100 90 200 140 T 400 140' fill='none' stroke='%2306b6d4' stroke-width='1' stroke-opacity='0.3'/%3E%3C/svg%3E")`
+            : `url("data:image/svg+xml,%3Csvg width='400' height='200' viewBox='0 0 400 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 100 Q 100 50 200 100 T 400 100' fill='none' stroke='%234682A9' stroke-width='1.5' stroke-opacity='0.25'/%3E%3Cpath d='M0 140 Q 100 90 200 140 T 400 140' fill='none' stroke='%23749BC2' stroke-width='1' stroke-opacity='0.2'/%3E%3C/svg%3E")`,
+          backgroundSize: '800px 400px',
+          opacity: isDark ? 0.4 : 0.25,
+        }}
+      ></div>
+
+      {/* 3. Các đốm sáng Glow cố định tạo chiều sâu */}
+      <div className={`fixed top-[20%] left-[-10%] w-[500px] h-[500px] rounded-full z-0 pointer-events-none blur-[120px] transition-colors duration-300 ${
+        isDark ? 'bg-emerald-900/20' : 'bg-emerald-200/35'
+      }`}></div>
+      <div className={`fixed bottom-[10%] right-[-10%] w-[400px] h-[400px] rounded-full z-0 pointer-events-none blur-[100px] transition-colors duration-300 ${
+        isDark ? 'bg-cyan-900/20' : 'bg-cyan-200/35'
+      }`}></div>
+
+      <div className="relative z-10">
+        <div className="glass-card border-b border-water/35 dark:border-white/6">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <h1 className="text-2xl font-bold text-white">Đơn hàng của tôi</h1>
+            <p className="text-white/70 mt-1">Theo dõi và quản lý các đơn hàng đã đặt</p>
+          </div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Filters */}
         <div className="flex flex-wrap gap-2 mb-6">
           {statusOptions.map((opt) => (
@@ -207,6 +237,7 @@ const MyOrders = () => {
             </button>
           </div>
         )}
+      </div>
       </div>
     </div>
   );
