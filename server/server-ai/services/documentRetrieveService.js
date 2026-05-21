@@ -2,6 +2,8 @@ import { DOC_TOP_K, DOC_SCORE_THRESHOLD } from '../config/aiConfig.js';
 import { embedText } from './geminiService.js';
 import { searchDocumentChunks } from './qdrantService.js';
 
+const normalizeValue = (value) => String(value || '').toLowerCase().trim();
+
 const mapSource = (match) => {
   const payload = match?.payload || {};
   return {
@@ -25,15 +27,69 @@ const buildContextText = (matches) => {
   return blocks.join('\n\n');
 };
 
-const retrieveDocumentContext = async ({ query }) => {
-  const vector = await embedText(query);
-  const matches = await searchDocumentChunks(vector, {
-    limit: DOC_TOP_K,
-    scoreThreshold: DOC_SCORE_THRESHOLD
+const applyConversationBias = (matches, preferredSources = []) => {
+  if (!preferredSources.length) return matches;
+
+  const preferredTitles = new Set(
+    preferredSources
+      .map((source) => normalizeValue(source.title))
+      .filter(Boolean)
+  );
+  const preferredUris = new Set(
+    preferredSources
+      .map((source) => normalizeValue(source.uri))
+      .filter(Boolean)
+  );
+
+  if (!preferredTitles.size && !preferredUris.size) return matches;
+
+  const preferredMatches = [];
+  const otherMatches = [];
+
+  matches.forEach((match) => {
+    const payload = match?.payload || {};
+    const isPreferred =
+      preferredTitles.has(normalizeValue(payload.fileName || payload.title)) ||
+      preferredUris.has(normalizeValue(payload.filePath || payload.uri));
+    if (isPreferred) {
+      preferredMatches.push(match);
+    } else {
+      otherMatches.push(match);
+    }
   });
 
-  const sources = matches.map(mapSource).filter((item) => item.chunkId);
-  const contextText = buildContextText(matches);
+  const sortableMatches = preferredMatches.length >= 2
+    ? preferredMatches
+    : [...preferredMatches, ...otherMatches];
+
+  return sortableMatches.sort((a, b) => {
+    const payloadA = a?.payload || {};
+    const payloadB = b?.payload || {};
+    const aPreferred =
+      preferredTitles.has(normalizeValue(payloadA.fileName || payloadA.title)) ||
+      preferredUris.has(normalizeValue(payloadA.filePath || payloadA.uri));
+    const bPreferred =
+      preferredTitles.has(normalizeValue(payloadB.fileName || payloadB.title)) ||
+      preferredUris.has(normalizeValue(payloadB.filePath || payloadB.uri));
+
+    if (aPreferred !== bPreferred) {
+      return aPreferred ? -1 : 1;
+    }
+
+    return (b.score || 0) - (a.score || 0);
+  });
+};
+
+const retrieveDocumentContext = async ({ query, preferredSources = [] }) => {
+  const vector = await embedText(query);
+  const matches = await searchDocumentChunks(vector, {
+    limit: Math.max(DOC_TOP_K * 4, DOC_TOP_K),
+    scoreThreshold: DOC_SCORE_THRESHOLD
+  });
+  const rankedMatches = applyConversationBias(matches, preferredSources).slice(0, DOC_TOP_K);
+
+  const sources = rankedMatches.map(mapSource).filter((item) => item.chunkId);
+  const contextText = buildContextText(rankedMatches);
 
   return {
     contextText,

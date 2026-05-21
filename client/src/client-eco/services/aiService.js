@@ -4,6 +4,10 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || '/api/v1';
 
 const buildStreamUrl = () => `${API_BASE_URL.replace(/\/$/, '')}/ai/chat/stream`;
 
+const getApiErrorMessage = (error, fallback) => {
+  return error?.response?.data?.message || error?.message || fallback;
+};
+
 const streamAiChat = async ({
   payload,
   anonymousId,
@@ -116,28 +120,66 @@ const uploadAiDocument = async ({ file, onProgress }) => {
   const formData = new FormData();
   formData.append('file', file);
 
-  const response = await api.post('/ai/documents/upload', formData, {
-    headers: {
-      'Content-Type': 'multipart/form-data'
-    },
-    onUploadProgress: (event) => {
-      if (!event.total || !onProgress) return;
-      const percent = Math.round((event.loaded / event.total) * 100);
-      onProgress(percent);
-    }
-  });
+  let response;
+  try {
+    response = await api.post('/ai/documents/upload', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      },
+      onUploadProgress: (event) => {
+        if (!event.total || !onProgress) return;
+        const percent = Math.round((event.loaded / event.total) * 100);
+        onProgress(percent);
+      }
+    });
+  } catch (error) {
+    throw new Error(getApiErrorMessage(error, 'Khong the upload tai lieu'));
+  }
 
   return response.data?.data;
+};
+
+const getAiDocuments = async () => {
+  try {
+    const response = await api.get('/ai/documents');
+    return response.data?.data;
+  } catch (error) {
+    throw new Error(getApiErrorMessage(error, 'Khong the tai danh sach tai lieu'));
+  }
+};
+
+const deleteAiDocument = async ({ fileName }) => {
+  try {
+    const response = await api.delete(`/ai/documents/${encodeURIComponent(fileName)}`);
+    return response.data?.data;
+  } catch (error) {
+    throw new Error(getApiErrorMessage(error, 'Khong the xoa tai lieu'));
+  }
 };
 
 const getCatalogStatus = async () => {
-  const response = await api.get('/ai/catalog/status');
-  return response.data?.data;
+  try {
+    const response = await api.get('/ai/catalog/status');
+    return response.data?.data;
+  } catch (error) {
+    throw new Error(getApiErrorMessage(error, 'Khong the tai trang thai catalog'));
+  }
 };
 
 const syncCatalog = async ({ reason = 'manual' } = {}) => {
-  const response = await api.post('/ai/catalog/sync', { reason });
-  return response.data?.data;
+  try {
+    const response = await api.post('/ai/catalog/sync', { reason });
+    return response.data?.data;
+  } catch (error) {
+    throw new Error(getApiErrorMessage(error, 'Khong the dong bo catalog'));
+  }
 };
 
-export { streamAiChat, uploadAiDocument, getCatalogStatus, syncCatalog };
+export {
+  streamAiChat,
+  uploadAiDocument,
+  getAiDocuments,
+  deleteAiDocument,
+  getCatalogStatus,
+  syncCatalog
+};

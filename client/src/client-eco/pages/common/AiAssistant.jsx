@@ -80,7 +80,7 @@ const AiAssistant = () => {
       id: assistantId,
       role: 'assistant',
       content: '',
-      mode,
+      mode: 'auto',
       sources: [],
       retrievalStrategy: '',
       sourceSummary: ''

@@ -5,16 +5,36 @@ import {
   CheckCircleIcon,
   ExclamationTriangleIcon,
   ClockIcon,
-  CloudArrowUpIcon
+  CloudArrowUpIcon,
+  TrashIcon
 } from '@heroicons/react/24/outline';
 import AdminLayout from '../../components/admin/AdminLayout';
-import { getCatalogStatus, syncCatalog, uploadAiDocument } from '../../services/aiService';
+import {
+  deleteAiDocument,
+  getAiDocuments,
+  getCatalogStatus,
+  syncCatalog,
+  uploadAiDocument
+} from '../../services/aiService';
 
 const formatTimestamp = (value) => {
   if (!value) return 'Chua co';
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return 'Chua co';
   return date.toLocaleString('vi-VN');
+};
+
+const formatBytes = (value) => {
+  const size = Number(value) || 0;
+  if (!size) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB'];
+  let index = 0;
+  let current = size;
+  while (current >= 1024 && index < units.length - 1) {
+    current /= 1024;
+    index += 1;
+  }
+  return `${current.toFixed(current < 10 && index > 0 ? 1 : 0)} ${units[index]}`;
 };
 
 const AiCatalogSync = () => {
@@ -26,6 +46,10 @@ const AiCatalogSync = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadResult, setUploadResult] = useState(null);
   const [uploadError, setUploadError] = useState('');
+  const [documents, setDocuments] = useState([]);
+  const [docsLoading, setDocsLoading] = useState(true);
+  const [docsError, setDocsError] = useState('');
+  const [deletingFile, setDeletingFile] = useState('');
 
   const loadStatus = async () => {
     setIsLoading(true);
@@ -68,6 +92,7 @@ const AiCatalogSync = () => {
         onProgress: setUploadProgress
       });
       setUploadResult(result);
+      await loadDocuments();
     } catch (err) {
       setUploadError(err?.message || 'Khong the upload tai lieu');
     } finally {
@@ -75,8 +100,37 @@ const AiCatalogSync = () => {
     }
   };
 
+  const loadDocuments = async () => {
+    setDocsLoading(true);
+    setDocsError('');
+    try {
+      const data = await getAiDocuments();
+      setDocuments(data?.items || []);
+    } catch (err) {
+      setDocsError(err?.message || 'Khong the tai danh sach tai lieu');
+    } finally {
+      setDocsLoading(false);
+    }
+  };
+
+  const handleDeleteDocument = async (fileName) => {
+    if (!fileName) return;
+    setDeletingFile(fileName);
+    setDocsError('');
+
+    try {
+      await deleteAiDocument({ fileName });
+      await loadDocuments();
+    } catch (err) {
+      setDocsError(err?.message || 'Khong the xoa tai lieu');
+    } finally {
+      setDeletingFile('');
+    }
+  };
+
   useEffect(() => {
     loadStatus();
+    loadDocuments();
   }, []);
 
   const lastResult = status?.lastSyncResult;
@@ -237,6 +291,57 @@ const AiCatalogSync = () => {
               </div>
             )}
           </div>
+        </div>
+
+        <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6">
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <div>
+              <p className="text-sm font-semibold text-gray-700">Tai lieu da upload</p>
+              <p className="text-xs text-gray-500">Danh sach tai lieu trong thu muc RAG.</p>
+            </div>
+            <button
+              type="button"
+              onClick={loadDocuments}
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-200 text-xs font-semibold text-gray-600 hover:border-gray-400"
+            >
+              <ArrowPathIcon className="w-4 h-4" />
+              Tai lai
+            </button>
+          </div>
+
+          {docsError && (
+            <div className="mb-4 text-xs text-rose-600 bg-rose-50 px-3 py-2 rounded-xl">
+              {docsError}
+            </div>
+          )}
+
+          {docsLoading ? (
+            <p className="text-sm text-gray-500">Dang tai danh sach...</p>
+          ) : documents.length ? (
+            <div className="divide-y divide-gray-100">
+              {documents.map((doc) => (
+                <div key={doc.fileName} className="py-3 flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-800">{doc.fileName}</p>
+                    <p className="text-xs text-gray-500">
+                      {formatBytes(doc.sizeBytes)} • {formatTimestamp(doc.uploadedAt)}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteDocument(doc.fileName)}
+                    disabled={deletingFile === doc.fileName}
+                    className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-rose-600 border border-rose-100 hover:border-rose-300 disabled:opacity-60"
+                  >
+                    <TrashIcon className="w-4 h-4" />
+                    {deletingFile === doc.fileName ? 'Dang xoa...' : 'Xoa'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-gray-500">Chua co tai lieu nao.</p>
+          )}
         </div>
       </div>
     </AdminLayout>

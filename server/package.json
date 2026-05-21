@@ -38,7 +38,8 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "dev:debug": "nodemon --inspect index.js"
+    "dev:debug": "nodemon --inspect index.js",
+    "verify:ai": "node scripts/verify-ai-phase56.mjs"
   },
   "keywords": [],
   "author": "",

@@ -1,6 +1,8 @@
 import crypto from 'crypto';
 import fs from 'fs/promises';
 import path from 'path';
+import { createRequire } from 'module';
+import { pathToFileURL } from 'url';
 import { OfficeParser } from 'officeparser';
 import { BadRequestError } from '../../utils/errorHandler.js';
 import {
@@ -8,12 +10,35 @@ import {
   DOC_CHUNK_OVERLAP,
   DOC_MIN_TEXT_LENGTH,
   DOC_MAX_FILE_SIZE_BYTES,
+  DOC_MAX_CHUNKS_PER_UPLOAD,
   GEMINI_EMBED_MODEL,
   QDRANT_DOCS_COLLECTION
 } from '../config/aiConfig.js';
 import { normalizeText, chunkText } from '../utils/textUtils.js';
 import { embedText } from './geminiService.js';
-import { ensureDocsCollection, upsertDocumentChunks } from './qdrantService.js';
+import {
+  deleteDocumentChunksByFileHash,
+  ensureDocsCollection,
+  upsertDocumentChunks
+} from './qdrantService.js';
+
+const require = createRequire(import.meta.url);
+let cachedPdfWorkerSrc = null;
+
+const getPdfWorkerSrc = () => {
+  if (cachedPdfWorkerSrc !== null) {
+    return cachedPdfWorkerSrc;
+  }
+
+  try {
+    const workerPath = require.resolve('pdfjs-dist/legacy/build/pdf.worker.mjs');
+    cachedPdfWorkerSrc = pathToFileURL(workerPath).href;
+  } catch (error) {
+    cachedPdfWorkerSrc = '';
+  }
+
+  return cachedPdfWorkerSrc;
+};
 
 const ALLOWED_EXTENSIONS = new Set(['.pdf', '.docx', '.pptx', '.xlsx']);
 const ALLOWED_MIME_TYPES = new Set([
@@ -22,6 +47,18 @@ const ALLOWED_MIME_TYPES = new Set([
   'application/vnd.openxmlformats-officedocument.presentationml.presentation',
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 ]);
+
+const createPointId = () => {
+  if (crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+
+  const bytes = crypto.randomBytes(16);
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = bytes.toString('hex');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+};
 
 const safeUnlink = async (filePath) => {
   if (!filePath) return;
@@ -51,9 +88,16 @@ const validateDocumentFile = (file) => {
 };
 
 const extractTextFromFile = async (filePath) => {
-  const ast = await OfficeParser.parseOffice(filePath, {
+  const config = {
     newlineDelimiter: '\n'
-  });
+  };
+
+  const pdfWorkerSrc = getPdfWorkerSrc();
+  if (pdfWorkerSrc) {
+    config.pdfWorkerSrc = pdfWorkerSrc;
+  }
+
+  const ast = await OfficeParser.parseOffice(filePath, config);
   if (!ast || typeof ast.toText !== 'function') {
     return '';
   }
@@ -62,6 +106,7 @@ const extractTextFromFile = async (filePath) => {
 
 const buildPayload = ({
   docId,
+  fileHash,
   chunkId,
   chunkIndex,
   file,
@@ -70,6 +115,7 @@ const buildPayload = ({
 }) => {
   return {
     docId,
+    fileHash,
     chunkId,
     chunkIndex,
     source_type: 'document',
@@ -88,6 +134,10 @@ const buildPayload = ({
 const ingestDocument = async ({ file, userId }) => {
   const docId = crypto.randomUUID();
   const relativePath = file?.path ? path.relative(process.cwd(), file.path) : '';
+  const fileBuffer = file?.path ? await fs.readFile(file.path) : null;
+  const fileHash = fileBuffer
+    ? crypto.createHash('sha256').update(fileBuffer).digest('hex')
+    : '';
   const enrichedFile = {
     ...file,
     relativePath
@@ -107,9 +157,15 @@ const ingestDocument = async ({ file, userId }) => {
     if (!chunks.length) {
       throw new BadRequestError('No text chunks could be created.');
     }
+    if (chunks.length > DOC_MAX_CHUNKS_PER_UPLOAD) {
+      throw new BadRequestError(
+        `Document creates ${chunks.length} chunks, which is above the current limit of ${DOC_MAX_CHUNKS_PER_UPLOAD}. Increase DOC_CHUNK_SIZE or DOC_MAX_CHUNKS_PER_UPLOAD for larger files.`
+      );
+    }
 
     const firstVector = await embedText(chunks[0]);
     await ensureDocsCollection(firstVector.length);
+    await deleteDocumentChunksByFileHash(fileHash);
 
     const batchSize = 50;
     let buffer = [];
@@ -121,10 +177,11 @@ const ingestDocument = async ({ file, userId }) => {
     };
 
     buffer.push({
-      id: `${docId}-0`,
+      id: createPointId(),
       vector: firstVector,
       payload: buildPayload({
         docId,
+        fileHash,
         chunkId: `${docId}-0`,
         chunkIndex: 0,
         file: enrichedFile,
@@ -140,10 +197,11 @@ const ingestDocument = async ({ file, userId }) => {
     for (let index = 1; index < chunks.length; index += 1) {
       const vector = await embedText(chunks[index]);
       buffer.push({
-        id: `${docId}-${index}`,
+        id: createPointId(),
         vector,
         payload: buildPayload({
           docId,
+          fileHash,
           chunkId: `${docId}-${index}`,
           chunkIndex: index,
           file: enrichedFile,
@@ -161,6 +219,7 @@ const ingestDocument = async ({ file, userId }) => {
 
     return {
       docId,
+      fileHash,
       fileName: file.originalname,
       chunkCount: chunks.length,
       collection: QDRANT_DOCS_COLLECTION,

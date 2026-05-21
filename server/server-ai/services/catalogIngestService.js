@@ -1,3 +1,4 @@
+import crypto from 'crypto';
 import Category from '../../server-ecommerce/models/Category.js';
 import Product from '../../server-ecommerce/models/Product.js';
 import Promotion from '../../server-ecommerce/models/Promotion.js';
@@ -11,6 +12,18 @@ import { recreateCatalogCollection, upsertCatalogItems } from './qdrantService.j
 
 const MAX_DESCRIPTION_CHARS = 1200;
 const BATCH_SIZE = 50;
+
+const createPointId = () => {
+  if (crypto.randomUUID) {
+    return crypto.randomUUID();
+  }
+
+  const bytes = crypto.randomBytes(16);
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = bytes.toString('hex');
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+};
 
 let syncRunning = false;
 let syncPending = false;
@@ -162,7 +175,7 @@ const buildCatalogItems = async () => {
     const maxPrice = variantRange ? variantRange.max : basePrice;
 
     return {
-      id: `product:${productId}`,
+      id: createPointId(),
       text,
       payload: {
         source_type: 'catalog_product',
@@ -196,7 +209,7 @@ const buildCatalogItems = async () => {
     const promotionId = String(promotion._id);
 
     return {
-      id: `promotion:${promotionId}`,
+      id: createPointId(),
       text,
       payload: {
         source_type: 'catalog_promotion',

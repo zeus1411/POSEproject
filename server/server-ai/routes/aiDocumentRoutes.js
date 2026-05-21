@@ -1,6 +1,6 @@
 import express from 'express';
-import { uploadDocument } from '../controllers/aiDocumentController.js';
-import { authenticateUser } from '../../middlewares/auth.js';
+import { deleteDocument, listDocuments, uploadDocument } from '../controllers/aiDocumentController.js';
+import { authenticateUser, authorizeRoles } from '../../middlewares/auth.js';
 import { uploadAiDocument } from '../middlewares/aiUpload.js';
 
 const router = express.Router();
@@ -29,6 +29,48 @@ const router = express.Router();
  *         description: Document indexed
  */
 
-router.post('/documents/upload', authenticateUser, uploadAiDocument.single('file'), uploadDocument);
+router.post(
+	'/documents/upload',
+	authenticateUser,
+	authorizeRoles('admin'),
+	uploadAiDocument.single('file'),
+	uploadDocument
+);
+
+/**
+ * @swagger
+ * /ai/documents:
+ *   get:
+ *     summary: List uploaded documents (Admin only)
+ *     tags: [AI]
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Document list
+ */
+router.get('/documents', authenticateUser, authorizeRoles('admin'), listDocuments);
+
+/**
+ * @swagger
+ * /ai/documents/{fileName}:
+ *   delete:
+ *     summary: Delete uploaded document (Admin only)
+ *     tags: [AI]
+ *     security:
+ *       - bearerAuth: []
+ *       - cookieAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: fileName
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Document deleted
+ */
+router.delete('/documents/:fileName', authenticateUser, authorizeRoles('admin'), deleteDocument);
 
 export default router;

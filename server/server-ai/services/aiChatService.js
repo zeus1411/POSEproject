@@ -20,6 +20,25 @@ const countUserMessages = (messages = []) => {
   return messages.filter((msg) => msg.role === 'user').length;
 };
 
+const getRecentChatHistory = (messages = [], limit = 6) => {
+  return messages
+    .slice(-limit)
+    .map((message) => ({
+      role: message.role,
+      content: message.content,
+      mode: message.mode,
+      sources: message.sources || []
+    }));
+};
+
+const getPreferredSources = (messages = []) => {
+  const lastAssistantWithSources = [...messages]
+    .reverse()
+    .find((message) => message.role === 'assistant' && message.sources?.length);
+
+  return lastAssistantWithSources?.sources || [];
+};
+
 const getOrCreateConversation = async ({ conversationId, userId, anonymousId, mode, message }) => {
   const normalizedMode = normalizeMode(mode, message);
   ensureModeSupported(normalizedMode);
@@ -106,6 +125,9 @@ const handleAiChat = async ({
     enforceAnonymousLimit(conversation);
   }
 
+  const chatHistory = getRecentChatHistory(conversation.messages);
+  const preferredSources = getPreferredSources(conversation.messages);
+
   conversation.addMessage({
     role: 'user',
     content: String(message).trim(),
@@ -118,6 +140,8 @@ const handleAiChat = async ({
     mode: normalizedMode,
     message: String(message).trim(),
     conversationId: conversation._id.toString(),
+    chatHistory,
+    preferredSources,
     onStart,
     onMeta,
     onToken
