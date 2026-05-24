@@ -66,11 +66,6 @@ class BlogService {
       relatedProducts: processedRelatedProducts
     };
 
-    // Secure relatedProducts: Only admins can tag products
-    if (userRole !== 'admin') {
-      blogData.relatedProducts = [];
-    }
-
     if (userRole === 'admin') {
       blogData.publishedAt = new Date();
     }
@@ -177,7 +172,7 @@ class BlogService {
         .populate('category', 'name slug')
         .populate('tags', 'name slug')
         .populate('relatedProducts', 'name price images sku slug discount originalPrice stock hasVariants variants')
-        .sort({ createdAt: -1 })
+        .sort({ publishedAt: -1, createdAt: -1 })
         .skip(skip)
         .limit(pageSize),
       Blog.countDocuments(filter)
@@ -214,9 +209,6 @@ class BlogService {
     if (!blog) {
       throw new NotFoundError('Không tìm thấy bài viết');
     }
-
-    // Increment view count (async, don't block response)
-    blog.incrementViewCount().catch(err => console.error('Error incrementing view count:', err));
 
     return blog;
   }
@@ -328,11 +320,6 @@ class BlogService {
 
     // Detect status transition to PENDING to notify admins
     const statusChangedToPending = data.status === 'PENDING' && blog.status !== 'PENDING';
-
-    // Secure relatedProducts: Only admins can update product tags
-    if (userRole !== 'admin') {
-      delete data.relatedProducts;
-    }
 
     const updatedBlog = await Blog.findByIdAndUpdate(
       id,
@@ -468,7 +455,8 @@ class BlogService {
       blog._id,
       blog.title,
       status,
-      reason
+      reason,
+      updatedBlog.slug
     );
 
     return updatedBlog;

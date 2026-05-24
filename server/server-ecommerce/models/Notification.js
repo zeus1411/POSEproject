@@ -21,7 +21,8 @@ const notificationSchema = new mongoose.Schema(
         'PASSWORD_RESET',
         'NEW_ORDER_ADMIN',
         'BLOG_SUBMISSION_ADMIN',
-        'BLOG_STATUS_UPDATE'
+        'BLOG_STATUS_UPDATE',
+        'BLOG_COMMENT'
       ],
       required: true
     },
@@ -438,9 +439,10 @@ notificationSchema.statics.createBlogSubmissionNotificationForAdmins = async fun
 };
 
 // ✅ Static method to notify user about blog status update
-notificationSchema.statics.createBlogStatusNotificationForUser = async function (userId, blogId, blogTitle, status, reason) {
+notificationSchema.statics.createBlogStatusNotificationForUser = async function (userId, blogId, blogTitle, status, reason, blogSlug) {
   try {
     const isPublished = status === 'PUBLISHED';
+    const publishedActionUrl = blogSlug ? `/blogs/${blogSlug}` : `/blogs/${blogId}`;
     
     const data = {
       userId,
@@ -452,7 +454,7 @@ notificationSchema.statics.createBlogStatusNotificationForUser = async function 
         : `Bài viết "${blogTitle}" của bạn đã bị từ chối. Lý do: ${reason}. Vui lòng sửa lại và gửi duyệt lại.`,
       relatedId: blogId,
       relatedType: 'blog',
-      actionUrl: isPublished ? `/blogs/slug/${blogId}` : `/me/blogs/edit/${blogId}`, // Simplified links
+      actionUrl: isPublished ? publishedActionUrl : `/me/blogs/edit/${blogId}`, // Simplified links
       actionText: 'Xem chi tiết',
       icon: isPublished ? '✅' : '❌',
       channels: ['IN_APP', 'EMAIL']
@@ -461,6 +463,40 @@ notificationSchema.statics.createBlogStatusNotificationForUser = async function 
     return await this.createNotification(data);
   } catch (error) {
     console.error('Error creating blog status notification:', error);
+    return null;
+  }
+};
+
+// Static method to notify blog author about a new comment
+notificationSchema.statics.createBlogCommentNotificationForAuthor = async function (
+  authorId,
+  commenterId,
+  blogId,
+  blogTitle,
+  blogSlug,
+  commentId,
+  commenterName
+) {
+  try {
+    if (authorId.toString() === commenterId.toString()) {
+      return null;
+    }
+
+    return await this.createNotification({
+      userId: authorId,
+      type: 'BLOG_COMMENT',
+      priority: 'MEDIUM',
+      title: 'Bài viết có bình luận mới',
+      message: `${commenterName || 'Một người dùng'} đã bình luận trong bài viết "${blogTitle}".`,
+      relatedId: blogId,
+      relatedType: 'blog',
+      actionUrl: `/blogs/${blogSlug}?commentId=${commentId}`,
+      actionText: 'Xem bình luận',
+      icon: '💬',
+      channels: ['IN_APP']
+    });
+  } catch (error) {
+    console.error('Error creating blog comment notification:', error);
     return null;
   }
 };

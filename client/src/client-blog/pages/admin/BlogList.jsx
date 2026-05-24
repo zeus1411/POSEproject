@@ -16,6 +16,17 @@ const BlogList = () => {
   const { blogs, isLoading, page, totalPages } = useSelector((state) => state.blog);
   console.log({ page, totalPages, blogs });
   const [confirmId, setConfirmId] = React.useState(null);
+  const formatDateTime = (date) => {
+    if (!date) return 'Chưa đăng';
+
+    return new Date(date).toLocaleString('vi-VN', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
   
   useEffect(() => {
         dispatch(getAllBlogs({ page: 1, limit: 10 }))
@@ -101,6 +112,12 @@ const BlogList = () => {
                   Trạng thái
                 </th>
 
+                <th className={`px-6 py-4 text-[11px] font-bold uppercase tracking-wider transition-colors duration-300 ${
+                  isDark ? 'text-gray-400' : 'text-slate-400'
+                }`}>
+                  Thời gian
+                </th>
+
                 <th className={`px-6 py-4 text-[11px] font-bold uppercase tracking-wider text-center transition-colors duration-300 ${
                   isDark ? 'text-gray-400' : 'text-slate-400'
                 }`}>
@@ -115,7 +132,7 @@ const BlogList = () => {
               {isLoading ? (
                 <tr>
                   <td
-                    colSpan="4"
+                    colSpan="5"
                     className={`px-6 py-12 text-center font-medium transition-colors duration-300 ${
                       isDark ? 'text-gray-400' : 'text-slate-400'
                     }`}
@@ -126,7 +143,7 @@ const BlogList = () => {
               ) : blogs?.length === 0 ? (
                 <tr>
                   <td
-                    colSpan="4"
+                    colSpan="5"
                     className={`px-6 py-12 text-center font-medium transition-colors duration-300 ${
                       isDark ? 'text-gray-400' : 'text-slate-400'
                     }`}
@@ -217,6 +234,20 @@ const BlogList = () => {
                           ● Bị từ chối
                         </span>
                       )}
+                    </td>
+
+                    {/* TIMES */}
+                    <td className="px-6 py-5">
+                      <div className={`text-xs leading-5 ${isDark ? 'text-gray-400' : 'text-slate-500'}`}>
+                        <div>
+                          <span className={`font-bold ${isDark ? 'text-gray-300' : 'text-slate-700'}`}>Tạo/Gửi: </span>
+                          {formatDateTime(blog.createdAt)}
+                        </div>
+                        <div>
+                          <span className={`font-bold ${isDark ? 'text-gray-300' : 'text-slate-700'}`}>Đăng: </span>
+                          {formatDateTime(blog.publishedAt)}
+                        </div>
+                      </div>
                     </td>
 
                     {/* ACTIONS */}

@@ -1,6 +1,36 @@
 import Notification from '../models/Notification.js';
+import Blog from '../../server-blogs/models/Blog.js';
 import { StatusCodes } from 'http-status-codes';
 import { NotFoundError } from '../../utils/errorHandler.js';
+
+const normalizeBlogNotificationUrls = async (notifications) => {
+  const blogNotifications = notifications.filter(notification =>
+    notification.type === 'BLOG_STATUS_UPDATE' &&
+    notification.relatedType === 'blog' &&
+    notification.actionUrl?.startsWith('/blogs/slug/')
+  );
+
+  if (blogNotifications.length === 0) {
+    return notifications;
+  }
+
+  const blogIds = blogNotifications.map(notification => notification.relatedId).filter(Boolean);
+  const blogs = await Blog.find({ _id: { $in: blogIds } }).select('slug').lean();
+  const slugById = new Map(blogs.map(blog => [blog._id.toString(), blog.slug]));
+
+  return notifications.map(notification => {
+    const normalizedNotification = notification.toObject();
+    const slug = normalizedNotification.relatedId
+      ? slugById.get(normalizedNotification.relatedId.toString())
+      : null;
+
+    if (slug && normalizedNotification.actionUrl?.startsWith('/blogs/slug/')) {
+      normalizedNotification.actionUrl = `/blogs/${slug}`;
+    }
+
+    return normalizedNotification;
+  });
+};
 
 const getUserNotifications = async (req, res) => {
   const userId = req.user.userId;
@@ -12,6 +42,7 @@ const getUserNotifications = async (req, res) => {
     page: parseInt(page),
     limit: parseInt(limit)
   });
+  const normalizedNotifications = await normalizeBlogNotificationUrls(notifications);
   
   const total = await Notification.countDocuments({
     userId,
@@ -22,7 +53,7 @@ const getUserNotifications = async (req, res) => {
   res.status(StatusCodes.OK).json({
     success: true,
     data: {
-      notifications,
+      notifications: normalizedNotifications,
       pagination: {
         page: parseInt(page),
         limit: parseInt(limit),

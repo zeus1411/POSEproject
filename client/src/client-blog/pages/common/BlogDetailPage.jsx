@@ -132,14 +132,6 @@ const BlogDetailPage = ({ isAdminPreview = false }) => {
       
       const blogData = data.blog || data;
       
-      if (!isAdminPreview) {
-        const viewed = sessionStorage.getItem(`viewed_${blogData.slug}`);
-        if (!viewed) {
-          blogData.viewCount = (blogData.viewCount || 0) + 1;
-          sessionStorage.setItem(`viewed_${blogData.slug}`, 'true');
-        }
-      }
-      
       setBlog(blogData);
     } catch (err) { 
       console.error(err); 

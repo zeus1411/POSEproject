@@ -1,6 +1,22 @@
 import Tag from '../models/Tag.js';
+import Blog from '../models/Blog.js';
 import mongoose from 'mongoose';
 import { BadRequestError, NotFoundError } from '../../utils/errorHandler.js';
+
+const attachBlogCounts = async (tags) => {
+  const counts = await Blog.aggregate([
+    { $unwind: '$tags' },
+    { $group: { _id: '$tags', count: { $sum: 1 } } }
+  ]);
+  const countByTagId = new Map(
+    counts.filter(item => item._id).map(item => [item._id.toString(), item.count])
+  );
+
+  return tags.map(tag => ({
+    ...(tag.toObject ? tag.toObject() : tag),
+    blogCount: countByTagId.get(tag._id.toString()) || 0
+  }));
+};
 
 /**
  * Tag Service
@@ -14,11 +30,12 @@ class TagService {
    * @returns {Promise<Object>} List of tags and pagination info
    */
   async getAllTags(query = {}) {
-    const { all, page = 1, limit = 20 } = query;
+    const { all, includeInactive, page = 1, limit = 20 } = query;
+    const filter = includeInactive === 'true' ? {} : { isActive: true };
 
     if (all === 'true') {
-      const tags = await Tag.find().sort({ name: 1 });
-      return { tags, total: tags.length };
+      const tags = await Tag.find(filter).sort({ name: 1 });
+      return { tags: await attachBlogCounts(tags), total: tags.length };
     }
 
     const pageNum = Math.max(1, parseInt(page, 10) || 1);
@@ -26,12 +43,12 @@ class TagService {
     const skip = (pageNum - 1) * pageSize;
 
     const [tags, total] = await Promise.all([
-      Tag.find().sort({ name: 1 }).skip(skip).limit(pageSize),
-      Tag.countDocuments()
+      Tag.find(filter).sort({ name: 1 }).skip(skip).limit(pageSize),
+      Tag.countDocuments(filter)
     ]);
 
     return {
-      tags,
+      tags: await attachBlogCounts(tags),
       pagination: {
         total,
         page: pageNum,
@@ -90,15 +107,14 @@ class TagService {
       throw new BadRequestError('ID không hợp lệ');
     }
 
-    const tag = await Tag.findByIdAndUpdate(
-      id,
-      data,
-      { new: true, runValidators: true }
-    );
+    const tag = await Tag.findById(id);
 
     if (!tag) {
       throw new NotFoundError('Không tìm thấy thẻ (tag)');
     }
+
+    Object.assign(tag, data);
+    await tag.save();
 
     return tag;
   }

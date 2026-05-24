@@ -16,15 +16,15 @@ const initialState = {
 // Get all blog categories
 export const getBlogCategories = createAsyncThunk(
   'blogCategories/getBlogCategories',
-  async (
-    {
+  async (options = {}, thunkAPI) => {
+    const {
       page = 1,
       limit = 10,
       includeInactive = false
-    } = {},
-    thunkAPI
-  ) => { try {
-      return await blogCategoryService.getBlogCategories(includeInactive);
+    } = typeof options === 'object' ? options : { includeInactive: options };
+
+    try {
+      return await blogCategoryService.getBlogCategories({ page, limit, includeInactive });
     } catch (error) {
       const message =
         error.response?.data?.message ||

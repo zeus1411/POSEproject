@@ -4,6 +4,9 @@ import blogTagService from '../../services/blogTagService';
 const initialState = {
   blogTags: [],
   currentBlogTag: null,
+  page: 1,
+  totalPages: 1,
+  total: 0,
   isLoading: false,
   isSuccess: false,
   isError: false,
@@ -125,6 +128,9 @@ const blogTagSlice = createSlice({
         state.blogTags = Array.isArray(action.payload.tags)
           ? action.payload.tags
           : [];
+        state.page = action.payload.pagination?.page || 1;
+        state.totalPages = action.payload.pagination?.pages || 1;
+        state.total = action.payload.pagination?.total || action.payload.total || state.blogTags.length;
       })
 
       // ERROR
@@ -135,17 +141,19 @@ const blogTagSlice = createSlice({
       })
 
       .addCase(getBlogTagById.fulfilled, (state, action) => {
+        state.isLoading = false;
         state.currentBlogTag = action.payload;
-        state.isSuccess = true;
       })
 
       .addCase(createBlogTag.fulfilled, (state, action) => {
+        state.isLoading = false;
         state.blogTags.push(action.payload);
         state.message = 'Tạo tag thành công';
         state.isSuccess = true;
       })
 
       .addCase(updateBlogTag.fulfilled, (state, action) => {
+        state.isLoading = false;
         const index = state.blogTags.findIndex(
           (tag) => tag._id === action.payload._id
         );
@@ -157,6 +165,7 @@ const blogTagSlice = createSlice({
       })
 
       .addCase(deleteBlogTag.fulfilled, (state, action) => {
+        state.isLoading = false;
         state.blogTags = state.blogTags.filter(
           (tag) => tag._id !== action.meta.arg
         );
@@ -165,6 +174,7 @@ const blogTagSlice = createSlice({
       })
 
       .addCase(updateBlogTagStatus.fulfilled, (state, action) => {
+        state.isLoading = false;
         const index = state.blogTags.findIndex(
           (tag) => tag._id === action.payload._id
         );

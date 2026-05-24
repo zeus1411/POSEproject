@@ -154,7 +154,7 @@ const BlogCategories = () => {
               <h1 className={`text-3xl font-black tracking-tight ${
                 isDark ? 'text-white' : 'text-slate-800'
               }`}>
-                Blog Categories
+                Danh mục blog
               </h1>
 
               <span className={`px-3 py-1 rounded-full text-xs font-bold ${

@@ -12,7 +12,7 @@ const BlogCard = ({ blog }) => {
   const { 
     _id, title, slug, author, coverImage, 
     likeCount = 0, commentCount = 0, viewCount = 0, 
-    excerpt, createdAt 
+    excerpt, createdAt, publishedAt
   } = blog;
 
   const authorName = author?.name || author?.fullName || author?.username || 'Người dùng ẩn danh';
@@ -41,7 +41,7 @@ const BlogCard = ({ blog }) => {
   const [loadingLike, setLoadingLike] = useState(false);
   const [loadingBookmark, setLoadingBookmark] = useState(false);
 
-  const formattedDate = new Date(createdAt).toLocaleDateString('vi-VN', {
+  const formattedDate = new Date(publishedAt || createdAt).toLocaleDateString('vi-VN', {
     day: 'numeric', month: 'long', year: 'numeric'
   });
 

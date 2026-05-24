@@ -150,7 +150,7 @@ const Header = () => {
                   </Link>
                 </div>
               )}
-              
+
               {user && <NotificationIcon />}
               <ThemeToggle />
               

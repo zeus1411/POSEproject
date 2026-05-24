@@ -2,6 +2,7 @@ import Comment from '../models/Comment.js';
 import Blog from '../models/Blog.js';
 import mongoose from 'mongoose';
 import { BadRequestError, NotFoundError, UnauthorizedError } from '../../utils/errorHandler.js';
+import Notification from '../../server-ecommerce/models/Notification.js';
 
 /**
  * Comment Service
@@ -20,7 +21,8 @@ class CommentService {
       throw new BadRequestError('ID bài viết không hợp lệ');
     }
 
-    const blog = await Blog.findById(blogId);
+    const blog = await Blog.findById(blogId)
+      .populate('author', 'username fullName');
     if (!blog) {
       throw new NotFoundError('Không tìm thấy bài viết');
     }
@@ -35,7 +37,19 @@ class CommentService {
     // Increment comment count in blog
     await Blog.findByIdAndUpdate(blogId, { $inc: { commentCount: 1 } });
 
-    return await comment.populate('author', 'username fullName avatar');
+    const populatedComment = await comment.populate('author', 'username fullName avatar');
+
+    Notification.createBlogCommentNotificationForAuthor(
+      blog.author._id,
+      userId,
+      blog._id,
+      blog.title,
+      blog.slug,
+      comment._id,
+      populatedComment.author.fullName || populatedComment.author.username
+    ).catch(err => console.error('Error triggering blog comment notification:', err));
+
+    return populatedComment;
   }
 
   /**

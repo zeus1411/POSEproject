@@ -1,9 +1,13 @@
 import api from '../../client-eco/services/api';
 
 const blogTagService = {
-  getBlogTags: async (includeInactive = false) => {
+  getBlogTags: async (options = false) => {
+    const params = typeof options === 'object'
+      ? options
+      : { includeInactive: options };
+
     const response = await api.get('/tags', {
-      params: { includeInactive }
+      params
     });
     return response.data;
   },
@@ -15,12 +19,12 @@ const blogTagService = {
 
   createBlogTag: async (tagData) => {
     const response = await api.post('/tags', tagData);
-    return response.data;
+    return response.data.tag;
   },
 
   updateBlogTag: async (tagId, tagData) => {
     const response = await api.put(`/tags/${tagId}`, tagData);
-    return response.data;
+    return response.data.tag;
   },
 
   deleteBlogTag: async (tagId) => {
@@ -30,7 +34,7 @@ const blogTagService = {
 
   updateBlogTagStatus: async (tagId, isActive) => {
     const response = await api.patch(`/tags/${tagId}/status`, { isActive });
-    return response.data;
+    return response.data.tag;
   }
 };
 

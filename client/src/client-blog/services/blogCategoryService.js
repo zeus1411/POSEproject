@@ -1,9 +1,13 @@
 import api from '../../client-eco/services/api';
 
 const blogCategoryService = {
-  getBlogCategories: async (page = 1, limit = 10, includeInactive = false) => {
+  getBlogCategories: async (options = {}) => {
+    const params = typeof options === 'object'
+      ? options
+      : { page: 1, limit: 10, includeInactive: options };
+
     const response = await api.get('/blog-categories', {
-      params: { page, limit, includeInactive }
+      params
     });
     return response.data;
   },

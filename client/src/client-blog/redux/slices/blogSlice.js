@@ -134,10 +134,12 @@ const blogSlice = createSlice({
         state.currentBlog = action.payload.blog;
       })
       .addCase(createBlog.fulfilled, (state) => {
+        state.isLoading = false;
         state.isSuccess = true;
         state.message = 'Tạo bài viết thành công';
       })
       .addCase(updateBlog.fulfilled, (state) => {
+        state.isLoading = false;
         state.isSuccess = true;
         state.message = 'Cập nhật bài viết thành công';
       })
@@ -180,6 +182,7 @@ const blogSlice = createSlice({
       .addMatcher(
         (action) => action.type.endsWith('/rejected'),
         (state, action) => {
+          state.isLoading = false;
           state.isError = true;
           state.message = action.payload;
         }

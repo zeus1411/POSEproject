@@ -8,6 +8,7 @@ import {
   UsersIcon,
   TicketIcon,
   DocumentTextIcon,
+  ArrowTopRightOnSquareIcon,
   NewspaperIcon 
 } from '@heroicons/react/24/outline';
 import { FileClock } from 'lucide-react';
@@ -49,28 +50,34 @@ const AdminSidebar = () => {
       subtitle: 'Báo cáo doanh thu'
     },
     { 
-      name: 'Blog Categories',
+      name: 'Danh mục blog',
       href: '/admin/blog-categories',
       icon: DocumentTextIcon,
       subtitle: 'Danh mục bài viết'
     },
     { 
-      name: 'Blog Tags',
+      name: 'Thẻ blog',
       href: '/admin/tags',
       icon: TicketIcon,
       subtitle: 'Từ khóa bài viết'
     },
     { 
-      name: 'Blog List',
+      name: 'Danh sách bài viết',
       href: '/admin/blogs',
       icon: NewspaperIcon,
       subtitle: 'Danh sách bài viết'
     },
     {
-      name: 'Blog Pending',
+      name: 'Bài viết chờ duyệt',
       href: '/admin/blogs/pending',
       icon: FileClock,
       subtitle: 'Duyệt bài viết'
+    },
+    {
+      name: 'Xem trang blog',
+      href: '/blogs',
+      icon: ArrowTopRightOnSquareIcon,
+      subtitle: 'Mở trang blog người dùng'
     }
   ];
 

@@ -38,12 +38,12 @@ tagSchema.index({ slug: 1 });
 tagSchema.pre('save', async function (next) {
   if (this.isModified('name') || !this.slug) {
     let slug = slugify(this.name);
-    let slugExists = await this.constructor.findOne({ slug });
+    let slugExists = await this.constructor.findOne({ slug, _id: { $ne: this._id } });
     let counter = 1;
     
     while (slugExists) {
       slug = `${slugify(this.name)}-${counter}`;
-      slugExists = await this.constructor.findOne({ slug });
+      slugExists = await this.constructor.findOne({ slug, _id: { $ne: this._id } });
       counter++;
     }
     

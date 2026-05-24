@@ -1,6 +1,21 @@
 import BlogCategory from '../models/BlogCategory.js';
+import Blog from '../models/Blog.js';
 import mongoose from 'mongoose';
 import { BadRequestError, NotFoundError } from '../../utils/errorHandler.js';
+
+const attachBlogCounts = async (categories) => {
+  const counts = await Blog.aggregate([
+    { $group: { _id: '$category', count: { $sum: 1 } } }
+  ]);
+  const countByCategoryId = new Map(
+    counts.filter(item => item._id).map(item => [item._id.toString(), item.count])
+  );
+
+  return categories.map(category => ({
+    ...(category.toObject ? category.toObject() : category),
+    blogCount: countByCategoryId.get(category._id.toString()) || 0
+  }));
+};
 
 /**
  * Blog Category Service
@@ -18,7 +33,7 @@ class BlogCategoryService {
 
     if (all === 'true') {
       const categories = await BlogCategory.find().sort({ name: 1 });
-      return { categories, total: categories.length };
+      return { categories: await attachBlogCounts(categories), total: categories.length };
     }
 
     const pageNum = Math.max(1, parseInt(page, 10) || 1);
@@ -31,7 +46,7 @@ class BlogCategoryService {
     ]);
 
     return {
-      categories,
+      categories: await attachBlogCounts(categories),
       pagination: {
         total,
         page: pageNum,
@@ -90,15 +105,14 @@ class BlogCategoryService {
       throw new BadRequestError('ID không hợp lệ');
     }
 
-    const category = await BlogCategory.findByIdAndUpdate(
-      id,
-      data,
-      { new: true, runValidators: true }
-    );
+    const category = await BlogCategory.findById(id);
 
     if (!category) {
       throw new NotFoundError('Không tìm thấy danh mục bài viết');
     }
+
+    Object.assign(category, data);
+    await category.save();
 
     return category;
   }

@@ -10,7 +10,8 @@ import {
   getBlogById,
   createBlog,
   updateBlog,
-  reset
+  reset,
+  clearCurrentBlog
 } from '../../redux/slices/blogSlice';
 
 import { getBlogCategories } from '../../redux/slices/blogCategorySlice';
@@ -44,6 +45,7 @@ const BlogEditor = () => {
       dispatch(getBlogById(id));
     } else {
       dispatch(reset());
+      dispatch(clearCurrentBlog());
     }
   }, [dispatch, id]);
 
@@ -75,7 +77,10 @@ const BlogEditor = () => {
         categories={blogCategories}
         tags={blogTags}
         onSubmit={handleSubmit}
-        onCancel={() => navigate('/admin/blogs')}
+        onCancel={() => {
+          dispatch(clearCurrentBlog());
+          navigate('/admin/blogs');
+        }}
         isLoading={isLoading}
         isAdmin={true}
       />

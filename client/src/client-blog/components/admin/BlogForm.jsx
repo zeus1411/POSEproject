@@ -16,6 +16,14 @@ const BlogForm = ({
   isAdmin = true
 }) => {
   const { isDark } = useTheme();
+  const emptyFormData = {
+    title: '',
+    excerpt: '',
+    content: '',
+    category: '',
+    tags: [],
+    coverImage: null,
+  };
   const [formData, setFormData] = useState({
     title: '',
     excerpt: '',
@@ -45,6 +53,22 @@ const BlogForm = ({
   const MAX_RELATED_PRODUCTS = 10;
   const MAX_FILE_SIZE = 2 * 1024 * 1024; // Giới hạn 2MB chuẩn cấu hình Server
 
+  const toggleTag = (tagId) => {
+    setFormData((prev) => ({
+      ...prev,
+      tags: prev.tags.includes(tagId)
+        ? prev.tags.filter((id) => id !== tagId)
+        : [...prev.tags, tagId]
+    }));
+  };
+
+  const removeTag = (tagId) => {
+    setFormData((prev) => ({
+      ...prev,
+      tags: prev.tags.filter((id) => id !== tagId)
+    }));
+  };
+
   const generateSlug = (text) =>
     text
       .toLowerCase()
@@ -67,6 +91,13 @@ const BlogForm = ({
         setRelatedProducts(blog.relatedProducts); 
       }
       setPreview(blog.coverImage?.url || null);
+    } else {
+      setFormData(emptyFormData);
+      setRelatedProducts([]);
+      setSelectedProducts([]);
+      setProductQuery('');
+      setProductDropdownOpen(false);
+      setPreview(null);
     }
   }, [blog]);
 
@@ -586,10 +617,16 @@ const BlogForm = ({
 
       {/* 🔥 CẢI TIẾN 3: MODAL XÁC NHẬN HỦY (GLASSMORPHISM ĐỒNG BỘ TRANG WEB) */}
       {showConfirmCancel && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center bg-black/40 backdrop-blur-md p-4 animate-in fade-in duration-200">
-          <div className={`rounded-[2rem] p-6 w-full max-w-sm shadow-2xl animate-in fade-in zoom-in-95 duration-250 ${
+        <div
+          onClick={(e) => e.stopPropagation()}
+          className="fixed inset-0 z-[110] flex items-center justify-center bg-black/40 backdrop-blur-md p-4 animate-in fade-in duration-200"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className={`rounded-[2rem] p-6 w-full max-w-sm shadow-2xl animate-in fade-in zoom-in-95 duration-250 ${
             isDark ? 'bg-[#062323]/95 border border-white/10' : 'bg-[#FFFDF0]/98 border border-water/45'
-          }`}>
+          }`}
+          >
             <div className="flex items-center gap-3 text-amber-400 mb-3">
               <AlertCircle size={24} />
               <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-foreground'}`}>Rời khỏi trình soạn thảo?</h3>
