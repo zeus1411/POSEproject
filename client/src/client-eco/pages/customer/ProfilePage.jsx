@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { User, MapPin, Phone, Mail, Edit2, Save, X, Eye, EyeOff, Camera, Loader2 } from 'lucide-react';
+import { User, MapPin, Phone, Mail, Edit2, Save, X, Eye, EyeOff, Camera, Loader2, Lock } from 'lucide-react';
 import userService from '../../services/userService';
 import addressService from '../../services/addressService';
 import { setUser } from '../../redux/slices/authSlice';
@@ -12,6 +12,7 @@ const ProfilePage = () => {
   const dispatch = useDispatch();
   const { isDark } = useTheme();
   
+  const [activeTab, setActiveTab] = useState('personal'); // 'personal', 'address', 'password'
   const [isEditingPersonal, setIsEditingPersonal] = useState(false);
   const [isEditingAddress, setIsEditingAddress] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -442,11 +443,11 @@ const ProfilePage = () => {
     if (/[^A-Za-z0-9]/.test(password)) strength++;
 
     if (strength <= 2) {
-      setPasswordStrength({ label: 'Yếu', color: 'border-red-300 dark:border-red-500/50', textColor: 'text-red-500', bar: 'bg-red-400 dark:bg-red-500', width: '25%' });
+      setPasswordStrength({ label: 'Yếu', color: 'border-rose-300 dark:border-rose-500/50', textColor: 'text-rose-600 dark:text-rose-400', bar: 'bg-rose-500', width: '25%' });
     } else if (strength === 3) {
-      setPasswordStrength({ label: 'Trung bình', color: 'border-yellow-300 dark:border-yellow-500/50', textColor: 'text-yellow-500', bar: 'bg-yellow-400 dark:bg-yellow-500', width: '50%' });
+      setPasswordStrength({ label: 'Trung bình', color: 'border-amber-300 dark:border-amber-500/50', textColor: 'text-amber-600 dark:text-amber-400', bar: 'bg-amber-500', width: '50%' });
     } else if (strength >= 4) {
-      setPasswordStrength({ label: 'Mạnh', color: 'border-green-300 dark:border-green-500/50', textColor: 'text-green-500', bar: 'bg-green-400 dark:bg-green-500', width: '100%' });
+      setPasswordStrength({ label: 'Mạnh', color: 'border-emerald-300 dark:border-emerald-500/50', textColor: 'text-emerald-600 dark:text-emerald-400', bar: 'bg-emerald-500', width: '100%' });
     } else {
       setPasswordStrength({ label: '', color: 'border-water/30 dark:border-white/10', textColor: 'text-muted-foreground', bar: '', width: '0%' });
     }
@@ -613,7 +614,7 @@ const ProfilePage = () => {
           : 'bg-gradient-to-b from-[#FFFDF0] via-[#E8F6F6] to-[#FFFDF0]'
       }`}></div>
 
-      {/* 2. Hệ thống vân sóng vô tận lặp lại toàn trang */}
+      {/* 2. Hệ thống vân sóng vô chậm lặp lại toàn trang */}
       <div 
         className="absolute inset-0 z-0 pointer-events-none transition-opacity duration-300"
         style={{
@@ -634,28 +635,24 @@ const ProfilePage = () => {
       }`}></div>
 
       {/* Nội dung chính */}
-      <div className="relative z-10 max-w-4xl mx-auto px-4 space-y-6">
+      <div className="relative z-10 max-w-6xl mx-auto px-4">
         
-        {/* Header */}
-        <div className="glass-panel shadow-xl rounded-3xl p-6 border border-water/45 dark:border-white/10">
-          <div className="flex flex-col sm:flex-row items-center gap-6 text-center sm:text-left">
-            <div className="relative group">
-              <div 
-                className="w-24 h-24 rounded-full bg-aqua/10 dark:bg-white/10 border-2 border-water/40 dark:border-white/20 flex items-center justify-center overflow-hidden cursor-pointer shadow-inner transition-all duration-300"
-                onClick={handleAvatarClick}
-              >
-                {user?.avatar ? (
-                  <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
-                ) : (
-                  <User className="w-12 h-12 text-muted-foreground" />
-                )}
-                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 flex items-center justify-center transition-all duration-300">
-                  {isUploading ? (
-                    <Loader2 className="w-6 h-6 text-white animate-spin" />
+        {/* Grid Layout chính */}
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
+          
+          {/* CỘT TRÁI: SIDEBAR THÔNG TIN TÓM TẮT & DI CHUYỂN NHANH */}
+          <div className="md:col-span-4 space-y-6">
+            <div className="glass-panel shadow-2xl rounded-3xl p-6 border border-water/45 dark:border-white/10 backdrop-blur-md bg-white/80 dark:bg-white/[0.02]">
+              
+              {/* Ảnh Đại Diện & Thông Tin Cơ Bản */}
+              <div className="flex flex-col items-center text-center">
+                <div className="relative group w-28 h-28 rounded-full overflow-hidden border-2 border-water/40 dark:border-white/20 shadow-inner cursor-pointer" onClick={handleAvatarClick}>
+                  {user?.avatar ? (
+                    <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
                   ) : (
-                    <User className="w-12 h-12 text-gray-400" />
+                    <User className="w-14 h-14 text-muted-foreground m-auto" />
                   )}
-                  {/* Lớp phủ hover mượt mà */}
+                  {/* Lớp phủ hover mượt mà - Chỉ xuất hiện khi rê chuột vào vòng tròn ảnh đại diện */}
                   <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-all duration-300 backdrop-blur-[2px]">
                     {isUploading ? (
                       <Loader2 className="w-6 h-6 text-emerald-400 animate-spin" />
@@ -664,6 +661,7 @@ const ProfilePage = () => {
                     )}
                   </div>
                 </div>
+                
                 <input
                   type="file"
                   ref={fileInputRef}
@@ -672,374 +670,606 @@ const ProfilePage = () => {
                   className="hidden"
                   disabled={isUploading}
                 />
-              </div>
 
-              {/* Thông tin nhanh bên cạnh Avatar */}
-              <div className="text-center sm:text-left flex-1">
-                <h1 className="text-2xl font-bold tracking-tight text-white mb-1.5">{user?.username}</h1>
-                <p className="text-gray-400 flex items-center justify-center sm:justify-start gap-2 text-sm">
-                  <Mail className="w-4 h-4 text-cyan-400" />
+                <h2 className="mt-4 text-xl font-bold tracking-tight text-gray-950 dark:text-white">{user?.username}</h2>
+                <p className="text-gray-600 dark:text-gray-400 text-xs mt-1 flex items-center gap-1.5 justify-center">
+                  <Mail className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
                   {user?.email}
                 </p>
+                
                 <button
                   type="button"
                   onClick={handleAvatarClick}
                   disabled={isUploading}
-                  className="mt-3 text-xs font-bold uppercase tracking-wider text-emerald-400 hover:text-emerald-300 transition-colors disabled:opacity-50"
+                  className="mt-3 text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 transition-colors disabled:opacity-50"
                 >
-                  {isUploading ? 'Hệ thống đang tải lên...' : '✨ Đổi ảnh đại diện'}
+                  {isUploading ? 'Đang tải lên...' : '✨ Đổi ảnh đại diện'}
                 </button>
               </div>
-            </div>
-          </div>
 
-          {/* BLOCK 2: PERSONAL INFORMATION (THÔNG TIN CÁ NHÂN) */}
-          <div className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-8 shadow-xl">
-            <div className="flex justify-between items-center mb-6 border-b border-white/5 pb-4">
-              <h2 className="text-xl font-bold tracking-tight text-white/90">👤 Thông tin cá nhân</h2>
-              {isEditingPersonal ? (
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setIsEditingPersonal(false)}
-                    className="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleUpdatePersonal}
-                    disabled={loading}
-                    className="flex items-center gap-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold rounded-xl transition-colors shadow-md shadow-emerald-950/30 disabled:bg-gray-700 disabled:opacity-50"
-                  >
-                    <Save className="w-4 h-4" />
-                    {loading ? 'Đang lưu...' : 'Lưu thông tin'}
-                  </button>
-                </div>
-              ) : (
+              {/* Đường kẻ ngăn cách */}
+              <div className="border-t border-black/10 dark:border-white/10 my-6"></div>
+
+              {/* Menu Điều Hướng Tabs */}
+              <div className="space-y-2">
                 <button
                   type="button"
-                  onClick={() => setIsEditingPersonal(true)}
-                  className="flex items-center gap-2 text-sm font-bold text-emerald-400 hover:text-emerald-300 transition-colors"
+                  onClick={() => {
+                    setActiveTab('personal');
+                    setIsEditingPersonal(false);
+                  }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-300 ${
+                    activeTab === 'personal'
+                      ? 'bg-emerald-600/10 dark:bg-emerald-600/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 dark:border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.1)]'
+                      : 'text-gray-600 dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white border border-transparent'
+                  }`}
                 >
-                  <Edit2 className="w-4 h-4" />
-                  Chỉnh sửa
+                  <User className="w-5 h-5" />
+                  Thông tin cá nhân
                 </button>
-              )}
-            </div>
 
-            {/* VIEW MODE */}
-            {!isEditingPersonal ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm bg-black/10 p-5 border border-white/5 rounded-2xl shadow-inner font-medium">
-                <div className="flex items-center gap-3 py-1">
-                  <span className="text-gray-400 w-32 shrink-0">Tên người dùng:</span>
-                  <span className="text-white">{user?.username || 'Chưa cập nhật'}</span>
-                </div>
-                <div className="flex items-center gap-3 py-1">
-                  <span className="text-gray-400 w-32 shrink-0">Họ tên:</span>
-                  <span className="text-white">{user?.fullName || 'Chưa cập nhật'}</span>
-                </div>
-                <div className="flex items-center gap-3 py-1">
-                  <span className="text-gray-400 w-32 shrink-0">Số điện thoại:</span>
-                  <span className="text-white font-mono">{user?.phone || 'Chưa cập nhật'}</span>
-                </div>
-                <div className="flex items-center gap-3 py-1">
-                  <span className="text-gray-400 w-32 shrink-0">Ngày sinh:</span>
-                  <span className="text-white font-mono">{formatDateForDisplay(user?.dateOfBirth)}</span>
-                </div>
-                <div className="flex items-center gap-3 py-1 col-span-1 md:col-span-2">
-                  <span className="text-gray-400 w-32 shrink-0">Giới tính:</span>
-                  <span className="text-white">
-                    {user?.gender === 'male' ? 'Nam' : user?.gender === 'female' ? 'Nữ' : 'Chưa cập nhật'}
-                  </span>
-                </div>
-              </div>
-            ) : (
-              // EDIT MODE
-              <div className="space-y-4">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-semibold text-gray-300 pl-1">Tên người dùng</label>
-                  <input
-                    type="text"
-                    value={personalData.username}
-                    onChange={(e) => setPersonalData({...personalData, username: e.target.value})}
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all shadow-inner text-sm"
-                    placeholder="Nhập tên người dùng..."
-                  />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-semibold text-gray-300 pl-1">
-                    Họ tên <span className="text-rose-400">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={personalData.fullName}
-                    onChange={(e) => {
-                      setPersonalData({...personalData, fullName: e.target.value});
-                      if (errors.fullName) setErrors({...errors, fullName: null});
-                    }}
-                    className={`w-full bg-white/5 border rounded-2xl px-5 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 transition-all shadow-inner text-sm ${
-                      errors.fullName ? 'border-rose-500 focus:ring-rose-500/50' : 'border-white/10 focus:ring-emerald-500/50'
-                    }`}
-                    placeholder="Nguyễn Văn A"
-                    maxLength={100}
-                  />
-                  {errors.fullName && (
-                    <p className="text-rose-400 text-xs mt-1 flex items-center gap-1 pl-1">
-                      <span>⚠️</span> {errors.fullName}
-                    </p>
-                  )}
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-gray-300 pl-1">
-                      Số điện thoại <span className="text-rose-400">*</span>
-                    </label>
-                    <input
-                      type="tel"
-                      value={personalData.phone}
-                      onChange={(e) => {
-                        setPersonalData({...personalData, phone: e.target.value});
-                        if (errors.phone) setErrors({...errors, phone: null});
-                      }}
-                      className={`w-full bg-white/5 border rounded-2xl px-5 py-3 text-white font-mono placeholder:text-gray-500 focus:outline-none focus:ring-2 transition-all shadow-inner text-sm ${
-                        errors.phone ? 'border-rose-500 focus:ring-rose-500/50' : 'border-white/10 focus:ring-emerald-500/50'
-                      }`}
-                      placeholder="0912345678"
-                    />
-                    {errors.phone ? (
-                      <p className="text-rose-400 text-xs mt-1 flex items-center gap-1 pl-1">
-                        <span>⚠️</span> {errors.phone}
-                      </p>
-                    ) : personalData.phone && (
-                      <p className="text-[11px] text-gray-500 pl-1 mt-0.5 font-mono">Định dạng chuẩn: 0912345678</p>
-                    )}
-                  </div>
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-gray-300 pl-1">Ngày sinh</label>
-                    <input
-                      type="date"
-                      value={personalData.dateOfBirth}
-                      onChange={(e) => setPersonalData({...personalData, dateOfBirth: e.target.value})}
-                      className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-3 text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all shadow-inner text-sm scheme-dark"
-                    />
-                  </div>
-                </div>
-                <div className="flex flex-col gap-1.5 pt-1">
-                  <label className="text-xs font-semibold text-gray-300 pl-1">Giới tính</label>
-                  <div className="flex gap-6 pl-1 mt-1">
-                    <label className="flex items-center text-sm font-medium gap-2 cursor-pointer text-gray-300 hover:text-white transition-colors">
-                      <input
-                        type="radio"
-                        value="male"
-                        checked={personalData.gender === 'male'}
-                        onChange={(e) => setPersonalData({...personalData, gender: e.target.value})}
-                        className="accent-emerald-500 w-4 h-4"
-                      />
-                      Nam
-                    </label>
-                    <label className="flex items-center text-sm font-medium gap-2 cursor-pointer text-gray-300 hover:text-white transition-colors">
-                      <input
-                        type="radio"
-                        value="female"
-                        checked={personalData.gender === 'female'}
-                        onChange={(e) => setPersonalData({...personalData, gender: e.target.value})}
-                        className="accent-emerald-500 w-4 h-4"
-                      />
-                      Nữ
-                    </label>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="bg-white/[0.03] backdrop-blur-xl border border-white/10 rounded-[2.5rem] p-8 shadow-xl">
-            <div className="flex items-center justify-between mb-6 border-b border-white/5 pb-4">
-              <h2 className="text-xl font-bold tracking-tight text-white/90 flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-cyan-400" />
-                Sổ địa chỉ nhận hàng
-              </h2>
-              {!isEditingAddress ? (
                 <button
                   type="button"
-                  onClick={() => setIsEditingAddress(true)}
-                  className="flex items-center gap-2 text-sm font-bold text-emerald-400 hover:text-emerald-300 transition-colors"
+                  onClick={() => {
+                    setActiveTab('address');
+                    setIsEditingAddress(false);
+                  }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-300 ${
+                    activeTab === 'address'
+                      ? 'bg-emerald-600/10 dark:bg-emerald-600/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 dark:border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.1)]'
+                      : 'text-gray-600 dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white border border-transparent'
+                  }`}
                 >
-                  <Edit2 className="w-4 h-4" />
-                  {user?.address?.street ? 'Chỉnh sửa' : 'Thêm địa chỉ'}
+                  <MapPin className="w-5 h-5" />
+                  Sổ địa chỉ nhận hàng
                 </button>
-              ) : (
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setIsEditingAddress(false)}
-                    className="p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-xl transition-colors"
-                  >
-                    <X className="w-5 h-5" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleUpdateAddress}
-                    disabled={loading}
-                    className="flex items-center gap-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold rounded-xl transition-colors shadow-md disabled:bg-gray-700 disabled:opacity-50"
-                  >
-                    <Save className="w-4 h-4" />
-                    {loading ? 'Đang lưu...' : 'Lưu địa chỉ'}
-                  </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab('password');
+                  }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-300 ${
+                    activeTab === 'password'
+                      ? 'bg-emerald-600/10 dark:bg-emerald-600/20 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 dark:border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.1)]'
+                      : 'text-gray-600 dark:text-gray-400 hover:bg-black/5 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white border border-transparent'
+                  }`}
+                >
+                  <Lock className="w-5 h-5" />
+                  Đổi mật khẩu
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* CỘT PHẢI: CHI TIẾT CỦA TAB ĐANG CHỌN */}
+          <div className="md:col-span-8">
+            <div className="glass-panel shadow-2xl rounded-3xl p-8 border border-water/45 dark:border-white/10 backdrop-blur-md bg-white/80 dark:bg-white/[0.02] min-h-[460px]">
+              
+              {/* TAB 1: THÔNG TIN CÁ NHÂN */}
+              {activeTab === 'personal' && (
+                <div className="space-y-6">
+                  <div className="flex justify-between items-center border-b border-black/10 dark:border-white/10 pb-4">
+                    <h2 className="text-xl font-bold tracking-tight text-gray-950 dark:text-white flex items-center gap-2">
+                      <User className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                      Thông tin cá nhân
+                    </h2>
+                    {isEditingPersonal ? (
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setIsEditingPersonal(false)}
+                          className="px-4 py-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 rounded-xl text-sm font-semibold transition-colors"
+                        >
+                          Hủy
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleUpdatePersonal}
+                          disabled={loading}
+                          className="flex items-center gap-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold rounded-xl transition-colors shadow-md shadow-emerald-950/30 disabled:bg-gray-700 disabled:opacity-50"
+                        >
+                          <Save className="w-4 h-4" />
+                          {loading ? 'Đang lưu...' : 'Lưu lại'}
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setIsEditingPersonal(true)}
+                        className="flex items-center gap-2 px-4 py-2 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-emerald-700 dark:text-emerald-400 text-sm font-bold rounded-xl border border-emerald-500/20 transition-all duration-300"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                        Chỉnh sửa
+                      </button>
+                    )}
+                  </div>
+
+                  {!isEditingPersonal ? (
+                    /* Chế độ xem: Hiển thị các ô thông tin sang trọng */
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="bg-black/[0.02] dark:bg-white/[0.02] border border-black/[0.05] dark:border-white/[0.05] rounded-2xl p-4 transition-all duration-300 hover:bg-black/[0.04] dark:hover:bg-white/[0.04] hover:border-emerald-500/20 group">
+                        <span className="text-gray-700 dark:text-gray-400 text-xs block mb-1 font-medium">Tên đăng nhập</span>
+                        <span className="text-gray-900 dark:text-white font-bold text-base">{user?.username || 'Chưa cập nhật'}</span>
+                      </div>
+
+                      <div className="bg-black/[0.02] dark:bg-white/[0.02] border border-black/[0.05] dark:border-white/[0.05] rounded-2xl p-4 transition-all duration-300 hover:bg-black/[0.04] dark:hover:bg-white/[0.04] hover:border-emerald-500/20 group">
+                        <span className="text-gray-700 dark:text-gray-400 text-xs block mb-1 font-medium">Họ và tên</span>
+                        <span className="text-gray-900 dark:text-white font-bold text-base">{user?.fullName || 'Chưa cập nhật'}</span>
+                      </div>
+
+                      <div className="bg-black/[0.02] dark:bg-white/[0.02] border border-black/[0.05] dark:border-white/[0.05] rounded-2xl p-4 transition-all duration-300 hover:bg-black/[0.04] dark:hover:bg-white/[0.04] hover:border-emerald-500/20 group">
+                        <span className="text-gray-700 dark:text-gray-400 text-xs block mb-1 font-medium">Số điện thoại</span>
+                        <span className="text-gray-900 dark:text-white font-bold text-base font-mono">{user?.phone || 'Chưa cập nhật'}</span>
+                      </div>
+
+                      <div className="bg-black/[0.02] dark:bg-white/[0.02] border border-black/[0.05] dark:border-white/[0.05] rounded-2xl p-4 transition-all duration-300 hover:bg-black/[0.04] dark:hover:bg-white/[0.04] hover:border-emerald-500/20 group">
+                        <span className="text-gray-700 dark:text-gray-400 text-xs block mb-1 font-medium">Ngày sinh</span>
+                        <span className="text-gray-900 dark:text-white font-bold text-base font-mono">{formatDateForDisplay(user?.dateOfBirth)}</span>
+                      </div>
+
+                      <div className="bg-black/[0.02] dark:bg-white/[0.02] border border-black/[0.05] dark:border-white/[0.05] rounded-2xl p-4 transition-all duration-300 hover:bg-black/[0.04] dark:hover:bg-white/[0.04] hover:border-emerald-500/20 group sm:col-span-2">
+                        <span className="text-gray-700 dark:text-gray-400 text-xs block mb-1 font-medium">Giới tính</span>
+                        <span className="text-gray-900 dark:text-white font-bold text-base">
+                          {user?.gender === 'male' ? 'Nam' : user?.gender === 'female' ? 'Nữ' : 'Chưa cập nhật'}
+                        </span>
+                      </div>
+                    </div>
+                  ) : (
+                    /* Chế độ chỉnh sửa: Form chỉnh sửa tinh tế */
+                    <div className="space-y-4">
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-bold text-gray-900 dark:text-gray-200 pl-1">Tên người dùng</label>
+                        <input
+                          type="text"
+                          value={personalData.username}
+                          onChange={(e) => setPersonalData({...personalData, username: e.target.value})}
+                          className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-2xl px-5 py-3 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all shadow-inner text-sm"
+                          placeholder="Nhập tên người dùng..."
+                        />
+                      </div>
+                      
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-bold text-gray-900 dark:text-gray-200 pl-1">
+                          Họ tên <span className="text-rose-600 dark:text-rose-450 font-bold">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={personalData.fullName}
+                          onChange={(e) => {
+                            setPersonalData({...personalData, fullName: e.target.value});
+                            if (errors.fullName) setErrors({...errors, fullName: null});
+                          }}
+                          className={`w-full bg-black/5 dark:bg-white/5 border rounded-2xl px-5 py-3 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 transition-all shadow-inner text-sm ${
+                            errors.fullName ? 'border-rose-500 focus:ring-rose-500/50' : 'border-black/10 dark:border-white/10'
+                          }`}
+                          placeholder="Nguyễn Văn A"
+                          maxLength={100}
+                        />
+                        {errors.fullName && (
+                          <p className="text-rose-600 dark:text-rose-400 text-xs mt-1 flex items-center gap-1 pl-1 font-semibold">
+                            <span>⚠️</span> {errors.fullName}
+                          </p>
+                        )}
+                      </div>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-xs font-bold text-gray-900 dark:text-gray-200 pl-1">
+                            Số điện thoại <span className="text-rose-600 dark:text-rose-450 font-bold">*</span>
+                          </label>
+                          <input
+                            type="tel"
+                            value={personalData.phone}
+                            onChange={(e) => {
+                              setPersonalData({...personalData, phone: e.target.value});
+                              if (errors.phone) setErrors({...errors, phone: null});
+                            }}
+                            className={`w-full bg-black/5 dark:bg-white/5 border rounded-2xl px-5 py-3 text-gray-900 dark:text-white font-mono placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 transition-all shadow-inner text-sm ${
+                              errors.phone ? 'border-rose-500 focus:ring-rose-500/50' : 'border-black/10 dark:border-white/10'
+                            }`}
+                            placeholder="0912345678"
+                          />
+                          {errors.phone ? (
+                            <p className="text-rose-600 dark:text-rose-400 text-xs mt-1 flex items-center gap-1 pl-1 font-semibold">
+                              <span>⚠️</span> {errors.phone}
+                            </p>
+                          ) : personalData.phone && (
+                            <p className="text-[11px] text-gray-600 dark:text-gray-400 pl-1 mt-0.5 font-mono">Định dạng chuẩn: 0912345678</p>
+                          )}
+                        </div>
+                        
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-xs font-bold text-gray-900 dark:text-gray-200 pl-1">Ngày sinh</label>
+                          <input
+                            type="date"
+                            value={personalData.dateOfBirth}
+                            onChange={(e) => setPersonalData({...personalData, dateOfBirth: e.target.value})}
+                            className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-2xl px-5 py-3 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all shadow-inner text-sm dark:scheme-dark"
+                          />
+                        </div>
+                      </div>
+                      
+                      <div className="flex flex-col gap-1.5 pt-1">
+                        <label className="text-xs font-bold text-gray-900 dark:text-gray-200 pl-1">Giới tính</label>
+                        <div className="flex gap-6 pl-1 mt-1">
+                          <label className="flex items-center text-sm font-semibold gap-2 cursor-pointer text-gray-900 dark:text-gray-200 hover:text-gray-950 dark:hover:text-white transition-colors">
+                            <input
+                              type="radio"
+                              value="male"
+                              checked={personalData.gender === 'male'}
+                              onChange={(e) => setPersonalData({...personalData, gender: e.target.value})}
+                              className="accent-emerald-500 w-4 h-4"
+                            />
+                            Nam
+                          </label>
+                          <label className="flex items-center text-sm font-semibold gap-2 cursor-pointer text-gray-900 dark:text-gray-200 hover:text-gray-950 dark:hover:text-white transition-colors">
+                            <input
+                              type="radio"
+                              value="female"
+                              checked={personalData.gender === 'female'}
+                              onChange={(e) => setPersonalData({...personalData, gender: e.target.value})}
+                              className="accent-emerald-500 w-4 h-4"
+                            />
+                            Nữ
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
+
+              {/* TAB 2: SỔ ĐỊA CHỈ NHẬN HÀNG */}
+              {activeTab === 'address' && (
+                <div className="space-y-6">
+                  <div className="flex justify-between items-center border-b border-black/10 dark:border-white/10 pb-4">
+                    <h2 className="text-xl font-bold tracking-tight text-gray-950 dark:text-white flex items-center gap-2">
+                      <MapPin className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
+                      Sổ địa chỉ nhận hàng
+                    </h2>
+                    {isEditingAddress ? (
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setIsEditingAddress(false)}
+                          className="px-4 py-2 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 rounded-xl text-sm font-semibold transition-colors"
+                        >
+                          Hủy
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleUpdateAddress}
+                          disabled={loading}
+                          className="flex items-center gap-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold rounded-xl transition-colors shadow-md disabled:bg-gray-700 disabled:opacity-50"
+                        >
+                          <Save className="w-4 h-4" />
+                          {loading ? 'Đang lưu...' : 'Lưu lại'}
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setIsEditingAddress(true)}
+                        className="flex items-center gap-2 px-4 py-2 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-emerald-700 dark:text-emerald-400 text-sm font-bold rounded-xl border border-emerald-500/20 transition-all duration-300"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                        {user?.address?.street ? 'Chỉnh sửa' : 'Thêm địa chỉ'}
+                      </button>
+                    )}
+                  </div>
+
+                  {!isEditingAddress ? (
+                    /* Chế độ xem địa chỉ */
+                    <div className="bg-black/[0.02] dark:bg-white/[0.02] border border-black/[0.05] dark:border-white/[0.05] rounded-2xl p-6 transition-all duration-300 hover:bg-black/[0.04] dark:hover:bg-white/[0.04]">
+                      <div className="flex items-start gap-4">
+                        <div className="p-3 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-600 dark:text-cyan-400">
+                          <MapPin className="w-6 h-6" />
+                        </div>
+                        <div className="space-y-3 flex-1">
+                          <span className="text-xs text-gray-700 dark:text-gray-400 uppercase tracking-wider font-bold">Địa chỉ nhận hàng mặc định</span>
+                          <p className="text-gray-900 dark:text-white font-bold text-lg leading-relaxed">{getFullAddress()}</p>
+                          
+                          {user?.address?.notes && (
+                            <div className="mt-4 p-3 bg-black/5 dark:bg-white/5 border border-black/5 dark:border-white/5 rounded-xl font-mono text-xs text-gray-900 dark:text-gray-300 flex items-start gap-2">
+                              <span className="text-cyan-600 dark:text-cyan-400">📝</span>
+                              <div>
+                                <span className="font-bold block mb-0.5 text-[11px] text-gray-700 dark:text-gray-400">Ghi chú giao kho:</span>
+                                {user.address.notes}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    /* Chế độ chỉnh sửa địa chỉ */
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-xs font-bold text-gray-900 dark:text-gray-200 pl-1">
+                            Tỉnh/Thành phố <span className="text-rose-600 dark:text-rose-450 font-bold">*</span>
+                          </label>
+                          <select
+                            value={addressData.cityId}
+                            onChange={(e) => {
+                              handleProvinceChange(e);
+                              if (errors.city) setErrors({...errors, city: null});
+                            }}
+                            disabled={loadingLocation}
+                            className={`w-full bg-black/5 dark:bg-white/5 border rounded-2xl px-4 py-3 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer appearance-none ${
+                              errors.city ? 'border-rose-500 focus:ring-rose-500/50' : 'border-black/10 dark:border-white/10'
+                            }`}
+                            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='${isDark ? 'white' : 'black'}'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1em' }}
+                          >
+                            <option value="" className="bg-white dark:bg-[#0a2828] text-gray-500">-- Chọn Tỉnh/TP --</option>
+                            {provinces.map(province => (
+                              <option key={province.id} value={province.id} className="bg-white dark:bg-[#0a2828] text-gray-900 dark:text-white">
+                                {province.name}
+                              </option>
+                            ))}
+                          </select>
+                          {errors.city && (
+                            <p className="text-rose-600 dark:text-rose-400 text-xs mt-1 flex items-center gap-1 pl-1 font-semibold">
+                              <span>⚠️</span> {errors.city}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-xs font-bold text-gray-900 dark:text-gray-200 pl-1">
+                            Quận/Huyện <span className="text-rose-600 dark:text-rose-450 font-bold">*</span>
+                          </label>
+                          <select
+                            value={addressData.districtId}
+                            onChange={(e) => {
+                              handleDistrictChange(e);
+                              if (errors.district) setErrors({...errors, district: null});
+                            }}
+                            disabled={!addressData.cityId || loadingLocation}
+                            className={`w-full bg-black/5 dark:bg-white/5 border rounded-2xl px-4 py-3 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer appearance-none ${
+                              errors.district ? 'border-rose-500 focus:ring-rose-500/50' : 'border-black/10 dark:border-white/10'
+                            }`}
+                            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='${isDark ? 'white' : 'black'}'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1em' }}
+                          >
+                            <option value="" className="bg-white dark:bg-[#0a2828] text-gray-500">-- Chọn Quận/Huyện --</option>
+                            {districts.map(district => (
+                              <option key={district.id} value={district.id} className="bg-white dark:bg-[#0a2828] text-gray-900 dark:text-white">
+                                {district.name}
+                              </option>
+                            ))}
+                          </select>
+                          {errors.district && (
+                            <p className="text-rose-600 dark:text-rose-400 text-xs mt-1 flex items-center gap-1 pl-1 font-semibold">
+                              <span>⚠️</span> {errors.district}
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="flex flex-col gap-1.5">
+                          <label className="text-xs font-bold text-gray-900 dark:text-gray-200 pl-1">
+                            Phường/Xã <span className="text-rose-600 dark:text-rose-450 font-bold">*</span>
+                          </label>
+                          <select
+                            value={addressData.wardCode}
+                            onChange={(e) => {
+                              handleWardChange(e);
+                              if (errors.ward) setErrors({...errors, ward: null});
+                            }}
+                            disabled={!addressData.districtId || loadingLocation}
+                            className={`w-full bg-black/5 dark:bg-white/5 border rounded-2xl px-4 py-3 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/50 cursor-pointer appearance-none ${
+                              errors.ward ? 'border-rose-500 focus:ring-rose-500/50' : 'border-black/10 dark:border-white/10'
+                            }`}
+                            style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='${isDark ? 'white' : 'black'}'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1em' }}
+                          >
+                            <option value="" className="bg-white dark:bg-[#0a2828] text-gray-500">-- Chọn Phường/Xã --</option>
+                            {wards.map(ward => (
+                              <option key={ward.id} value={ward.id} className="bg-white dark:bg-[#0a2828] text-gray-900 dark:text-white">
+                                {ward.name}
+                              </option>
+                            ))}
+                          </select>
+                          {errors.ward && (
+                            <p className="text-rose-600 dark:text-rose-400 text-xs mt-1 flex items-center gap-1 pl-1 font-semibold">
+                              <span>⚠️</span> {errors.ward}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-bold text-gray-900 dark:text-gray-200 pl-1">
+                          Địa chỉ cụ thể (số nhà, tên đường) <span className="text-rose-600 dark:text-rose-450 font-bold">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={addressData.street}
+                          onChange={(e) => {
+                            setAddressData({...addressData, street: e.target.value});
+                            if (errors.street) setErrors({...errors, street: null});
+                          }}
+                          className={`w-full bg-black/5 dark:bg-white/5 border rounded-2xl px-5 py-3 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all shadow-inner text-sm ${
+                            errors.street ? 'border-rose-500 focus:ring-rose-500/50' : 'border-black/10 dark:border-white/10'
+                          }`}
+                          placeholder="Số 123, Đường Nguyễn Văn Linh..."
+                          maxLength={200}
+                        />
+                        {errors.street && (
+                          <p className="text-rose-600 dark:text-rose-400 text-xs mt-1 flex items-center gap-1 pl-1 font-semibold">
+                            <span>⚠️</span> {errors.street}
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="flex flex-col gap-1.5">
+                        <label className="text-xs font-bold text-gray-900 dark:text-gray-200 pl-1">Ghi chú giao kho (tùy chọn)</label>
+                        <textarea
+                          value={addressData.notes}
+                          onChange={(e) => {
+                            setAddressData({...addressData, notes: e.target.value});
+                            if (errors.notes) setErrors({...errors, notes: null});
+                          }}
+                          rows={3}
+                          className={`w-full bg-black/5 dark:bg-white/5 border rounded-2xl px-5 py-3 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 resize-none text-sm leading-relaxed ${
+                            errors.notes ? 'border-rose-500 focus:ring-rose-500/50' : 'border-black/10 dark:border-white/10'
+                          }`}
+                          placeholder="Ví dụ: Gần chung cư, gọi điện trước khi giao hàng..."
+                          maxLength={500}
+                        />
+                        {errors.notes ? (
+                          <p className="text-rose-600 dark:text-rose-400 text-xs mt-1 flex items-center gap-1 pl-1 font-semibold">
+                            <span>⚠️</span> {errors.notes}
+                          </p>
+                        ) : addressData.notes && (
+                          <p className="text-[10px] text-gray-600 dark:text-gray-400 font-mono text-right pr-2 mt-0.5">
+                            {addressData.notes.length}/500 ký tự
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* TAB 3: ĐỔI MẬT KHẨU */}
+              {activeTab === 'password' && (
+                <div className="space-y-6">
+                  <div className="flex justify-between items-center border-b border-black/10 dark:border-white/10 pb-4">
+                    <h2 className="text-xl font-bold tracking-tight text-gray-950 dark:text-white flex items-center gap-2">
+                      <Lock className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                      Bảo mật & Đổi mật khẩu
+                    </h2>
+                    <button
+                      type="button"
+                      onClick={handleChangePassword}
+                      disabled={loading}
+                      className="flex items-center gap-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold rounded-xl transition-colors shadow-md shadow-emerald-950/30 disabled:bg-gray-700 disabled:opacity-50"
+                    >
+                      <Save className="w-4 h-4" />
+                      {loading ? 'Đang lưu...' : 'Lưu mật khẩu'}
+                    </button>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-gray-900 dark:text-gray-200 pl-1">
+                        Mật khẩu hiện tại <span className="text-rose-600 dark:text-rose-450 font-bold">*</span>
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={passwordVisible.current ? 'text' : 'password'}
+                          value={passwordData.currentPassword}
+                          onChange={(e) => {
+                            setPasswordData({...passwordData, currentPassword: e.target.value});
+                            if (errors.currentPassword) setErrors({...errors, currentPassword: null});
+                          }}
+                          className={`w-full bg-black/5 dark:bg-white/5 border rounded-2xl pl-5 pr-12 py-3 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all shadow-inner text-sm ${
+                            errors.currentPassword ? 'border-rose-500 focus:ring-rose-500/50' : 'border-black/10 dark:border-white/10'
+                          }`}
+                          placeholder="Nhập mật khẩu hiện tại..."
+                        />
+                        <button
+                          type="button"
+                          onClick={() => togglePasswordVisibility('current')}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
+                        >
+                          {passwordVisible.current ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        </button>
+                      </div>
+                      {errors.currentPassword && (
+                        <p className="text-rose-600 dark:text-rose-400 text-xs mt-1 flex items-center gap-1 pl-1 font-semibold">
+                          <span>⚠️</span> {errors.currentPassword}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-gray-900 dark:text-gray-200 pl-1">
+                        Mật khẩu mới <span className="text-rose-600 dark:text-rose-450 font-bold">*</span>
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={passwordVisible.new ? 'text' : 'password'}
+                          value={passwordData.newPassword}
+                          onChange={(e) => {
+                            handlePasswordChange(e.target.value);
+                            if (errors.newPassword) setErrors({...errors, newPassword: null});
+                          }}
+                          className={`w-full bg-black/5 dark:bg-white/5 border rounded-2xl pl-5 pr-12 py-3 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all shadow-inner text-sm ${
+                            errors.newPassword ? 'border-rose-500 focus:ring-rose-500/50' : 'border-black/10 dark:border-white/10'
+                          }`}
+                          placeholder="Nhập mật khẩu mới (tối thiểu 6 ký tự)..."
+                        />
+                        <button
+                          type="button"
+                          onClick={() => togglePasswordVisibility('new')}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
+                        >
+                          {passwordVisible.new ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        </button>
+                      </div>
+                      
+                      {/* Password Strength Meter */}
+                      {passwordData.newPassword && (
+                        <div className="mt-2 pl-1 space-y-1.5">
+                          <div className="flex justify-between items-center text-xs">
+                            <span className="text-gray-700 dark:text-gray-300 font-medium">Độ mạnh mật khẩu:</span>
+                            <span className={`font-bold ${passwordStrength.textColor}`}>{passwordStrength.label}</span>
+                          </div>
+                          <div className="w-full h-1.5 bg-black/10 dark:bg-white/10 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full transition-all duration-500 ${passwordStrength.bar}`}
+                              style={{ width: passwordStrength.width }}
+                            ></div>
+                          </div>
+                        </div>
+                      )}
+
+                      {errors.newPassword && (
+                        <p className="text-rose-600 dark:text-rose-400 text-xs mt-1 flex items-center gap-1 pl-1 font-semibold">
+                          <span>⚠️</span> {errors.newPassword}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-gray-900 dark:text-gray-200 pl-1">
+                        Xác nhận mật khẩu mới <span className="text-rose-600 dark:text-rose-450 font-bold">*</span>
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={passwordVisible.confirm ? 'text' : 'password'}
+                          value={passwordData.confirmPassword}
+                          onChange={(e) => {
+                            setPasswordData({...passwordData, confirmPassword: e.target.value});
+                            if (errors.confirmPassword) setErrors({...errors, confirmPassword: null});
+                          }}
+                          className={`w-full bg-black/5 dark:bg-white/5 border rounded-2xl pl-5 pr-12 py-3 text-gray-900 dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all shadow-inner text-sm ${
+                            errors.confirmPassword ? 'border-rose-500 focus:ring-rose-500/50' : 'border-black/10 dark:border-white/10'
+                          }`}
+                          placeholder="Nhập lại mật khẩu mới..."
+                        />
+                        <button
+                          type="button"
+                          onClick={() => togglePasswordVisibility('confirm')}
+                          className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-900 dark:hover:text-white transition-colors"
+                        >
+                          {passwordVisible.confirm ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                        </button>
+                      </div>
+                      {errors.confirmPassword && (
+                        <p className="text-rose-600 dark:text-rose-400 text-xs mt-1 flex items-center gap-1 pl-1 font-semibold">
+                          <span>⚠️</span> {errors.confirmPassword}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
             </div>
-
-            {/* VIEW ADDRESS MODE */}
-            {!isEditingAddress ? (
-              <div className="p-5 bg-black/10 border border-white/5 rounded-2xl shadow-inner text-sm leading-relaxed">
-                <p className="text-white font-medium">{getFullAddress() || 'Chưa thiết lập địa chỉ giao hàng mặc định.'}</p>
-                {user?.address?.notes && (
-                  <p className="text-gray-400 text-xs mt-2.5 bg-white/5 px-3 py-1.5 border border-white/5 rounded-xl font-mono">
-                    Ghi chú giao kho: {user.address.notes}
-                  </p>
-                )}
-              </div>
-            ) : (
-              // EDIT ADDRESS MODE (DROP-DOWNS ĐƯỢC NHUỘM MÀU ĐÁY HỒ TỐI SANG TRỌNG)
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-gray-300 pl-1">Tỉnh/Thành phố *</label>
-                    <select
-                      value={addressData.cityId}
-                      onChange={(e) => {
-                        handleProvinceChange(e);
-                        if (errors.city) setErrors({...errors, city: null});
-                      }}
-                      disabled={loadingLocation}
-                      className={`w-full bg-white/5 border rounded-2xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 cursor-pointer appearance-none ${
-                        errors.city ? 'border-rose-500 focus:ring-rose-500/50' : 'border-white/10 focus:ring-emerald-500/50'
-                      }`}
-                      style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'white\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'%3E%3C/path%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1em' }}
-                    >
-                      <option value="" className="bg-[#0a2828] text-gray-400">-- Chọn Tỉnh/TP --</option>
-                      {provinces.map(province => (
-                        <option key={province.id} value={province.id} className="bg-[#0a2828] text-white">
-                          {province.name}
-                        </option>
-                      ))}
-                    </select>
-                    {errors.city && (
-                      <p className="text-rose-400 text-xs mt-1 flex items-center gap-1 pl-1">
-                        <span>⚠️</span> {errors.city}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-gray-300 pl-1">Quận/Huyện *</label>
-                    <select
-                      value={addressData.districtId}
-                      onChange={(e) => {
-                        handleDistrictChange(e);
-                        if (errors.district) setErrors({...errors, district: null});
-                      }}
-                      disabled={!addressData.cityId || loadingLocation}
-                      className={`w-full bg-white/5 border rounded-2xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 cursor-pointer appearance-none ${
-                        errors.district ? 'border-rose-500 focus:ring-rose-500/50' : 'border-white/10 focus:ring-emerald-500/50'
-                      }`}
-                      style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'white\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'%3E%3C/path%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1em' }}
-                    >
-                      <option value="" className="bg-[#0a2828] text-gray-400">-- Chọn Quận/Huyện --</option>
-                      {districts.map(district => (
-                        <option key={district.id} value={district.id} className="bg-[#0a2828] text-white">
-                          {district.name}
-                        </option>
-                      ))}
-                    </select>
-                    {errors.district && (
-                      <p className="text-rose-400 text-xs mt-1 flex items-center gap-1 pl-1">
-                        <span>⚠️</span> {errors.district}
-                      </p>
-                    )}
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-semibold text-gray-300 pl-1">Phường/Xã *</label>
-                    <select
-                      value={addressData.wardCode}
-                      onChange={(e) => {
-                        handleWardChange(e);
-                        if (errors.ward) setErrors({...errors, ward: null});
-                      }}
-                      disabled={!addressData.districtId || loadingLocation}
-                      className={`w-full bg-white/5 border rounded-2xl px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 cursor-pointer appearance-none ${
-                        errors.ward ? 'border-rose-500 focus:ring-rose-500/50' : 'border-white/10 focus:ring-emerald-500/50'
-                      }`}
-                      style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'none\' viewBox=\'0 0 24 24\' stroke=\'white\'%3E%3Cpath stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M19 9l-7 7-7-7\'%3E%3C/path%3E%3C/svg%3E")', backgroundRepeat: 'no-repeat', backgroundPosition: 'right 1rem center', backgroundSize: '1em' }}
-                    >
-                      <option value="" className="bg-[#0a2828] text-gray-400">-- Chọn Phường/Xã --</option>
-                      {wards.map(ward => (
-                        <option key={ward.id} value={ward.id} className="bg-[#0a2828] text-white">
-                          {ward.name}
-                        </option>
-                      ))}
-                    </select>
-                    {errors.ward && (
-                      <p className="text-rose-400 text-xs mt-1 flex items-center gap-1 pl-1">
-                        <span>⚠️</span> {errors.ward}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-semibold text-gray-300 pl-1">Địa chỉ cụ thể (số nhà, tên đường) *</label>
-                  <input
-                    type="text"
-                    value={addressData.street}
-                    onChange={(e) => {
-                      setAddressData({...addressData, street: e.target.value});
-                      if (errors.street) setErrors({...errors, street: null});
-                    }}
-                    className={`w-full bg-white/5 border rounded-2xl px-5 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 transition-all shadow-inner text-sm ${
-                      errors.street ? 'border-rose-500 focus:ring-rose-500/50' : 'border-white/10 focus:ring-emerald-500/50'
-                    }`}
-                    placeholder="Số 123, Đường Nguyễn Văn Linh..."
-                    maxLength={200}
-                  />
-                  {errors.street && (
-                    <p className="text-rose-400 text-xs mt-1 flex items-center gap-1 pl-1">
-                      <span>⚠️</span> {errors.street}
-                    </p>
-                  )}
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-semibold text-gray-300 pl-1">Ghi chú giao kho (tùy chọn)</label>
-                  <textarea
-                    value={addressData.notes}
-                    onChange={(e) => {
-                      setAddressData({...addressData, notes: e.target.value});
-                      if (errors.notes) setErrors({...errors, notes: null});
-                    }}
-                    rows={3}
-                    className={`w-full bg-white/5 border rounded-2xl px-5 py-3 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 resize-none text-sm leading-relaxed ${
-                      errors.notes ? 'border-rose-500 focus:ring-rose-500/50' : 'border-white/10 focus:ring-emerald-500/50'
-                    }`}
-                    placeholder="Ví dụ: Gần chung cư, gọi điện trước khi giao hàng..."
-                    maxLength={500}
-                  />
-                  {errors.notes ? (
-                    <p className="text-rose-400 text-xs mt-1 flex items-center gap-1 pl-1">
-                      <span>⚠️</span> {errors.notes}
-                    </p>
-                  ) : addressData.notes && (
-                    <p className="text-[10px] text-gray-500 font-mono text-right pr-2 mt-0.5">
-                      {addressData.notes.length}/500 ký tự
-                    </p>
-                  )}
-                </div>
-              </div>
-            )}
           </div>
+
         </div>
       </div>
     </div>

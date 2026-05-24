@@ -151,7 +151,7 @@
   box-shadow: 0 22px 52px rgb(var(--deep-ocean) / 0.14), 0 0 0 1px rgb(var(--aqua-blue) / 0.2);
 }
 
-/* Home light-mode skin: keep the existing layout, shift the mood to premium aquatic. */
+/* Home light-mode skin: premium aquatic feel with high-contrast text. */
 .light .home-page {
   background:
     radial-gradient(circle at 8% 0%, rgb(var(--aqua-blue) / 0.36), transparent 28%),
@@ -177,23 +177,42 @@
     linear-gradient(180deg, rgb(236 249 247 / 0.96), rgb(255 251 222 / 0.88)) !important;
 }
 
-.light .home-page > section:not(#hero) .text-center h2,
-.light .home-page > section:not(#hero) .animate-on-scroll > h2,
-.light .home-page > section:not(#hero) .glass-card h3,
-.light .home-page > section:not(#hero) .glass-card h4 {
+/* ── Headings: always dark in light mode ── */
+.light .home-page > section:not(#hero) h2,
+.light .home-page > section:not(#hero) h3,
+.light .home-page > section:not(#hero) h4 {
   color: rgb(var(--foreground)) !important;
-  text-shadow: none;
+  text-shadow: none !important;
 }
 
-.light .home-page > section:not(#hero) .text-center p,
-.light .home-page > section:not(#hero) .glass-card p,
-.light .home-page > section:not(#hero) .animate-on-scroll > p {
+/* ── Paragraphs & body text ── */
+.light .home-page > section:not(#hero) p,
+.light .home-page > section:not(#hero) blockquote p {
   color: rgb(var(--muted-foreground)) !important;
 }
 
+/* ── White text overrides ── */
+.light .home-page > section:not(#hero) .text-white {
+  color: rgb(var(--foreground)) !important;
+}
+
+.light .home-page > section:not(#hero) [class*="text-white/"] {
+  color: rgb(var(--muted-foreground)) !important;
+}
+
+/* ── Gray text overrides ── */
+.light .home-page > section:not(#hero) .text-gray-400,
+.light .home-page > section:not(#hero) .text-gray-300,
+.light .home-page > section:not(#hero) .text-gray-500 {
+  color: rgb(var(--muted-foreground)) !important;
+}
+
+/* ── Cyan / neon accent text ── */
 .light .home-page > section:not(#hero) .text-neon-cyan,
 .light .home-page > section:not(#hero) .text-cyan-400,
-.light .home-page > section:not(#hero) .text-teal-400 {
+.light .home-page > section:not(#hero) .text-teal-400,
+.light .home-page > section:not(#hero) [class*="text-neon-cyan/"],
+.light .home-page > section:not(#hero) [class*="text-cyan-50/"] {
   color: rgb(var(--deep-ocean)) !important;
 }
 
@@ -202,6 +221,7 @@
   color: rgb(var(--natural-green)) !important;
 }
 
+/* ── Neon cyan backgrounds ── */
 .light .home-page > section:not(#hero) .bg-neon-cyan,
 .light .home-page > section:not(#hero) .bg-cyan-300,
 .light .home-page > section:not(#hero) .bg-cyan-400 {
@@ -209,22 +229,32 @@
   color: rgb(var(--primary-foreground)) !important;
 }
 
+/* ── Border overrides ── */
 .light .home-page > section:not(#hero) .border-white\/10,
+.light .home-page > section:not(#hero) .border-white\/8,
+.light .home-page > section:not(#hero) .border-white\/15,
 .light .home-page > section:not(#hero) .border-white\/20,
-.light .home-page > section:not(#hero) .border-white\/30 {
+.light .home-page > section:not(#hero) .border-white\/30,
+.light .home-page > section:not(#hero) [class*="border-neon-cyan/"] {
   border-color: rgb(var(--water-blue) / 0.38) !important;
 }
 
+/* ── Semi-transparent BG overrides ── */
 .light .home-page > section:not(#hero) .bg-black\/20,
+.light .home-page > section:not(#hero) .bg-black\/30,
+.light .home-page > section:not(#hero) .bg-black\/15,
 .light .home-page > section:not(#hero) .bg-white\/10,
-.light .home-page > section:not(#hero) .bg-white\/5 {
+.light .home-page > section:not(#hero) .bg-white\/5,
+.light .home-page > section:not(#hero) [class*="bg-white/["] {
   background-color: rgb(var(--card) / 0.78) !important;
 }
 
+/* ── Glow shadows → subtle depth ── */
 .light .home-page > section:not(#hero) .shadow-glow-cyan {
   box-shadow: 0 14px 30px rgb(var(--deep-ocean) / 0.16) !important;
 }
 
+/* ── Glass components ── */
 .light .home-page > section:not(#hero) .glass-card {
   color: rgb(var(--card-foreground));
 }
@@ -247,6 +277,7 @@
   color: rgb(var(--muted-foreground)) !important;
 }
 
+/* ── Cards with rounded corners ── */
 .light .home-page > section:not(#hero) .rounded-\[2rem\] {
   border-color: rgb(var(--water-blue) / 0.42);
   background: linear-gradient(145deg, rgb(255 255 255 / 0.78), rgb(var(--aqua-blue) / 0.16));
@@ -259,6 +290,49 @@
   border-color: rgb(var(--water-blue) / 0.4);
 }
 
+/* ── Collection / blog card backgrounds ── */
+.light .home-page > section:not(#hero) .rounded-2xl[class*="border"] {
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.95), rgb(248 253 252 / 0.92)) !important;
+  border-color: rgb(var(--water-blue) / 0.36) !important;
+  box-shadow: 0 12px 32px rgb(var(--deep-ocean) / 0.08);
+}
+
+/* ── Hex flip card light mode ── */
+.light .home-page .hex-flip-back {
+  background: linear-gradient(160deg, rgb(var(--card)), rgb(236 249 247)) !important;
+}
+
+.light .home-page .hex-flip-back h3 {
+  color: rgb(var(--foreground)) !important;
+}
+
+.light .home-page .hex-flip-back p {
+  color: rgb(var(--muted-foreground)) !important;
+}
+
+.light .home-page .hex-flip-back .text-neon-cyan {
+  color: rgb(var(--deep-ocean)) !important;
+}
+
+.light .home-page .hex-flip-back [class*="bg-neon-cyan/"] {
+  background-color: rgb(var(--deep-ocean) / 0.12) !important;
+}
+
+.light .home-page .hex-flip-back [class*="border-neon-cyan/"] {
+  border-color: rgb(var(--deep-ocean) / 0.25) !important;
+}
+
+/* ── Stats bar in light mode ── */
+.light .home-page > section:not(#hero) .font-headline.text-neon-cyan {
+  color: rgb(var(--deep-ocean)) !important;
+}
+
+/* ── Yellow stars keep their color ── */
+.light .home-page .text-yellow-400 {
+  color: rgb(202 138 4) !important;
+}
+
+/* ── Nav dots ── */
 .light .home-page nav .bg-gray-600 {
   background-color: rgb(var(--water-blue) / 0.6) !important;
 }
@@ -563,11 +637,17 @@
   color: rgb(var(--foreground)) !important;
 }
 
-.light .profile-page .text-gray-700,
+.light .profile-page .text-gray-700 {
+  color: rgb(var(--foreground) / 0.85) !important;
+}
+
 .light .profile-page .text-gray-600,
-.light .profile-page .text-gray-500,
-.light .profile-page .text-gray-400 {
+.light .profile-page .text-gray-500 {
   color: rgb(var(--muted-foreground)) !important;
+}
+
+.light .profile-page .text-gray-400 {
+  color: rgb(var(--muted-foreground) / 0.8) !important;
 }
 
 .light .profile-page .text-blue-600 {
@@ -1101,6 +1181,133 @@ html {
   animation-delay: 5s;
   animation-duration: 8s;
 }
+
+/* ========================================
+   Hex Honeycomb & Flip Card Layout
+   ======================================== */
+
+.hex-honeycomb {
+  --hex-w: 110px;
+  --hex-h: 127px;
+  --hex-gap-x: 5px;
+  --hex-gap-y: 5px;
+  position: relative;
+  width: calc(3 * var(--hex-w) + 2 * var(--hex-gap-x));
+  height: calc(1.75 * var(--hex-h) + var(--hex-gap-y));
+  margin: 0 auto;
+}
+
+@media (max-width: 359px) {
+  .hex-honeycomb {
+    --hex-w: 95px;
+    --hex-h: 110px;
+    --hex-gap-x: 4px;
+    --hex-gap-y: 4px;
+  }
+}
+
+@media (min-width: 480px) {
+  .hex-honeycomb {
+    --hex-w: 130px;
+    --hex-h: 150px;
+    --hex-gap-x: 8px;
+    --hex-gap-y: 8px;
+  }
+}
+
+@media (min-width: 768px) {
+  .hex-honeycomb {
+    --hex-w: 160px;
+    --hex-h: 184px;
+    --hex-gap-x: 10px;
+    --hex-gap-y: 10px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hex-honeycomb {
+    --hex-w: 175px;
+    --hex-h: 202px;
+    --hex-gap-x: 12px;
+    --hex-gap-y: 12px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .hex-honeycomb {
+    --hex-w: 190px;
+    --hex-h: 218px;
+    --hex-gap-x: 14px;
+    --hex-gap-y: 14px;
+  }
+}
+
+
+.hex-flip-card {
+  width: var(--hex-w);
+  height: var(--hex-h);
+  perspective: 1000px;
+}
+
+.hex-flip-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.65s cubic-bezier(0.4, 0, 0.2, 1);
+  transform-style: preserve-3d;
+}
+
+.hex-flip-card:hover .hex-flip-inner {
+  transform: rotateY(180deg);
+}
+
+.hex-flip-front,
+.hex-flip-back {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+  overflow: hidden;
+}
+
+.hex-flip-front {
+  z-index: 2;
+}
+
+.hex-flip-back {
+  transform: rotateY(180deg);
+  background: #051C1C;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 0 40px rgba(0, 255, 209, 0.06);
+}
+
+/* Float Animations for Fluid Aquatic Effect */
+@keyframes float-gentle {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.float-slow-1 {
+  animation: float-gentle 6s ease-in-out infinite;
+}
+
+.float-slow-2 {
+  animation: float-gentle 8s ease-in-out infinite;
+  animation-delay: 1.2s;
+}
+
+.float-slow-3 {
+  animation: float-gentle 7s ease-in-out infinite;
+  animation-delay: 2.4s;
+}
+
 
 /* Seaweed sway animation */
 @keyframes sway {

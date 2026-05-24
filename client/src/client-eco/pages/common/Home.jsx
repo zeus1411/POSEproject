@@ -1,22 +1,178 @@
 import React, { useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
-import { 
-  ArrowRightIcon, 
-  StarIcon, 
-  ShieldCheckIcon, 
-  TruckIcon, 
+import {
+  ArrowRightIcon,
+  StarIcon,
+  ShieldCheckIcon,
+  TruckIcon,
   ChatBubbleLeftRightIcon,
   CheckIcon,
   SparklesIcon,
   BeakerIcon,
   LightBulbIcon,
   SunIcon,
-  NewspaperIcon
+  NewspaperIcon,
+  MagnifyingGlassIcon,
+  FunnelIcon,
+  CurrencyDollarIcon,
+  ClipboardDocumentCheckIcon,
+  HeartIcon,
 } from '@heroicons/react/24/outline';
 
+const CATEGORY_IDS = {
+  plants: '66c9b0a1f1e2d3c4a5b6e7f8',
+  fish: '66c9b0a1f1e2d3c4a5b6e7f9',
+  accessories: '66c9b0a1f1e2d3c4a5b6e7fc',
+};
+
+const navDots = [
+  { id: 'hero', label: 'Trang chủ' },
+  { id: 'collections', label: 'Bộ sưu tập' },
+  { id: 'experience', label: 'Trải nghiệm' },
+  { id: 'why-us', label: 'Ưu điểm' },
+  { id: 'community', label: 'Cộng đồng' },
+  { id: 'blogs', label: 'Blogs' },
+];
+
+const collections = [
+  {
+    title: 'Cây thủy sinh',
+    subtitle: 'Layout xanh sống động',
+    description: 'Từ cây tiền cảnh dễ chăm đến cây hậu cảnh rực màu, phù hợp cả bể mới setup lẫn layout chuyên sâu.',
+    image: 'https://www.ugaoo.com/cdn/shop/articles/0e338c1b09.jpg?v=1698991765',
+    icon: BeakerIcon,
+    href: `/shop?category=${encodeURIComponent(CATEGORY_IDS.plants)}`,
+  },
+  {
+    title: 'Cá cảnh',
+    subtitle: 'Khỏe, đẹp, dễ phối đàn',
+    description: 'Các dòng cá nhiệt đới được chọn lọc theo màu sắc, tập tính và khả năng hòa hợp với bể thủy sinh.',
+    image: 'https://images.unsplash.com/photo-1522069169874-c58ec4b76be5?q=80&w=1200&auto=format&fit=crop',
+    icon: SparklesIcon,
+    href: `/shop?category=${encodeURIComponent(CATEGORY_IDS.fish)}`,
+  },
+  {
+    title: 'Phụ kiện',
+    subtitle: 'Thiết bị cho bể ổn định',
+    description: 'Lọc, đèn LED, CO2, phân nền, phân nước và dụng cụ bảo dưỡng giúp hệ sinh thái vận hành bền vững.',
+    image: 'https://becathuysinhmini.com/wp-content/uploads/2023/05/phu-kien-be-ca.jpg',
+    icon: SunIcon,
+    href: `/shop?category=${encodeURIComponent(CATEGORY_IDS.accessories)}`,
+  },
+];
+
+const galleryItems = [
+  { src: '/images/nature-style.jpg', title: 'Nature Style', sub: 'Phong cách tự nhiên' },
+  { src: '/images/dutch-style.jpg', title: 'Dutch Style', sub: 'Bố cục cây rực màu' },
+  { src: '/images/planted-tank.jpg', title: 'Planted Tank', sub: 'Bể trồng cây cân bằng' },
+  { src: '/images/iwagumi.jpg', title: 'Iwagumi', sub: 'Đá, khoảng trống, nhịp thở' },
+  { src: '/images/community-tank.jpg', title: 'Community Tank', sub: 'Bể cộng đồng hài hòa' },
+  { src: '/images/biotope.jpg', title: 'Biotope', sub: 'Sinh cảnh gần tự nhiên' },
+];
+
+const whyUs = [
+  {
+    icon: ShieldCheckIcon,
+    title: 'Chọn lọc kỹ',
+    desc: 'Sản phẩm kiểm duyệt chất lượng trước khi lên kệ.',
+    image: 'https://images.unsplash.com/photo-1571752726703-5e7d1f6a986d?w=600&auto=format&fit=crop&q=80',
+  },
+  {
+    icon: TruckIcon,
+    title: 'Giao an toàn',
+    desc: 'Đóng gói chuyên biệt cho cây và cá sống.',
+    image: 'https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=600&auto=format&fit=crop&q=80',
+  },
+  {
+    icon: ChatBubbleLeftRightIcon,
+    title: 'Hỗ trợ nhanh',
+    desc: 'Tư vấn setup và chăm sóc bể mọi lúc.',
+    image: 'https://images.unsplash.com/photo-1559827291-bae6b24a1ce2?w=600&auto=format&fit=crop&q=80',
+  },
+  {
+    icon: SparklesIcon,
+    title: 'Ý tưởng mới',
+    desc: 'Blog & bộ sưu tập giúp bạn bắt đầu dễ hơn.',
+    image: 'https://images.unsplash.com/photo-1535591273668-578e31182c4f?w=600&auto=format&fit=crop&q=80',
+  },
+  {
+    icon: HeartIcon,
+    title: 'Nghệ thuật sống',
+    desc: 'Biến không gian sống thành một tác phẩm nghệ thuật tự nhiên.',
+    image: 'https://images.unsplash.com/photo-1522069169874-c58ec4b76be5?w=600&auto=format&fit=crop&q=80',
+  },
+];
+
+const honeycombPositions = [
+  {
+    left: '0px',
+    top: '0px',
+    className: 'float-slow-1',
+  },
+  {
+    left: 'calc(var(--hex-w) + var(--hex-gap-x))',
+    top: '0px',
+    className: 'float-slow-2',
+  },
+  {
+    left: 'calc(2 * (var(--hex-w) + var(--hex-gap-x)))',
+    top: '0px',
+    className: 'float-slow-3',
+  },
+  {
+    left: 'calc((var(--hex-w) + var(--hex-gap-x)) / 2)',
+    top: 'calc(var(--hex-h) * 0.75 + var(--hex-gap-y))',
+    className: 'float-slow-3',
+  },
+  {
+    left: 'calc((var(--hex-w) + var(--hex-gap-x)) * 1.5)',
+    top: 'calc(var(--hex-h) * 0.75 + var(--hex-gap-y))',
+    className: 'float-slow-1',
+  },
+];
+
+const communityLayouts = [
+  { src: '/images/AIimage.jpg', name: 'Anh Tuấn', initial: 'T', review: 'Cây khỏe, đóng gói kỹ. Bể sau vài tuần lên form rất ổn.' },
+  { src: '/images/kingfish.jpg', name: 'Chú Hưng', initial: 'H', review: 'Cá đẹp, bơi khỏe và màu lên tốt hơn mong đợi.' },
+  { src: '/images/beeshrimp.jpg', name: 'Anh Vinh', initial: 'V', review: 'Tép màu đẹp, phụ kiện dễ dùng, tư vấn cũng nhanh.' },
+];
+
+const blogs = [
+  {
+    to: '/blogs/setup-be-thuy-sinh-cho-nguoi-moi',
+    img: '/images/nature-style.jpg',
+    tag: 'Beginner Guide',
+    title: 'Cách setup bể thủy sinh cho người mới',
+    desc: 'Các bước chọn nền, lọc, đèn, cây và cá để bể mới ổn định hơn.',
+  },
+  {
+    to: '/blogs/co2-va-anh-sang',
+    img: '/images/iwagumi.jpg',
+    tag: 'Advanced Tips',
+    title: 'CO2 và ánh sáng: bộ đôi quyết định',
+    desc: 'Hiểu đúng vai trò của ánh sáng và CO2 để cây phát triển khỏe.',
+  },
+  {
+    to: '/blogs/top-10-cay-de-song',
+    img: '/images/planted-tank.jpg',
+    tag: 'Plant Care',
+    title: 'Top cây thủy sinh dễ sống cho người mới',
+    desc: 'Những lựa chọn bền, đẹp và ít đòi hỏi kỹ thuật chăm sóc phức tạp.',
+  },
+];
+
+/* ── tiny fade-up wrapper ── */
+const Reveal = ({ children, className = '', delay = 0 }) => (
+  <div
+    className={`animate-on-scroll ${className}`}
+    style={{ transitionDelay: `${delay}ms` }}
+  >
+    {children}
+  </div>
+);
+
 const Home = () => {
-  const navigate = useNavigate();
   const [activeSection, setActiveSection] = React.useState('hero');
   const prefersReducedMotion = useReducedMotion();
 
@@ -27,10 +183,12 @@ const Home = () => {
     }
   };
 
+  /* ── scroll-spy ── */
   useEffect(() => {
     const handleScroll = () => {
-      const sections = ['hero', 'collections', 'features', 'why-us', 'blogs'];
+      const sections = navDots.map((d) => d.id);
       const scrollPosition = window.scrollY + 200;
+
       for (const sectionId of sections) {
         const element = document.getElementById(sectionId);
         if (element) {
@@ -42,25 +200,29 @@ const Home = () => {
         }
       }
     };
+
     window.addEventListener('scroll', handleScroll);
     handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  /* ── parallax hero text ── */
   useEffect(() => {
+    if (prefersReducedMotion) return undefined;
+
     const handleScroll = () => {
       const scrolled = window.pageYOffset;
       const heroContent = document.querySelector('.hero-content');
-      const heroImage = document.querySelector('.hero-image');
-      if (heroContent && heroImage) {
-        heroContent.style.transform = `translateY(${scrolled * 0.3}px)`;
-        heroImage.style.transform = `translateY(${scrolled * 0.1}px)`;
+      if (heroContent) {
+        heroContent.style.transform = `translateY(${scrolled * 0.08}px)`;
       }
     };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [prefersReducedMotion]);
+
+  /* ── intersection observer ── */
   useEffect(() => {
     const observerCallback = (entries) => {
       entries.forEach((entry) => {
@@ -69,37 +231,36 @@ const Home = () => {
         }
       });
     };
+
     const observer = new IntersectionObserver(observerCallback, {
       threshold: 0.1,
-      rootMargin: '0px 0px -50px 0px'
+      rootMargin: '0px 0px -50px 0px',
     });
+
     const elements = document.querySelectorAll('.animate-on-scroll');
     elements.forEach((el) => observer.observe(el));
     return () => observer.disconnect();
   }, []);
 
-  const navDots = [
-    { id: 'hero', label: 'Trang chủ' },
-    { id: 'collections', label: 'Bộ sưu tập' },
-    { id: 'features', label: 'Tính năng' },
-    { id: 'why-us', label: 'Ưu điểm' },
-    { id: 'blogs', label: 'Blogs' },
-  ];
+  const marqueeItems = galleryItems.concat(galleryItems);
 
   return (
     <div className="home-page min-h-screen bg-background text-foreground">
-      {/* Floating Navigation Sidebar */}
-      <nav className="hidden lg:block fixed left-8 top-1/2 -translate-y-1/2 z-30">
-        <div className="glass-panel rounded-2xl p-4">
-          <div className="flex flex-col space-y-6">
+
+      {/* ═══════════════ NAV DOTS ═══════════════ */}
+      <nav className="fixed left-5 top-1/2 z-30 hidden -translate-y-1/2 lg:block">
+        <div className="glass-panel rounded-2xl p-3">
+          <div className="flex flex-col gap-5">
             {navDots.map((dot) => (
               <button key={dot.id} onClick={() => scrollToSection(dot.id)} className="group relative" title={dot.label}>
-                <div className={`w-3 h-3 rounded-full transition-all duration-200 ${
-                  activeSection === dot.id
-                    ? 'bg-neon-cyan ring-4 ring-neon-cyan/30 shadow-glow-cyan'
-                    : 'bg-gray-600 group-hover:bg-neon-cyan/60'
-                }`}></div>
-                <span className="absolute left-8 top-1/2 -translate-y-1/2 bg-abyss/90 backdrop-blur-md text-neon-cyan text-xs px-3 py-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-neon-cyan/20">
+                <span
+                  className={`block h-3 w-3 rounded-full transition-all duration-300 ${
+                    activeSection === dot.id
+                      ? 'bg-neon-cyan ring-4 ring-neon-cyan/30 shadow-glow-cyan'
+                      : 'bg-gray-600 group-hover:bg-neon-cyan/70'
+                  }`}
+                />
+                <span className="absolute left-8 top-1/2 -translate-y-1/2 whitespace-nowrap rounded-lg border border-neon-cyan/20 bg-abyss/90 px-3 py-1.5 font-body text-xs text-neon-cyan opacity-0 backdrop-blur-md transition-opacity group-hover:opacity-100">
                   {dot.label}
                 </span>
               </button>
@@ -108,458 +269,601 @@ const Home = () => {
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section 
-        id="hero" 
-        className="relative min-h-screen flex items-center overflow-hidden"
-      >
-        {/* Background Image with Overlay */}
+      {/* ═══════════════ HERO ═══════════════ */}
+      <section id="hero" className="relative flex min-h-screen items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <video
-            src="https://res.cloudinary.com/dxtrwinoc/video/upload/v1778405384/12095774-hd_1920_1080_30fps_swlzx1.mp4"
+            src="https://res.cloudinary.com/dxtrwinoc/video/upload/v1779354346/311063_gt5toe.mp4"
             autoPlay
             loop
             muted
             playsInline
-            className="w-full h-full object-cover"
+            className="h-full w-full object-cover"
           />
-          {/* Lớp phủ tối để nổi bật text và các nút bấm */}
-          <div className="absolute inset-0 bg-black/50"></div>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_45%,rgba(0,255,209,0.20),transparent_32%),linear-gradient(90deg,rgba(5,28,28,0.86),rgba(5,28,28,0.58),rgba(5,28,28,0.82))]" />
+          <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-background to-transparent" />
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 w-full">
-          <div className="flex flex-col items-start space-y-8">
-            {/* Title & Caption */}
-            <div className="space-y-4">
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight">
-                Thực Hiện Ước Mơ <br />
-                <span className="text-emerald-400">Thủy Sinh</span>
-              </h1>
-              <p className="text-lg md:text-xl text-gray-200 max-w-2xl leading-relaxed">
-                Khám phá thế giới thủy sinh cao cấp với bộ sưu tập cây nước, cá cảnh và phụ kiện chất lượng. 
-                Tạo nên những layout bể thủy sinh đẹp hoàn hảo cho không gian của bạn.
-              </p>
+        <div className="hero-content relative z-10 mx-auto flex w-full max-w-6xl justify-center px-4 py-24 text-center sm:px-6 lg:px-8">
+          <div className="max-w-4xl">
+            <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/20 px-4 py-2 font-body text-xs font-bold uppercase tracking-[0.22em] text-cyan-50 shadow-glass backdrop-blur-md">
+              <SparklesIcon className="h-4 w-4 text-neon-cyan" />
+              AquaticPose
             </div>
-
-            {/* Buttons Row - Đã chỉnh sửa nằm ngang hàng */}
-            <div className="flex flex-wrap items-center gap-4">
-              {/* Nút 1: Shopping time */}
+            <h1 className="font-headline text-5xl font-bold leading-[0.95] text-white drop-shadow-[0_8px_30px_rgba(0,0,0,0.55)] md:text-7xl lg:text-8xl">
+              Thực hiện ước mơ
+              <span className="block bg-gradient-to-r from-neon-cyan via-emerald-300 to-cyan-200 bg-clip-text text-transparent">
+                thủy sinh
+              </span>
+            </h1>
+            <p className="mx-auto mt-6 max-w-3xl font-body text-base font-medium leading-8 text-cyan-50/90 drop-shadow-[0_3px_18px_rgba(0,0,0,0.55)] md:text-xl">
+              Khám phá cây nước, cá cảnh và phụ kiện chất lượng để tạo nên một layout bể thủy sinh hài hòa,
+              ổn định và đúng gu của bạn.
+            </p>
+            <div className="mt-9 flex flex-col items-center justify-center gap-4 sm:flex-row">
               <Link
                 to="/shop"
-                className="inline-flex items-center justify-center
-                          px-8 py-4
-                          text-lg font-semibold
-                          text-white
-                          bg-gradient-to-r from-emerald-600 to-teal-600
-                          rounded-full
-                          hover:from-emerald-700 hover:to-teal-700
-                          hover:scale-105
-                          transition-all duration-300
-                          shadow-lg hover:shadow-xl"
+                className="group inline-flex w-full items-center justify-center rounded-full bg-primary px-8 py-4 font-body text-base font-bold text-primary-foreground shadow-glow-cyan transition-all duration-300 hover:-translate-y-1 hover:bg-primary-hover sm:w-auto"
               >
-                Shopping time
-                <ArrowRightIcon className="ml-2 w-5 h-5" />
+                Mua sắm ngay
+                <ArrowRightIcon className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
               </Link>
-
-              {/* Nút 2: Tìm Hiểu Thêm */}
               <button
                 onClick={() => scrollToSection('collections')}
-                className="inline-flex items-center justify-center
-                          px-8 py-4
-                          text-lg font-semibold
-                          text-white
-                          bg-white/10
-                          backdrop-blur-md
-                          border-2 border-white/30
-                          rounded-full
-                          hover:bg-white/20
-                          hover:scale-105
-                          transition-all duration-300"
+                className="inline-flex w-full items-center justify-center rounded-full border border-white/30 bg-white/10 px-8 py-4 font-body text-base font-bold text-white shadow-glass backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:bg-white/18 sm:w-auto"
               >
-                Tìm Hiểu Thêm
+                Khám phá bộ sưu tập
               </button>
-
-              {/* Nút 3: Xem Blog */}
               <Link
                 to="/blogs"
-                className="inline-flex items-center justify-center
-                          px-8 py-4
-                          text-lg font-semibold
-                          text-white
-                          bg-white/10
-                          backdrop-blur-md
-                          border-2 border-white/30
-                          rounded-full
-                          hover:bg-white/20
-                          hover:scale-105
-                          transition-all duration-300"
+                className="group inline-flex w-full items-center justify-center rounded-full border border-white/20 bg-black/20 px-8 py-4 font-body text-base font-bold text-white shadow-glass backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:bg-white/14 sm:w-auto"
               >
-                <span className="mr-2">📖</span>
-                Xem Blog setup
-                <ArrowRightIcon className="ml-2 w-4 h-4"/>
+                <NewspaperIcon className="mr-2 h-5 w-5 text-neon-cyan" />
+                Xem blog setup
+                <ArrowRightIcon className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
               </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Collections Section */}
-      <section id="collections" className="py-24 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#051C1C] via-[#0a2828] to-[#051C1C]"></div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center mb-16 animate-on-scroll">
-            <h2 className="text-3xl md:text-4xl font-headline font-bold text-white mb-4">
-              Khám Phá Bộ Sưu Tập
-            </h2>
-            <p className="text-lg text-gray-400 font-body max-w-3xl mx-auto">
-              Chúng tôi cung cấp đầy đủ các sản phẩm chất lượng cao cho hobby thủy sinh của bạn
-            </p>
-          </div>
+      {/* ═══════════════ COLLECTIONS ═══════════════ */}
+      <section id="collections" className="relative overflow-hidden py-28">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#051C1C] via-[#0a2828] to-[#051C1C]" />
+        <div className="absolute inset-0 opacity-50 [background:radial-gradient(circle_at_50%_0%,rgba(0,255,209,0.16),transparent_34%)]" />
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* Cây Thủy Sinh */}
-            <div className="group animate-on-scroll glass-card rounded-2xl overflow-hidden transition-all duration-500">
-              <div className="relative h-48 overflow-hidden">
-                <img src="https://www.ugaoo.com/cdn/shop/articles/0e338c1b09.jpg?v=1698991765" alt="Cây thủy sinh" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                <div className="absolute inset-0 bg-gradient-to-t from-abyss/80 via-abyss/30 to-transparent"></div>
-                <div className="absolute bottom-4 left-4 flex items-center space-x-2">
-                  <div className="w-10 h-10 glass-panel rounded-xl flex items-center justify-center"><BeakerIcon className="w-5 h-5 text-neon-cyan" /></div>
-                  <span className="text-white font-headline font-semibold text-lg">Cây Thủy Sinh</span>
-                </div>
-              </div>
-              <div className="p-6">
-                <p className="text-gray-400 font-body mb-6 leading-relaxed">Bộ sưu tập cây thủy sinh đa dạng từ dễ chăm đến khó, phù hợp cho mọi layout từ Dutch đến Nature.</p>
-                <Link to={`/shop?category=${encodeURIComponent('66c9b0a1f1e2d3c4a5b6e7f8')}`} className="inline-flex items-center text-neon-cyan font-body font-semibold hover:text-neon-green group/link transition-colors duration-200 cursor-pointer z-10 relative" onClick={(e) => { console.log('Cây thủy sinh link clicked'); e.stopPropagation(); }}>
-                  Xem thêm <ArrowRightIcon className="ml-1 w-4 h-4 group-hover/link:translate-x-1 transition-transform" />
-                </Link>
-              </div>
-            </div>
-
-            {/* Cá Cảnh */}
-            <div className="group animate-on-scroll glass-card rounded-2xl overflow-hidden transition-all duration-500">
-              <div className="relative h-48 overflow-hidden">
-                <img src="https://images.unsplash.com/photo-1522069169874-c58ec4b76be5?q=80&w=1200&auto=format&fit=crop" alt="Cá cảnh" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                <div className="absolute inset-0 bg-gradient-to-t from-abyss/80 via-abyss/30 to-transparent"></div>
-                <div className="absolute bottom-4 left-4 flex items-center space-x-2">
-                  <div className="w-10 h-10 glass-panel rounded-xl flex items-center justify-center"><SparklesIcon className="w-5 h-5 text-neon-cyan" /></div>
-                  <span className="text-white font-headline font-semibold text-lg">Cá Cảnh</span>
-                </div>
-              </div>
-              <div className="p-6">
-                <p className="text-gray-400 font-body mb-6 leading-relaxed">Các loài cá nhiệt đới đẹp và khỏe mạnh, được chọn lọc kỹ càng để phù hợp với hệ thống thủy sinh.</p>
-                <Link to={`/shop?category=${encodeURIComponent('66c9b0a1f1e2d3c4a5b6e7f9')}`} className="inline-flex items-center text-neon-cyan font-body font-semibold hover:text-neon-green group/link transition-colors duration-200 cursor-pointer z-10 relative" onClick={(e) => { console.log('Cá cảnh link clicked'); e.stopPropagation(); }}>
-                  Xem thêm <ArrowRightIcon className="ml-1 w-4 h-4 group-hover/link:translate-x-1 transition-transform" />
-                </Link>
-              </div>
-            </div>
-
-            {/* Phụ Kiện */}
-            <div className="group animate-on-scroll glass-card rounded-2xl overflow-hidden transition-all duration-500 md:col-span-2 lg:col-span-1">
-              <div className="relative h-48 overflow-hidden">
-                <img src="https://becathuysinhmini.com/wp-content/uploads/2023/05/phu-kien-be-ca.jpg" alt="Phụ kiện thủy sinh" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                <div className="absolute inset-0 bg-gradient-to-t from-abyss/80 via-abyss/30 to-transparent"></div>
-                <div className="absolute bottom-4 left-4 flex items-center space-x-2">
-                  <div className="w-10 h-10 glass-panel rounded-xl flex items-center justify-center"><SunIcon className="w-5 h-5 text-neon-cyan" /></div>
-                  <span className="text-white font-headline font-semibold text-lg">Phụ Kiện</span>
-                </div>
-              </div>
-              <div className="p-6">
-                <p className="text-gray-400 font-body mb-6 leading-relaxed">Hệ thống lọc, đèn LED, CO2, phân bón và các thiết bị cần thiết cho bể thủy sinh hoàn hảo.</p>
-                <Link to={`/shop?category=${encodeURIComponent('66c9b0a1f1e2d3c4a5b6e7fc')}`} className="inline-flex items-center text-neon-cyan font-body font-semibold hover:text-neon-green group/link transition-colors duration-200 cursor-pointer z-10 relative" onClick={(e) => { console.log('Phụ kiện link clicked'); e.stopPropagation(); }}>
-                  Xem thêm <ArrowRightIcon className="ml-1 w-4 h-4 group-hover/link:translate-x-1 transition-transform" />
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-          {/* Showcase Slider Section */}
-          <section className="py-20 relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-[#061e2e] via-[#0a2a2a] to-[#051C1C]"></div>
-            <div className="absolute inset-0 pointer-events-none">
-              <div className="absolute left-1/2 top-20 h-80 w-[42rem] -translate-x-1/2 rounded-full bg-cyan-400/10 blur-3xl"></div>
-              <div className="absolute right-[-8rem] top-32 h-72 w-72 rounded-full bg-emerald-400/10 blur-3xl"></div>
-              <div className="absolute left-[-8rem] bottom-[-6rem] h-72 w-72 rounded-full bg-teal-500/10 blur-3xl"></div>
-            </div>
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-              <div className="text-center mb-10 sm:mb-14 animate-on-scroll">
-                <p className="text-xs uppercase tracking-[0.4em] text-neon-cyan/70 mb-3">Gallery Layout Thủy Sinh</p>
-                <h2 className="text-3xl md:text-4xl font-headline font-bold text-white mb-4">Dòng chảy hình ảnh aquascape</h2>
-                <p className="text-lg text-gray-400 font-body max-w-3xl mx-auto">Một dải ảnh chuyển động theo kiểu editorial, khớp với tông tối và sang của trang chủ.</p>
-              </div>
-
-              <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-black/20 backdrop-blur-xl shadow-[0_30px_120px_rgba(0,0,0,0.35)] px-4 sm:px-6 py-6 sm:py-8">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(34,211,238,0.12),transparent_35%),radial-gradient(circle_at_50%_100%,rgba(16,185,129,0.10),transparent_32%)] pointer-events-none"></div>
-                <motion.div
-                  className="flex w-max gap-4 sm:gap-5 will-change-transform"
-                  animate={prefersReducedMotion ? { x: 0 } : { x: ['0%', '-50%'] }}
-                  transition={{ duration: prefersReducedMotion ? 0 : 34, ease: 'linear', repeat: Infinity }}
-                >
-                  {[
-                    { src: '/images/nature-style.jpg', title: 'Nature Style', sub: 'Phong cách tự nhiên' },
-                    { src: '/images/dutch-style.jpg', title: 'Dutch Style', sub: 'Phong cách Hà Lan' },
-                    { src: '/images/planted-tank.jpg', title: 'Planted Tank', sub: 'Bể thủy sinh trồng cây' },
-                    { src: '/images/iwagumi.jpg', title: 'Iwagumi', sub: 'Phong cách đá' },
-                    { src: '/images/community-tank.jpg', title: 'Community Tank', sub: 'Bể cộng đồng' },
-                    { src: '/images/biotope.jpg', title: 'Biotope', sub: 'Sinh cảnh tự nhiên' },
-                  ].concat([
-                    { src: '/images/nature-style.jpg', title: 'Nature Style', sub: 'Phong cách tự nhiên' },
-                    { src: '/images/dutch-style.jpg', title: 'Dutch Style', sub: 'Phong cách Hà Lan' },
-                    { src: '/images/planted-tank.jpg', title: 'Planted Tank', sub: 'Bể thủy sinh trồng cây' },
-                    { src: '/images/iwagumi.jpg', title: 'Iwagumi', sub: 'Phong cách đá' },
-                    { src: '/images/community-tank.jpg', title: 'Community Tank', sub: 'Bể cộng đồng' },
-                    { src: '/images/biotope.jpg', title: 'Biotope', sub: 'Sinh cảnh tự nhiên' },
-                  ]).map((item, i) => (
-                    <motion.div
-                      key={`${item.title}-${i}`}
-                      whileHover={prefersReducedMotion ? undefined : { y: -10, scale: 1.02, rotateY: 6 }}
-                      transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-                      className="group relative shrink-0 w-[16rem] sm:w-[18rem] lg:w-[19rem] overflow-hidden rounded-[1.6rem] border border-white/10 bg-[#071616] shadow-[0_20px_50px_rgba(0,0,0,0.35)]"
-                      style={{ transformStyle: 'preserve-3d', perspective: 1200 }}
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-b from-cyan-400/10 via-transparent to-transparent opacity-70"></div>
-                      <img src={item.src} alt={item.title} className="h-[23rem] w-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/92 via-black/20 to-transparent"></div>
-                      <div className="absolute inset-x-0 bottom-0 p-4 sm:p-5">
-                        <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/25 px-3 py-1 text-[10px] uppercase tracking-[0.35em] text-cyan-100/75 backdrop-blur-md">
-                          Aquascape
-                        </div>
-                        <h3 className="mt-3 text-2xl sm:text-3xl font-headline font-semibold text-white leading-tight drop-shadow-[0_2px_18px_rgba(0,0,0,0.45)]">
-                          {item.title}
-                        </h3>
-                        <p className="mt-2 text-sm text-white/65 font-body">{item.sub}</p>
-                      </div>
-                    </motion.div>
-                  ))}
-                </motion.div>
-              </div>
-            </div>
-          </section>
-
-      {/* Features Section */}
-      <section id="features" className="py-20 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#051C1C] to-[#0a2828]"></div>
-        <div className="absolute inset-0 pointer-events-none overflow-hidden">
-          <div className="fish-container"><div className="fish fish-1">🐠</div><div className="fish fish-2">🐟</div><div className="fish fish-3">🐡</div></div>
-        </div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center mb-16 animate-on-scroll">
-            <h2 className="text-3xl md:text-4xl font-headline font-bold text-white mb-4">Tính Năng Nổi Bật</h2>
-            <p className="text-lg text-gray-400 font-body max-w-3xl mx-auto">Hệ thống mua sắm thủy sinh hiện đại với đầy đủ tính năng</p>
-          </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {[
-              { icon: SunIcon, title: 'Tìm Kiếm Thông Minh', desc: 'Lọc theo loại sản phẩm, giá cả và độ khó chăm sóc', color: 'neon-cyan' },
-              { icon: LightBulbIcon, title: 'Thông Tin Chi Tiết', desc: 'Hướng dẫn chăm sóc và độ tương thích đầy đủ', color: 'emerald-400' },
-              { icon: StarIcon, title: 'Đánh Giá Sản Phẩm', desc: 'Nhận xét từ cộng đồng aquascaper', color: 'cyan-400' },
-              { icon: BeakerIcon, title: 'Trợ Giá Shipping', desc: 'Mua càng cao shipping càng hời', color: 'teal-400' },
-            ].map((f, i) => (
-              <div key={i} className="group glass-card rounded-2xl p-8 transition-all duration-500 hover:border-neon-cyan/20 animate-on-scroll">
-                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 bg-${f.color}/10 border border-${f.color}/20`}>
-                  <f.icon className={`w-8 h-8 text-${f.color}`} />
-                </div>
-                <h4 className="font-headline font-bold text-lg text-white mb-3">{f.title}</h4>
-                <p className="text-sm text-gray-400 font-body leading-relaxed">{f.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Aquarium Experience Section */}
-      <section className="py-24 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0a2828] via-[#061e2e] to-[#051C1C]"></div>
-        <div className="absolute inset-0 pointer-events-none"><div className="bubble"></div><div className="bubble"></div><div className="bubble"></div><div className="bubble"></div><div className="bubble"></div><div className="bubble"></div></div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="animate-on-scroll space-y-6">
-              <div className="inline-block"><span className="glass-panel text-neon-cyan px-4 py-2 rounded-full text-sm font-body font-semibold">✨ Trải Nghiệm Thủy Sinh</span></div>
-              <h2 className="text-3xl md:text-4xl lg:text-5xl font-headline font-bold text-white leading-tight">
-                Đắm Chìm Trong Thế Giới<br /><span className="neon-glow text-neon-cyan">Aquascape Tuyệt Đẹp</span>
+        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          {/* Section header — editorial style */}
+          <Reveal>
+            <div className="mb-16 max-w-3xl">
+              <p className="mb-4 font-body text-xs font-bold uppercase tracking-[0.3em] text-neon-cyan">
+                Bộ sưu tập
+              </p>
+              <h2 className="font-headline text-4xl font-bold leading-tight text-white md:text-6xl">
+                Khám phá
+                <span className="block text-white/60">bộ sưu tập</span>
               </h2>
-              <p className="text-lg text-gray-400 font-body leading-relaxed">Mỗi bể thủy sinh là một tác phẩm nghệ thuật sống động. Chúng tôi giúp bạn tạo ra những không gian dưới nước đầy mê hoặc.</p>
-              <div className="grid grid-cols-2 gap-4 pt-4">
-                <div className="glass-panel rounded-xl p-4"><div className="text-3xl font-headline font-bold text-white mb-1">500+</div><div className="text-neon-cyan/70 font-body text-sm">Loài Cây & Cá</div></div>
-                <div className="glass-panel rounded-xl p-4"><div className="text-3xl font-headline font-bold text-white mb-1">1000+</div><div className="text-neon-cyan/70 font-body text-sm">Khách Hàng Hài Lòng</div></div>
-              </div>
+              <div className="mt-6 h-px w-20 bg-neon-cyan/40" />
+              <p className="mt-6 max-w-xl font-body text-base leading-relaxed text-gray-400 md:text-lg">
+                Ba mảnh ghép chính cho một bể thủy sinh đẹp — cây, cá và phụ kiện.
+              </p>
             </div>
-            <div className="animate-on-scroll relative">
-              <div className="relative rounded-3xl overflow-hidden shadow-glass-lg border border-white/10">
-                <img src="/images/OverviewTank.jpg" alt="Beautiful Aquascape" className="w-full h-[400px] object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-abyss/40 to-transparent"></div>
-                <div className="absolute top-6 right-6 glass-panel rounded-xl p-4 shadow-xl animate-float-gentle">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-neon-cyan/10 rounded-lg flex items-center justify-center"><BeakerIcon className="w-6 h-6 text-neon-cyan" /></div>
-                    <div><div className="text-sm font-body font-semibold text-white">Nature Style</div><div className="text-xs text-gray-400 font-body">Amano Inspired</div></div>
-                  </div>
-                </div>
-                <div className="absolute bottom-6 left-6 glass-panel rounded-xl p-4 shadow-xl animate-float-gentle-delayed">
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-neon-cyan/10 rounded-lg flex items-center justify-center"><SparklesIcon className="w-6 h-6 text-neon-cyan" /></div>
-                    <div><div className="text-sm font-body font-semibold text-white">Hồ siêu xịn</div><div className="text-xs text-gray-400 font-body">Setup triệu đô</div></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+          </Reveal>
 
-      {/* Why Choose Us */}
-      <section id="why-us" className="py-20 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#051C1C] to-[#0a2828]"></div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center mb-16 animate-on-scroll">
-            <h2 className="text-3xl md:text-4xl font-headline font-bold text-white mb-4">Tại Sao Chọn AquaticPose?</h2>
-            <p className="text-lg text-gray-400 font-body max-w-3xl mx-auto">Chúng tôi cam kết mang đến trải nghiệm mua sắm tốt nhất cho cộng đồng yêu thủy sinh</p>
-          </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {[
-              { icon: ShieldCheckIcon, title: 'Chất Lượng Đảm Bảo', desc: 'Cây và cá khỏe mạnh, được tuyển chọn kỹ càng từ những nhà cung cấp uy tín' },
-              { icon: TruckIcon, title: 'Vận Chuyển An Toàn', desc: 'Hệ thống đóng gói chuyên dụng cho thủy sinh, đảm bảo sản phẩm đến tay khách hàng an toàn' },
-              { icon: ChatBubbleLeftRightIcon, title: 'Tư Vấn Chuyên Nghiệp', desc: 'Đội ngũ chuyên gia hỗ trợ setup layout và giải đáp mọi thắc mắc về thủy sinh' },
-              { icon: SparklesIcon, title: 'Hỗ Trợ Setup', desc: 'Hướng dẫn chi tiết setup bể từ A-Z, đặc biệt hỗ trợ người mới bắt đầu' },
-            ].map((item, i) => (
-              <div key={i} className="text-center animate-on-scroll group">
-                <div className="relative mb-6">
-                  <div className="w-24 h-24 bg-neon-cyan/10 border border-neon-cyan/20 rounded-3xl flex items-center justify-center mx-auto group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-glow-cyan">
-                    <item.icon className="w-12 h-12 text-neon-cyan" />
+          {/* 3-col editorial grid */}
+          <div className="grid gap-6 md:grid-cols-3">
+            {collections.map((item, i) => (
+              <Reveal key={item.title} delay={i * 120}>
+                <Link
+                  to={item.href}
+                  className="group relative block overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] transition-all duration-500 hover:border-neon-cyan/30 hover:bg-white/[0.06]"
+                >
+                  {/* image */}
+                  <div className="relative h-72 overflow-hidden sm:h-80">
+                    <img
+                      src={item.image}
+                      alt={item.title}
+                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#051C1C] via-[#051C1C]/40 to-transparent" />
+                    {/* icon badge */}
+                    <div className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-xl border border-white/15 bg-black/30 text-neon-cyan backdrop-blur-md transition-transform duration-500 group-hover:scale-110">
+                      <item.icon className="h-5 w-5" />
+                    </div>
                   </div>
-                </div>
-                <h3 className="text-xl font-headline font-bold text-white mb-3">{item.title}</h3>
-                <p className="text-gray-400 font-body leading-relaxed">{item.desc}</p>
-              </div>
+
+                  {/* text */}
+                  <div className="p-6">
+                    <p className="mb-2 font-body text-[11px] font-bold uppercase tracking-[0.25em] text-neon-cyan/70">
+                      {item.subtitle}
+                    </p>
+                    <h3 className="font-headline text-2xl font-bold text-white transition-colors group-hover:text-neon-cyan">
+                      {item.title}
+                    </h3>
+                    <p className="mt-3 font-body text-sm leading-relaxed text-gray-400">
+                      {item.description}
+                    </p>
+                    <div className="mt-5 inline-flex items-center font-body text-sm font-semibold text-neon-cyan/80 transition-colors group-hover:text-neon-cyan">
+                      Khám phá
+                      <ArrowRightIcon className="ml-2 h-4 w-4 transition-transform duration-300 group-hover:translate-x-2" />
+                    </div>
+                  </div>
+                </Link>
+              </Reveal>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Customer Showcase */}
-      <section className="py-20 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0a2828] via-[#061e2e] to-[#051C1C]"></div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center mb-16 animate-on-scroll">
-            <h2 className="text-3xl md:text-4xl font-headline font-bold text-white mb-4">Bể Thủy Sinh Từ Cộng Đồng</h2>
-            <p className="text-lg text-gray-400 font-body max-w-3xl mx-auto">Những layout tuyệt đẹp được tạo ra bởi khách hàng của chúng tôi</p>
+      {/* ═══════════════ MARQUEE GALLERY ═══════════════ */}
+      <section className="relative overflow-hidden py-20">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#061e2e] via-[#0a2a2a] to-[#051C1C]" />
+        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <Reveal>
+            <div className="mb-12 max-w-2xl">
+              <p className="mb-4 font-body text-xs font-bold uppercase tracking-[0.3em] text-neon-cyan">
+                Cảm hứng layout
+              </p>
+              <h2 className="font-headline text-3xl font-bold leading-tight text-white md:text-5xl">
+                Dòng chảy aquascape
+              </h2>
+              <p className="mt-4 font-body text-base leading-relaxed text-gray-400">
+                Lướt qua các phong cách bể phổ biến để tìm cảm hứng cho layout của bạn.
+              </p>
+            </div>
+          </Reveal>
+
+          <div className="relative overflow-hidden rounded-2xl border border-white/8 bg-black/15 px-4 py-6 backdrop-blur-sm sm:px-6">
+            <motion.div
+              className="flex w-max gap-4 will-change-transform sm:gap-5"
+              animate={prefersReducedMotion ? { x: 0 } : { x: ['0%', '-50%'] }}
+              transition={{ duration: prefersReducedMotion ? 0 : 34, ease: 'linear', repeat: Infinity }}
+            >
+              {marqueeItems.map((item, i) => (
+                <motion.div
+                  key={`${item.title}-${i}`}
+                  whileHover={prefersReducedMotion ? undefined : { y: -8, scale: 1.02 }}
+                  transition={{ duration: 0.35 }}
+                  className="group relative h-[22rem] w-[15rem] shrink-0 overflow-hidden rounded-2xl border border-white/8 sm:w-[18rem]"
+                >
+                  <img src={item.src} alt={item.title} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
+                  <div className="absolute inset-x-0 bottom-0 p-5">
+                    <p className="font-body text-[10px] font-bold uppercase tracking-[0.3em] text-neon-cyan/60">Aquascape</p>
+                    <h3 className="mt-2 font-headline text-2xl font-semibold text-white">{item.title}</h3>
+                    <p className="mt-1 font-body text-sm text-white/55">{item.sub}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </motion.div>
           </div>
-          <div className="grid md:grid-cols-3 gap-8">
-            {[
-              { src: '/images/AIimage.jpg', name: 'Anh Tuấn', initial: 'A', review: '"Cây khỏe, đóng gói cẩn thận. Bể của mình giờ đẹp quá!"' },
-              { src: '/images/kingfish.jpg', name: 'Chú Hưng', initial: 'M', review: '"Cá nhìn nhỏ mà có võ. Sẽ quay lại ủng hộ!"' },
-              { src: '/images/beeshrimp.jpg', name: 'Anh Vinh', initial: 'H', review: '"Tép màu đẹp, trông nghệ cả củ!"' },
-            ].map((c, i) => (
-              <div key={i} className="group animate-on-scroll">
-                <div className="relative overflow-hidden rounded-2xl glass-card">
-                  <img src={c.src} alt={`Customer aquascape ${i+1}`} className="w-full h-72 object-cover group-hover:scale-110 transition-transform duration-700" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-abyss/90 via-abyss/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                    <div className="absolute bottom-6 left-6 right-6">
-                      <div className="flex items-center space-x-3 mb-3">
-                        <div className="w-10 h-10 bg-neon-cyan/20 rounded-full flex items-center justify-center text-neon-cyan font-bold">{c.initial}</div>
-                        <div><div className="text-white font-body font-semibold">{c.name}</div><div className="flex text-yellow-400 text-sm">{'★'.repeat(5)}</div></div>
-                      </div>
-                      <p className="text-gray-300 font-body text-sm italic">{c.review}</p>
+        </div>
+      </section>
+
+      {/* ═══════════════ AQUATIC EXPERIENCE ═══════════════ */}
+      <section id="experience" className="relative overflow-hidden py-28">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0a2828] via-[#061e2e] to-[#051C1C]" />
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="bubble" />
+          <div className="bubble" />
+          <div className="bubble" />
+          <div className="bubble" />
+          <div className="bubble" />
+          <div className="bubble" />
+        </div>
+
+        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          {/* Top: big heading + image — asymmetric */}
+          <div className="grid items-start gap-12 lg:grid-cols-[1fr_1.1fr]">
+            <Reveal>
+              <div>
+                <span className="inline-flex items-center gap-2 rounded-full border border-neon-cyan/20 bg-neon-cyan/[0.06] px-4 py-2 font-body text-sm font-bold text-neon-cyan backdrop-blur-sm">
+                  <BeakerIcon className="h-5 w-5" />
+                  Trải nghiệm thủy sinh
+                </span>
+
+                <h2 className="mt-8 font-headline text-4xl font-bold leading-[1.1] text-white md:text-5xl lg:text-6xl">
+                  Từ ý tưởng nhỏ
+                  <span className="block text-white/50">đến một bể cá</span>
+                  <span className="block text-white">có chiều sâu</span>
+                </h2>
+
+                <div className="mt-8 h-px w-16 bg-gradient-to-r from-neon-cyan/60 to-transparent" />
+
+                <p className="mt-6 max-w-md font-body text-base leading-8 text-gray-400 md:text-lg">
+                  Trang chủ được gom lại theo hành trình: chọn cảm hứng, tìm sản phẩm, đọc hướng dẫn và mua hàng với hỗ trợ rõ ràng.
+                </p>
+
+                {/* Stats inline */}
+                <div className="mt-10 flex gap-8">
+                  {[
+                    { val: '500+', label: 'Sản phẩm' },
+                    { val: '24/7', label: 'Hỗ trợ online' },
+                  ].map((s) => (
+                    <div key={s.label}>
+                      <div className="font-headline text-4xl font-bold text-white">{s.val}</div>
+                      <div className="mt-1 font-body text-sm font-semibold text-neon-cyan/70">{s.label}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </Reveal>
+
+            <Reveal delay={200}>
+              <div className="relative">
+                <div className="overflow-hidden rounded-2xl border border-white/10">
+                  <img
+                    src="/images/OverviewTank.jpg"
+                    alt="Bể thủy sinh layout nature style"
+                    className="h-[26rem] w-full object-cover transition-transform duration-700 hover:scale-[1.03] sm:h-[30rem]"
+                  />
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-[#051C1C]/60 via-transparent to-transparent" />
+                </div>
+
+                {/* Floating card */}
+                <div className="glass-panel absolute -bottom-6 -left-4 rounded-2xl p-4 sm:left-auto sm:-bottom-6 sm:right-6 sm:w-64">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-neon-cyan/10 text-neon-cyan">
+                      <HeartIcon className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <div className="font-body font-bold text-white">Nature Style</div>
+                      <div className="font-body text-xs text-gray-400">Gợi ý bố cục tự nhiên</div>
                     </div>
                   </div>
                 </div>
               </div>
+            </Reveal>
+          </div>
+
+          {/* Bottom quote — italic accent */}
+          <Reveal delay={300}>
+            <div className="mt-20 flex justify-end">
+              <blockquote className="max-w-lg border-l-2 border-neon-cyan/30 pl-6">
+                <p className="font-body text-base italic leading-relaxed text-gray-300 md:text-lg">
+                  Mỗi bể cá là một hệ sinh thái thu nhỏ. Từ ánh sáng, dòng nước cho đến từng cành cây — tất cả cùng kể một câu chuyện riêng.
+                </p>
+              </blockquote>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ═══════════════ WHY US — split layout ═══════════════ */}
+      <section id="why-us" className="relative overflow-hidden py-24 lg:py-32">
+        {/* Deep, glowing ambient background */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#051C1C] to-[#0a2828]" />
+        
+        {/* Artistic glowing radial lights in the background for a modern neon depth */}
+        <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-neon-cyan/5 blur-[120px] pointer-events-none" />
+        <div className="absolute top-1/3 right-1/4 -translate-y-1/2 w-[350px] h-[350px] rounded-full bg-emerald-500/5 blur-[100px] pointer-events-none" />
+
+        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 gap-16 lg:grid-cols-12 lg:gap-8 items-center">
+            
+            {/* Left side: Artistic text layout */}
+            <div className="lg:col-span-5 space-y-8 text-left max-w-xl mx-auto lg:mx-0">
+              <Reveal>
+                <div className="inline-flex items-center gap-3">
+                  <span className="h-[1px] w-8 bg-neon-cyan/60" />
+                  <p className="font-body text-[11px] font-bold uppercase tracking-[0.3em] text-neon-cyan">
+                    Vì sao chọn chúng tôi
+                  </p>
+                </div>
+              </Reveal>
+
+              <Reveal delay={100}>
+                <h2 className="font-headline text-4xl sm:text-5xl font-extrabold leading-[1.15] text-white tracking-tight">
+                  Nơi Đam Mê
+                  <span className="block mt-1 font-headline font-light italic text-gray-300">Gặp Gỡ</span>
+                  <span className="block mt-2 text-transparent bg-clip-text bg-gradient-to-r from-neon-cyan via-emerald-400 to-teal-400 drop-shadow-[0_2px_10px_rgba(0,255,209,0.15)]">
+                    Thiên Nhiên
+                  </span>
+                </h2>
+              </Reveal>
+
+              <Reveal delay={200}>
+                <div className="space-y-4 font-body text-sm sm:text-base leading-relaxed text-gray-300">
+                  <p>
+                    Tại <strong className="text-white font-semibold">AquaticPose</strong>, chúng tôi không chỉ đơn thuần cung cấp phụ kiện. Mỗi sản phẩm được tuyển chọn là một viên gạch xây dựng nên một hệ sinh thái thu nhỏ bền vững.
+                  </p>
+                  <p className="text-gray-400">
+                    Chúng tôi mang đến giải pháp toàn diện từ cảm hứng thiết kế, đóng gói an toàn đến sự tư vấn tận tình, giúp hành trình chinh phục nghệ thuật thủy sinh của bạn trở nên đơn giản và đầy cảm xúc.
+                  </p>
+                </div>
+              </Reveal>
+
+              <Reveal delay={300}>
+                <div className="pt-4 flex flex-wrap gap-x-6 gap-y-4 border-t border-white/10">
+                  <div className="flex items-center gap-2">
+                    <span className="h-2 w-2 rounded-full bg-neon-cyan animate-pulse" />
+                    <span className="font-body text-xs font-semibold uppercase tracking-wider text-gray-300">5+ Giá trị cốt lõi</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-gray-400">
+                    <span className="font-body text-xs">Di chuột vào các mảnh ghép để khám phá</span>
+                  </div>
+                </div>
+              </Reveal>
+            </div>
+
+            {/* Right side: 5-hexagon honeycomb cluster */}
+            <div className="lg:col-span-7 flex justify-center lg:justify-end">
+              <Reveal delay={200}>
+                <div className="hex-honeycomb">
+                  {whyUs.map((item, i) => {
+                    const pos = honeycombPositions[i];
+                    return (
+                      <div
+                        key={item.title}
+                        className={`absolute hex-flip-card group ${pos.className}`}
+                        style={{
+                          left: pos.left,
+                          top: pos.top,
+                          transition: 'all 0.5s ease',
+                        }}
+                      >
+                        <div className="hex-flip-inner">
+                          {/* FRONT */}
+                          <div className="hex-flip-front">
+                            <img
+                              src={item.image}
+                              alt={item.title}
+                              className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-[#051C1C]/90 via-[#051C1C]/35 to-transparent" />
+                            <div className="absolute inset-x-0 bottom-6 text-center">
+                              <div className="mx-auto mb-2 flex h-9.5 w-9.5 items-center justify-center rounded-lg border border-white/15 bg-black/25 text-neon-cyan backdrop-blur-sm">
+                                <item.icon className="h-[18px] w-[18px]" />
+                              </div>
+                              <h3 className="px-3 font-body text-xs sm:text-[13px] font-bold uppercase tracking-[0.12em] text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.5)]">
+                                {item.title}
+                              </h3>
+                            </div>
+                          </div>
+
+                          {/* BACK */}
+                          <div className="hex-flip-back">
+                            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(0,255,209,0.15),transparent_55%)]" />
+                            <div className="relative flex flex-col items-center justify-center p-4 text-center">
+                              <div className="mb-2.5 flex h-9 w-9 items-center justify-center rounded-lg border border-neon-cyan/20 bg-neon-cyan/10 text-neon-cyan">
+                                <item.icon className="h-5 w-5" />
+                              </div>
+                              <h3 className="font-body text-xs sm:text-[13px] font-bold uppercase tracking-wider text-white">
+                                {item.title}
+                              </h3>
+                              <p className="mt-1.5 font-body text-[10px] sm:text-[11px] leading-relaxed text-cyan-50/70 max-w-[125px] sm:max-w-[155px]">
+                                {item.desc}
+                              </p>
+                            </div>
+                          </div>
+
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </Reveal>
+            </div>
+
+          </div>
+        </div>
+      </section>
+
+
+      {/* ═══════════════ COMMUNITY ═══════════════ */}
+      <section id="community" className="relative overflow-hidden py-28">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0a2828] via-[#061e2e] to-[#051C1C]" />
+
+        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <Reveal>
+            <div className="mx-auto mb-16 max-w-2xl text-center">
+              <p className="mb-4 font-body text-xs font-bold uppercase tracking-[0.3em] text-neon-cyan">
+                Cộng đồng
+              </p>
+              <h2 className="font-headline text-4xl font-bold leading-tight text-white md:text-5xl">
+                Một vài layout
+                <span className="block text-white/55">từ khách hàng</span>
+              </h2>
+              <p className="mt-4 font-body text-base leading-relaxed text-gray-400">
+                Ảnh thật và phản hồi ngắn gọn từ cộng đồng AquaticPose.
+              </p>
+            </div>
+          </Reveal>
+
+          {/* 3 review cards */}
+          <div className="grid gap-6 md:grid-cols-3">
+            {communityLayouts.map((item, i) => (
+              <Reveal key={item.name} delay={i * 120}>
+                <div className="group overflow-hidden rounded-2xl border border-white/8 bg-white/[0.03] transition-all duration-500 hover:border-white/15 hover:bg-white/[0.06]">
+                  {/* Image */}
+                  <div className="relative h-64 overflow-hidden">
+                    <img
+                      src={item.src}
+                      alt={`Layout thủy sinh của ${item.name}`}
+                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#051C1C] via-[#051C1C]/30 to-transparent" />
+                  </div>
+
+                  {/* Review */}
+                  <div className="p-6">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-neon-cyan/10 font-body text-sm font-bold text-neon-cyan">
+                        {item.initial}
+                      </div>
+                      <div>
+                        <div className="font-body text-sm font-bold text-white">{item.name}</div>
+                        <div className="flex gap-0.5 text-yellow-400">
+                          {Array.from({ length: 5 }).map((_, idx) => (
+                            <StarIcon key={idx} className="h-3.5 w-3.5 fill-current" />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <p className="mt-4 font-body text-sm leading-relaxed text-gray-400">
+                      "{item.review}"
+                    </p>
+                  </div>
+                </div>
+              </Reveal>
             ))}
           </div>
-          <div className="mt-16 glass-panel rounded-3xl p-8 animate-on-scroll">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+
+          {/* Stats bar */}
+          <Reveal delay={400}>
+            <div className="mt-14 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-white/8 bg-white/[0.04] sm:grid-cols-4">
               {[
-                { val: '98%', label: 'Khách Hàng Hài Lòng' },
-                { val: '500+', label: 'Sản Phẩm' },
-                { val: '24/7', label: 'Hỗ Trợ' },
-                { val: '1000+', label: 'Đơn Hàng' },
-              ].map((s, i) => (
-                <div key={i} className="text-center">
-                  <div className="text-3xl md:text-4xl font-headline font-bold text-neon-cyan mb-2">{s.val}</div>
-                  <div className="text-gray-400 font-body text-sm">{s.label}</div>
+                { val: '98%', label: 'Khách hài lòng' },
+                { val: '500+', label: 'Sản phẩm' },
+                { val: '24/7', label: 'Hỗ trợ' },
+                { val: '1000+', label: 'Đơn đã xử lý' },
+              ].map((stat, i) => (
+                <div key={stat.label} className="p-6 text-center transition-colors duration-300 hover:bg-white/[0.03]">
+                  <div className="font-headline text-3xl font-bold text-neon-cyan md:text-4xl">{stat.val}</div>
+                  <div className="mt-2 font-body text-xs font-semibold uppercase tracking-[0.15em] text-gray-500">{stat.label}</div>
                 </div>
+              ))}
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
+      {/* ═══════════════ BLOGS ═══════════════ */}
+      <section id="blogs" className="relative overflow-hidden py-28">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#051C1C] to-[#0a2828]" />
+
+        <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <Reveal>
+            <div className="mb-14 flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-end">
+              <div className="max-w-xl">
+                <p className="mb-4 font-body text-xs font-bold uppercase tracking-[0.3em] text-neon-cyan">
+                  Blog setup
+                </p>
+                <h2 className="font-headline text-4xl font-bold leading-tight text-white md:text-5xl">
+                  Hướng dẫn ngắn gọn
+                  <span className="block text-white/55">để bể ổn định hơn</span>
+                </h2>
+              </div>
+              <Link
+                to="/blogs"
+                className="group inline-flex shrink-0 items-center font-body text-sm font-bold text-neon-cyan transition-colors hover:text-white"
+              >
+                Xem tất cả
+                <ArrowRightIcon className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-2" />
+              </Link>
+            </div>
+          </Reveal>
+
+          {/* 1 featured + 2 side — editorial blog layout */}
+          <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
+            {/* Featured */}
+            <Reveal>
+              <Link
+                to={blogs[0].to}
+                className="group relative block h-full overflow-hidden rounded-2xl border border-white/8 bg-white/[0.03] transition-all duration-500 hover:border-neon-cyan/25"
+              >
+                <div className="relative h-72 overflow-hidden sm:h-80 lg:h-full lg:min-h-[26rem]">
+                  <img src={blogs[0].img} alt={blogs[0].title} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#051C1C] via-[#051C1C]/50 to-transparent" />
+                </div>
+                <div className="absolute inset-x-0 bottom-0 p-6 sm:p-8">
+                  <span className="inline-block rounded-full border border-neon-cyan/25 bg-neon-cyan/[0.08] px-3 py-1 font-body text-xs font-bold uppercase tracking-wider text-neon-cyan">
+                    {blogs[0].tag}
+                  </span>
+                  <h3 className="mt-4 font-headline text-2xl font-bold text-white transition-colors group-hover:text-neon-cyan md:text-3xl">
+                    {blogs[0].title}
+                  </h3>
+                  <p className="mt-3 max-w-md font-body text-sm leading-relaxed text-gray-400">
+                    {blogs[0].desc}
+                  </p>
+                  <div className="mt-5 inline-flex items-center font-body text-sm font-bold text-neon-cyan/80 transition-colors group-hover:text-neon-cyan">
+                    Đọc bài viết
+                    <ArrowRightIcon className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-2" />
+                  </div>
+                </div>
+              </Link>
+            </Reveal>
+
+            {/* 2 stacked */}
+            <div className="grid gap-6">
+              {blogs.slice(1).map((blog, i) => (
+                <Reveal key={blog.to} delay={(i + 1) * 150}>
+                  <Link
+                    to={blog.to}
+                    className="group flex flex-col overflow-hidden rounded-2xl border border-white/8 bg-white/[0.03] transition-all duration-500 hover:border-neon-cyan/25 sm:flex-row"
+                  >
+                    <div className="h-48 w-full shrink-0 overflow-hidden sm:h-auto sm:w-44">
+                      <img src={blog.img} alt={blog.title} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                    </div>
+                    <div className="flex flex-col justify-center p-5">
+                      <span className="mb-2 w-fit font-body text-[11px] font-bold uppercase tracking-[0.2em] text-neon-cyan/70">
+                        {blog.tag}
+                      </span>
+                      <h3 className="font-headline text-lg font-bold text-white transition-colors group-hover:text-neon-cyan">
+                        {blog.title}
+                      </h3>
+                      <p className="mt-2 font-body text-sm leading-relaxed text-gray-400">
+                        {blog.desc}
+                      </p>
+                      <div className="mt-4 inline-flex items-center font-body text-sm font-bold text-neon-cyan/70 transition-colors group-hover:text-neon-cyan">
+                        Đọc thêm
+                        <ArrowRightIcon className="ml-1.5 h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+                      </div>
+                    </div>
+                  </Link>
+                </Reveal>
               ))}
             </div>
           </div>
         </div>
       </section>
 
-      {/* Blog Section */}
-      <section id="blogs" className="py-24 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-[#051C1C] to-[#0a2828]"></div>
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-          <div className="text-center mb-16 animate-on-scroll">
-            <h2 className="text-4xl md:text-5xl font-headline font-bold text-white mb-4">Blog Mới Nhất</h2>
-            <p className="text-lg text-gray-400 font-body max-w-3xl mx-auto">Chia sẻ kinh nghiệm setup, chăm cây, nuôi cá và các bí quyết giúp bể thủy sinh của bạn đẹp hơn mỗi ngày.</p>
-          </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[
-              { to: '/blogs/setup-be-thuy-sinh-cho-nguoi-moi', img: '/images/nature-style.jpg', tag: 'Beginner Guide', tagColor: 'neon-cyan', title: 'Cách Setup Bể Thủy Sinh Cho Người Mới', desc: 'Hướng dẫn từng bước từ nền, lọc, đèn cho đến chọn cây và cá.' },
-              { to: '/blogs/co2-va-anh-sang', img: '/images/iwagumi.jpg', tag: 'Advanced Tips', tagColor: 'emerald-400', title: 'CO2 Và Ánh Sáng: Bộ Đôi Quyết Định Thành Công', desc: 'Hiểu đúng về ánh sáng và CO2 để cây phát triển khỏe mạnh.' },
-              { to: '/blogs/top-10-cay-de-song', img: '/images/planted-tank.jpg', tag: 'Plant Care', tagColor: 'teal-400', title: 'Top 10 Cây Thủy Sinh Dễ Sống Nhất', desc: 'Danh sách cây cực dễ chơi cho người mới bắt đầu.' },
-            ].map((blog, i) => (
-              <Link key={i} to={blog.to} className="group glass-card rounded-3xl overflow-hidden transition-all duration-500 animate-on-scroll">
-                <div className="overflow-hidden h-60">
-                  <img src={blog.img} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                </div>
-                <div className="p-8">
-                  <span className={`text-sm font-body font-semibold text-${blog.tagColor}`}>{blog.tag}</span>
-                  <h3 className="text-xl font-headline font-bold text-white mt-3 mb-4 group-hover:text-neon-cyan transition-colors">{blog.title}</h3>
-                  <p className="text-gray-400 font-body mb-6">{blog.desc}</p>
-                  <div className="flex items-center text-neon-cyan font-body font-semibold">
-                    Đọc bài viết <ArrowRightIcon className="w-5 h-5 ml-2 group-hover:translate-x-2 transition-transform" />
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-          <div className="text-center mt-16">
-            <Link to="/blogs" className="inline-flex items-center px-8 py-4 rounded-full bg-neon-cyan text-abyss font-body font-bold hover:scale-105 transition-all shadow-glow-cyan">
-              Xem Tất Cả Blogs <ArrowRightIcon className="w-5 h-5 ml-2"/>
-            </Link>
-          </div>
-        </div>
-      </section>
+      {/* ═══════════════ CTA ═══════════════ */}
+      <section className="relative overflow-hidden py-28">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0a2828] via-[#061e2e] to-[#051C1C]" />
+        <div className="absolute inset-0 opacity-30 [background:radial-gradient(circle_at_50%_50%,rgba(0,255,209,0.18),transparent_40%)]" />
 
-      {/* Final CTA Section */}
-      <section className="relative py-32 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0a2828] via-[#061e2e] to-[#051C1C]"></div>
-        <div className="absolute inset-0">
-          <div className="absolute top-0 left-0 w-96 h-96 bg-neon-cyan/5 rounded-full blur-3xl animate-blob"></div>
-          <div className="absolute bottom-0 right-0 w-96 h-96 bg-emerald-500/5 rounded-full blur-3xl animate-blob animation-delay-2000"></div>
-        </div>
-        <div className="absolute inset-0 pointer-events-none opacity-20">
-          <div className="absolute top-1/4 left-10 text-4xl animate-float-gentle">🐠</div>
-          <div className="absolute top-2/3 right-20 text-3xl animate-float-gentle-delayed">🐟</div>
-          <div className="absolute bottom-1/4 left-1/3 text-3xl animate-float-gentle">🐡</div>
-        </div>
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-          <div className="animate-on-scroll space-y-8">
-            <div className="inline-block">
-              <div className="glass-panel rounded-full px-6 py-2 text-neon-cyan font-body font-semibold text-sm flex items-center space-x-2 animate-bounce-slow">
-                <SparklesIcon className="w-5 h-5" /><span>Ưu đãi đặc biệt cho khách hàng mới!</span>
-              </div>
-            </div>
-            <h2 className="text-4xl md:text-5xl lg:text-6xl font-headline font-bold text-white leading-tight">
-              Sẵn Sàng Tạo Ra<br /><span className="text-coral">Aquascape Mơ Ước?</span>
+        <div className="relative z-10 mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
+          <Reveal>
+            <h2 className="font-headline text-4xl font-bold leading-tight text-white md:text-6xl">
+              Sẵn sàng tạo
+              <span className="block bg-gradient-to-r from-neon-cyan via-emerald-300 to-cyan-200 bg-clip-text text-transparent">
+                aquascape mơ ước?
+              </span>
             </h2>
-            <p className="text-xl md:text-2xl text-gray-400 font-body max-w-3xl mx-auto leading-relaxed">
-              Khám phá ngay bộ sưu tập đa dạng của chúng tôi và bắt đầu hành trình tạo ra những layout thủy sinh tuyệt đẹp.
+            <p className="mx-auto mt-6 max-w-2xl font-body text-base leading-relaxed text-gray-400 md:text-lg">
+              Bắt đầu từ bộ sưu tập chính, chọn đúng sản phẩm và để hệ thống hỗ trợ bạn trong từng bước mua hàng.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
-              <Link to="/shop" className="group inline-flex items-center justify-center px-10 py-5 text-lg font-body font-bold text-abyss bg-neon-cyan rounded-full hover:bg-neon-teal transform hover:scale-105 transition-all duration-300 shadow-glow-cyan">
-                <span className="relative">Mua Ngay</span>
-                <ArrowRightIcon className="ml-2 w-6 h-6 group-hover:translate-x-2 transition-transform duration-300" />
+
+            <div className="mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row">
+              <Link
+                to="/shop"
+                className="group inline-flex w-full items-center justify-center rounded-full bg-primary px-9 py-4 font-body text-lg font-bold text-primary-foreground shadow-glow-cyan transition-all duration-300 hover:-translate-y-1 hover:bg-primary-hover sm:w-auto"
+              >
+                Mua ngay
+                <ArrowRightIcon className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-2" />
               </Link>
-              <button onClick={() => scrollToSection('collections')} className="inline-flex items-center justify-center px-10 py-5 text-lg font-body font-bold text-white glass-panel rounded-full hover:bg-white/10 transition-all duration-300">
-                Xem Bộ Sưu Tập
+              <button
+                onClick={() => scrollToSection('collections')}
+                className="glass-panel inline-flex w-full items-center justify-center rounded-full px-9 py-4 font-body text-lg font-bold text-white transition-all duration-300 hover:-translate-y-1 sm:w-auto"
+              >
+                Xem bộ sưu tập
               </button>
             </div>
-            <div className="pt-12 flex flex-wrap justify-center gap-8 text-gray-400">
-              <div className="flex items-center space-x-2"><ShieldCheckIcon className="w-6 h-6 text-neon-cyan/60" /><span className="text-sm font-body font-medium">Sản phẩm chất lượng</span></div>
-              <div className="flex items-center space-x-2"><TruckIcon className="w-6 h-6 text-neon-cyan/60" /><span className="text-sm font-body font-medium">Giao hàng nhanh chóng</span></div>
-              <div className="flex items-center space-x-2"><ChatBubbleLeftRightIcon className="w-6 h-6 text-neon-cyan/60" /><span className="text-sm font-body font-medium">Hỗ trợ 24/7</span></div>
+
+            <div className="mt-10 flex flex-wrap justify-center gap-4">
+              {[
+                { icon: CheckIcon, label: 'Sản phẩm rõ thông tin' },
+                { icon: TruckIcon, label: 'Theo dõi vận chuyển' },
+                { icon: ChatBubbleLeftRightIcon, label: 'Hỗ trợ khi mua' },
+              ].map((item) => (
+                <div key={item.label} className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 font-body text-sm text-gray-400">
+                  <item.icon className="h-4 w-4 text-neon-cyan" />
+                  {item.label}
+                </div>
+              ))}
             </div>
-          </div>
+          </Reveal>
         </div>
       </section>
     </div>
