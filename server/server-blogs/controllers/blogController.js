@@ -142,6 +142,20 @@ export const deleteBlog = async (req, res, next) => {
     }
 };
 
+export const hideBlog = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user.userId;
+        const userRole = req.user.role;
+        const isHidden = req.body?.isHidden ?? true;
+
+        const result = await blogService.hideBlog(id, userId, userRole, isHidden);
+        res.status(StatusCodes.OK).json(result);
+    } catch (error) {
+        next(error);
+    }
+};
+
 // @desc    Update blog status
 // @route   PATCH /api/v1/blogs/:id/status
 // @access  Private (Admin)

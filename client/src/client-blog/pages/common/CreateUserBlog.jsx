@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -19,6 +19,7 @@ const CreateUserBlog = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { id } = useParams();
+  const [redirectPath, setRedirectPath] = useState('/my-blogs?tab=pending');
 
   console.log({
     getBlogById,
@@ -51,17 +52,21 @@ const CreateUserBlog = () => {
     if (isSuccess) {
       toast.success(message);
       dispatch(reset());
-      navigate('/blogs');
+      dispatch(clearCurrentBlog());
+      navigate(redirectPath);
     }
 
     if (isError) {
       toast.error(message);
       dispatch(reset());
     }
-  }, [isSuccess, isError]);
+  }, [isSuccess, isError, message, redirectPath, dispatch, navigate]);
 
   const handleSubmit = (formData) => {
     if (isLoading) return;
+    const status = formData.get('status');
+    setRedirectPath(status === 'DRAFT' ? '/my-blogs?tab=draft' : '/my-blogs?tab=pending');
+
     if (id) {
       dispatch(updateBlog({ id, data: formData }));
     } else {
@@ -77,7 +82,7 @@ const CreateUserBlog = () => {
         onSubmit={handleSubmit}
         onCancel={() => {
           dispatch(clearCurrentBlog());
-          navigate('/blogs');
+          navigate(currentBlog?.status === 'DRAFT' ? '/my-blogs?tab=draft' : '/my-blogs?tab=pending');
         }}
         isLoading={isLoading}
         isAdmin={false}

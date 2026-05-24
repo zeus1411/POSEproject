@@ -49,15 +49,18 @@ class BlogService {
       }
     }
 
+    const requestedStatus = data.status;
+    const status = userRole === 'admin'
+      ? (requestedStatus === 'DRAFT' ? 'DRAFT' : 'PUBLISHED')
+      : (requestedStatus === 'DRAFT' ? 'DRAFT' : 'PENDING');
+
     const blogData = {
       title,
       content,
       excerpt,
       category,
       tags: processedTags,
-      status: userRole === 'admin'
-      ? 'PUBLISHED'
-      : 'PENDING',
+      status,
       author: userId,
       coverImage: {
         url: file.path,
@@ -66,7 +69,7 @@ class BlogService {
       relatedProducts: processedRelatedProducts
     };
 
-    if (userRole === 'admin') {
+    if (status === 'PUBLISHED') {
       blogData.publishedAt = new Date();
     }
 
@@ -151,7 +154,7 @@ class BlogService {
   async getPublicBlogs(query = {}) {
     const { category, tag, page = 1, limit = 10, search } = query;
 
-    const filter = { status: 'PUBLISHED' };
+    const filter = { status: 'PUBLISHED', isHidden: { $ne: true } };
 
     if (category) filter.category = category;
     if (tag) filter.tags = tag;
@@ -220,7 +223,7 @@ class BlogService {
    * @returns {Promise<Object>} Blog object
    */
   async getBlogBySlug(slug, clientIp) {
-    const blog = await Blog.findOne({ slug, status: 'PUBLISHED' })
+    const blog = await Blog.findOne({ slug, status: 'PUBLISHED', isHidden: { $ne: true } })
       .populate('author', 'username fullName avatar')
       .populate('category', 'name slug')
       .populate('tags', 'name slug')
@@ -310,12 +313,7 @@ class BlogService {
     */
 
     if (userRole !== 'admin') {
-
-      // user không được tự set status
-      delete data.status;
-
-      // user edit thì auto quay lại PENDING
-      data.status = 'PENDING';
+      data.status = data.status === 'DRAFT' ? 'DRAFT' : 'PENDING';
     }
 
     // Detect status transition to PENDING to notify admins
@@ -361,6 +359,10 @@ class BlogService {
       throw new UnauthorizedError('Bạn không có quyền xóa bài viết này');
     }
 
+    if (userRole !== 'admin' && blog.status !== 'DRAFT') {
+      throw new BadRequestError('Bạn chỉ có thể xóa bài viết đang ở bản nháp hoặc bị từ chối');
+    }
+
     // Delete image from Cloudinary
     if (blog.coverImage && blog.coverImage.publicId) {
       await deleteFromCloudinary(blog.coverImage.publicId).catch(err =>
@@ -370,6 +372,34 @@ class BlogService {
 
     await Blog.findByIdAndDelete(id);
     return { success: true, message: 'Xóa bài viết thành công' };
+  }
+
+  async hideBlog(id, userId, userRole, isHidden = true) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw new BadRequestError('ID không hợp lệ');
+    }
+
+    const blog = await Blog.findById(id);
+    if (!blog) {
+      throw new NotFoundError('Không tìm thấy bài viết');
+    }
+
+    if (userRole !== 'admin' && blog.author.toString() !== userId) {
+      throw new UnauthorizedError('Bạn không có quyền ẩn bài viết này');
+    }
+
+    if (blog.status !== 'PUBLISHED') {
+      throw new BadRequestError('Chỉ bài viết đã đăng mới có thể ẩn');
+    }
+
+    blog.isHidden = Boolean(isHidden);
+    await blog.save({ validateBeforeSave: false });
+
+    return {
+      success: true,
+      message: blog.isHidden ? 'Ẩn bài viết thành công' : 'Gỡ ẩn bài viết thành công',
+      blog
+    };
   }
 
   async updateBlogStatus(id, status, reason, adminId) {
@@ -397,6 +427,7 @@ class BlogService {
 
       updateData = {
         status: 'PUBLISHED',
+        isHidden: false,
         publishedAt: new Date(),
         approvedBy: adminId,
         rejectionReason: null

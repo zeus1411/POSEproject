@@ -72,6 +72,19 @@ export const deleteBlog = createAsyncThunk(
   }
 );
 
+export const hideBlog = createAsyncThunk(
+  'blog/hide',
+  async ({ id, isHidden = true }, thunkAPI) => {
+    try {
+      return await blogService.hideBlog(id, isHidden);
+    } catch (err) {
+      return thunkAPI.rejectWithValue(
+        err.response?.data?.message || err.message
+      );
+    }
+  }
+);
+
 export const getPublicBlogs = createAsyncThunk(
   'blog/getPublic',
   async (params, thunkAPI) => {
@@ -160,6 +173,15 @@ const blogSlice = createSlice({
         // Remove from list
         state.blogs = state.blogs.filter(
           (blog) => blog._id !== action.meta.arg
+        );
+      })
+      .addCase(hideBlog.fulfilled, (state, action) => {
+        state.isSuccess = true;
+        state.message = 'Ẩn bài viết thành công';
+
+        const hiddenBlog = action.payload.blog;
+        state.blogs = state.blogs.map((blog) =>
+          blog._id === hiddenBlog?._id ? hiddenBlog : blog
         );
       })
 

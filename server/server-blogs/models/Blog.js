@@ -82,6 +82,10 @@ const blogSchema = new mongoose.Schema(
       type: Boolean,
       default: false
     },
+    isHidden: {
+      type: Boolean,
+      default: false
+    },
     publishedAt: Date,
     readTime: {
       type: Number, // in minutes
@@ -111,7 +115,7 @@ const blogSchema = new mongoose.Schema(
 // Indexes
 blogSchema.index({ title: 'text', content: 'text' });
 blogSchema.index({ slug: 1 });
-blogSchema.index({ status: 1, publishedAt: -1 });
+blogSchema.index({ status: 1, isHidden: 1, publishedAt: -1 });
 blogSchema.index({ category: 1 });
 blogSchema.index({ tags: 1 });
 

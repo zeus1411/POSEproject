@@ -203,7 +203,7 @@ const BlogForm = ({
     }
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e, submitStatus = null) => {
     e.preventDefault();
 
     // Khóa nút ngay lập tức để chặn spam trùng bài viết
@@ -226,7 +226,7 @@ const BlogForm = ({
       data.append('title', formData.title);
       data.append('excerpt', formData.excerpt);
       data.append('content', formData.content);
-      data.append('status', blog?.status || (isAdmin ? 'PUBLISHED' : 'PENDING'));
+      data.append('status', submitStatus || (isAdmin ? 'PUBLISHED' : 'PENDING'));
 
       if (formData.category) {
         data.append('category', formData.category);
@@ -281,7 +281,7 @@ const BlogForm = ({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={(e) => handleSubmit(e)} className="space-y-6">
           {/* TITLE */}
           <div className="flex flex-col gap-1.5">
             <label className={`font-semibold text-sm pl-1 ${isDark ? 'text-gray-300' : 'text-gray-700'}`}>Tiêu đề</label>
@@ -603,6 +603,18 @@ const BlogForm = ({
               }`}
             >
               Hủy bỏ
+            </button>
+            <button
+              type="button"
+              disabled={isLoading || isSubmitting}
+              onClick={(e) => handleSubmit(e, 'DRAFT')}
+              className={`px-5 py-2.5 border rounded-xl text-sm font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed ${
+                isDark 
+                  ? 'border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/10' 
+                  : 'border-water/40 text-primary hover:bg-water/10'
+              }`}
+            >
+              Lưu bản nháp
             </button>
             <button
               type="submit"

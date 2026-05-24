@@ -454,7 +454,7 @@ notificationSchema.statics.createBlogStatusNotificationForUser = async function 
         : `Bài viết "${blogTitle}" của bạn đã bị từ chối. Lý do: ${reason}. Vui lòng sửa lại và gửi duyệt lại.`,
       relatedId: blogId,
       relatedType: 'blog',
-      actionUrl: isPublished ? publishedActionUrl : `/me/blogs/edit/${blogId}`, // Simplified links
+      actionUrl: isPublished ? publishedActionUrl : '/my-blogs?tab=draft',
       actionText: 'Xem chi tiết',
       icon: isPublished ? '✅' : '❌',
       channels: ['IN_APP', 'EMAIL']

@@ -6,7 +6,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 import AdminLayout from '../../../client-eco/components/admin/AdminLayout';
 import ConfirmDialog from '../../../client-eco/components/common/ConfirmDialog';
-import { getAllBlogs, deleteBlog } from '../../redux/slices/blogSlice';
+import { getAllBlogs, deleteBlog, hideBlog } from '../../redux/slices/blogSlice';
 import { useTheme } from '../../../client-eco/context/ThemeContext';
 
 const BlogList = () => {
@@ -43,6 +43,16 @@ const BlogList = () => {
     } finally {
         setConfirmId(null);
     }};
+
+  const handleHiddenChange = async (id, isHidden) => {
+    try {
+      await dispatch(hideBlog({ id, isHidden })).unwrap();
+      toast.success(isHidden ? 'Ẩn bài viết thành công' : 'Gỡ ẩn bài viết thành công');
+      dispatch(getAllBlogs({ page, limit: 10 }));
+    } catch (err) {
+      toast.error('Cập nhật trạng thái ẩn thất bại: ' + err);
+    }
+  };
 
   return (
     <AdminLayout>
@@ -207,11 +217,15 @@ const BlogList = () => {
                     <td className="px-6 py-5">
                       {blog.status === "PUBLISHED" && (
                         <span className={`inline-flex px-3 py-1 rounded-full text-xs font-bold border transition-all duration-300 ${
-                          isDark 
-                            ? 'bg-green-500/10 text-green-400 border-green-500/20' 
-                            : 'bg-green-100 text-green-700 border-green-200/50'
+                          blog.isHidden
+                            ? isDark
+                              ? 'bg-slate-500/10 text-slate-300 border-slate-500/20'
+                              : 'bg-slate-100 text-slate-600 border-slate-200/50'
+                            : isDark 
+                              ? 'bg-green-500/10 text-green-400 border-green-500/20' 
+                              : 'bg-green-100 text-green-700 border-green-200/50'
                         }`}>
-                          ● Đã đăng
+                          {blog.isHidden ? '● Đã ẩn' : '● Đã đăng'}
                         </span>
                       )}
 
@@ -277,6 +291,22 @@ const BlogList = () => {
                         >
                           Sửa
                         </button>
+
+                        {blog.status === 'PUBLISHED' && (
+                          <label className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold border cursor-pointer transition-all ${
+                            isDark
+                              ? 'bg-orange-500/10 text-orange-300 border-orange-500/20'
+                              : 'bg-orange-50 text-orange-600 border-orange-100/50'
+                          }`}>
+                            <input
+                              type="checkbox"
+                              checked={!!blog.isHidden}
+                              onChange={(e) => handleHiddenChange(blog._id, e.target.checked)}
+                              className="h-4 w-4 accent-orange-500"
+                            />
+                            Ẩn
+                          </label>
+                        )}
 
                         <button
                           onClick={() => setConfirmId(blog._id)}

@@ -33,6 +33,11 @@ const deleteBlog = async (id) => {
   return res.data;
 };
 
+const hideBlog = async (id, isHidden = true) => {
+  const res = await api.patch(`${API_URL}/${id}/hide`, { isHidden });
+  return res.data;
+};
+
 const searchProductsQuick = async (query) => {
   const res = await api.get(`/products/search-quick?q=${query}`);
   return res.data.products || [];
@@ -91,6 +96,7 @@ export default {
   getBlogById,
   getAllBlogs,
   deleteBlog,
+  hideBlog,
   searchProductsQuick,
   getAllCategories,
   getAllTags,

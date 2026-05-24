@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { FileText, Clock, XCircle, Bookmark, Edit, Eye, MessageCircle, AlertCircle } from 'lucide-react';
+import { FileText, Clock, XCircle, Bookmark, Edit, Eye, EyeOff, MessageCircle, Trash2 } from 'lucide-react';
 import blogService from '../../services/blogService';
 import blogInteractionService from '../../services/blogInteractionService';
 import { useTheme } from '../../../client-eco/context/ThemeContext';
@@ -43,6 +43,30 @@ const MyBlogs = () => {
       console.error("Lỗi khi tải dữ liệu:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleHiddenChange = async (blogId, isHidden) => {
+    const confirmed = window.confirm(isHidden ? 'Bạn có chắc muốn ẩn bài viết này khỏi feed blog?' : 'Bạn có chắc muốn gỡ ẩn bài viết này?');
+    if (!confirmed) return;
+
+    try {
+      await blogService.hideBlog(blogId, isHidden);
+      await fetchData();
+    } catch (error) {
+      alert(error.response?.data?.message || 'Không thể cập nhật trạng thái ẩn bài viết');
+    }
+  };
+
+  const handleDeleteBlog = async (blogId) => {
+    const confirmed = window.confirm('Bạn có chắc muốn xóa bản nháp này? Hành động này không thể hoàn tác.');
+    if (!confirmed) return;
+
+    try {
+      await blogService.deleteBlog(blogId);
+      await fetchData();
+    } catch (error) {
+      alert(error.response?.data?.message || 'Không thể xóa bài viết');
     }
   };
 
@@ -124,7 +148,7 @@ const MyBlogs = () => {
           // DANH SÁCH BÀI VIẾT KHỐI KÍNH MỜ
           <div className="space-y-4">
             {blogs.map((blog) => {
-              const detailUrl = (activeTab === 'pending' || activeTab === 'draft') 
+              const detailUrl = (activeTab === 'pending' || activeTab === 'draft' || blog.isHidden) 
                 ? `/my-blogs/preview/${blog._id}` 
                 : `/blogs/${blog.slug || blog._id}`;
 
@@ -148,13 +172,22 @@ const MyBlogs = () => {
                       </Link>
                       
                       {activeTab === 'draft' && (
-                        <span className="px-2.5 py-1 bg-red-500/15 border border-red-500/30 text-red-600 dark:text-red-400 text-xs font-bold rounded-full whitespace-nowrap">
-                          Bị từ chối
+                        <span className={`px-2.5 py-1 border text-xs font-bold rounded-full whitespace-nowrap ${
+                          blog.rejectionReason
+                            ? 'bg-red-500/15 border-red-500/30 text-red-600 dark:text-red-400'
+                            : 'bg-slate-500/15 border-slate-500/30 text-slate-600 dark:text-slate-300'
+                        }`}>
+                          {blog.rejectionReason ? 'Bị từ chối' : 'Nháp'}
                         </span>
                       )}
                       {activeTab === 'pending' && (
                         <span className="px-2.5 py-1 bg-yellow-500/15 border border-yellow-500/30 text-yellow-600 dark:text-yellow-400 text-xs font-bold rounded-full whitespace-nowrap">
                           Đang chờ duyệt
+                        </span>
+                      )}
+                      {activeTab === 'published' && blog.isHidden && (
+                        <span className="px-2.5 py-1 bg-slate-500/15 border border-slate-500/30 text-slate-600 dark:text-slate-300 text-xs font-bold rounded-full whitespace-nowrap">
+                          Đã ẩn
                         </span>
                       )}
                     </div>
@@ -189,13 +222,36 @@ const MyBlogs = () => {
                           Xem
                         </Link>
                         
-                        {activeTab === 'draft' && (
+                        {(activeTab === 'draft' || activeTab === 'pending') && (
                           <Link 
                             to={`/blogs/edit/${blog._id}`} 
                             className="px-4 py-1.5 text-sm font-bold text-white bg-gradient-to-r from-nature to-ocean rounded-xl hover:opacity-90 shadow-md transition-all flex items-center gap-1"
                           >
                             <Edit size={14} /> Sửa bài
                           </Link>
+                        )}
+
+                        {activeTab === 'published' && (
+                          <label className="px-4 py-1.5 text-sm font-bold text-orange-600 dark:text-orange-300 bg-orange-500/10 border border-orange-500/30 rounded-xl hover:bg-orange-500/20 transition-all flex items-center gap-2 cursor-pointer">
+                            <EyeOff size={14} />
+                            <input
+                              type="checkbox"
+                              checked={!!blog.isHidden}
+                              onChange={(e) => handleHiddenChange(blog._id, e.target.checked)}
+                              className="h-4 w-4 accent-orange-500"
+                            />
+                            Ẩn
+                          </label>
+                        )}
+
+                        {activeTab === 'draft' && (
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteBlog(blog._id)}
+                            className="px-4 py-1.5 text-sm font-bold text-red-600 dark:text-red-300 bg-red-500/10 border border-red-500/30 rounded-xl hover:bg-red-500/20 transition-all flex items-center gap-1"
+                          >
+                            <Trash2 size={14} /> Xóa
+                          </button>
                         )}
                       </div>
                     </div>

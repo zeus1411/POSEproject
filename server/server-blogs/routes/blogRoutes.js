@@ -7,6 +7,7 @@ import {
     getPublicBlogs,
     updateBlog,
     deleteBlog,
+    hideBlog,
     updateBlogStatus,
     getMyBlogs
 } from '../controllers/blogController.js';
@@ -269,6 +270,8 @@ router.put(
 );
 
 router.patch('/:id/status', authenticateUser, authorizeRoles('admin'), updateBlogStatus);
+
+router.patch('/:id/hide', authenticateUser, hideBlog);
 
 router.delete('/:id', authenticateUser, deleteBlog);
 

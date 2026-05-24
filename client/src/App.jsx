@@ -104,6 +104,10 @@ function App() {
                 path="/blogs/create"
                 element={<CreateUserBlog />}
               />
+              <Route
+                path="/blogs/edit/:id"
+                element={<CreateUserBlog />}
+              />
             </Route>
           </Route>      
 
