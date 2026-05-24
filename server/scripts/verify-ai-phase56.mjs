@@ -25,6 +25,8 @@ const history = [
 assert.equal(normalizeMode('auto', 'San pham nao dang giam gia?'), 'catalog_qa');
 assert.equal(normalizeMode('auto', 'Nguyen nhan lam ban ho ca la gi?'), 'document_rag');
 assert.equal(detectAiIntent('Xin chao').intent, 'behavior');
+assert.equal(detectAiIntent('ban khoe khong ?').intent, 'behavior');
+assert.equal(detectAiIntent('shop oi').intent, 'behavior');
 assert.equal(detectAiIntent('Nguyen nhan lam o nhiem nuoc la gi?').intent, 'knowledge_query');
 
 const followUpQuery = buildRetrievalQuery({
@@ -52,6 +54,7 @@ const prompt = buildDocumentPrompt({
 assert.match(prompt, /Answer in clear Vietnamese/);
 assert.match(prompt, /Recent chat history/);
 assert.match(prompt, /Do not stop after an unfinished sentence/);
+assert.match(prompt, /Do not show technical citation markers/);
 assert.equal(looksIncompleteAnswer('Bun: Duoc tao'), true);
 assert.equal(
   looksIncompleteAnswer(

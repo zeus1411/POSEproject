@@ -1,5 +1,10 @@
 const BEHAVIOR_PATTERNS = [
   /^(hi|hello|hey|xin chao|chao|chao ban|alo|hello bot)$/i,
+  /^(xin chao ban|chao shop|xin chao shop|shop oi|shop oi cho minh hoi)$/i,
+  /^(ban\s+)?(co\s+)?khoe\s+khong\s*\??$/i,
+  /^(ban\s+)?(van\s+)?khoe\s+chu\s*\??$/i,
+  /^(hom nay\s+)?(ban\s+)?the nao\s*\??$/i,
+  /^(bot\s+)?(co\s+)?on\s+khong\s*\??$/i,
   /^(cam on|thanks|thank you|ok|oke|duoc roi|tot|hay qua)$/i,
   /^(bye|goodbye|tam biet|hen gap lai)$/i,
   /(ban la ai|bot la ai|ban lam duoc gi|huong dan su dung|cach dung)/
@@ -78,22 +83,29 @@ const buildBehaviorAnswer = (message) => {
   const normalized = normalizeIntentText(message);
 
   if (/cam on|thanks|thank you/.test(normalized)) {
-    return 'Không có gì, mình luôn sẵn sàng hỗ trợ bạn về tài liệu, sản phẩm, giá và khuyến mãi.';
+    return 'Không có gì nha. Nếu bạn cần chọn sản phẩm cho hồ cá hoặc muốn xem khuyến mãi đang có, mình hỗ trợ bạn ngay.';
+  }
+
+  if (/khoe khong|khoe chu|the nao|on khong/.test(normalized)) {
+    return 'Mình khỏe, cảm ơn bạn đã hỏi. Hôm nay bạn muốn tìm sản phẩm nào cho hồ thủy sinh của mình?';
   }
 
   if (/bye|goodbye|tam biet|hen gap lai/.test(normalized)) {
-    return 'Tạm biệt bạn. Khi cần hỏi về tài liệu hoặc sản phẩm, bạn cứ mở lại trợ lý AI nhé.';
+    return 'Tạm biệt bạn, hẹn gặp lại nhé. Chúc hồ cá của bạn luôn khỏe và đẹp.';
   }
 
   if (/ban la ai|bot la ai|ban lam duoc gi|huong dan su dung|cach dung/.test(normalized)) {
     return [
       'Mình là trợ lý AI của AquaticPose.',
-      'Bạn có thể hỏi mình về tài liệu đã upload, sản phẩm, giá, tồn kho hoặc khuyến mãi.',
-      'Với câu hỏi cần dữ liệu, mình sẽ tìm trong nguồn nội bộ trước rồi trả lời kèm nguồn tham khảo.'
+      'Mình có thể gợi ý sản phẩm cho hồ thủy sinh, kiểm tra giá, khuyến mãi, tồn kho và hỗ trợ các câu hỏi cơ bản về chăm sóc hồ cá.'
     ].join('\n');
   }
 
-  return 'Xin chào, mình có thể hỗ trợ bạn tra cứu tài liệu, sản phẩm, giá và khuyến mãi. Bạn muốn hỏi nội dung nào?';
+  if (/shop oi|chao shop/.test(normalized)) {
+    return 'Chào bạn, AquaticPose có thể hỗ trợ gì cho hồ thủy sinh của bạn hôm nay? Bạn đang muốn tìm thức ăn, vi sinh, cây thủy sinh hay phụ kiện?';
+  }
+
+  return 'Xin chào bạn, hôm nay bạn có nhu cầu như thế nào? Bạn muốn tìm sản phẩm gì để phục vụ cho hồ thủy sinh của mình?';
 };
 
 export {

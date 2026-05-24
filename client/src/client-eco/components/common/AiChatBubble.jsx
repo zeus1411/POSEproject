@@ -25,12 +25,19 @@ const getOrCreateAnonymousId = () => {
 };
 
 const SUGGESTIONS = [
-  'San pham nao dang co giam gia hom nay?',
-  'Khuyen mai coupon ap dung gom nhung gi?',
-  'Tom tat 3 diem chinh trong tai lieu vua upload.',
-  'San pham nao gia duoi 200.000 va con hang?',
-  'Cho minh biet quy trinh bao hanh trong tai lieu.'
+  'Sản phẩm nào đang có giảm giá hôm nay?',
+  'Khuyến mãi coupon áp dụng gồm những gì?',
+  'Tóm tắt 3 điểm chính trong tài liệu vừa upload.',
+  'Sản phẩm nào giá dưới 200.000 và còn hàng?',
+  'Cho mình biết quy trình bảo hành trong tài liệu.'
 ];
+
+const cleanCustomerAiText = (value = '') => {
+  return String(value)
+    .replace(/\s*\[S\d+\]/g, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+};
 
 const AiChatBubble = () => {
   const { user } = useSelector((state) => state.auth);
@@ -271,7 +278,7 @@ const AiChatBubble = () => {
                   <div className="flex flex-col items-center justify-center h-full text-gray-500 space-y-2">
                     <SparklesIcon className="w-16 h-16 text-gray-300" />
                     <p className="text-center">
-                      Xin chào! Hay hỏi bất kỳ thông tin nào về tài liệu hoặc sản phẩm.
+                      Xin chào! Hãy hỏi bất kỳ thông tin nào về tài liệu hoặc sản phẩm.
                     </p>
                   </div>
                 ) : (
@@ -303,34 +310,14 @@ const AiChatBubble = () => {
                               <div
                                 className={`px-4 py-2 rounded-2xl ${
                                   isUser
-                                    ? 'bg-emerald-600 text-white rounded-br-sm'
+                                  ? 'bg-emerald-600 text-white rounded-br-sm'
                                     : 'bg-white text-gray-800 rounded-bl-sm shadow-sm'
                                 }`}
                               >
                                 <p className="text-sm break-words whitespace-pre-wrap">
-                                  {msg.content || (isStreaming && !isUser ? '...' : '')}
+                                  {cleanCustomerAiText(msg.content) || (isStreaming && !isUser ? '...' : '')}
                                 </p>
                               </div>
-                              {!isUser && msg.sources?.length > 0 && (
-                                <div className="mt-2 text-[11px] text-gray-500 space-y-1">
-                                  {msg.sources.slice(0, 3).map((source, sourceIndex) => (
-                                    <div
-                                      key={`${msg.id}-source-${sourceIndex}`}
-                                      className="flex items-center justify-between gap-2 bg-white border border-gray-200 rounded-lg px-2 py-1"
-                                    >
-                                      <span className="font-semibold">
-                                        {source.citationId ? `[${source.citationId}] ` : ''}
-                                        {source.title || source.uri || 'Nguon'}
-                                      </span>
-                                      <span>
-                                        {Number.isFinite(source.score)
-                                          ? source.score.toFixed(2)
-                                          : 'N/A'}
-                                      </span>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
                             </div>
                           </div>
                         </div>

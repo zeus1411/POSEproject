@@ -58,7 +58,7 @@ const AiCatalogSync = () => {
       const data = await getCatalogStatus();
       setStatus(data);
     } catch (err) {
-      setError(err?.message || 'Khong the tai trang thai catalog');
+      setError(err?.message || 'Không thể tải trạng thái catalog');
     } finally {
       setIsLoading(false);
     }
@@ -71,7 +71,7 @@ const AiCatalogSync = () => {
       await syncCatalog({ reason: 'manual' });
       await loadStatus();
     } catch (err) {
-      setError(err?.message || 'Khong the dong bo catalog');
+      setError(err?.message || 'Không thể đồng bộ catalog');
     } finally {
       setIsSyncing(false);
     }
@@ -94,7 +94,7 @@ const AiCatalogSync = () => {
       setUploadResult(result);
       await loadDocuments();
     } catch (err) {
-      setUploadError(err?.message || 'Khong the upload tai lieu');
+      setUploadError(err?.message || 'Không thể upload tài liệu');
     } finally {
       setIsUploading(false);
     }
@@ -107,7 +107,7 @@ const AiCatalogSync = () => {
       const data = await getAiDocuments();
       setDocuments(data?.items || []);
     } catch (err) {
-      setDocsError(err?.message || 'Khong the tai danh sach tai lieu');
+      setDocsError(err?.message || 'Không thể tải danh sách tài liệu');
     } finally {
       setDocsLoading(false);
     }
@@ -122,7 +122,7 @@ const AiCatalogSync = () => {
       await deleteAiDocument({ fileName });
       await loadDocuments();
     } catch (err) {
-      setDocsError(err?.message || 'Khong the xoa tai lieu');
+      setDocsError(err?.message || 'Không thể xóa tài liệu');
     } finally {
       setDeletingFile('');
     }
@@ -141,9 +141,9 @@ const AiCatalogSync = () => {
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <p className="text-sm text-gray-500">AI Catalog</p>
-            <h1 className="text-2xl font-semibold text-gray-900">Dong bo catalog QA</h1>
+            <h1 className="text-2xl font-semibold text-gray-900">Đồng bộ catalog QA</h1>
             <p className="text-sm text-gray-500 mt-2">
-              Theo doi trang thai index Qdrant va chay dong bo thu cong khi can.
+              Theo dõi trạng thái index Qdrant và chạy đồng bộ thủ công khi cần.
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -162,7 +162,7 @@ const AiCatalogSync = () => {
               className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-900 text-white text-sm font-semibold disabled:opacity-60"
             >
               <PlayIcon className="w-4 h-4" />
-              {isSyncing ? 'Dang dong bo...' : 'Dong bo ngay'}
+              {isSyncing ? 'Đang đồng bộ...' : 'Đồng bộ ngay'}
             </button>
           </div>
         </div>
@@ -177,7 +177,7 @@ const AiCatalogSync = () => {
         <div className="grid lg:grid-cols-2 gap-6">
           <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6">
             <div className="flex items-center justify-between mb-4">
-              <p className="text-sm font-semibold text-gray-700">Trang thai hien tai</p>
+              <p className="text-sm font-semibold text-gray-700">Trạng thái hiện tại</p>
               {status?.running ? (
                 <span className="text-xs font-semibold text-amber-600 bg-amber-50 px-3 py-1 rounded-full">Dang chay</span>
               ) : (
@@ -186,23 +186,23 @@ const AiCatalogSync = () => {
             </div>
 
             {isLoading ? (
-              <p className="text-sm text-gray-500">Dang tai...</p>
+              <p className="text-sm text-gray-500">Đang tải...</p>
             ) : (
               <div className="space-y-3 text-sm text-gray-600">
                 <div className="flex items-center justify-between">
                   <span className="flex items-center gap-2">
                     <ClockIcon className="w-4 h-4" />
-                    Lan dong bo gan nhat
+                    Lần đồng bộ gần nhất
                   </span>
                   <span className="font-semibold text-gray-800">{formatTimestamp(status?.lastSyncAt)}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span>Ly do</span>
-                  <span className="font-semibold text-gray-800">{status?.lastSyncReason || 'Chua co'}</span>
+                  <span>Lý do</span>
+                  <span className="font-semibold text-gray-800">{status?.lastSyncReason || 'Chưa có'}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span>Dang cho</span>
-                  <span className="font-semibold text-gray-800">{status?.pending ? 'Co' : 'Khong'}</span>
+                  <span>Đang chờ</span>
+                  <span className="font-semibold text-gray-800">{status?.pending ? 'Có' : 'Không'}</span>
                 </div>
                 {status?.lastSyncError && (
                   <div className="text-xs text-rose-600 bg-rose-50 px-3 py-2 rounded-lg">
@@ -216,27 +216,27 @@ const AiCatalogSync = () => {
           <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6">
             <div className="flex items-center gap-2 mb-4">
               <CheckCircleIcon className="w-4 h-4 text-emerald-500" />
-              <p className="text-sm font-semibold text-gray-700">Ket qua dong bo</p>
+              <p className="text-sm font-semibold text-gray-700">Kết quả đồng bộ</p>
             </div>
             {isLoading ? (
-              <p className="text-sm text-gray-500">Dang tai...</p>
+              <p className="text-sm text-gray-500">Đang tải...</p>
             ) : lastResult ? (
               <div className="space-y-3 text-sm text-gray-600">
                 <div className="flex items-center justify-between">
-                  <span>Trang thai</span>
+                  <span>Trạng thái</span>
                   <span className="font-semibold text-gray-800">{lastResult.status}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span>San pham</span>
+                  <span>Sản phẩm</span>
                   <span className="font-semibold text-gray-800">{lastResult.counts?.products ?? 0}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span>Khuyen mai</span>
+                  <span>Khuyến mãi</span>
                   <span className="font-semibold text-gray-800">{lastResult.counts?.promotions ?? 0}</span>
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-gray-500">Chua co du lieu dong bo.</p>
+              <p className="text-sm text-gray-500">Chưa có dữ liệu đồng bộ.</p>
             )}
           </div>
         </div>
@@ -244,16 +244,16 @@ const AiCatalogSync = () => {
         <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6">
           <div className="flex items-center gap-2 mb-4">
             <CloudArrowUpIcon className="w-4 h-4 text-emerald-500" />
-            <p className="text-sm font-semibold text-gray-700">Upload tai lieu RAG</p>
+            <p className="text-sm font-semibold text-gray-700">Upload tài liệu RAG</p>
           </div>
           <p className="text-xs text-gray-500">
-            Ho tro PDF, DOCX, PPTX, XLSX. Toi da 25MB. Chi admin moi duoc upload.
+            Hỗ trợ PDF, DOCX, PPTX, XLSX. Tối đa 25MB. Chỉ admin mới được upload.
           </p>
 
           <div className="mt-4">
             <label className="flex flex-col items-center justify-center gap-3 border border-dashed border-gray-200 rounded-2xl px-4 py-6 text-gray-500 text-sm cursor-pointer hover:border-gray-400">
               <CloudArrowUpIcon className="w-6 h-6" />
-              <span>Keo tha hoac click de chon file</span>
+              <span>Kéo thả hoặc click để chọn file</span>
               <input
                 type="file"
                 className="hidden"
@@ -279,7 +279,7 @@ const AiCatalogSync = () => {
               <div className="mt-4 text-xs text-emerald-700 bg-emerald-50 px-3 py-3 rounded-xl flex items-start gap-2">
                 <CheckCircleIcon className="w-4 h-4 mt-0.5" />
                 <div>
-                  <p className="font-semibold">Upload thanh cong</p>
+                  <p className="font-semibold">Upload thành công</p>
                   <p>{uploadResult.fileName} - {uploadResult.chunkCount} chunks</p>
                 </div>
               </div>
@@ -296,8 +296,8 @@ const AiCatalogSync = () => {
         <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6">
           <div className="flex items-center justify-between gap-3 mb-4">
             <div>
-              <p className="text-sm font-semibold text-gray-700">Tai lieu da upload</p>
-              <p className="text-xs text-gray-500">Danh sach tai lieu trong thu muc RAG.</p>
+              <p className="text-sm font-semibold text-gray-700">Tài liệu đã upload</p>
+              <p className="text-xs text-gray-500">Danh sách tài liệu trong thư mục RAG.</p>
             </div>
             <button
               type="button"
@@ -305,7 +305,7 @@ const AiCatalogSync = () => {
               className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-200 text-xs font-semibold text-gray-600 hover:border-gray-400"
             >
               <ArrowPathIcon className="w-4 h-4" />
-              Tai lai
+              Tải lại
             </button>
           </div>
 
@@ -316,7 +316,7 @@ const AiCatalogSync = () => {
           )}
 
           {docsLoading ? (
-            <p className="text-sm text-gray-500">Dang tai danh sach...</p>
+            <p className="text-sm text-gray-500">Đang tải danh sách...</p>
           ) : documents.length ? (
             <div className="divide-y divide-gray-100">
               {documents.map((doc) => (
@@ -334,13 +334,13 @@ const AiCatalogSync = () => {
                     className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-rose-600 border border-rose-100 hover:border-rose-300 disabled:opacity-60"
                   >
                     <TrashIcon className="w-4 h-4" />
-                    {deletingFile === doc.fileName ? 'Dang xoa...' : 'Xoa'}
+                    {deletingFile === doc.fileName ? 'Đang xóa...' : 'Xóa'}
                   </button>
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-sm text-gray-500">Chua co tai lieu nao.</p>
+            <p className="text-sm text-gray-500">Chưa có tài liệu nào.</p>
           )}
         </div>
       </div>

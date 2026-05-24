@@ -24,12 +24,19 @@ const getOrCreateAnonymousId = () => {
 };
 
 const EXAMPLES = [
-  'Tom tat 3 diem chinh trong tai lieu vua upload.',
-  'San pham nao dang co giam gia hom nay?',
-  'Khuyen mai coupon ap dung gom nhung gi?',
-  'Cho minh biet quy trinh bao hanh trong tai lieu.',
-  'San pham nao gia duoi 200.000 va con hang?'
+  'Tóm tắt 3 điểm chính trong tài liệu vừa upload.',
+  'Sản phẩm nào đang có giảm giá hôm nay?',
+  'Khuyến mãi coupon áp dụng gồm những gì?',
+  'Cho mình biết quy trình bảo hành trong tài liệu.',
+  'Sản phẩm nào giá dưới 200.000 và còn hàng?'
 ];
+
+const cleanCustomerAiText = (value = '') => {
+  return String(value)
+    .replace(/\s*\[S\d+\]/g, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+};
 
 const AiAssistant = () => {
   const { user } = useSelector((state) => state.auth);
@@ -226,7 +233,9 @@ const AiAssistant = () => {
                         : 'bg-white border border-slate-200 text-slate-800 rounded-bl-md'
                     }`}
                   >
-                    <p className="whitespace-pre-wrap">{msg.content || (msg.role === 'assistant' && isStreaming ? '...' : '')}</p>
+                    <p className="whitespace-pre-wrap">
+                      {cleanCustomerAiText(msg.content) || (msg.role === 'assistant' && isStreaming ? '...' : '')}
+                    </p>
                   </div>
 
                   {msg.role === 'assistant' && (msg.sources?.length || msg.sourceSummary) && (

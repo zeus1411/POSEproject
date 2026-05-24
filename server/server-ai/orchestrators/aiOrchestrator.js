@@ -13,10 +13,10 @@ const DEFAULT_RETRIEVAL_STRATEGY = {
 };
 
 const EMPTY_CONTEXT_ANSWER =
-  'Toi chua tim thay thong tin phu hop trong tai lieu hien co. Ban co the cung cap them tai lieu hoac dat cau hoi ro hon.';
+  'Tôi chưa tìm thấy thông tin phù hợp trong tài liệu hiện có. Ban có thể cung cấp thêm tài liệu hoặc đặt câu hỏi rõ hơn.';
 
 const EMPTY_CATALOG_ANSWER =
-  'Toi chua tim thay thong tin san pham hoac khuyen mai phu hop trong catalog hien co.';
+  'Tôi chưa tìm thấy thông tin sản phẩm hoặc khuyến mãi phù hợp trong catalog hiện có.';
 
 const MIN_USEFUL_ANSWER_CHARS = 180;
 
