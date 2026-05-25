@@ -46,7 +46,7 @@ export default {
           DEFAULT: 'rgb(var(--destructive) / <alpha-value>)',
           foreground: 'rgb(var(--destructive-foreground) / <alpha-value>)',
         },
-        // AquaticPose deep underwater palette
+        // AquaticCaps deep underwater palette
         abyss: {
           DEFAULT: '#051C1C',
           50: '#0a3838',

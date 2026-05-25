@@ -236,7 +236,7 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
               className={`w-full px-4 py-2.5 text-sm rounded-xl border focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 ${
                 errors.name 
                   ? 'border-red-500 bg-red-500/5' 
-                  : (isDark ? 'bg-white/5 border-white/10 text-white focus:bg-white/10' : 'bg-water/5 border-water/20 text-slate-800 focus:bg-water/10')
+                  : (isDark ? 'bg-white/5 border-white/10 text-white focus:bg-white/10' : 'bg-white border-water/30 text-slate-800 focus:bg-slate-50')
               }`}
               placeholder="Nhập tên sản phẩm"
             />
@@ -257,7 +257,7 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
                 className={`w-full px-4 py-2.5 text-sm rounded-xl border focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 ${
                   errors.sku 
                     ? 'border-red-500 bg-red-500/5' 
-                    : (isDark ? 'bg-white/5 border-white/10 text-white focus:bg-white/10' : 'bg-water/5 border-water/20 text-slate-800 focus:bg-water/10')
+                    : (isDark ? 'bg-white/5 border-white/10 text-white focus:bg-white/10' : 'bg-white border-water/30 text-slate-800 focus:bg-slate-50')
                 }`}
                 placeholder="Nhập SKU"
               />
@@ -277,7 +277,7 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
                   className={`w-full px-4 py-2.5 text-sm rounded-xl border focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 ${
                     errors.price 
                       ? 'border-red-500 bg-red-500/5' 
-                      : (isDark ? 'bg-white/5 border-white/10 text-white focus:bg-white/10' : 'bg-water/5 border-water/20 text-slate-800 focus:bg-water/10')
+                      : (isDark ? 'bg-white/5 border-white/10 text-white focus:bg-white/10' : 'bg-white border-water/30 text-slate-800 focus:bg-slate-50')
                   }`}
                   placeholder="0"
                   min="0"
@@ -305,7 +305,11 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
                 className={`w-full px-4 py-2.5 text-sm rounded-xl border focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 ${
                   errors.stock 
                     ? 'border-red-500 bg-red-500/5' 
-                    : (isDark ? 'bg-white/5 border-white/10 text-white focus:bg-white/10' : 'bg-water/5 border-water/20 text-slate-800 focus:bg-water/10')
+                    : (isDark 
+                        ? 'bg-white/5 border-white/10 text-white focus:bg-white/10' 
+                        : (formData.hasVariants 
+                            ? 'bg-slate-100 border-slate-200 text-slate-400' // Cấm nhập ở theme sáng thì giữ xám
+                            : 'bg-white border-water/30 text-slate-800 focus:bg-slate-50'))
                 } ${formData.hasVariants ? 'opacity-60 cursor-not-allowed' : ''}`}
                 placeholder="0"
                 min="0"
@@ -324,7 +328,7 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
                 className={`w-full px-4 py-2.5 text-sm rounded-xl border focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 ${
                   errors.categoryId 
                     ? 'border-red-500 bg-red-500/5' 
-                    : (isDark ? 'bg-white/5 border-white/10 text-white focus:bg-white/10 dark:text-white dark:bg-card' : 'bg-water/5 border-water/20 text-slate-800 focus:bg-water/10 bg-white')
+                    : (isDark ? 'bg-white/5 border-white/10 text-white focus:bg-white/10 dark:text-white dark:bg-card' : 'bg-white border-water/30 text-slate-800 focus:bg-slate-50')
                 }`}
               >
                 <option value="" className={isDark ? 'bg-card text-white' : 'bg-white text-slate-800'}>Chọn danh mục</option>
@@ -370,7 +374,7 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
               value={formData.status}
               onChange={handleInputChange}
               className={`w-full px-4 py-2.5 text-sm rounded-xl border focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all duration-200 ${
-                isDark ? 'bg-white/5 border-white/10 text-white focus:bg-white/10 dark:text-white dark:bg-card' : 'bg-water/5 border-water/20 text-slate-800 focus:bg-water/10 bg-white'
+                isDark ? 'bg-white/5 border-white/10 text-white focus:bg-white/10 dark:text-white dark:bg-card' : 'bg-white border-water/30 text-slate-800 focus:bg-slate-50'
               }`}
             >
               <option value="ACTIVE" className={isDark ? 'bg-card text-white' : 'bg-white text-slate-800'}>Đang hoạt động</option>
@@ -384,7 +388,7 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
               Ảnh sản phẩm {!product && '*'}
             </label>
             <div className={`border-2 border-dashed rounded-2xl p-6 text-center transition-all ${
-              isDark ? 'border-white/10 hover:border-emerald-500/50 bg-white/5' : 'border-water/20 hover:border-primary/50 bg-water/5'
+              isDark ? 'border-white/10 hover:border-emerald-500/50 bg-white/5' : 'border-water/20 hover:border-primary/50 bg-white shadow-sm'
             }`}>
               <Upload className={`mx-auto h-10 w-10 mb-2 ${isDark ? 'text-white/40' : 'text-water/60'}`} />
               <input
@@ -462,8 +466,8 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
           </div>
 
           {/* Product Variants Manager */}
-          <div className={`p-4.5 rounded-2xl border ${
-            isDark ? 'border-white/5 bg-white/5' : 'border-water/10 bg-water/5'
+          <div className={`p-4.5 rounded-2xl border transition-all duration-300 ${
+            isDark ? 'border-white/5 bg-white/5' : 'border-water/20 bg-white shadow-sm'
           }`}>
             <ProductVariantsManager 
               product={product} 
@@ -483,10 +487,10 @@ const ProductForm = ({ product, categories, onSubmit, onCancel, isLoading }) => 
             <button
               type="button"
               onClick={onCancel}
-              className={`px-5 py-2.5 rounded-xl border text-sm font-semibold transition-all duration-200 active:scale-95 ${
+              className={`px-5 py-2.5 rounded-xl border text-sm font-semibold transition-all duration-200 active:scale-95 shadow-sm ${
                 isDark 
-                  ? 'border-white/10 text-gray-300 hover:bg-white/10 hover:text-white' 
-                  : 'border-water/20 text-slate-700 hover:bg-water/10 hover:text-slate-900'
+                  ? 'bg-red-500/10 border-red-500/30 text-red-400 hover:bg-red-500 hover:text-white hover:border-transparent' 
+                  : 'bg-red-50 border-red-200 text-red-600 hover:bg-red-500 hover:text-white hover:border-transparent'
               }`}
             >
               Hủy
