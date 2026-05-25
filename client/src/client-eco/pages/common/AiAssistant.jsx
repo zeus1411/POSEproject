@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import {
   ArrowPathIcon,
@@ -34,8 +35,108 @@ const EXAMPLES = [
 const cleanCustomerAiText = (value = '') => {
   return String(value)
     .replace(/\s*\[S\d+\]/g, '')
+    .replace(/^\s*[*-]\s+/gm, '')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
+};
+
+const renderFormattedText = (value = '') => {
+  const cleaned = cleanCustomerAiText(value);
+  const parts = cleaned.split(/(\*\*[^*]+\*\*)/g);
+
+  return parts.map((part, index) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return (
+        <strong key={`${part}-${index}`} className="font-semibold text-slate-950">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+    return <React.Fragment key={`${part}-${index}`}>{part}</React.Fragment>;
+  });
+};
+
+const formatVnd = (value) => {
+  const number = Number(value) || 0;
+  if (!number) return 'Liên hệ';
+  return `${new Intl.NumberFormat('vi-VN').format(number)}đ`;
+};
+
+const formatProductPrice = (source) => {
+  const min = Number(source?.minPrice || source?.price || 0);
+  const max = Number(source?.maxPrice || source?.price || 0);
+  if (!min && !max) return 'Liên hệ';
+  if (min && max && min !== max) {
+    return `${formatVnd(min)} - ${formatVnd(max)}`;
+  }
+  return formatVnd(min || max);
+};
+
+const getProductSuggestions = (sources = []) => {
+  const seen = new Set();
+  return sources
+    .filter((source) => source?.itemType === 'product' && source?.itemId && source?.title)
+    .filter((source) => {
+      if (seen.has(source.itemId)) return false;
+      seen.add(source.itemId);
+      return true;
+    })
+    .slice(0, 4);
+};
+
+const escapeRegExp = (value = '') => {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+};
+
+const renderInlineProductText = (value = '', sources = []) => {
+  const cleaned = cleanCustomerAiText(value);
+  const products = getProductSuggestions(sources)
+    .slice(0, 8)
+    .sort((a, b) => b.title.length - a.title.length);
+  const boldParts = cleaned.split(/(\*\*[^*]+\*\*)/g);
+
+  const renderLinkedParts = (text, isStrong = false) => {
+    if (!products.length || !text) {
+      return isStrong ? <strong className="font-semibold text-slate-950">{text}</strong> : text;
+    }
+
+    const productMap = new Map(products.map((product) => [product.title, product]));
+    const pattern = new RegExp(`(${products.map((product) => escapeRegExp(product.title)).join('|')})`, 'g');
+
+    return String(text).split(pattern).map((part, index) => {
+      const product = productMap.get(part);
+      if (!product) {
+        return isStrong
+          ? <strong key={`${part}-${index}`} className="font-semibold text-slate-950">{part}</strong>
+          : <React.Fragment key={`${part}-${index}`}>{part}</React.Fragment>;
+      }
+
+      return (
+        <Link
+          key={`${product.itemId}-${index}`}
+          to={product.uri || `/product/${product.itemId}`}
+          className="font-semibold text-teal-700 hover:text-teal-900 hover:underline"
+        >
+          {part}
+        </Link>
+      );
+    });
+  };
+
+  return boldParts.map((part, index) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return (
+        <React.Fragment key={`${part}-${index}`}>
+          {renderLinkedParts(part.slice(2, -2), true)}
+        </React.Fragment>
+      );
+    }
+    return (
+      <React.Fragment key={`${part}-${index}`}>
+        {renderLinkedParts(part)}
+      </React.Fragment>
+    );
+  });
 };
 
 const AiAssistant = () => {
@@ -234,42 +335,37 @@ const AiAssistant = () => {
                     }`}
                   >
                     <p className="whitespace-pre-wrap">
-                      {cleanCustomerAiText(msg.content) || (msg.role === 'assistant' && isStreaming ? '...' : '')}
+                      {msg.content
+                        ? renderInlineProductText(msg.content, msg.sources)
+                        : (msg.role === 'assistant' && isStreaming ? '...' : '')}
                     </p>
                   </div>
-
-                  {msg.role === 'assistant' && (msg.sources?.length || msg.sourceSummary) && (
-                    <div className="mt-3 text-xs text-slate-500">
-                      {msg.sourceSummary && (
-                        <p className="mb-1">{msg.sourceSummary}</p>
-                      )}
-                      {msg.sources?.length > 0 && (
-                        <div className="grid gap-2">
-                          {msg.sources.map((source, index) => (
-                            <div
-                              key={`${msg.id}-source-${index}`}
-                              className="flex items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50/70 px-3 py-2"
+                  {false && msg.role === 'assistant' && getProductSuggestions(msg.sources).length > 0 && (
+                    <div className="hidden">
+                      <p className="mb-2 text-xs text-slate-500">
+                        Bạn có thể chọn vào tên sản phẩm để xem chi tiết sản phẩm.
+                      </p>
+                      <div className="grid gap-2">
+                        {getProductSuggestions(msg.sources).map((source) => (
+                          <div
+                            key={source.itemId}
+                            className="flex items-center justify-between gap-3 rounded-xl bg-emerald-50/70 px-3 py-2"
+                          >
+                            <Link
+                              to={source.uri || `/product/${source.itemId}`}
+                              className="text-sm font-semibold text-teal-700 hover:text-teal-900 hover:underline"
                             >
-                              <div>
-                                <p className="font-semibold text-slate-700">
-                                  {source.citationId ? `[${source.citationId}] ` : ''}
-                                  {source.title || source.uri || 'Nguon'}
-                                </p>
-                                <p className="text-[11px] text-slate-400">
-                                  {source.chunkId || source.itemId || source.itemType || ''}
-                                </p>
-                              </div>
-                              <span className="text-[11px] font-semibold text-slate-600">
-                                {Number.isFinite(source.score)
-                                  ? `Score ${source.score.toFixed(2)}`
-                                  : 'Score N/A'}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
+                              {source.title}
+                            </Link>
+                            <span className="whitespace-nowrap text-xs font-semibold text-slate-700">
+                              {formatProductPrice(source)}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
                   )}
+
                 </div>
               ))}
               <div ref={messagesEndRef} />

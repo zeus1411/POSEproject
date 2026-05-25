@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import {
   ChatBubbleLeftRightIcon,
@@ -35,8 +36,75 @@ const SUGGESTIONS = [
 const cleanCustomerAiText = (value = '') => {
   return String(value)
     .replace(/\s*\[S\d+\]/g, '')
+    .replace(/^\s*[*-]\s+/gm, '')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
+};
+
+const escapeRegExp = (value = '') => {
+  return String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+};
+
+const getProductSuggestions = (sources = []) => {
+  const seen = new Set();
+  return sources
+    .filter((source) => source?.itemType === 'product' && source?.itemId && source?.title)
+    .filter((source) => {
+      if (seen.has(source.itemId)) return false;
+      seen.add(source.itemId);
+      return true;
+    })
+    .slice(0, 8);
+};
+
+const renderProductLinkedText = (value, products, isStrong = false) => {
+  if (!products.length || !value) {
+    return isStrong ? <strong className="font-semibold text-gray-900">{value}</strong> : value;
+  }
+
+  const productMap = new Map(products.map((product) => [product.title, product]));
+  const pattern = new RegExp(`(${products.map((product) => escapeRegExp(product.title)).join('|')})`, 'g');
+
+  return String(value).split(pattern).map((part, index) => {
+    const product = productMap.get(part);
+    if (!product) {
+      return isStrong
+        ? <strong key={`${part}-${index}`} className="font-semibold text-gray-900">{part}</strong>
+        : <React.Fragment key={`${part}-${index}`}>{part}</React.Fragment>;
+    }
+
+    return (
+      <Link
+        key={`${product.itemId}-${index}`}
+        to={product.uri || `/product/${product.itemId}`}
+        className="font-semibold text-teal-700 hover:text-teal-900 hover:underline"
+      >
+        {part}
+      </Link>
+    );
+  });
+};
+
+const renderFormattedText = (value = '', sources = []) => {
+  const cleaned = cleanCustomerAiText(value);
+  const products = getProductSuggestions(sources)
+    .sort((a, b) => b.title.length - a.title.length);
+  const parts = cleaned.split(/(\*\*[^*]+\*\*)/g);
+
+  return parts.map((part, index) => {
+    if (part.startsWith('**') && part.endsWith('**')) {
+      return (
+        <React.Fragment key={`${part}-${index}`}>
+          {renderProductLinkedText(part.slice(2, -2), products, true)}
+        </React.Fragment>
+      );
+    }
+    return (
+      <React.Fragment key={`${part}-${index}`}>
+        {renderProductLinkedText(part, products)}
+      </React.Fragment>
+    );
+  });
 };
 
 const AiChatBubble = () => {
@@ -306,7 +374,7 @@ const AiChatBubble = () => {
                             {!isUser && !isFirstInGroup && (
                               <div className="w-8"></div>
                             )}
-                            <div>
+                            <div className="space-y-2">
                               <div
                                 className={`px-4 py-2 rounded-2xl ${
                                   isUser
@@ -315,7 +383,9 @@ const AiChatBubble = () => {
                                 }`}
                               >
                                 <p className="text-sm break-words whitespace-pre-wrap">
-                                  {cleanCustomerAiText(msg.content) || (isStreaming && !isUser ? '...' : '')}
+                                  {msg.content
+                                    ? renderFormattedText(msg.content, msg.sources)
+                                    : (isStreaming && !isUser ? '...' : '')}
                                 </p>
                               </div>
                             </div>

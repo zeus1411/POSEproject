@@ -185,7 +185,7 @@ const buildCatalogItems = async () => {
         name: product.name,
         sku: product.sku || '',
         slug: product.slug || '',
-        uri: product.slug ? `/products/${product.slug}` : '',
+        uri: `/product/${productId}`,
         category: categoryPath,
         price: basePrice,
         minPrice,

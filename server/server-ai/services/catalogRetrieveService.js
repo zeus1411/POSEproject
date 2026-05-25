@@ -7,9 +7,14 @@ const mapSource = (match) => {
   const payload = match?.payload || {};
   return {
     title: payload.title || payload.name || 'Catalog Item',
-    uri: payload.uri || payload.slug || '',
+    uri: payload.itemType === 'product'
+      ? `/product/${payload.itemId || ''}`
+      : payload.uri || payload.slug || '',
     itemId: payload.itemId || String(match.id || ''),
     itemType: payload.itemType || payload.source_type || 'catalog',
+    price: payload.price || 0,
+    minPrice: payload.minPrice || payload.price || 0,
+    maxPrice: payload.maxPrice || payload.price || 0,
     score: match.score
   };
 };
