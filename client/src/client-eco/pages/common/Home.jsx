@@ -105,31 +105,11 @@ const whyUs = [
 ];
 
 const honeycombPositions = [
-  {
-    left: '0px',
-    top: '0px',
-    className: 'float-slow-1',
-  },
-  {
-    left: 'calc(var(--hex-w) + var(--hex-gap-x))',
-    top: '0px',
-    className: 'float-slow-2',
-  },
-  {
-    left: 'calc(2 * (var(--hex-w) + var(--hex-gap-x)))',
-    top: '0px',
-    className: 'float-slow-3',
-  },
-  {
-    left: 'calc((var(--hex-w) + var(--hex-gap-x)) / 2)',
-    top: 'calc(var(--hex-h) * 0.75 + var(--hex-gap-y))',
-    className: 'float-slow-3',
-  },
-  {
-    left: 'calc((var(--hex-w) + var(--hex-gap-x)) * 1.5)',
-    top: 'calc(var(--hex-h) * 0.75 + var(--hex-gap-y))',
-    className: 'float-slow-1',
-  },
+  { left: '0px', top: '0px', className: 'float-slow-1' },
+  { left: 'calc(var(--hex-w) + var(--hex-gap-x))', top: '0px', className: 'float-slow-2' },
+  { left: 'calc(2 * (var(--hex-w) + var(--hex-gap-x)))', top: '0px', className: 'float-slow-3' },
+  { left: 'calc((var(--hex-w) + var(--hex-gap-x)) / 2)', top: 'calc(var(--hex-h) * 0.75 + var(--hex-gap-y))', className: 'float-slow-3' },
+  { left: 'calc((var(--hex-w) + var(--hex-gap-x)) * 1.5)', top: 'calc(var(--hex-h) * 0.75 + var(--hex-gap-y))', className: 'float-slow-1' },
 ];
 
 const communityLayouts = [
@@ -162,7 +142,6 @@ const blogs = [
   },
 ];
 
-/* ── tiny fade-up wrapper ── */
 const Reveal = ({ children, className = '', delay = 0 }) => (
   <div
     className={`animate-on-scroll ${className}`}
@@ -183,7 +162,6 @@ const Home = () => {
     }
   };
 
-  /* ── scroll-spy ── */
   useEffect(() => {
     const handleScroll = () => {
       const sections = navDots.map((d) => d.id);
@@ -206,7 +184,6 @@ const Home = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  /* ── parallax hero text ── */
   useEffect(() => {
     if (prefersReducedMotion) return undefined;
 
@@ -222,7 +199,6 @@ const Home = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [prefersReducedMotion]);
 
-  /* ── intersection observer ── */
   useEffect(() => {
     const observerCallback = (entries) => {
       entries.forEach((entry) => {
@@ -288,7 +264,7 @@ const Home = () => {
           <div className="max-w-4xl">
             <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/20 px-4 py-2 font-body text-xs font-bold uppercase tracking-[0.22em] text-cyan-50 shadow-glass backdrop-blur-md">
               <SparklesIcon className="h-4 w-4 text-neon-cyan" />
-              AquaticPose
+              AquaticCaps
             </div>
             <h1 className="font-headline text-5xl font-bold leading-[0.95] text-white drop-shadow-[0_8px_30px_rgba(0,0,0,0.55)] md:text-7xl lg:text-8xl">
               Thực hiện ước mơ
@@ -333,24 +309,23 @@ const Home = () => {
         <div className="absolute inset-0 opacity-50 [background:radial-gradient(circle_at_50%_0%,rgba(0,255,209,0.16),transparent_34%)]" />
 
         <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          {/* Section header — editorial style */}
           <Reveal>
             <div className="mb-16 max-w-3xl">
-              <p className="mb-4 font-body text-xs font-bold uppercase tracking-[0.3em] text-neon-cyan">
-                Bộ sưu tập
+              {/* Chỉnh font text-xs -> text-sm và chữ đậm hơn */}
+              <p className="mb-4 font-body text-sm font-black uppercase tracking-[0.3em] text-neon-cyan">
+                Bộ sưu tập hàng đầu
               </p>
-              <h2 className="font-headline text-4xl font-bold leading-tight text-white md:text-6xl">
-                Khám phá
-                <span className="block text-white/60">bộ sưu tập</span>
+              {/* Tăng cỡ chữ và gom tất cả chữ phụ mờ (text-white/60) về màu trắng đậm */}
+              <h2 className="font-headline text-4xl font-black leading-tight text-white md:text-6xl tracking-tight">
+                Khám phá <span className="block text-white">bộ sưu tập thủy sinh</span>
               </h2>
               <div className="mt-6 h-px w-20 bg-neon-cyan/40" />
-              <p className="mt-6 max-w-xl font-body text-base leading-relaxed text-gray-400 md:text-lg">
+              <p className="mt-6 max-w-xl font-body text-base leading-relaxed text-gray-300 md:text-lg">
                 Ba mảnh ghép chính cho một bể thủy sinh đẹp — cây, cá và phụ kiện.
               </p>
             </div>
           </Reveal>
 
-          {/* 3-col editorial grid */}
           <div className="grid gap-6 md:grid-cols-3">
             {collections.map((item, i) => (
               <Reveal key={item.title} delay={i * 120}>
@@ -358,23 +333,17 @@ const Home = () => {
                   to={item.href}
                   className="group relative block overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] transition-all duration-500 hover:border-neon-cyan/30 hover:bg-white/[0.06]"
                 >
-                  {/* image */}
                   <div className="relative h-72 overflow-hidden sm:h-80">
-                    <img
-                      src={item.image}
-                      alt={item.title}
-                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                    />
+                    <img src={item.image} alt={item.title} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#051C1C] via-[#051C1C]/40 to-transparent" />
-                    {/* icon badge */}
                     <div className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-xl border border-white/15 bg-black/30 text-neon-cyan backdrop-blur-md transition-transform duration-500 group-hover:scale-110">
                       <item.icon className="h-5 w-5" />
                     </div>
                   </div>
 
-                  {/* text */}
                   <div className="p-6">
-                    <p className="mb-2 font-body text-[11px] font-bold uppercase tracking-[0.25em] text-neon-cyan/70">
+                    {/* Tinh chỉnh chữ nhỏ phụ đề của thẻ bài viết cho sáng rõ hơn */}
+                    <p className="mb-2 font-body text-xs font-black uppercase tracking-[0.25em] text-neon-cyan">
                       {item.subtitle}
                     </p>
                     <h3 className="font-headline text-2xl font-bold text-white transition-colors group-hover:text-neon-cyan">
@@ -401,13 +370,13 @@ const Home = () => {
         <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <Reveal>
             <div className="mb-12 max-w-2xl">
-              <p className="mb-4 font-body text-xs font-bold uppercase tracking-[0.3em] text-neon-cyan">
-                Cảm hứng layout
+              <p className="mb-4 font-body text-sm font-black uppercase tracking-[0.3em] text-neon-cyan">
+                Cảm hứng bố cục layout
               </p>
-              <h2 className="font-headline text-3xl font-bold leading-tight text-white md:text-5xl">
-                Dòng chảy aquascape
+              <h2 className="font-headline text-3xl font-black leading-tight text-white md:text-5xl tracking-tight">
+                Dòng chảy aquascape tự nhiên
               </h2>
-              <p className="mt-4 font-body text-base leading-relaxed text-gray-400">
+              <p className="mt-4 font-body text-base leading-relaxed text-gray-300">
                 Lướt qua các phong cách bể phổ biến để tìm cảm hứng cho layout của bạn.
               </p>
             </div>
@@ -429,9 +398,10 @@ const Home = () => {
                   <img src={item.src} alt={item.title} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
                   <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
                   <div className="absolute inset-x-0 bottom-0 p-5">
-                    <p className="font-body text-[10px] font-bold uppercase tracking-[0.3em] text-neon-cyan/60">Aquascape</p>
-                    <h3 className="mt-2 font-headline text-2xl font-semibold text-white">{item.title}</h3>
-                    <p className="mt-1 font-body text-sm text-white/55">{item.sub}</p>
+                    <p className="font-body text-[11px] font-black uppercase tracking-[0.3em] text-neon-cyan">Aquascape</p>
+                    <h3 className="mt-2 font-headline text-2xl font-bold text-white">{item.title}</h3>
+                    {/* Nâng màu trắng mờ của phân loại gallery từ text-white/55 lên trắng đục dễ nhìn hơn */}
+                    <p className="mt-1 font-body text-sm text-white/80">{item.sub}</p>
                   </div>
                 </motion.div>
               ))}
@@ -453,36 +423,33 @@ const Home = () => {
         </div>
 
         <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          {/* Top: big heading + image — asymmetric */}
           <div className="grid items-start gap-12 lg:grid-cols-[1fr_1.1fr]">
             <Reveal>
               <div>
-                <span className="inline-flex items-center gap-2 rounded-full border border-neon-cyan/20 bg-neon-cyan/[0.06] px-4 py-2 font-body text-sm font-bold text-neon-cyan backdrop-blur-sm">
+                <span className="inline-flex items-center gap-2 rounded-full border border-neon-cyan/20 bg-neon-cyan/[0.06] px-4 py-2 font-body text-sm font-black text-neon-cyan backdrop-blur-sm">
                   <BeakerIcon className="h-5 w-5" />
-                  Trải nghiệm thủy sinh
+                  Trải nghiệm không gian thủy sinh
                 </span>
 
-                <h2 className="mt-8 font-headline text-4xl font-bold leading-[1.1] text-white md:text-5xl lg:text-6xl">
-                  Từ ý tưởng nhỏ
-                  <span className="block text-white/50">đến một bể cá</span>
-                  <span className="block text-white">có chiều sâu</span>
+                {/* Khắc phục cụm chữ text-white/50 mờ thành chữ màu trắng thuần đồng nhất */}
+                <h2 className="mt-8 font-headline text-4xl font-black leading-[1.1] text-white md:text-5xl lg:text-6xl tracking-tight">
+                  Từ ý tưởng nhỏ <span className="block text-white">đến một bể cá</span> <span className="block text-white">có chiều sâu nghệ thuật</span>
                 </h2>
 
                 <div className="mt-8 h-px w-16 bg-gradient-to-r from-neon-cyan/60 to-transparent" />
 
-                <p className="mt-6 max-w-md font-body text-base leading-8 text-gray-400 md:text-lg">
+                <p className="mt-6 max-w-md font-body text-base leading-8 text-gray-300 md:text-lg">
                   Trang chủ được gom lại theo hành trình: chọn cảm hứng, tìm sản phẩm, đọc hướng dẫn và mua hàng với hỗ trợ rõ ràng.
                 </p>
 
-                {/* Stats inline */}
                 <div className="mt-10 flex gap-8">
                   {[
-                    { val: '500+', label: 'Sản phẩm' },
+                    { val: '500+', label: 'Sản phẩm cao cấp' },
                     { val: '24/7', label: 'Hỗ trợ online' },
                   ].map((s) => (
                     <div key={s.label}>
-                      <div className="font-headline text-4xl font-bold text-white">{s.val}</div>
-                      <div className="mt-1 font-body text-sm font-semibold text-neon-cyan/70">{s.label}</div>
+                      <div className="font-headline text-4xl font-black text-white">{s.val}</div>
+                      <div className="mt-1 font-body text-sm font-bold text-neon-cyan">{s.label}</div>
                     </div>
                   ))}
                 </div>
@@ -500,7 +467,6 @@ const Home = () => {
                   <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-[#051C1C]/60 via-transparent to-transparent" />
                 </div>
 
-                {/* Floating card */}
                 <div className="glass-panel absolute -bottom-6 -left-4 rounded-2xl p-4 sm:left-auto sm:-bottom-6 sm:right-6 sm:w-64">
                   <div className="flex items-center gap-3">
                     <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-neon-cyan/10 text-neon-cyan">
@@ -508,7 +474,7 @@ const Home = () => {
                     </div>
                     <div>
                       <div className="font-body font-bold text-white">Nature Style</div>
-                      <div className="font-body text-xs text-gray-400">Gợi ý bố cục tự nhiên</div>
+                      <div className="font-body text-xs text-gray-300">Gợi ý bố cục tự nhiên</div>
                     </div>
                   </div>
                 </div>
@@ -516,7 +482,6 @@ const Home = () => {
             </Reveal>
           </div>
 
-          {/* Bottom quote — italic accent */}
           <Reveal delay={300}>
             <div className="mt-20 flex justify-end">
               <blockquote className="max-w-lg border-l-2 border-neon-cyan/30 pl-6">
@@ -529,45 +494,41 @@ const Home = () => {
         </div>
       </section>
 
-      {/* ═══════════════ WHY US — split layout ═══════════════ */}
+      {/* ═══════════════ WHY US ═══════════════ */}
       <section id="why-us" className="relative overflow-hidden py-24 lg:py-32">
-        {/* Deep, glowing ambient background */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#051C1C] to-[#0a2828]" />
-        
-        {/* Artistic glowing radial lights in the background for a modern neon depth */}
         <div className="absolute top-1/2 left-1/4 -translate-y-1/2 w-[400px] h-[400px] rounded-full bg-neon-cyan/5 blur-[120px] pointer-events-none" />
         <div className="absolute top-1/3 right-1/4 -translate-y-1/2 w-[350px] h-[350px] rounded-full bg-emerald-500/5 blur-[100px] pointer-events-none" />
 
         <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 gap-16 lg:grid-cols-12 lg:gap-8 items-center">
             
-            {/* Left side: Artistic text layout */}
             <div className="lg:col-span-5 space-y-8 text-left max-w-xl mx-auto lg:mx-0">
               <Reveal>
                 <div className="inline-flex items-center gap-3">
                   <span className="h-[1px] w-8 bg-neon-cyan/60" />
-                  <p className="font-body text-[11px] font-bold uppercase tracking-[0.3em] text-neon-cyan">
+                  <p className="font-body text-sm font-black uppercase tracking-[0.3em] text-neon-cyan">
                     Vì sao chọn chúng tôi
                   </p>
                 </div>
               </Reveal>
 
               <Reveal delay={100}>
+                {/* Thay thế màu xám mờ text-gray-300 nguyên bản thành màu trắng đục thuần */}
                 <h2 className="font-headline text-4xl sm:text-5xl font-extrabold leading-[1.15] text-white tracking-tight">
-                  Nơi Đam Mê
-                  <span className="block mt-1 font-headline font-light italic text-gray-300">Gặp Gỡ</span>
+                  Nơi Đam Mê <span className="block mt-1 font-headline font-light italic text-white">Gặp Gỡ</span>
                   <span className="block mt-2 text-transparent bg-clip-text bg-gradient-to-r from-neon-cyan via-emerald-400 to-teal-400 drop-shadow-[0_2px_10px_rgba(0,255,209,0.15)]">
-                    Thiên Nhiên
+                    Thiên Nhiên Bể Thủy Sinh
                   </span>
                 </h2>
               </Reveal>
 
               <Reveal delay={200}>
-                <div className="space-y-4 font-body text-sm sm:text-base leading-relaxed text-gray-300">
+                <div className="space-y-4 font-body text-sm sm:text-base leading-relaxed text-gray-200">
                   <p>
-                    Tại <strong className="text-white font-semibold">AquaticPose</strong>, chúng tôi không chỉ đơn thuần cung cấp phụ kiện. Mỗi sản phẩm được tuyển chọn là một viên gạch xây dựng nên một hệ sinh thái thu nhỏ bền vững.
+                    Tại <strong className="text-white font-black">AquaticCaps</strong>, chúng tôi không chỉ đơn thuần cung cấp phụ kiện. Mỗi sản phẩm được tuyển chọn là một viên gạch xây dựng nên một hệ sinh thái thu nhỏ bền vững.
                   </p>
-                  <p className="text-gray-400">
+                  <p className="text-gray-300">
                     Chúng tôi mang đến giải pháp toàn diện từ cảm hứng thiết kế, đóng gói an toàn đến sự tư vấn tận tình, giúp hành trình chinh phục nghệ thuật thủy sinh của bạn trở nên đơn giản và đầy cảm xúc.
                   </p>
                 </div>
@@ -577,16 +538,12 @@ const Home = () => {
                 <div className="pt-4 flex flex-wrap gap-x-6 gap-y-4 border-t border-white/10">
                   <div className="flex items-center gap-2">
                     <span className="h-2 w-2 rounded-full bg-neon-cyan animate-pulse" />
-                    <span className="font-body text-xs font-semibold uppercase tracking-wider text-gray-300">5+ Giá trị cốt lõi</span>
-                  </div>
-                  <div className="flex items-center gap-2 text-gray-400">
-                    <span className="font-body text-xs">Di chuột vào các mảnh ghép để khám phá</span>
+                    <span className="font-body text-xs font-bold uppercase tracking-wider text-gray-200">5+ Giá trị cốt lõi bền vững</span>
                   </div>
                 </div>
               </Reveal>
             </div>
 
-            {/* Right side: 5-hexagon honeycomb cluster */}
             <div className="lg:col-span-7 flex justify-center lg:justify-end">
               <Reveal delay={200}>
                 <div className="hex-honeycomb">
@@ -603,13 +560,8 @@ const Home = () => {
                         }}
                       >
                         <div className="hex-flip-inner">
-                          {/* FRONT */}
                           <div className="hex-flip-front">
-                            <img
-                              src={item.image}
-                              alt={item.title}
-                              className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
-                            />
+                            <img src={item.image} alt={item.title} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110" />
                             <div className="absolute inset-0 bg-gradient-to-t from-[#051C1C]/90 via-[#051C1C]/35 to-transparent" />
                             <div className="absolute inset-x-0 bottom-6 text-center">
                               <div className="mx-auto mb-2 flex h-9.5 w-9.5 items-center justify-center rounded-lg border border-white/15 bg-black/25 text-neon-cyan backdrop-blur-sm">
@@ -621,7 +573,6 @@ const Home = () => {
                             </div>
                           </div>
 
-                          {/* BACK */}
                           <div className="hex-flip-back">
                             <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(0,255,209,0.15),transparent_55%)]" />
                             <div className="relative flex flex-col items-center justify-center p-4 text-center">
@@ -631,7 +582,7 @@ const Home = () => {
                               <h3 className="font-body text-xs sm:text-[13px] font-bold uppercase tracking-wider text-white">
                                 {item.title}
                               </h3>
-                              <p className="mt-1.5 font-body text-[10px] sm:text-[11px] leading-relaxed text-cyan-50/70 max-w-[125px] sm:max-w-[155px]">
+                              <p className="mt-1.5 font-body text-[10px] sm:text-[11px] leading-relaxed text-cyan-50 max-w-[125px] sm:max-w-[155px]">
                                 {item.desc}
                               </p>
                             </div>
@@ -649,7 +600,6 @@ const Home = () => {
         </div>
       </section>
 
-
       {/* ═══════════════ COMMUNITY ═══════════════ */}
       <section id="community" className="relative overflow-hidden py-28">
         <div className="absolute inset-0 bg-gradient-to-br from-[#0a2828] via-[#061e2e] to-[#051C1C]" />
@@ -657,35 +607,28 @@ const Home = () => {
         <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <Reveal>
             <div className="mx-auto mb-16 max-w-2xl text-center">
-              <p className="mb-4 font-body text-xs font-bold uppercase tracking-[0.3em] text-neon-cyan">
-                Cộng đồng
+              <p className="mb-4 font-body text-sm font-black uppercase tracking-[0.3em] text-neon-cyan">
+                Cộng đồng sinh thái
               </p>
-              <h2 className="font-headline text-4xl font-bold leading-tight text-white md:text-5xl">
-                Một vài layout
-                <span className="block text-white/55">từ khách hàng</span>
+              {/* Đồng bộ hóa text-white/55 mờ về màu trắng sáng rõ */}
+              <h2 className="font-headline text-4xl font-black leading-tight text-white md:text-5xl tracking-tight">
+                Một vài layout <span className="block text-white">được chia sẻ từ khách hàng</span>
               </h2>
-              <p className="mt-4 font-body text-base leading-relaxed text-gray-400">
-                Ảnh thật và phản hồi ngắn gọn từ cộng đồng AquaticPose.
+              <p className="mt-4 font-body text-base leading-relaxed text-gray-300">
+                Ảnh thật và phản hồi ngắn gọn từ cộng đồng AquaticCaps.
               </p>
             </div>
           </Reveal>
 
-          {/* 3 review cards */}
           <div className="grid gap-6 md:grid-cols-3">
             {communityLayouts.map((item, i) => (
               <Reveal key={item.name} delay={i * 120}>
                 <div className="group overflow-hidden rounded-2xl border border-white/8 bg-white/[0.03] transition-all duration-500 hover:border-white/15 hover:bg-white/[0.06]">
-                  {/* Image */}
                   <div className="relative h-64 overflow-hidden">
-                    <img
-                      src={item.src}
-                      alt={`Layout thủy sinh của ${item.name}`}
-                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                    />
+                    <img src={item.src} alt={`Layout thủy sinh của ${item.name}`} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
                     <div className="absolute inset-0 bg-gradient-to-t from-[#051C1C] via-[#051C1C]/30 to-transparent" />
                   </div>
 
-                  {/* Review */}
                   <div className="p-6">
                     <div className="flex items-center gap-3">
                       <div className="flex h-10 w-10 items-center justify-center rounded-full bg-neon-cyan/10 font-body text-sm font-bold text-neon-cyan">
@@ -709,7 +652,6 @@ const Home = () => {
             ))}
           </div>
 
-          {/* Stats bar */}
           <Reveal delay={400}>
             <div className="mt-14 grid grid-cols-2 gap-px overflow-hidden rounded-2xl border border-white/8 bg-white/[0.04] sm:grid-cols-4">
               {[
@@ -720,7 +662,7 @@ const Home = () => {
               ].map((stat, i) => (
                 <div key={stat.label} className="p-6 text-center transition-colors duration-300 hover:bg-white/[0.03]">
                   <div className="font-headline text-3xl font-bold text-neon-cyan md:text-4xl">{stat.val}</div>
-                  <div className="mt-2 font-body text-xs font-semibold uppercase tracking-[0.15em] text-gray-500">{stat.label}</div>
+                  <div className="mt-2 font-body text-xs font-bold uppercase tracking-[0.15em] text-gray-400">{stat.label}</div>
                 </div>
               ))}
             </div>
@@ -736,25 +678,24 @@ const Home = () => {
           <Reveal>
             <div className="mb-14 flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-end">
               <div className="max-w-xl">
-                <p className="mb-4 font-body text-xs font-bold uppercase tracking-[0.3em] text-neon-cyan">
-                  Blog setup
+                <p className="mb-4 font-body text-sm font-black uppercase tracking-[0.3em] text-neon-cyan">
+                  Blog cẩm nang kiến thức
                 </p>
-                <h2 className="font-headline text-4xl font-bold leading-tight text-white md:text-5xl">
-                  Hướng dẫn ngắn gọn
-                  <span className="block text-white/55">để bể ổn định hơn</span>
+                {/* Gom text-white/55 về text-white đồng bộ sáng rõ */}
+                <h2 className="font-headline text-4xl font-black leading-tight text-white md:text-5xl tracking-tight">
+                  Hướng dẫn ngắn gọn <span className="block text-white">để bể thủy sinh ổn định hơn</span>
                 </h2>
               </div>
               <Link
                 to="/blogs"
                 className="group inline-flex shrink-0 items-center font-body text-sm font-bold text-neon-cyan transition-colors hover:text-white"
               >
-                Xem tất cả
+                Xem tất cả cẩm nang
                 <ArrowRightIcon className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-2" />
               </Link>
             </div>
           </Reveal>
 
-          {/* 1 featured + 2 side — editorial blog layout */}
           <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr]">
             {/* Featured */}
             <Reveal>
@@ -796,7 +737,7 @@ const Home = () => {
                       <img src={blog.img} alt={blog.title} className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
                     </div>
                     <div className="flex flex-col justify-center p-5">
-                      <span className="mb-2 w-fit font-body text-[11px] font-bold uppercase tracking-[0.2em] text-neon-cyan/70">
+                      <span className="mb-2 w-fit font-body text-[11px] font-bold uppercase tracking-[0.2em] text-neon-cyan">
                         {blog.tag}
                       </span>
                       <h3 className="font-headline text-lg font-bold text-white transition-colors group-hover:text-neon-cyan">
@@ -825,13 +766,10 @@ const Home = () => {
 
         <div className="relative z-10 mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
           <Reveal>
-            <h2 className="font-headline text-4xl font-bold leading-tight text-white md:text-6xl">
-              Sẵn sàng tạo
-              <span className="block bg-gradient-to-r from-neon-cyan via-emerald-300 to-cyan-200 bg-clip-text text-transparent">
-                aquascape mơ ước?
-              </span>
+            <h2 className="font-headline text-4xl font-black leading-tight text-white md:text-6xl tracking-tight">
+              Sẵn sàng tạo <span className="block bg-gradient-to-r from-neon-cyan via-emerald-300 to-cyan-200 bg-clip-text text-transparent">aquascape mơ ước?</span>
             </h2>
-            <p className="mx-auto mt-6 max-w-2xl font-body text-base leading-relaxed text-gray-400 md:text-lg">
+            <p className="mx-auto mt-6 max-w-2xl font-body text-base leading-relaxed text-gray-300 md:text-lg">
               Bắt đầu từ bộ sưu tập chính, chọn đúng sản phẩm và để hệ thống hỗ trợ bạn trong từng bước mua hàng.
             </p>
 
@@ -857,7 +795,7 @@ const Home = () => {
                 { icon: TruckIcon, label: 'Theo dõi vận chuyển' },
                 { icon: ChatBubbleLeftRightIcon, label: 'Hỗ trợ khi mua' },
               ].map((item) => (
-                <div key={item.label} className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 font-body text-sm text-gray-400">
+                <div key={item.label} className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-4 py-2 font-body text-sm text-gray-300">
                   <item.icon className="h-4 w-4 text-neon-cyan" />
                   {item.label}
                 </div>

@@ -3,12 +3,15 @@ import { NavLink, useLocation } from 'react-router-dom';
 import {
   ShoppingBagIcon,
   ChartBarIcon,
-  CubeIcon,
+  Square3Stack3DIcon, // Icon mới trực quan hơn cho sản phẩm thủy sinh
   HomeModernIcon,
   UsersIcon,
   TicketIcon,
   DocumentTextIcon,
   ArrowTopRightOnSquareIcon,
+  GiftIcon,           // Tách riêng icon Khuyến mãi
+  DocumentDuplicateIcon, 
+  TagIcon,            // Tách riêng icon Tag bài viết, không bị trùng TicketIcon
   NewspaperIcon 
 } from '@heroicons/react/24/outline';
 import { FileClock } from 'lucide-react';
@@ -22,50 +25,50 @@ const AdminSidebar = () => {
     { 
       name: 'Sản phẩm', 
       href: '/admin/products', 
-      icon: CubeIcon,
+      icon: Square3Stack3DIcon,
       subtitle: 'Quản lý kho hàng'
     },
     { 
       name: 'Đơn hàng', 
       href: '/admin/orders', 
       icon: ShoppingBagIcon,
-      subtitle: 'Đơn đặt hàng'
+      subtitle: 'Xử lý đơn đặt hàng'
     },
     { 
-      name: 'Khuyến mãi', 
+      name: 'Chương trình ưu đãi', 
       href: '/admin/promotions', 
-      icon: TicketIcon,
-      subtitle: 'Mã giảm giá'
+      icon: GiftIcon,
+      subtitle: 'Mã giảm giá & Quà tặng'
     },
     { 
-      name: 'Người dùng', 
+      name: 'Thành viên & Nhân sự', 
       href: '/admin/manage-users', 
       icon: UsersIcon,
       subtitle: 'Khách hàng & Staff'
     },
     { 
-      name: 'Thống kê', 
+      name: 'Thống kê kinh doanh', 
       href: '/admin/statistics', 
       icon: ChartBarIcon,
       subtitle: 'Báo cáo doanh thu'
     },
     { 
-      name: 'Danh mục blog',
+      name: 'Danh mục bài viết',
       href: '/admin/blog-categories',
-      icon: DocumentTextIcon,
-      subtitle: 'Danh mục bài viết'
+      icon: DocumentDuplicateIcon,
+      subtitle: 'Phân loại chủ đề blog'
     },
     { 
-      name: 'Thẻ blog',
+      name: 'Thẻ tag bài viết',
       href: '/admin/tags',
-      icon: TicketIcon,
-      subtitle: 'Từ khóa bài viết'
+      icon: TagIcon,
+      subtitle: 'Từ khóa tìm kiếm nhanh'
     },
     { 
-      name: 'Danh sách bài viết',
+      name: 'Quản lý bài viết',
       href: '/admin/blogs',
       icon: NewspaperIcon,
-      subtitle: 'Danh sách bài viết'
+      subtitle: 'Danh sách các bài blog'
     },
     {
       name: 'Bài viết chờ duyệt',
@@ -86,7 +89,7 @@ const AdminSidebar = () => {
       <div className={`flex flex-col w-66 h-screen shadow-2xl transition-all duration-300 border-r ${
         isDark 
           ? 'bg-[#062323]/90 backdrop-blur-md border-white/10 text-white' 
-          : 'bg-[#FFFDF0]/95 backdrop-blur-md border-water/30 text-foreground'
+          : 'bg-[#FFFDF0]/95 backdrop-blur-md border-water/30 text-foreground' // Giữ nguyên màu nền gốc của bạn
       }`}>
         {/* Header with Logo */}
         <div className={`flex items-center justify-center h-20 px-6 border-b transition-colors duration-300 ${
@@ -116,7 +119,7 @@ const AdminSidebar = () => {
             const isActive = location.pathname === item.href;
             const Icon = item.icon;
             
-            // Dynamic theme class calculations
+            // Tính toán class linh hoạt dựa theo nền gốc của bạn
             const linkClass = isActive
               ? (isDark
                   ? 'bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 shadow-lg shadow-emerald-950/10'
@@ -132,10 +135,6 @@ const AdminSidebar = () => {
             const iconClass = isActive
               ? (isDark ? 'text-emerald-400' : 'text-primary')
               : (isDark ? 'text-gray-400 group-hover:text-white' : 'text-gray-500 group-hover:text-primary');
-
-            const textClass = isActive
-              ? (isDark ? 'font-bold text-white' : 'font-bold text-primary')
-              : (isDark ? 'text-gray-700 group-hover:text-primary' : 'text-gray-700 group-hover:text-primary');
 
             return (
               <NavLink
@@ -153,7 +152,7 @@ const AdminSidebar = () => {
                     {item.name}
                   </div>
                   <div className={`text-[10px] transition-colors duration-250 ${
-                    isActive ? (isDark ? 'text-emerald-500/80' : 'text-primary/70') : 'text-gray-400'
+                    isActive ? (isDark ? 'text-emerald-500/80' : 'text-primary/70') : (isDark ? 'text-gray-400' : 'text-gray-500')
                   }`}>
                     {item.subtitle}
                   </div>

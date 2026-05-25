@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-const THEME_STORAGE_KEY = 'aquaticpose-theme';
+const THEME_STORAGE_KEY = 'aquaticcaps-theme';
 const DEFAULT_THEME = 'dark';
 const THEMES = ['light', 'dark'];
 

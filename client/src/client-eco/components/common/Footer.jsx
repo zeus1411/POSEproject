@@ -18,7 +18,7 @@ const Footer = () => {
         {/* --- Cột 1: Logo + Mô tả --- */}
         <div>
           <h2 className="text-2xl font-headline font-bold text-white mb-3 flex items-center gap-2">
-            <span className="text-neon-cyan">🐠</span> AquaticPose
+            <span className="text-neon-cyan">🐠</span> AquaticCaps
           </h2>
           <p className="text-gray-500 text-sm leading-relaxed font-body">
             Khám phá bộ sưu tập đẳng cấp, biến không gian sống thành tác phẩm nghệ thuật thủy sinh.
@@ -122,7 +122,7 @@ const Footer = () => {
 
       {/* --- Dòng bản quyền --- */}
       <div className="border-t border-white/5 py-4 text-center text-sm text-gray-600 font-body">
-        Copyright © {new Date().getFullYear()} AquaticPose
+        Copyright © {new Date().getFullYear()} AquaticCaps. All rights reserved.
       </div>
     </footer>
   );
