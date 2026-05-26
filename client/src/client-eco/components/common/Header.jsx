@@ -142,7 +142,7 @@ const Header = () => {
             {/* Menu bên phải - Hệ thống nút bấm đồng bộ 100% Size & Border */}
             <div className="flex items-center gap-3.5 min-w-[200px] justify-end">
               {!isAdmin && (
-                <div className="md:hidden">
+                <div className="md:hidden flex items-center gap-2">
                   <Link
                     to="/shop"
                     className="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold text-primary-foreground bg-ocean rounded-lg hover:bg-primary-hover transition-colors dark:bg-primary/90 dark:hover:bg-primary"

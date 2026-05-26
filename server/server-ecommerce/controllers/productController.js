@@ -1,5 +1,6 @@
 import ProductService from '../services/productService.js';
 import { deleteFromCloudinary } from '../../utils/cloudinaryUtils.js';
+import { requestCatalogSync } from '../../server-ai/services/catalogIngestService.js';
 
 // Create a new product
 export const createProduct = async (req, res, next) => {
@@ -8,6 +9,7 @@ export const createProduct = async (req, res, next) => {
         const userId = req.user?.userId;
         
         const savedProduct = await ProductService.createProduct(req.body, files, userId);
+        requestCatalogSync({ reason: 'product_create' });
         res.status(201).json(savedProduct);
     } catch (error) {
         // Clean up uploaded files if there was an error
@@ -57,6 +59,7 @@ export const updateProduct = async (req, res, next) => {
         const files = req.files;
         
         const updatedProduct = await ProductService.updateProduct(id, req.body, files);
+        requestCatalogSync({ reason: 'product_update' });
         res.status(200).json(updatedProduct);
     } catch (error) {
         // Clean up uploaded files if there was an error
@@ -126,6 +129,7 @@ export const deleteProduct = async (req, res, next) => {
         const { id } = req.params;
         
         await ProductService.deleteProduct(id);
+        requestCatalogSync({ reason: 'product_delete' });
 
         res.status(200).json({ 
             success: true,

@@ -8,6 +8,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { getUserChat, markAsRead } from '../../redux/slices/chatSlice';
 import { useSocket } from '../../context/SocketContext';
+import { useChatDock } from '../../context/ChatDockContext';
 
 const ChatBubble = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -17,6 +18,7 @@ const ChatBubble = () => {
   
   const dispatch = useDispatch();
   const { socket, isConnected } = useSocket();
+  const { registerPanel, unregisterPanel, getPanelRightOffset, getBubbleBottomOffset, getPanelBottomOffset } = useChatDock();
   const { user } = useSelector((state) => state.auth);
   const { currentChat, unreadCount, isLoading } = useSelector((state) => state.chat);
   
@@ -118,6 +120,16 @@ const ChatBubble = () => {
     setIsMinimized(!isMinimized);
   };
 
+  useEffect(() => {
+    if (isOpen) {
+      registerPanel('support');
+    } else {
+      unregisterPanel('support');
+    }
+
+    return () => unregisterPanel('support');
+  }, [isOpen, registerPanel, unregisterPanel]);
+
   // Don't show if user is not logged in
   if (!user || user.role === 'admin') {
     return null;
@@ -126,31 +138,41 @@ const ChatBubble = () => {
   return (
     <>
       {/* Chat Bubble Button */}
-      {!isOpen && (
-        <button
-          onClick={toggleChat}
-          className="fixed bottom-6 right-6 z-50 w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-full shadow-2xl hover:shadow-3xl hover:scale-110 transition-all duration-300 flex items-center justify-center group"
-        >
-          <ChatBubbleLeftRightIcon className="w-8 h-8 group-hover:scale-110 transition-transform" />
-          {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center animate-pulse">
-              {unreadCount > 9 ? '9+' : unreadCount}
-            </span>
-          )}
-          {!isConnected && (
-            <span className="absolute bottom-1 right-1 w-3 h-3 bg-gray-400 rounded-full border-2 border-white"></span>
-          )}
-          {isConnected && (
-            <span className="absolute bottom-1 right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white animate-pulse"></span>
-          )}
-        </button>
-      )}
+      <button
+        onClick={toggleChat}
+        style={{
+          right: '1.5rem',
+          bottom: `${getBubbleBottomOffset('support')}rem`
+        }}
+        className={`fixed z-50 w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-full shadow-2xl hover:shadow-3xl hover:scale-110 transition-all duration-300 flex items-center justify-center group ${
+          isOpen ? 'ring-4 ring-blue-200' : ''
+        }`}
+      >
+        <ChatBubbleLeftRightIcon className="w-8 h-8 group-hover:scale-110 transition-transform" />
+        {unreadCount > 0 && (
+          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full w-6 h-6 flex items-center justify-center animate-pulse">
+            {unreadCount > 9 ? '9+' : unreadCount}
+          </span>
+        )}
+        {!isConnected && (
+          <span className="absolute bottom-1 right-1 w-3 h-3 bg-gray-400 rounded-full border-2 border-white"></span>
+        )}
+        {isConnected && (
+          <span className="absolute bottom-1 right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white animate-pulse"></span>
+        )}
+      </button>
 
       {/* Chat Window */}
       {isOpen && (
-        <div className={`fixed bottom-6 right-6 z-50 w-96 bg-white rounded-2xl shadow-2xl flex flex-col transition-all duration-300 ${
-          isMinimized ? 'h-16' : 'h-[600px]'
-        }`}>
+        <div
+          className={`fixed z-50 w-96 bg-white rounded-2xl shadow-2xl flex flex-col transition-all duration-300 ${
+            isMinimized ? 'h-16' : 'h-[600px]'
+          }`}
+          style={{
+            right: `${getPanelRightOffset('support')}rem`,
+            bottom: `${getPanelBottomOffset()}rem`
+          }}
+        >
           {/* Header */}
           <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-6 py-4 rounded-t-2xl flex items-center justify-between">
             <div className="flex items-center space-x-3">

@@ -50,6 +50,14 @@ const errorHandlerMiddleware = (err, req, res, next) => {
         customError.statusCode = StatusCodes.UNAUTHORIZED;
     }
 
+    // Multer Errors
+    if (err.name === 'MulterError') {
+        customError.msg = err.code === 'LIMIT_FILE_SIZE'
+            ? 'File too large'
+            : err.message || 'Upload failed';
+        customError.statusCode = StatusCodes.PAYLOAD_TOO_LARGE;
+    }
+
     console.error('Response:', customError);
     console.error('===================\n');
 

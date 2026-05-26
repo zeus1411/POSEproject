@@ -11,8 +11,9 @@ import {
   ArrowTopRightOnSquareIcon,
   GiftIcon,           // Tách riêng icon Khuyến mãi
   DocumentDuplicateIcon, 
-  TagIcon,            // Tách riêng icon Tag bài viết, không bị trùng TicketIcon
-  NewspaperIcon 
+  TagIcon,            // Tách riêng icon Tag bài viết, không bị trùng TicketIcon 
+  NewspaperIcon,
+  SparklesIcon
 } from '@heroicons/react/24/outline';
 import { FileClock } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
@@ -39,6 +40,14 @@ const AdminSidebar = () => {
       href: '/admin/promotions', 
       icon: GiftIcon,
       subtitle: 'Mã giảm giá & Quà tặng'
+    },
+    {
+      name: 'AI Catalog',
+      href: '/admin/ai-catalog',
+      icon: SparklesIcon,
+      color: 'from-teal-500 to-emerald-500',
+      bg: 'bg-gradient-to-br from-teal-50 to-emerald-50',
+      iconColor: 'text-teal-600',
     },
     { 
       name: 'Thành viên & Nhân sự', 

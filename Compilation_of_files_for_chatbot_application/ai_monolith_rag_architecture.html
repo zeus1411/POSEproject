@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Monolithic AI Service Architecture</title>
+    <style>
+        :root {
+            --bg: #f4f6f8;
+            --ink: #1d2939;
+            --muted: #52606d;
+            --line: #95a2b3;
+            --card: #ffffff;
+            --green: #e6f8ec;
+            --yellow: #fff7dd;
+            --pink: #ffe8ec;
+            --gray: #edf0f4;
+            --blue: #eaf3ff;
+            --shadow: 0 8px 20px rgba(16, 24, 40, 0.08);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--ink);
+            background:
+                radial-gradient(circle at 10% 10%, #ffffff 0%, transparent 35%),
+                radial-gradient(circle at 90% 20%, #ffffff 0%, transparent 30%),
+                var(--bg);
+        }
+
+        .page {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        h1 {
+            margin: 0 0 8px;
+            font-size: clamp(1.2rem, 2.4vw, 2rem);
+            letter-spacing: 0.02em;
+        }
+
+        p.desc {
+            margin: 0 0 18px;
+            color: var(--muted);
+            max-width: 980px;
+        }
+
+        .board {
+            border: 1px solid #d0d7e0;
+            border-radius: 16px;
+            background: #fcfdff;
+            box-shadow: var(--shadow);
+            padding: 18px;
+            overflow-x: auto;
+        }
+
+        .layout {
+            min-width: 1200px;
+            display: grid;
+            grid-template-columns: 200px 1fr 310px;
+            gap: 16px;
+            align-items: start;
+        }
+
+        .stack {
+            display: grid;
+            gap: 12px;
+        }
+
+        .card {
+            background: var(--card);
+            border: 1px solid #d5dde7;
+            border-radius: 12px;
+            padding: 12px;
+            box-shadow: 0 4px 10px rgba(16, 24, 40, 0.05);
+        }
+
+        .card h3 {
+            margin: 0 0 8px;
+            font-size: 0.98rem;
+        }
+
+        .pill {
+            display: inline-block;
+            margin: 4px 6px 0 0;
+            padding: 3px 8px;
+            border-radius: 999px;
+            border: 1px solid #cfd8e4;
+            font-size: 0.75rem;
+            color: #344054;
+            background: #f8fafc;
+        }
+
+        .lane-title {
+            font-size: 0.84rem;
+            color: var(--muted);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .core {
+            border: 1px dashed #9fc8a8;
+            background: var(--green);
+            border-radius: 14px;
+            padding: 12px;
+            display: grid;
+            gap: 10px;
+        }
+
+        .core-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(120px, 1fr));
+            gap: 8px;
+        }
+
+        .mini {
+            background: #fff;
+            border: 1px solid #c7e3cf;
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .right-col {
+            display: grid;
+            gap: 12px;
+        }
+
+        .pink {
+            background: var(--pink);
+            border-color: #f2b8c4;
+        }
+
+        .yellow {
+            background: var(--yellow);
+            border-color: #f0d996;
+        }
+
+        .gray {
+            background: var(--gray);
+            border-color: #ccd4df;
+        }
+
+        .blue {
+            background: var(--blue);
+            border-color: #b8d2ff;
+        }
+
+        .legend {
+            margin-top: 12px;
+            color: var(--muted);
+            font-size: 0.88rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .legend span {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .arrow {
+            font-size: 1.2rem;
+            color: #667085;
+            text-align: center;
+            margin: 2px 0;
+        }
+
+        .section {
+            margin-top: 20px;
+            border: 1px solid #d0d7e0;
+            border-radius: 12px;
+            background: #ffffff;
+            padding: 14px;
+            box-shadow: var(--shadow);
+        }
+
+        .section h2 {
+            margin: 0 0 8px;
+            font-size: 1.05rem;
+        }
+
+        .mermaid {
+            overflow-x: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page">
+        <h1>Monolithic AI Service Architecture (RAG + Website QA)</h1>
+        <p class="desc">
+            Suggested architecture for your graduation project scope: one monolithic backend handles API, ingest,
+            retrieval, generation,
+            and website product QA mode. Qdrant is used as shared vector storage with separate collections.
+        </p>
+
+        <div class="board">
+            <div class="layout">
+                <div class="stack">
+                    <div class="lane-title">Entry & CI/CD</div>
+                    <div class="card">
+                        <h3>Users</h3>
+                        <span class="pill">Web UI</span>
+                        <span class="pill">Chat Widget</span>
+                    </div>
+                    <div class="arrow">→</div>
+                    <div class="card">
+                        <h3>GitHub Pipeline</h3>
+                        <span class="pill">Commit</span>
+                        <span class="pill">Build</span>
+                        <span class="pill">Push Image</span>
+                        <span class="pill">Pull Image</span>
+                    </div>
+                </div>
+
+                <div class="stack">
+                    <div class="card blue">
+                        <h3>Cache Client</h3>
+                        <span class="pill">Standard Cache</span>
+                        <span class="pill">Semantic Cache</span>
+                    </div>
+
+                    <div class="core">
+                        <div class="lane-title">Monolithic AI Service</div>
+                        <div class="core-grid">
+                            <div class="mini">API Layer</div>
+                            <div class="mini">Guardrails</div>
+                            <div class="mini">Retriever</div>
+                            <div class="mini">Generator</div>
+                        </div>
+                        <div class="core-grid">
+                            <div class="mini">Chunking</div>
+                            <div class="mini">Embedding</div>
+                            <div class="mini">Catalog Ingestion</div>
+                            <div class="mini">Chat History</div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <h3>VectorDB</h3>
+                        <span class="pill">Qdrant: docs_collection</span>
+                        <span class="pill">Qdrant: catalog_collection</span>
+                    </div>
+                </div>
+
+                <div class="right-col">
+                    <div class="card pink">
+                        <h3>Data Ingestion Pipeline</h3>
+                        <span class="pill">Upload PDF/DOCX/PPTX/XLSX</span>
+                        <span class="pill">Parse</span>
+                        <span class="pill">Chunk</span>
+                        <span class="pill">Embed</span>
+                        <span class="pill">Store Vector</span>
+                    </div>
+
+                    <div class="card yellow">
+                        <h3>LLM Gateway</h3>
+                        <span class="pill">LiteLLM / Router</span>
+                        <span class="pill">Provider fallback</span>
+                    </div>
+
+                    <div class="card gray">
+                        <h3>API Providers</h3>
+                        <span class="pill">OpenAI</span>
+                        <span class="pill">Gemini</span>
+                        <span class="pill">Other models</span>
+                    </div>
+
+                    <div class="card">
+                        <h3>Observability</h3>
+                        <span class="pill">Langfuse</span>
+                        <span class="pill">Logs</span>
+                        <span class="pill">Traces</span>
+                        <span class="pill">Cost Tracking</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="legend">
+                <span><i class="dot" style="background:#f2b8c4"></i> Ingestion zone</span>
+                <span><i class="dot" style="background:#f0d996"></i> LLM gateway zone</span>
+                <span><i class="dot" style="background:#9fc8a8"></i> Monolithic service zone</span>
+                <span><i class="dot" style="background:#b8d2ff"></i> Cache zone</span>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>Mermaid Version</h2>
+            <pre class="mermaid">
+flowchart LR
+    U[Users] -->|1. Ask question| WEB[Web UI / Chat Widget]
+
+    DEV[Developer] -->|Commit| GIT[GitHub]
+    GIT -->|Trigger pipeline| CI[CI/CD]
+    CI -->|Build & Push Image| REG[Container Registry]
+    REG -->|Pull image| APP
+
+    subgraph APP[Monolithic AI Service]
+        APIL[API Layer]
+        GUARD[Guardrails Layer]
+        ORCH[Query Orchestrator]
+        CACHE[Cache Service\\n- Standard cache\\n- Semantic cache]
+        RET[Retriever]
+        GEN[Generator]
+        CHAT[(Chat History)]
+        CATALOG[(Catalog Snapshot Store)]
+
+        APIL -->|2. Validate input| GUARD
+        GUARD -->|3. Route request| ORCH
+        ORCH -->|4a. Check cache| CACHE
+        ORCH -->|4b. Retrieve context| RET
+        ORCH -->|4c. Build prompt| GEN
+        ORCH -->|4d. Save conversation| CHAT
+        ORCH -->|4e. Website product facts| CATALOG
+        GEN -->|5. Validate output| GUARD
+        GUARD -->|6. Return response| APIL
+    end
+
+    WEB --> APIL
+    APIL --> WEB
+
+    subgraph ING[Data Ingestion Pipeline]
+        UPLOAD[Upload Files\\nPDF DOCX PPTX XLSX]
+        PARSE[Parse / Normalize]
+        CHUNK[Chunk + Overlap]
+        EMBED[Embedding]
+        META[Metadata Enrichment]
+        UPLOAD --> PARSE --> CHUNK --> EMBED --> META
+    end
+
+    subgraph CING[Catalog Ingestion Pipeline]
+        SRC[(Products / Prices / Promotions DB)]
+        ETL[ETL Job]
+        CEMB[Embedding + Tags]
+        SRC --> ETL --> CEMB
+    end
+
+    META -->|Upsert vectors| QDR[(Qdrant Collections)]
+    CEMB -->|Upsert vectors| QDR
+    RET -->|Similarity search| QDR
+
+    GEN -->|LLM call| LLMG[LLM Gateway]
+    LLMG --> P1[Provider A]
+    LLMG --> P2[Provider B]
+
+    APIL --> OBS[Observability\\nLogs Traces Metrics]
+    RET --> OBS
+    GEN --> OBS
+
+    APIL -->|7. Final answer| WEB
+      </pre>
+        </div>
+    </div>
+
+    <script type="module">
+        import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs';
+        mermaid.initialize({
+            startOnLoad: true,
+            theme: 'default',
+            securityLevel: 'loose'
+        });
+    </script>
+</body>
+
+</html>

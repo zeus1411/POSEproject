@@ -1,0 +1,351 @@
+import React, { useEffect, useState } from 'react';
+import {
+  ArrowPathIcon,
+  PlayIcon,
+  CheckCircleIcon,
+  ExclamationTriangleIcon,
+  ClockIcon,
+  CloudArrowUpIcon,
+  TrashIcon
+} from '@heroicons/react/24/outline';
+import AdminLayout from '../../components/admin/AdminLayout';
+import {
+  deleteAiDocument,
+  getAiDocuments,
+  getCatalogStatus,
+  syncCatalog,
+  uploadAiDocument
+} from '../../services/aiService';
+
+const formatTimestamp = (value) => {
+  if (!value) return 'Chua co';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return 'Chua co';
+  return date.toLocaleString('vi-VN');
+};
+
+const formatBytes = (value) => {
+  const size = Number(value) || 0;
+  if (!size) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB'];
+  let index = 0;
+  let current = size;
+  while (current >= 1024 && index < units.length - 1) {
+    current /= 1024;
+    index += 1;
+  }
+  return `${current.toFixed(current < 10 && index > 0 ? 1 : 0)} ${units[index]}`;
+};
+
+const AiCatalogSync = () => {
+  const [status, setStatus] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSyncing, setIsSyncing] = useState(false);
+  const [error, setError] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadResult, setUploadResult] = useState(null);
+  const [uploadError, setUploadError] = useState('');
+  const [documents, setDocuments] = useState([]);
+  const [docsLoading, setDocsLoading] = useState(true);
+  const [docsError, setDocsError] = useState('');
+  const [deletingFile, setDeletingFile] = useState('');
+
+  const loadStatus = async () => {
+    setIsLoading(true);
+    setError('');
+    try {
+      const data = await getCatalogStatus();
+      setStatus(data);
+    } catch (err) {
+      setError(err?.message || 'Không thể tải trạng thái catalog');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSync = async () => {
+    setIsSyncing(true);
+    setError('');
+    try {
+      await syncCatalog({ reason: 'manual' });
+      await loadStatus();
+    } catch (err) {
+      setError(err?.message || 'Không thể đồng bộ catalog');
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
+  const handleUpload = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setUploadError('');
+    setUploadResult(null);
+    setIsUploading(true);
+    setUploadProgress(0);
+
+    try {
+      const result = await uploadAiDocument({
+        file,
+        onProgress: setUploadProgress
+      });
+      setUploadResult(result);
+      await loadDocuments();
+    } catch (err) {
+      setUploadError(err?.message || 'Không thể upload tài liệu');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const loadDocuments = async () => {
+    setDocsLoading(true);
+    setDocsError('');
+    try {
+      const data = await getAiDocuments();
+      setDocuments(data?.items || []);
+    } catch (err) {
+      setDocsError(err?.message || 'Không thể tải danh sách tài liệu');
+    } finally {
+      setDocsLoading(false);
+    }
+  };
+
+  const handleDeleteDocument = async (fileName) => {
+    if (!fileName) return;
+    setDeletingFile(fileName);
+    setDocsError('');
+
+    try {
+      await deleteAiDocument({ fileName });
+      await loadDocuments();
+    } catch (err) {
+      setDocsError(err?.message || 'Không thể xóa tài liệu');
+    } finally {
+      setDeletingFile('');
+    }
+  };
+
+  useEffect(() => {
+    loadStatus();
+    loadDocuments();
+  }, []);
+
+  const lastResult = status?.lastSyncResult;
+
+  return (
+    <AdminLayout>
+      <div className="space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <p className="text-sm text-gray-500">AI Catalog</p>
+            <h1 className="text-2xl font-semibold text-gray-900">Đồng bộ catalog QA</h1>
+            <p className="text-sm text-gray-500 mt-2">
+              Theo dõi trạng thái index Qdrant và chạy đồng bộ thủ công khi cần.
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={loadStatus}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:border-gray-400"
+            >
+              <ArrowPathIcon className="w-4 h-4" />
+              Tai lai
+            </button>
+            <button
+              type="button"
+              onClick={handleSync}
+              disabled={isSyncing}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gray-900 text-white text-sm font-semibold disabled:opacity-60"
+            >
+              <PlayIcon className="w-4 h-4" />
+              {isSyncing ? 'Đang đồng bộ...' : 'Đồng bộ ngay'}
+            </button>
+          </div>
+        </div>
+
+        {error && (
+          <div className="flex items-center gap-2 text-sm text-rose-600 bg-rose-50 px-4 py-3 rounded-xl">
+            <ExclamationTriangleIcon className="w-4 h-4" />
+            {error}
+          </div>
+        )}
+
+        <div className="grid lg:grid-cols-2 gap-6">
+          <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6">
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-sm font-semibold text-gray-700">Trạng thái hiện tại</p>
+              {status?.running ? (
+                <span className="text-xs font-semibold text-amber-600 bg-amber-50 px-3 py-1 rounded-full">Dang chay</span>
+              ) : (
+                <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full">San sang</span>
+              )}
+            </div>
+
+            {isLoading ? (
+              <p className="text-sm text-gray-500">Đang tải...</p>
+            ) : (
+              <div className="space-y-3 text-sm text-gray-600">
+                <div className="flex items-center justify-between">
+                  <span className="flex items-center gap-2">
+                    <ClockIcon className="w-4 h-4" />
+                    Lần đồng bộ gần nhất
+                  </span>
+                  <span className="font-semibold text-gray-800">{formatTimestamp(status?.lastSyncAt)}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Lý do</span>
+                  <span className="font-semibold text-gray-800">{status?.lastSyncReason || 'Chưa có'}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Đang chờ</span>
+                  <span className="font-semibold text-gray-800">{status?.pending ? 'Có' : 'Không'}</span>
+                </div>
+                {status?.lastSyncError && (
+                  <div className="text-xs text-rose-600 bg-rose-50 px-3 py-2 rounded-lg">
+                    {status.lastSyncError}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <CheckCircleIcon className="w-4 h-4 text-emerald-500" />
+              <p className="text-sm font-semibold text-gray-700">Kết quả đồng bộ</p>
+            </div>
+            {isLoading ? (
+              <p className="text-sm text-gray-500">Đang tải...</p>
+            ) : lastResult ? (
+              <div className="space-y-3 text-sm text-gray-600">
+                <div className="flex items-center justify-between">
+                  <span>Trạng thái</span>
+                  <span className="font-semibold text-gray-800">{lastResult.status}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Sản phẩm</span>
+                  <span className="font-semibold text-gray-800">{lastResult.counts?.products ?? 0}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span>Khuyến mãi</span>
+                  <span className="font-semibold text-gray-800">{lastResult.counts?.promotions ?? 0}</span>
+                </div>
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500">Chưa có dữ liệu đồng bộ.</p>
+            )}
+          </div>
+        </div>
+
+        <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <CloudArrowUpIcon className="w-4 h-4 text-emerald-500" />
+            <p className="text-sm font-semibold text-gray-700">Upload tài liệu RAG</p>
+          </div>
+          <p className="text-xs text-gray-500">
+            Hỗ trợ PDF, DOCX, PPTX, XLSX. Tối đa 25MB. Chỉ admin mới được upload.
+          </p>
+
+          <div className="mt-4">
+            <label className="flex flex-col items-center justify-center gap-3 border border-dashed border-gray-200 rounded-2xl px-4 py-6 text-gray-500 text-sm cursor-pointer hover:border-gray-400">
+              <CloudArrowUpIcon className="w-6 h-6" />
+              <span>Kéo thả hoặc click để chọn file</span>
+              <input
+                type="file"
+                className="hidden"
+                accept=".pdf,.docx,.pptx,.xlsx"
+                onChange={handleUpload}
+                disabled={isUploading}
+              />
+            </label>
+
+            {isUploading && (
+              <div className="mt-4">
+                <div className="h-2 rounded-full bg-gray-100">
+                  <div
+                    className="h-2 rounded-full bg-gray-900 transition-all"
+                    style={{ width: `${uploadProgress}%` }}
+                  />
+                </div>
+                <p className="text-xs text-gray-500 mt-2">Upload {uploadProgress}%</p>
+              </div>
+            )}
+
+            {uploadResult && (
+              <div className="mt-4 text-xs text-emerald-700 bg-emerald-50 px-3 py-3 rounded-xl flex items-start gap-2">
+                <CheckCircleIcon className="w-4 h-4 mt-0.5" />
+                <div>
+                  <p className="font-semibold">Upload thành công</p>
+                  <p>{uploadResult.fileName} - {uploadResult.chunkCount} chunks</p>
+                </div>
+              </div>
+            )}
+
+            {uploadError && (
+              <div className="mt-4 text-xs text-rose-600 bg-rose-50 px-3 py-2 rounded-xl">
+                {uploadError}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="bg-white border border-gray-100 rounded-2xl shadow-sm p-6">
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <div>
+              <p className="text-sm font-semibold text-gray-700">Tài liệu đã upload</p>
+              <p className="text-xs text-gray-500">Danh sách tài liệu trong thư mục RAG.</p>
+            </div>
+            <button
+              type="button"
+              onClick={loadDocuments}
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-xl border border-gray-200 text-xs font-semibold text-gray-600 hover:border-gray-400"
+            >
+              <ArrowPathIcon className="w-4 h-4" />
+              Tải lại
+            </button>
+          </div>
+
+          {docsError && (
+            <div className="mb-4 text-xs text-rose-600 bg-rose-50 px-3 py-2 rounded-xl">
+              {docsError}
+            </div>
+          )}
+
+          {docsLoading ? (
+            <p className="text-sm text-gray-500">Đang tải danh sách...</p>
+          ) : documents.length ? (
+            <div className="divide-y divide-gray-100">
+              {documents.map((doc) => (
+                <div key={doc.fileName} className="py-3 flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-semibold text-gray-800">{doc.fileName}</p>
+                    <p className="text-xs text-gray-500">
+                      {formatBytes(doc.sizeBytes)} • {formatTimestamp(doc.uploadedAt)}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteDocument(doc.fileName)}
+                    disabled={deletingFile === doc.fileName}
+                    className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold text-rose-600 border border-rose-100 hover:border-rose-300 disabled:opacity-60"
+                  >
+                    <TrashIcon className="w-4 h-4" />
+                    {deletingFile === doc.fileName ? 'Đang xóa...' : 'Xóa'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-sm text-gray-500">Chưa có tài liệu nào.</p>
+          )}
+        </div>
+      </div>
+    </AdminLayout>
+  );
+};
+
+export default AiCatalogSync;

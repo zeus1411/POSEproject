@@ -1,0 +1,88 @@
+Plan: Monolithic AI Service (RAG + Catalog QA)
+Mục tiêu là tận dụng code hiện có để dựng một luồng monolithic duy nhất, nhưng có 2 chế độ rõ ràng:
+
+Document RAG: upload tài liệu, chunk, embed, truy vấn theo tài liệu.
+Catalog QA: tra cứu thông tin sản phẩm/giá/khuyến mãi từ vector catalog.
+Mình đã lưu kế hoạch chi tiết vào session plan và tóm tắt bản thực thi bên dưới.
+
+Steps
+
+Phase 1 - Foundation contract + mode router
+
+Chuẩn hóa contract chat request/response có trường mode gồm document_rag và catalog_qa.
+
+Tạo entry orchestration chung để route sang flow RAG tài liệu hoặc flow catalog QA, giữ nguyên streaming hiện tại.
+
+Mở rộng metadata conversation/message để lưu mode, retrieval strategy, source summary.
+
+Phase 2 - Document RAG hardening
+
+Dùng lại pipeline upload/index hiện có, bổ sung validation chặt cho PDF/DOCX/PPTX/XLSX và trạng thái parse lỗi.
+
+Chuẩn hóa chunk profile và gắn embedding version vào payload vector.
+
+Tách namespace vector docs hoặc bắt buộc filter source_type=document để tránh lẫn dữ liệu.
+
+Thêm guard retrieval: similarity threshold, top-k cap, fallback khi thiếu context.
+
+Phase 3 - Catalog ingestion + retrieval
+
+Xây ETL snapshot product/price/promotion/category đẩy vào vector catalog với metadata đầy đủ.
+
+Sync theo 2 cơ chế: cron 5-10 phút và trigger sau admin CRUD.
+
+Trả lời catalog theo format nhất quán: tên SP, giá hiện tại, promo, điều kiện, hiệu lực.
+
+Phase 4 - Frontend integration
+
+Thêm mode selector tại ô chat, gửi mode trong payload API.
+
+Chặn send khi upload đang chạy, hiển thị trạng thái index/sync, render nguồn trích dẫn.
+
+Thêm trạng thái đồng bộ catalog đơn giản cho admin.
+
+Phase 5 - Resilience + observability
+
+Áp cache theo mode: TTL ngắn cho catalog QA, TTL dài hơn cho document QA.
+
+Graceful degradation khi Qdrant hoặc LLM lỗi, không trả lời suy diễn không có bằng chứng.
+
+Gắn trace/metrics theo mode: latency retrieval/gen, token usage, cache hit, source coverage.
+
+Phase 6 - Verification
+
+Test backend cho mode routing, isolation collection, retrieval filter, permission boundary.
+
+E2E: upload doc rồi hỏi; update giá/promo rồi sync rồi hỏi; kiểm tra phân quyền.
+
+Regression streaming chat và conversation persistence hiện hữu.
+
+Relevant files
+
+service.py
+router.py
+retriever.py
+service.py
+qdrant_service.py
+embedding_service.py
+sync_qdrant_erp.py
+models.py
+models.py
+chat-input.tsx
+chat.ts
+chat-store.ts
+use-dbiz-chat.ts
+dbiz-autonomous-ui/src/app/(dashboard)/knowledge/documents/page.tsx/knowledge/documents/page.tsx)
+Verification
+
+Validate mode enum, folder permission, invalid input trả 4xx đúng chuẩn.
+Test 10 câu hỏi tài liệu, mỗi câu phải có citation nguồn chunk.
+Sửa 1 giá + 1 promotion, sync xong hỏi lại, kết quả phải phản ánh dữ liệu mới trong SLA đặt trước.
+Kiểm tra isolation: query docs không dính catalog và ngược lại.
+Giả lập Qdrant/LLM fail, xác nhận fallback an toàn + trace đầy đủ.
+Kiểm tra UI mode toggle, upload gating, streaming không regression.
+Decisions
+
+In scope: 2 mode document_rag và catalog_qa trên một API monolith.
+In scope: dùng Qdrant nhưng tách logic dữ liệu theo namespace/filter nghiêm ngặt.
+Out of scope: recommendation ML nâng cao, re-ranker phức tạp, stress test production-scale.

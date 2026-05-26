@@ -46,6 +46,7 @@ const options = {
     './routes/*.js',
     './server-ecommerce/routes/*.js',
     './server-blogs/routes/*.js',
+    './server-ai/routes/*.js',
     './models/*.js',
   ],
 };

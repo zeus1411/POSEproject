@@ -24,6 +24,7 @@ import AdminOrders from '../src/client-eco/pages/admin/Orders';
 import AdminOrderDetail from '../src/client-eco/pages/admin/AdminOrderDetail';
 import AdminLayout from '../src/client-eco/components/admin/AdminLayout';
 import AdminPromotions from '../src/client-eco/pages/admin/Promotions';
+import AiCatalogSync from '../src/client-eco/pages/admin/AiCatalogSync';
 
 // Blog management pages
 import AdminBlogCategories from './client-blog/pages/admin/BlogCategories';
@@ -85,6 +86,7 @@ function App() {
               <Route path="admin/orders/:id" element={<AdminOrderDetail />} />
               <Route path="admin/my-orders" element={<AdminLayout> <MyOrders /> </AdminLayout>} />
               <Route path="admin/promotions" element={<AdminPromotions />} />
+              <Route path="admin/ai-catalog" element={<AiCatalogSync />} />
 
               {/* Blog management routes */}
               <Route path="admin/blog-categories" element={<AdminBlogCategories />} />

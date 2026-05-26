@@ -6,6 +6,8 @@ import Header from './common/Header';
 import Footer from './common/Footer';
 import Toast from './common/Toast';
 import ChatBubble from './common/ChatBubble';
+import AiChatBubble from './common/AiChatBubble';
+import { ChatDockProvider } from '../context/ChatDockContext';
 
 const Layout = () => {
   const { user } = useSelector((state) => state.auth);
@@ -49,7 +51,10 @@ const Layout = () => {
       </div>
       <Footer />
       <Toast />
-      <ChatBubble />
+      <ChatDockProvider>
+        <ChatBubble />
+        <AiChatBubble />
+      </ChatDockProvider>
     </div>
   );
 };
