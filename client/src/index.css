@@ -1581,3 +1581,30 @@ html {
   backdrop-filter: none !important;
   -webkit-backdrop-filter: none !important;
 }
+
+/* Shop campaign surfaces remain cinematic in light mode while surrounding UI softens. */
+.light .shop-page .shop-hero-banner h1,
+.light .shop-page .shop-hero-banner p,
+.light .shop-page .shop-hero-banner [class*="text-white"] {
+  color: #ffffff !important;
+}
+
+.light .shop-page .shop-hero-banner [class*="text-neon-cyan"],
+.light .shop-page .media-overlay-action:hover {
+  color: #00ffd1 !important;
+}
+
+.light .shop-page .media-overlay-action {
+  color: #ffffff !important;
+}
+
+.dark .shop-page .shop-sort-select {
+  color-scheme: dark;
+  background-color: rgb(6 31 32 / 0.98);
+  color: rgb(var(--foreground));
+}
+
+.dark .shop-page .shop-sort-select option {
+  background-color: #082727;
+  color: #f1f5f9;
+}

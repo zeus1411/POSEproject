@@ -1,4 +1,5 @@
 import Product from '../models/Product.js';
+import Order from '../models/Order.js';
 import mongoose from 'mongoose';
 import { BadRequestError, NotFoundError } from '../../utils/errorHandler.js';
 import { deleteFromCloudinary } from '../../utils/cloudinaryUtils.js';
@@ -434,6 +435,107 @@ class ProductService {
         limit: pageSize
       },
       message: total === 0 ? 'Không tìm thấy sản phẩm' : null
+    };
+  }
+
+  /**
+   * Build lightweight purchase-based recommendations for a signed-in customer.
+   * This uses existing order/category data and deliberately excludes products
+   * already purchased by the customer.
+   */
+  async getPersonalizedRecommendations(userId, limit = 6) {
+    const itemLimit = Math.max(1, Math.min(12, Number(limit) || 6));
+    const orders = await Order.find({
+      userId,
+      status: { $nin: ['CANCELLED', 'FAILED'] }
+    })
+      .sort({ createdAt: -1 })
+      .limit(20)
+      .select('items.productId createdAt')
+      .populate('items.productId', 'name categoryId');
+
+    const purchasedProducts = orders.flatMap((order) => (
+      order.items
+        .map((item) => item.productId)
+        .filter(Boolean)
+    ));
+
+    if (purchasedProducts.length === 0) {
+      return {
+        hasPurchaseHistory: false,
+        basis: 'none',
+        recommended: [],
+        similar: []
+      };
+    }
+
+    const purchasedIds = [...new Set(purchasedProducts.map((product) => product._id.toString()))];
+    const categoryWeights = new Map();
+
+    orders.forEach((order, orderIndex) => {
+      const recencyWeight = orderIndex === 0 ? 3 : orderIndex < 4 ? 2 : 1;
+      order.items.forEach((item) => {
+        const categoryId = item.productId?.categoryId?.toString();
+        if (categoryId) {
+          categoryWeights.set(categoryId, (categoryWeights.get(categoryId) || 0) + recencyWeight);
+        }
+      });
+    });
+
+    const categoryIds = [...categoryWeights.keys()];
+    const latestCategoryIds = [
+      ...new Set((orders[0]?.items || [])
+        .map((item) => item.productId?.categoryId?.toString())
+        .filter(Boolean))
+    ];
+
+    if (categoryIds.length === 0) {
+      return {
+        hasPurchaseHistory: true,
+        basis: 'purchase-history-without-categories',
+        recommended: [],
+        similar: []
+      };
+    }
+
+    const candidates = await Product.find({
+      status: 'ACTIVE',
+      categoryId: { $in: categoryIds },
+      _id: { $nin: purchasedIds }
+    })
+      .populate('categoryId', 'name slug')
+      .limit(100)
+      .lean();
+
+    const recommendationScore = (product) => {
+      const categoryScore = categoryWeights.get(product.categoryId?._id?.toString() || product.categoryId?.toString()) || 0;
+      return categoryScore * 100
+        + (product.isFeatured ? 20 : 0)
+        + (product.rating?.average || 0) * 5
+        + Math.min(product.soldCount || 0, 100) / 10;
+    };
+
+    const similarityScore = (product) => (
+      (product.rating?.average || 0) * 10
+      + Math.min(product.soldCount || 0, 100)
+      + (product.isFeatured ? 10 : 0)
+    );
+
+    const recommended = [...candidates]
+      .sort((left, right) => recommendationScore(right) - recommendationScore(left))
+      .slice(0, itemLimit);
+
+    const similar = candidates
+      .filter((product) => latestCategoryIds.includes(product.categoryId?._id?.toString() || product.categoryId?.toString()))
+      .sort((left, right) => similarityScore(right) - similarityScore(left))
+      .slice(0, itemLimit);
+
+    return {
+      hasPurchaseHistory: true,
+      basis: 'purchased-categories',
+      sourceProducts: purchasedProducts.slice(0, 4).map((product) => product.name),
+      recommended,
+      similar
     };
   }
 

@@ -5,20 +5,18 @@ const ProductGrid = ({
   products = [], 
   isLoading = false, 
   onAddToCart, 
-  onToggleWishlist,
-  wishlistItems = [],
   className = ""
 }) => {
   if (isLoading) {
     return (
-      <div className={`grid grid-cols-4 gap-3 md:gap-4 ${className}`}>
+      <div className={`grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:grid-cols-4 ${className}`}>
         {[...Array(8)].map((_, index) => (
-          <div key={index} className="bg-card rounded-xl shadow-md overflow-hidden border border-border animate-pulse dark:bg-white">
-            <div className="aspect-square bg-muted dark:bg-gray-200"></div>
-            <div className="p-5 space-y-4">
-              <div className="h-5 bg-muted dark:bg-gray-200 rounded w-3/4"></div>
-              <div className="h-5 bg-muted dark:bg-gray-200 rounded w-1/2"></div>
-              <div className="h-7 bg-muted dark:bg-gray-200 rounded w-1/3"></div>
+          <div key={index} className="animate-pulse overflow-hidden rounded-2xl border border-water/25 bg-card/70 dark:border-white/10 dark:bg-white/[0.04]">
+            <div className="aspect-square bg-muted dark:bg-white/[0.06]"></div>
+            <div className="space-y-3 p-4">
+              <div className="h-3 w-1/3 rounded bg-muted dark:bg-white/[0.07]"></div>
+              <div className="h-4 w-4/5 rounded bg-muted dark:bg-white/[0.07]"></div>
+              <div className="h-5 w-1/2 rounded bg-muted dark:bg-white/[0.07]"></div>
             </div>
           </div>
         ))}
@@ -41,14 +39,12 @@ const ProductGrid = ({
   }
 
   return (
-    <div className={`grid grid-cols-4 gap-3 md:gap-4 ${className}`}>
+    <div className={`grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 xl:grid-cols-4 ${className}`}>
       {products.map((product) => (
         <ProductCard
           key={product._id}
           product={product}
           onAddToCart={onAddToCart}
-          onToggleWishlist={onToggleWishlist}
-          isInWishlist={wishlistItems.includes(product._id)}
         />
       ))}
     </div>

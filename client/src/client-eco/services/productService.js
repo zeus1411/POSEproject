@@ -63,6 +63,13 @@ const productService = {
     return response.data.items || response.data;
   },
 
+  getPersonalizedRecommendations: async (limit = 6) => {
+    const response = await api.get('/products/recommendations/for-you', {
+      params: { limit }
+    });
+    return response.data;
+  },
+
   // Get products by category
   getProductsByCategory: async (categoryId, params = {}) => {
     const response = await api.get('/products/search', {

@@ -148,6 +148,21 @@ export const searchProducts = async (req, res, next) => {
     }
 };
 
+// @desc    Purchase-based recommendations for current customer
+// @route   GET /api/v1/products/recommendations/for-you
+// @access  Private
+export const getPersonalizedRecommendations = async (req, res, next) => {
+    try {
+        const result = await ProductService.getPersonalizedRecommendations(
+            req.user.userId,
+            req.query.limit
+        );
+        return res.status(200).json(result);
+    } catch (error) {
+        return next(error);
+    }
+};
+
 // @desc    Upload image for product description (TinyMCE)
 // @route   POST /api/v1/products/upload-description-image
 // @access  Private (Admin)

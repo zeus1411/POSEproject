@@ -7,6 +7,7 @@ import {
   deleteProduct,
   searchProducts,
   searchProductsQuick,
+  getPersonalizedRecommendations,
   updateProductImages,
   uploadProductImages,
   uploadDescriptionImage
@@ -108,6 +109,8 @@ router.get('/search', searchProducts);
  *         description: List of products found
  */
 router.get('/search-quick', authenticateUser, searchProductsQuick);
+
+router.get('/recommendations/for-you', authenticateUser, getPersonalizedRecommendations);
 
 /**
  * @swagger
