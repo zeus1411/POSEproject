@@ -1,170 +1,146 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { StarIcon, ShoppingCartIcon, EyeIcon } from '@heroicons/react/24/outline';
-import { StarIcon as StarSolid } from '@heroicons/react/24/solid';
-import { useDispatch, useSelector } from 'react-redux';
-import { addToCart } from '../../redux/slices/cartSlice';
+import {
+  EyeIcon,
+  ShoppingBagIcon,
+} from '@heroicons/react/24/outline';
+import { StarIcon } from '@heroicons/react/24/solid';
 
-const ProductCard = ({ product, onToggleWishlist, isInWishlist = false }) => {
-  const dispatch = useDispatch();
+const RECENTLY_VIEWED_KEY = 'aquaticcaps-recently-viewed';
+
+const ProductCard = ({
+  product,
+  onAddToCart,
+  variant = 'grid',
+}) => {
   const navigate = useNavigate();
-  const { user } = useSelector((s) => s.auth);
+  const isRail = variant === 'rail';
 
-  const handleViewDetail = (e) => {
-    e.stopPropagation();
-    navigate(`/product/${product._id}`);
-  };
+  const formatPrice = (price) => new Intl.NumberFormat('vi-VN', {
+    style: 'currency',
+    currency: 'VND',
+  }).format(price || 0);
 
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND'
-    }).format(price);
-  };
-
-  const renderPrice = () => {
-    if (product.hasVariants && product.variants && product.variants.length > 0) {
-      const activePrices = product.variants.filter(v => v.isActive).map(v => v.price);
-      if (activePrices.length > 0) {
-        const minPrice = Math.min(...activePrices);
-        const maxPrice = Math.max(...activePrices);
-        if (minPrice === maxPrice) return formatPrice(minPrice);
-        return `${formatPrice(minPrice)} – ${formatPrice(maxPrice)}`;
-      }
-    }
-    return formatPrice(product.price);
-  };
-
-  const getTotalStock = () => {
-    if (product.hasVariants && product.variants && product.variants.length > 0) {
-      return product.variants.filter(v => v.isActive).reduce((t, v) => t + (v.stock || 0), 0);
-    }
-    return product.stock || 0;
-  };
-
-  const totalStock = getTotalStock();
+  const activeVariants = product.variants?.filter((item) => item.isActive) || [];
+  const variantPrices = activeVariants.map((item) => item.price);
+  const minPrice = variantPrices.length ? Math.min(...variantPrices) : product.price;
+  const maxPrice = variantPrices.length ? Math.max(...variantPrices) : product.price;
+  const price = minPrice === maxPrice ? formatPrice(minPrice) : `${formatPrice(minPrice)} - ${formatPrice(maxPrice)}`;
+  const stock = product.hasVariants
+    ? activeVariants.reduce((total, item) => total + (item.stock || 0), 0)
+    : product.stock || 0;
   const rating = product.rating?.average || 0;
-  const ratingCount = product.rating?.count || 0;
-
-  const discountPercentage = product.originalPrice && product.price
+  const discount = product.originalPrice && product.price
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     : product.discount || 0;
 
+  const rememberViewed = () => {
+    try {
+      const stored = JSON.parse(window.localStorage.getItem(RECENTLY_VIEWED_KEY) || '[]');
+      const snapshot = {
+        _id: product._id,
+        name: product.name,
+        images: product.images,
+        price: product.price,
+        originalPrice: product.originalPrice,
+        discount: product.discount,
+        stock: product.stock,
+        variants: product.variants,
+        hasVariants: product.hasVariants,
+        categoryId: product.categoryId,
+        rating: product.rating,
+        soldCount: product.soldCount,
+      };
+      const next = [snapshot, ...stored.filter((item) => item._id !== product._id)].slice(0, 10);
+      window.localStorage.setItem(RECENTLY_VIEWED_KEY, JSON.stringify(next));
+      window.dispatchEvent(new CustomEvent('aquaticcaps:recent-viewed', { detail: next }));
+    } catch (error) {
+      // Browsing still works when storage is unavailable.
+    }
+  };
+
+  const viewProduct = (event) => {
+    event.preventDefault();
+    rememberViewed();
+    navigate(`/product/${product._id}`);
+  };
+
+  const addToCart = (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (stock > 0) onAddToCart?.(product);
+  };
+
   return (
-    <div className="group overflow-hidden rounded-2xl border border-water/45 bg-card text-card-foreground shadow-[0_14px_35px_rgb(var(--deep-ocean)/0.08)] transition-all duration-500 hover:scale-[1.02] hover:border-ocean/45 hover:shadow-[0_20px_45px_rgb(var(--deep-ocean)/0.14)] dark:glass-card">
-      {/* Product Image */}
-      <div className="relative aspect-square overflow-hidden">
-        <Link to={`/product/${product._id}`}>
+    <article className={`group relative snap-start overflow-hidden rounded-2xl border border-water/30 bg-card/80 shadow-[0_12px_32px_rgb(var(--deep-ocean)/0.08)] transition duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-[0_24px_50px_rgb(var(--deep-ocean)/0.16)] dark:border-white/10 dark:bg-white/[0.045] dark:hover:shadow-[0_18px_42px_rgba(0,255,209,0.10)] ${isRail ? 'w-[215px] shrink-0 sm:w-[230px]' : 'w-full'}`}>
+      <div className="relative aspect-[1/1.02] overflow-hidden bg-muted">
+        <Link to={`/product/${product._id}`} onClick={rememberViewed} aria-label={`Xem ${product.name}`}>
           <img
             src={product.images?.[0] || '/placeholder-product.jpg'}
             alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-            onError={(e) => { e.target.src = '/placeholder-product.jpg'; }}
+            loading="lazy"
+            decoding="async"
+            className="h-full w-full object-cover transition duration-700 group-hover:scale-[1.07]"
+            onError={(event) => { event.currentTarget.src = '/placeholder-product.jpg'; }}
           />
         </Link>
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-abyss/70 via-transparent to-transparent opacity-50 transition group-hover:opacity-90" />
 
-        {/* Gradient overlay */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 dark:from-abyss/60"></div>
-
-        {/* Badges */}
-        <div className="absolute top-2.5 left-2.5 flex flex-col gap-1.5">
-          {product.isNew && (
-            <span className="bg-ocean text-primary-foreground text-xs px-2.5 py-1 rounded-full font-body font-bold shadow-sm dark:bg-neon-cyan dark:text-abyss dark:shadow-glow-cyan">
-              Mới
-            </span>
-          )}
-          {product.isFeatured && (
-            <span className="bg-nature backdrop-blur-sm text-accent-foreground text-xs px-2.5 py-1 rounded-full font-body font-medium dark:bg-emerald-500/80 dark:text-white">
-              Nổi bật
-            </span>
-          )}
-          {discountPercentage > 0 && (
-            <span className="bg-secondary text-secondary-foreground text-xs px-2.5 py-1 rounded-full font-body font-bold shadow-sm dark:bg-coral dark:text-white dark:shadow-glow-coral">
-              -{discountPercentage}%
-            </span>
-          )}
+        <div className="absolute left-2.5 top-2.5 flex flex-wrap gap-1.5">
+          {product.isNew && <span className="rounded-full bg-neon-cyan px-2 py-1 font-body text-[10px] font-bold uppercase text-abyss">Mới</span>}
+          {discount > 0 && <span className="rounded-full bg-coral px-2 py-1 font-body text-[10px] font-bold text-white">-{discount}%</span>}
         </div>
-
-        {/* Stock badge */}
-        {totalStock === 0 && (
-          <div className="absolute inset-0 bg-background/75 flex items-center justify-center dark:bg-abyss/60">
-            <span className="rounded-full border border-border bg-card text-muted-foreground font-body font-semibold text-sm px-4 py-2 shadow-sm dark:glass-panel dark:text-gray-300">
-              Hết hàng
-            </span>
-          </div>
-        )}
-
-        {/* Quick view on hover */}
-        <div className="absolute inset-x-0 bottom-0 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+        <div className="absolute inset-x-2.5 bottom-2.5 flex gap-2 opacity-100 transition duration-300 md:translate-y-3 md:opacity-0 md:group-hover:translate-y-0 md:group-hover:opacity-100 md:group-focus-within:translate-y-0 md:group-focus-within:opacity-100">
           <button
-            onClick={handleViewDetail}
-            disabled={totalStock === 0}
-            className="w-full py-3 px-4 bg-ocean/95 backdrop-blur-sm hover:bg-primary-hover disabled:bg-muted disabled:text-muted-foreground disabled:cursor-not-allowed
-                       text-primary-foreground text-sm font-body font-bold transition-colors duration-200 flex items-center justify-center gap-2
-                       dark:bg-neon-cyan/90 dark:hover:bg-neon-cyan dark:disabled:bg-gray-700 dark:text-abyss"
+            type="button"
+            onClick={viewProduct}
+            className="media-overlay-action grid h-10 flex-1 place-items-center rounded-xl border border-white/15 bg-abyss/70 text-white backdrop-blur-md transition hover:border-neon-cyan/50 hover:text-neon-cyan"
+            aria-label="Xem nhanh"
           >
-            <EyeIcon className="w-4 h-4" />
-            Xem chi tiết
+            <EyeIcon className="h-5 w-5" />
+          </button>
+          <button
+            type="button"
+            disabled={stock === 0}
+            onClick={addToCart}
+            className="flex h-10 flex-[2] items-center justify-center gap-1.5 rounded-xl bg-neon-cyan font-body text-xs font-semibold text-abyss shadow-glow-cyan transition hover:bg-white disabled:cursor-not-allowed disabled:bg-gray-600 disabled:text-gray-300"
+          >
+            <ShoppingBagIcon className="h-4 w-4" />
+            Thêm giỏ
           </button>
         </div>
       </div>
 
-      {/* Product Info */}
-      <div className="p-4 space-y-2">
-        {/* Category tag */}
-        {product.categoryId && (
-          <span className="inline-block text-xs text-nature font-body font-semibold px-2 py-0.5 rounded-full bg-aqua/25 border border-water/45 dark:text-neon-cyan/70 dark:bg-neon-cyan/10 dark:border-neon-cyan/20">
-            {product.categoryId.name}
+      <div className={`${isRail ? 'p-3' : 'p-3.5 sm:p-4'}`}>
+        <div className="mb-2 flex items-center justify-between gap-2">
+          <span className="truncate font-body text-[10px] font-semibold uppercase tracking-[0.15em] text-ocean dark:text-neon-cyan/80">
+            {product.categoryId?.name || 'Aquatic selection'}
           </span>
-        )}
-
-        {/* Product Name */}
-        <Link to={`/product/${product._id}`}>
-          <h3 className="font-body font-semibold text-sm text-foreground line-clamp-2 hover:text-ocean transition-colors duration-200 leading-snug dark:text-gray-200 dark:hover:text-neon-cyan">
+          <span className="flex shrink-0 items-center gap-1 font-body text-xs text-muted-foreground">
+            <StarIcon className="h-3.5 w-3.5 text-amber-400" />
+            {rating ? rating.toFixed(1) : 'New'}
+          </span>
+        </div>
+        <Link to={`/product/${product._id}`} onClick={rememberViewed}>
+          <h3 className="line-clamp-2 min-h-[2.5rem] font-body text-sm font-semibold leading-5 text-foreground transition group-hover:text-ocean dark:group-hover:text-neon-cyan">
             {product.name}
           </h3>
         </Link>
-
-        {/* Rating row */}
-        <div className="flex items-center gap-1.5">
-          <div className="flex items-center gap-0.5">
-            {[...Array(5)].map((_, i) => (
-              <StarSolid
-                key={i}
-                className={`w-3.5 h-3.5 ${i < Math.round(rating) ? 'text-yellow-500 dark:text-yellow-400' : 'text-border dark:text-gray-700'}`}
-              />
-            ))}
-          </div>
-          <span className="text-xs text-muted-foreground font-body">{rating > 0 ? rating.toFixed(1) : '—'}</span>
-          {ratingCount > 0 && (
-            <span className="text-xs text-muted-foreground font-body">({ratingCount})</span>
+        <div className="mt-3">
+          <p className="font-body text-base font-bold text-ocean dark:text-neon-cyan">{price}</p>
+          {product.originalPrice > product.price && (
+            <p className="mt-0.5 font-body text-xs text-muted-foreground line-through">{formatPrice(product.originalPrice)}</p>
           )}
         </div>
-
-        {/* Price row */}
-        <div className="flex items-center gap-2 pt-1">
-          <span className="text-base font-headline font-bold text-ocean dark:text-neon-cyan">
-            {renderPrice()}
+        <div className="mt-3 flex items-center justify-between gap-2 font-body text-xs text-muted-foreground">
+          <span className="inline-flex items-center gap-1.5">
+            <span className={`h-1.5 w-1.5 rounded-full ${stock > 0 ? 'bg-primary' : 'bg-destructive'}`} />
+            {stock > 0 ? 'Còn hàng' : 'Hết hàng'}
           </span>
-          {product.originalPrice && product.originalPrice > product.price && (
-            <span className="text-xs text-muted-foreground line-through font-body">
-              {formatPrice(product.originalPrice)}
-            </span>
-          )}
-        </div>
-
-        {/* Stock status */}
-        <div className="flex items-center gap-1.5 pt-0.5">
-          <div className={`w-2 h-2 rounded-full flex-shrink-0 ${totalStock > 0 ? 'bg-nature dark:bg-neon-cyan' : 'bg-destructive'}`}></div>
-          <span className="text-xs text-muted-foreground font-body">
-            {totalStock > 0 ? `Còn ${totalStock} sản phẩm` : 'Hết hàng'}
-          </span>
-          {product.soldCount > 0 && (
-            <span className="text-xs text-muted-foreground font-body ml-auto">Đã bán {product.soldCount}</span>
-          )}
+          {product.soldCount > 0 && <span>Đã bán {product.soldCount}</span>}
         </div>
       </div>
-    </div>
+    </article>
   );
 };
 
