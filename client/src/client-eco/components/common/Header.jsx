@@ -43,7 +43,7 @@ const Header = () => {
       navigate(`/login?redirect=${redirect || '/shop'}`);
       return;
     }
-    setIsMiniCartOpen(true);
+    setIsMiniCartOpen((prev) => !prev);
   };
 
   const handleLogout = async () => {
@@ -168,6 +168,7 @@ const Header = () => {
               {!isAdmin && (
                 <button
                   type="button"
+                  onMouseDown={(event) => event.stopPropagation()}
                   onClick={handleOpenCart}
                   className="relative w-10 h-10 flex items-center justify-center rounded-xl border border-water/30 dark:border-border/50 bg-muted/10 hover:bg-muted/30 dark:hover:bg-muted/20 transition-all duration-200 shrink-0 text-foreground"
                 >

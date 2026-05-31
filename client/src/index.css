@@ -1655,3 +1655,43 @@ html {
   background-color: #082727;
   color: #f1f5f9;
 }
+
+/* ========================================
+   Admin Dark Mode Input Legibility
+   ======================================== */
+.dark .admin-shell input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not(:disabled),
+.dark .admin-shell textarea:not(:disabled),
+.dark .admin-shell select:not(:disabled) {
+  background-color: #ffffff !important;
+  border-color: rgba(15, 118, 110, 0.28) !important;
+  color: #0f172a !important;
+  color-scheme: light;
+}
+
+.dark .admin-shell input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not(:disabled)::placeholder,
+.dark .admin-shell textarea:not(:disabled)::placeholder {
+  color: #64748b !important;
+}
+
+.dark .admin-shell input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not(:disabled):focus,
+.dark .admin-shell textarea:not(:disabled):focus,
+.dark .admin-shell select:not(:disabled):focus {
+  background-color: #ffffff !important;
+  border-color: #10b981 !important;
+  box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.24) !important;
+}
+
+.dark .admin-shell select:not(:disabled) option {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+.dark .admin-shell input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):disabled,
+.dark .admin-shell textarea:disabled,
+.dark .admin-shell select:disabled {
+  background-color: rgba(148, 163, 184, 0.16) !important;
+  border-color: rgba(148, 163, 184, 0.22) !important;
+  color: #94a3b8 !important;
+  cursor: not-allowed;
+  opacity: 0.78;
+}

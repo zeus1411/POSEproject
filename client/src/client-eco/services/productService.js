@@ -63,6 +63,17 @@ const productService = {
     return response.data.items || response.data;
   },
 
+  // Get top rated products
+  getTopRatedProducts: async (limit = 8) => {
+    const response = await api.get('/products/search', {
+      params: {
+        sort: 'rating.average:desc',
+        limit
+      }
+    });
+    return response.data.items || response.data;
+  },
+
   getPersonalizedRecommendations: async (limit = 6) => {
     const response = await api.get('/products/recommendations/for-you', {
       params: { limit }

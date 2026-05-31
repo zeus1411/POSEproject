@@ -21,7 +21,7 @@ const Footer = () => {
             <span className="text-neon-cyan">🐠</span> AquaticCaps
           </h2>
           <p className="text-gray-500 text-sm leading-relaxed font-body">
-            Khám phá bộ sưu tập đẳng cấp, biến không gian sống thành tác phẩm nghệ thuật thủy sinh.
+            Khám phá sản phẩm đẳng cấp, biến không gian sống thành tác phẩm nghệ thuật thủy sinh.
           </p>
 
           <div className="flex space-x-4 mt-5">

@@ -4,7 +4,6 @@ import {
   ShoppingBagIcon,
   ChartBarIcon,
   Square3Stack3DIcon, // Icon mới trực quan hơn cho sản phẩm thủy sinh
-  HomeModernIcon,
   UsersIcon,
   TicketIcon,
   DocumentTextIcon,
@@ -15,7 +14,7 @@ import {
   NewspaperIcon,
   SparklesIcon
 } from '@heroicons/react/24/outline';
-import { FileClock } from 'lucide-react';
+import { FileClock, Fish } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 
 const AdminSidebar = () => {
@@ -110,14 +109,14 @@ const AdminSidebar = () => {
                 ? 'bg-gradient-to-r from-emerald-500 to-teal-500 shadow-emerald-950/20' 
                 : 'bg-gradient-to-r from-primary to-water shadow-water/20'
             }`}>
-              <HomeModernIcon className="h-5 w-5 text-white" />
+              <Fish className="h-5 w-5 text-white" />
             </div>
             <span className={`text-lg font-black tracking-wide ${
               isDark 
                 ? 'bg-gradient-to-r from-emerald-400 to-cyan-400 text-transparent bg-clip-text' 
                 : 'bg-gradient-to-r from-primary to-water text-transparent bg-clip-text'
             }`}>
-              Aquatic Admin
+              AquaticCaps
             </span>
           </div>
         </div>

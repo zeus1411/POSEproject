@@ -3,16 +3,10 @@ import {
   ChevronDownIcon,
   ChevronUpIcon,
   Squares2X2Icon,
-  StarIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
+import { StarIcon } from '@heroicons/react/24/solid';
 import DualRangeSlider from './DualRangeSlider';
-
-const browseGroups = [
-  { key: 'aquarium', title: 'Loại bể', items: ['Nano tank', 'Nature aquarium', 'Low tech', 'CO2'] },
-  { key: 'difficulty', title: 'Độ khó cây', items: ['Dễ chăm', 'Trung bình', 'Cây tiền cảnh'] },
-  { key: 'fish', title: 'Loại cá', items: ['Cá đàn', 'Cá nano', 'Tép cảnh'] },
-];
 
 const Section = ({ title, open, onToggle, children }) => (
   <div className="border-b border-water/20 py-1 last:border-b-0 dark:border-white/[0.06]">
@@ -23,6 +17,32 @@ const Section = ({ title, open, onToggle, children }) => (
     {open && <div className="pb-4">{children}</div>}
   </div>
 );
+
+const RatingStar = ({ index, value, onPreview, onSelect }) => {
+  const fill = Math.max(0, Math.min(1, value - index));
+
+  const getRatingFromPointer = (event) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const isHalf = event.clientX - rect.left <= rect.width / 2;
+    return index + (isHalf ? 0.5 : 1);
+  };
+
+  return (
+    <button
+      type="button"
+      onMouseMove={(event) => onPreview(getRatingFromPointer(event))}
+      onFocus={() => onPreview(index + 1)}
+      onClick={(event) => onSelect(getRatingFromPointer(event))}
+      className="relative h-8 w-8 rounded-md text-slate-300 transition hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary/40 dark:text-white/25"
+      aria-label={`Chọn ${index + 0.5} hoặc ${index + 1} sao`}
+    >
+      <StarIcon className="h-8 w-8" />
+      <span className="pointer-events-none absolute inset-0 overflow-hidden text-amber-400" style={{ width: `${fill * 100}%` }}>
+        <StarIcon className="h-8 w-8" />
+      </span>
+    </button>
+  );
+};
 
 const FilterSidebar = ({
   categories = [],
@@ -37,15 +57,25 @@ const FilterSidebar = ({
     price: true,
     rating: true,
     stock: true,
-    aquarium: false,
-    difficulty: false,
-    fish: false,
   });
+  const [hoverRating, setHoverRating] = useState(null);
   const toggle = (key) => setOpen((value) => ({ ...value, [key]: !value[key] }));
-  const hasFilters = Boolean(selectedCategory || filters.search || filters.minPrice || filters.maxPrice || filters.inStock || filters.minRating);
+  const selectedRating = Number(filters.maxRating || 0);
+  const previewRating = hoverRating ?? selectedRating;
+  const hasFilters = Boolean(
+    selectedCategory
+    || filters.search
+    || filters.minPrice
+    || filters.maxPrice
+    || filters.inStock
+    || filters.minRating
+    || filters.maxRating
+  );
 
   const update = (key, value) => onFiltersChange({ ...filters, [key]: value });
-  const chooseBrowseTag = (tag) => update('search', filters.search === tag ? '' : tag);
+  const updateRating = (rating) => {
+    update('maxRating', selectedRating === rating ? '' : rating);
+  };
   const clearAll = () => {
     onCategoryChange(null);
     onFiltersChange({
@@ -56,6 +86,7 @@ const FilterSidebar = ({
       maxPrice: '',
       inStock: '',
       minRating: '',
+      maxRating: '',
     });
   };
 
@@ -115,23 +146,33 @@ const FilterSidebar = ({
         </Section>
 
         <Section title="Đánh giá" open={open.rating} onToggle={() => toggle('rating')}>
-          <div className="space-y-2">
-            {[4, 3].map((rating) => {
-              const active = String(filters.minRating) === String(rating);
-              return (
-                <button
-                  key={rating}
-                  type="button"
-                  onClick={() => update('minRating', active ? '' : rating)}
-                  className={`flex w-full items-center gap-2 rounded-xl border px-3 py-2.5 font-body text-sm transition ${
-                    active ? 'border-primary/30 bg-primary/10 text-foreground' : 'border-transparent text-muted-foreground hover:bg-primary/10'
-                  }`}
-                >
-                  <StarIcon className={`h-4 w-4 ${active ? 'fill-amber-400 text-amber-400' : 'text-amber-400'}`} />
-                  {rating} sao trở lên
-                </button>
-              );
-            })}
+          <div className="space-y-3">
+            <div
+              className="flex items-center gap-1"
+              onMouseLeave={() => setHoverRating(null)}
+              onBlur={(event) => {
+                if (!event.currentTarget.contains(event.relatedTarget)) {
+                  setHoverRating(null);
+                }
+              }}
+            >
+              {[0, 1, 2, 3, 4].map((index) => (
+                <RatingStar
+                  key={index}
+                  index={index}
+                  value={previewRating}
+                  onPreview={setHoverRating}
+                  onSelect={updateRating}
+                />
+              ))}
+            </div>
+            <p className="font-body text-xs text-muted-foreground">
+              {hoverRating
+                ? `Nhấn để lọc ${hoverRating.toFixed(1)} sao trở xuống`
+                : selectedRating
+                ? `Đang hiển thị sản phẩm ${selectedRating.toFixed(1)} sao trở xuống`
+                : 'Di chuột để xem trước, nhấn để lọc theo nửa sao.'}
+            </p>
           </div>
         </Section>
 
@@ -156,27 +197,6 @@ const FilterSidebar = ({
             ))}
           </div>
         </Section>
-
-        {browseGroups.map((group) => (
-          <Section key={group.key} title={group.title} open={open[group.key]} onToggle={() => toggle(group.key)}>
-            <div className="flex flex-wrap gap-2">
-              {group.items.map((tag) => (
-                <button
-                  type="button"
-                  key={tag}
-                  onClick={() => chooseBrowseTag(tag)}
-                  className={`rounded-full border px-3 py-2 font-body text-xs transition ${
-                    filters.search === tag
-                      ? 'border-primary/40 bg-primary/10 text-ocean dark:text-neon-cyan'
-                      : 'border-water/30 text-muted-foreground hover:border-primary/30 dark:border-white/10'
-                  }`}
-                >
-                  {tag}
-                </button>
-              ))}
-            </div>
-          </Section>
-        ))}
       </div>
 
       {onDone && (

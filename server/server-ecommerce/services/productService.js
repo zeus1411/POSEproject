@@ -287,6 +287,7 @@ class ProductService {
       maxPrice,
       inStock,
       minRating,
+      maxRating,
       page = 1,
       limit = 12,
       sort,
@@ -343,7 +344,20 @@ class ProductService {
     if (minRating !== undefined && minRating !== null && minRating !== '') {
       const ratingValue = Number(minRating);
       if (!Number.isNaN(ratingValue)) {
-        query['rating.average'] = { $gte: ratingValue };
+        query['rating.average'] = {
+          ...(query['rating.average'] || {}),
+          $gte: ratingValue
+        };
+      }
+    }
+
+    if (maxRating !== undefined && maxRating !== null && maxRating !== '') {
+      const ratingValue = Number(maxRating);
+      if (!Number.isNaN(ratingValue)) {
+        query['rating.average'] = {
+          ...(query['rating.average'] || {}),
+          $lte: ratingValue
+        };
       }
     }
 

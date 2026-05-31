@@ -32,6 +32,7 @@ const ProductDetail = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const location = useLocation();
+  const shopReturnPath = location.state?.fromShop || '/shop';
   
   const searchParams = new URLSearchParams(location.search);
   const orderIdFromUrl = searchParams.get('orderId');
@@ -45,6 +46,11 @@ const ProductDetail = () => {
   const [selectedVariant, setSelectedVariant] = useState(null);
   const reviews = useSelector((state) => state.reviews);
   const [showReviewForm, setShowReviewForm] = useState(false);
+  const productHasSelectableVariants = Boolean(
+    currentProduct?.hasVariants
+    && currentProduct?.options?.length > 0
+    && currentProduct?.variants?.some((variant) => variant.isActive)
+  );
 
   useEffect(() => {
     if (id) {
@@ -71,8 +77,11 @@ const ProductDetail = () => {
   }, [shouldShowReviewForm, orderIdFromUrl]);
 
   useEffect(() => {
-    if (!currentProduct || !currentProduct.hasVariants) return;
-    if (selectedVariant) return;
+    if (!currentProduct || !productHasSelectableVariants) {
+      setSelectedVariant(null);
+      return;
+    }
+    if (selectedVariant && selectedVariant.isActive && Number(selectedVariant.stock) > 0) return;
 
     const firstAvailable = currentProduct.variants.find(
       v => v.isActive && Number(v.stock) > 0
@@ -81,10 +90,9 @@ const ProductDetail = () => {
     if (firstAvailable) {
       setSelectedVariant(firstAvailable);
     } else {
-      const firstActive = currentProduct.variants.find(v => v.isActive);
-      setSelectedVariant(firstActive || null);
+      setSelectedVariant(null);
     }
-  }, [currentProduct]);
+  }, [currentProduct, productHasSelectableVariants, selectedVariant]);
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat('vi-VN', {
@@ -128,7 +136,7 @@ const ProductDetail = () => {
       return;
     }
 
-    if (currentProduct?.hasVariants && !selectedVariant) {
+    if (productHasSelectableVariants && !selectedVariant) {
       Swal.fire({
         icon: 'warning',
         title: 'Chưa chọn biến thể',
@@ -144,7 +152,7 @@ const ProductDetail = () => {
         quantity
       };
 
-      if (currentProduct?.hasVariants && selectedVariant) {
+      if (productHasSelectableVariants && selectedVariant) {
         cartData.variantId = selectedVariant._id;
       }
 
@@ -166,15 +174,22 @@ const ProductDetail = () => {
   };
 
   const getCurrentPrice = () => {
-    if (currentProduct?.hasVariants && selectedVariant) {
-      return selectedVariant.price;
+    if (productHasSelectableVariants) {
+      if (selectedVariant) return selectedVariant.price;
+      const activePrices = (currentProduct.variants || [])
+        .filter((variant) => variant.isActive && variant.price !== undefined && variant.price !== null)
+        .map((variant) => Number(variant.price));
+      return activePrices.length ? Math.min(...activePrices) : currentProduct?.price || 0;
     }
     return currentProduct?.price || 0;
   };
 
   const getCurrentStock = () => {
-    if (currentProduct?.hasVariants && selectedVariant) {
-      return selectedVariant.stock;
+    if (productHasSelectableVariants) {
+      if (selectedVariant) return selectedVariant.stock;
+      return (currentProduct.variants || [])
+        .filter((variant) => variant.isActive)
+        .reduce((total, variant) => total + (Number(variant.stock) || 0), 0);
     }
     return currentProduct?.stock || 0;
   };
@@ -187,7 +202,7 @@ const ProductDetail = () => {
         if (!item?.productId || !currentProduct) return false;
         if (item.productId._id !== currentProduct._id) return false;
 
-        if (currentProduct?.hasVariants && selectedVariant) {
+        if (productHasSelectableVariants && selectedVariant) {
           return (item.variantId?._id || item.variantId) === selectedVariant._id;
         }
 
@@ -270,7 +285,7 @@ const ProductDetail = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center space-x-2 text-sm text-cyan-200">
               <button
-                onClick={() => navigate('/shop')}
+                onClick={() => navigate(shopReturnPath)}
                 className="hover:text-white/90 transition-colors duration-200"
               >
                 Cửa hàng
@@ -359,13 +374,15 @@ const ProductDetail = () => {
                 </div>
               </div>
 
-              <div className="bg-white/3 backdrop-blur-md border border-cyan-300/20 p-4 rounded-lg">
-                <ProductVariantSelector
-                  product={currentProduct}
-                  selectedVariant={selectedVariant}
-                  onVariantChange={handleVariantChange}
-                />
-              </div>
+              {productHasSelectableVariants && (
+                <div className="bg-white/3 backdrop-blur-md border border-cyan-300/20 p-4 rounded-lg">
+                  <ProductVariantSelector
+                    product={currentProduct}
+                    selectedVariant={selectedVariant}
+                    onVariantChange={handleVariantChange}
+                  />
+                </div>
+              )}
 
               <div className="space-y-4">
                 <div>
@@ -392,7 +409,7 @@ const ProductDetail = () => {
                 </div>
 
                 <div className="space-y-3">
-                  {currentProduct?.hasVariants && !selectedVariant && (
+                  {productHasSelectableVariants && availableStock > 0 && !selectedVariant && (
                     <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
                       <p className="text-sm text-yellow-800 font-medium">
                         ⚠️ Vui lòng chọn biến thể sản phẩm trước khi thêm vào giỏ hàng
@@ -403,14 +420,14 @@ const ProductDetail = () => {
                   <div className="flex gap-4">
                     <motion.button
                       onClick={handleAddToCart}
-                      disabled={availableStock === 0 || (currentProduct?.hasVariants && !selectedVariant)}
+                      disabled={availableStock === 0 || (productHasSelectableVariants && !selectedVariant)}
                       whileTap={{ scale: 0.98 }}
                       className="flex-1 bg-gradient-to-r from-emerald-400 to-cyan-300 disabled:from-gray-400 disabled:to-gray-400 disabled:cursor-not-allowed text-slate-900 py-3 px-6 rounded-lg font-semibold transition-all duration-200 flex items-center justify-center gap-2 shadow-md"
                     >
                       <ShoppingCartIcon className="w-5 h-5" />
                       {availableStock === 0 
                         ? 'Hết hàng' 
-                        : currentProduct?.hasVariants && !selectedVariant
+                        : productHasSelectableVariants && !selectedVariant
                         ? 'Chọn biến thể'
                         : 'Thêm vào giỏ hàng'}
                     </motion.button>

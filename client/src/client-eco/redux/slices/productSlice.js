@@ -21,6 +21,7 @@ const initialState = {
     maxPrice: '',
     inStock: '',
     minRating: '',
+    maxRating: '',
     sort: 'createdAt:desc'
   }
 };
@@ -154,6 +155,7 @@ export const productSlice = createSlice({
         maxPrice: '',
         inStock: '',
         minRating: '',
+        maxRating: '',
         sort: 'createdAt:desc'
       };
     },

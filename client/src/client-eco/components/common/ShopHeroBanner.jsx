@@ -41,7 +41,7 @@ const ShopHeroBanner = ({ products = [], user }) => {
                 href="#shop-products"
                 className="inline-flex items-center gap-2 rounded-full bg-neon-cyan px-6 py-3 font-body text-sm font-semibold text-abyss shadow-glow-cyan transition hover:-translate-y-0.5 hover:bg-white"
               >
-                Khám phá bộ sưu tập
+                Khám phá sản phẩm
                 <ArrowRightIcon className="h-4 w-4" />
               </a>
               <a

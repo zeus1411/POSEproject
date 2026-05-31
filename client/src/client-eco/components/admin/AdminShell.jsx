@@ -21,7 +21,7 @@ const AdminShell = ({ children }) => {
   }
 
   return (
-    <div className={`min-h-screen flex relative overflow-hidden transition-colors duration-300 ${isDark ? 'bg-[#051C1C] text-white' : 'bg-background text-foreground'}`}>
+    <div className={`admin-shell min-h-screen flex relative overflow-hidden transition-colors duration-300 ${isDark ? 'bg-[#051C1C] text-white' : 'bg-background text-foreground'}`}>
       {/* 1. Main Gradient Background - Fixed */}
       <div className={`fixed inset-0 z-0 transition-colors duration-300 ${
         isDark 

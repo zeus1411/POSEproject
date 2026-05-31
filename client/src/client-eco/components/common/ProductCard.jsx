@@ -1,20 +1,19 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import {
-  EyeIcon,
-  ShoppingBagIcon,
-} from '@heroicons/react/24/outline';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { EyeIcon } from '@heroicons/react/24/outline';
 import { StarIcon } from '@heroicons/react/24/solid';
 
 const RECENTLY_VIEWED_KEY = 'aquaticcaps-recently-viewed';
+const SHOP_SCROLL_KEY = 'aquaticcaps-shop-scroll-position';
 
 const ProductCard = ({
   product,
-  onAddToCart,
   variant = 'grid',
 }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const isRail = variant === 'rail';
+  const returnTo = `${location.pathname}${location.search}`;
 
   const formatPrice = (price) => new Intl.NumberFormat('vi-VN', {
     style: 'currency',
@@ -22,11 +21,12 @@ const ProductCard = ({
   }).format(price || 0);
 
   const activeVariants = product.variants?.filter((item) => item.isActive) || [];
+  const hasValidVariants = Boolean(product.hasVariants && activeVariants.length > 0);
   const variantPrices = activeVariants.map((item) => item.price);
-  const minPrice = variantPrices.length ? Math.min(...variantPrices) : product.price;
-  const maxPrice = variantPrices.length ? Math.max(...variantPrices) : product.price;
+  const minPrice = hasValidVariants ? Math.min(...variantPrices) : product.price;
+  const maxPrice = hasValidVariants ? Math.max(...variantPrices) : product.price;
   const price = minPrice === maxPrice ? formatPrice(minPrice) : `${formatPrice(minPrice)} - ${formatPrice(maxPrice)}`;
-  const stock = product.hasVariants
+  const stock = hasValidVariants
     ? activeVariants.reduce((total, item) => total + (item.stock || 0), 0)
     : product.stock || 0;
   const rating = product.rating?.average || 0;
@@ -46,7 +46,7 @@ const ProductCard = ({
         discount: product.discount,
         stock: product.stock,
         variants: product.variants,
-        hasVariants: product.hasVariants,
+        hasVariants: hasValidVariants,
         categoryId: product.categoryId,
         rating: product.rating,
         soldCount: product.soldCount,
@@ -59,22 +59,36 @@ const ProductCard = ({
     }
   };
 
+  const rememberShopPosition = () => {
+    try {
+      window.sessionStorage.setItem(SHOP_SCROLL_KEY, JSON.stringify({
+        path: returnTo,
+        scrollY: window.scrollY,
+      }));
+    } catch (error) {
+      // Navigation still works when session storage is unavailable.
+    }
+  };
+
   const viewProduct = (event) => {
     event.preventDefault();
     rememberViewed();
-    navigate(`/product/${product._id}`);
-  };
-
-  const addToCart = (event) => {
-    event.preventDefault();
-    event.stopPropagation();
-    if (stock > 0) onAddToCart?.(product);
+    rememberShopPosition();
+    navigate(`/product/${product._id}`, { state: { fromShop: returnTo } });
   };
 
   return (
     <article className={`group relative snap-start overflow-hidden rounded-2xl border border-water/30 bg-card/80 shadow-[0_12px_32px_rgb(var(--deep-ocean)/0.08)] transition duration-300 hover:-translate-y-1 hover:border-primary/40 hover:shadow-[0_24px_50px_rgb(var(--deep-ocean)/0.16)] dark:border-white/10 dark:bg-white/[0.045] dark:hover:shadow-[0_18px_42px_rgba(0,255,209,0.10)] ${isRail ? 'w-[215px] shrink-0 sm:w-[230px]' : 'w-full'}`}>
       <div className="relative aspect-[1/1.02] overflow-hidden bg-muted">
-        <Link to={`/product/${product._id}`} onClick={rememberViewed} aria-label={`Xem ${product.name}`}>
+        <Link
+          to={`/product/${product._id}`}
+          state={{ fromShop: returnTo }}
+          onClick={() => {
+            rememberViewed();
+            rememberShopPosition();
+          }}
+          aria-label={`Xem ${product.name}`}
+        >
           <img
             src={product.images?.[0] || '/placeholder-product.jpg'}
             alt={product.name}
@@ -94,19 +108,11 @@ const ProductCard = ({
           <button
             type="button"
             onClick={viewProduct}
-            className="media-overlay-action grid h-10 flex-1 place-items-center rounded-xl border border-white/15 bg-abyss/70 text-white backdrop-blur-md transition hover:border-neon-cyan/50 hover:text-neon-cyan"
-            aria-label="Xem nhanh"
+            className="media-overlay-action flex h-10 w-full items-center justify-center gap-2 rounded-xl border border-white/15 bg-abyss/70 px-3 font-body text-xs font-semibold text-white backdrop-blur-md transition hover:border-neon-cyan/50 hover:text-neon-cyan"
+            aria-label="Xem chi tiết"
           >
-            <EyeIcon className="h-5 w-5" />
-          </button>
-          <button
-            type="button"
-            disabled={stock === 0}
-            onClick={addToCart}
-            className="flex h-10 flex-[2] items-center justify-center gap-1.5 rounded-xl bg-neon-cyan font-body text-xs font-semibold text-abyss shadow-glow-cyan transition hover:bg-white disabled:cursor-not-allowed disabled:bg-gray-600 disabled:text-gray-300"
-          >
-            <ShoppingBagIcon className="h-4 w-4" />
-            Thêm giỏ
+            <EyeIcon className="h-5 w-5"  />
+            <span>Xem chi tiết sản phẩm</span>
           </button>
         </div>
       </div>
@@ -121,7 +127,14 @@ const ProductCard = ({
             {rating ? rating.toFixed(1) : 'New'}
           </span>
         </div>
-        <Link to={`/product/${product._id}`} onClick={rememberViewed}>
+        <Link
+          to={`/product/${product._id}`}
+          state={{ fromShop: returnTo }}
+          onClick={() => {
+            rememberViewed();
+            rememberShopPosition();
+          }}
+        >
           <h3 className="line-clamp-2 min-h-[2.5rem] font-body text-sm font-semibold leading-5 text-foreground transition group-hover:text-ocean dark:group-hover:text-neon-cyan">
             {product.name}
           </h3>

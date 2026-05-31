@@ -1,8 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import Drawer from '@mui/material/Drawer';
 import { AdjustmentsHorizontalIcon } from '@heroicons/react/24/outline';
 import { useDispatch, useSelector } from 'react-redux';
-import { useSearchParams } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import { addToCart } from '../../redux/slices/cartSlice';
 import { getRootCategories } from '../../redux/slices/categorySlice';
@@ -18,11 +18,13 @@ import ShopHeroBanner from '../../components/common/ShopHeroBanner';
 import { useTheme } from '../../context/ThemeContext';
 
 const RECENTLY_VIEWED_KEY = 'aquaticcaps-recently-viewed';
+const SHOP_SCROLL_KEY = 'aquaticcaps-shop-scroll-position';
 
 const Shop = () => {
   const { isDark } = useTheme();
   const dispatch = useDispatch();
-  const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { products, pagination, filters, isLoading } = useSelector((state) => state.products);
   const { rootCategories: categories } = useSelector((state) => state.categories);
   const { user } = useSelector((state) => state.auth);
@@ -35,21 +37,65 @@ const Shop = () => {
     similar: [],
   });
   const [personalizedLoading, setPersonalizedLoading] = useState(false);
+  const [shopRails, setShopRails] = useState({
+    bestSellers: [],
+    trending: [],
+  });
+  const [shopRailsLoading, setShopRailsLoading] = useState(false);
+  const restoredScrollRef = useRef(false);
 
   const category = searchParams.get('category') || '';
   const search = searchParams.get('search') || '';
   const sort = searchParams.get('sort') || filters.sort || 'createdAt:desc';
+  const minPrice = searchParams.get('minPrice') || '';
+  const maxPrice = searchParams.get('maxPrice') || '';
+  const inStock = searchParams.get('inStock') || '';
+  const minRating = searchParams.get('minRating') || '';
+  const maxRating = searchParams.get('maxRating') || '';
+  const pageFromUrl = Math.max(1, parseInt(searchParams.get('page'), 10) || 1);
 
   useEffect(() => {
     dispatch(getRootCategories());
-    const initialFilters = { ...filters, categoryId: category, search, sort };
+    const initialFilters = {
+      ...filters,
+      categoryId: category,
+      search,
+      sort,
+      minPrice,
+      maxPrice,
+      inStock,
+      minRating,
+      maxRating,
+    };
     dispatch(setFilters(initialFilters));
-    dispatch(searchProducts({ ...initialFilters, page: 1 }));
-  }, [dispatch, category, search, sort]);
+    dispatch(searchProducts({ ...initialFilters, page: pageFromUrl }));
+  }, [dispatch, category, search, sort, minPrice, maxPrice, inStock, minRating, maxRating, pageFromUrl]);
 
   useEffect(() => {
     setSelectedCategory(category || null);
   }, [category]);
+
+  useEffect(() => {
+    restoredScrollRef.current = false;
+  }, [location.pathname, location.search]);
+
+  useEffect(() => {
+    if (restoredScrollRef.current || isLoading) return;
+
+    try {
+      const stored = JSON.parse(window.sessionStorage.getItem(SHOP_SCROLL_KEY) || 'null');
+      const currentPath = `${location.pathname}${location.search}`;
+      if (!stored || stored.path !== currentPath || typeof stored.scrollY !== 'number') return;
+
+      restoredScrollRef.current = true;
+      window.sessionStorage.removeItem(SHOP_SCROLL_KEY);
+      window.requestAnimationFrame(() => {
+        window.scrollTo({ top: stored.scrollY, behavior: 'auto' });
+      });
+    } catch (error) {
+      window.sessionStorage.removeItem(SHOP_SCROLL_KEY);
+    }
+  }, [isLoading, location.pathname, location.search, products.length]);
 
   useEffect(() => {
     const readRecent = (event) => {
@@ -102,24 +148,69 @@ const Shop = () => {
     };
   }, [user]);
 
+  useEffect(() => {
+    let active = true;
+
+    setShopRailsLoading(true);
+    Promise.all([
+      productService.getBestSellers(20),
+      productService.getTopRatedProducts(20),
+    ])
+      .then(([bestSellers, trending]) => {
+        if (active) {
+          setShopRails({
+            bestSellers: bestSellers || [],
+            trending: trending || [],
+          });
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setShopRails({ bestSellers: [], trending: [] });
+        }
+      })
+      .finally(() => {
+        if (active) setShopRailsLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const discoveryProducts = useMemo(
     () => [...products].sort((a, b) => Number(b.isFeatured) - Number(a.isFeatured) || (b.rating?.average || 0) - (a.rating?.average || 0)).slice(0, 6),
-    [products]
-  );
-  const bestSellerProducts = useMemo(
-    () => [...products].sort((a, b) => (b.soldCount || 0) - (a.soldCount || 0)).slice(0, 6),
-    [products]
-  );
-  const trendingProducts = useMemo(
-    () => [...products].sort((a, b) => (b.viewCount || 0) - (a.viewCount || 0)).slice(0, 6),
     [products]
   );
   const hasPersonalizedSuggestions = Boolean(user && personalized.hasPurchaseHistory);
   const recommendedProducts = hasPersonalizedSuggestions ? personalized.recommended : discoveryProducts;
 
+  const updateShopParams = (nextFilters, page = 1) => {
+    const nextParams = new URLSearchParams();
+    const paramMap = {
+      category: nextFilters.categoryId,
+      search: nextFilters.search,
+      sort: nextFilters.sort,
+      minPrice: nextFilters.minPrice,
+      maxPrice: nextFilters.maxPrice,
+      inStock: nextFilters.inStock,
+      minRating: nextFilters.minRating,
+      maxRating: nextFilters.maxRating,
+    };
+
+    Object.entries(paramMap).forEach(([key, value]) => {
+      if (value !== undefined && value !== null && value !== '') {
+        nextParams.set(key, value);
+      }
+    });
+    if (page > 1) nextParams.set('page', String(page));
+    setSearchParams(nextParams);
+  };
+
   const handleFiltersChange = (nextFilters) => {
     dispatch(setFilters(nextFilters));
     dispatch(searchProducts({ ...nextFilters, page: 1 }));
+    updateShopParams(nextFilters, 1);
   };
 
   const handleCategoryChange = (categoryId) => {
@@ -127,10 +218,12 @@ const Shop = () => {
     const nextFilters = { ...filters, categoryId: categoryId || '' };
     dispatch(setFilters(nextFilters));
     dispatch(searchProducts({ ...nextFilters, page: 1 }));
+    updateShopParams(nextFilters, 1);
   };
 
   const handlePageChange = (page) => {
     dispatch(searchProducts({ ...filters, page }));
+    updateShopParams(filters, page);
     document.getElementById('shop-products')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
@@ -233,14 +326,16 @@ const Shop = () => {
               <RecommendationSection
                 eyebrow="Community favorites"
                 title="Best sellers"
-                products={bestSellerProducts}
+                products={shopRails.bestSellers}
                 {...recommendationProps}
+                isLoading={shopRailsLoading}
               />
               <RecommendationSection
                 eyebrow="Đang được chú ý"
                 title="Trending now"
-                products={trendingProducts}
+                products={shopRails.trending}
                 {...recommendationProps}
+                isLoading={shopRailsLoading}
               />
               {user && recentProducts.length > 0 && (
                 <RecommendationSection
