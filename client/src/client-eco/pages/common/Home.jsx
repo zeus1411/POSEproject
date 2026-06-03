@@ -6,13 +6,11 @@ import {
   BookOpenIcon,
   ChatBubbleLeftRightIcon,
   CheckCircleIcon,
-  CubeIcon,
-  HeartIcon,
   ShieldCheckIcon,
   ShoppingBagIcon,
   StarIcon,
-  TruckIcon,
 } from '@heroicons/react/24/outline';
+import AquaticKitShowcase from '../../components/common/AquaticKitShowcase';
 
 const CATEGORY_IDS = {
   plants: '66c9b0a1f1e2d3c4a5b6e7f8',
@@ -71,37 +69,6 @@ const inspirationLayouts = [
     icon: ChatBubbleLeftRightIcon,
   },
 ];
-
-const careSteps = [
-  {
-    title: 'Do kich thuoc',
-    body: 'Chon theo dung dung tich va vi tri dat be.',
-    icon: CubeIcon,
-  },
-  {
-    title: 'Ghep he sinh thai',
-    body: 'Goi y cay, ca va phu kien co the song cung nhau.',
-  },
-  {
-    title: 'Dong goi rieng',
-    body: 'Cay, ca va thiet bi duoc dong goi theo tinh trang.',
-    icon: TruckIcon,
-  },
-  {
-    title: 'Cham soc tiep',
-    body: 'Nhan huong dan don gian de be on dinh lau hon.',
-    icon: HeartIcon,
-  },
-];
-
-const productSelections = [
-  { title: 'Nano', sub: '10-20L', active: false },
-  { title: 'Small', sub: '20-60L', active: true },
-  { title: 'Medium', sub: '60-120L', active: false },
-  { title: 'Large', sub: '120L+', active: false },
-];
-
-const plants = ['Anubias', 'Java Fern', 'Cryptocoryne'];
 
 const proofItems = [
   {
@@ -235,7 +202,7 @@ const Home = () => {
   });
 
   return (
-    <div className="home-redesign overflow-hidden bg-[#fffbde] font-body text-[#1f2937] dark:bg-[#031b22] dark:text-white">
+    <div className="home-redesign overflow-x-clip bg-[#fffbde] font-body text-[#1f2937] dark:bg-[#031b22] dark:text-white">
       <section id="hero" className="relative isolate min-h-[calc(100dvh-4rem)] overflow-hidden bg-[#031b22] text-white">
         <div className="absolute inset-0">
           <video
@@ -444,104 +411,7 @@ const Home = () => {
         </div>
       </section>
 
-      <section id="workflow" className="relative bg-[#fffbde] py-20 dark:bg-[#062424] lg:py-28">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,rgba(145,200,228,0.18),transparent_32%),linear-gradient(180deg,#fffbde,#fffdf0)] dark:bg-[radial-gradient(circle_at_70%_20%,rgba(145,200,228,0.12),transparent_32%),linear-gradient(180deg,#062424,#031b22)]" />
-        <div className="relative mx-auto grid max-w-7xl gap-12 px-5 sm:px-6 lg:grid-cols-[1.15fr_0.85fr] lg:px-8">
-          <FadeIn className="space-y-5">
-            <div className="rounded-[28px] border border-[#dfd2a8] bg-[#fffdf0]/82 p-6 shadow-[0_20px_60px_rgba(70,130,169,0.12)] dark:border-white/10 dark:bg-white/[0.06]">
-              <h3 className="font-body text-xl font-black text-[#1f2937] dark:text-white">1. Be cua ban kich thuoc nao?</h3>
-              <div className="mt-6 grid gap-4 sm:grid-cols-4">
-                {productSelections.map((item) => (
-                  <div
-                    key={item.title}
-                    className={`relative rounded-2xl border p-4 text-center transition ${
-                      item.active
-                        ? 'border-[#4682a9] bg-[#ecf9f7] dark:border-[#91c8e4] dark:bg-[#91c8e4]/12'
-                        : 'border-[#dfd2a8] bg-[#fffbde]/60 dark:border-white/10 dark:bg-white/[0.04]'
-                    }`}
-                  >
-                    {item.active && (
-                      <CheckCircleIcon className="absolute right-3 top-3 h-6 w-6 text-[#4682a9] dark:text-[#91c8e4]" />
-                    )}
-                    <div className="mx-auto mb-3 h-14 w-20 rounded-md border border-[#91c8e4]/50 bg-gradient-to-t from-[#d4eadf] to-[#ecf9f7] dark:from-[#063a35] dark:to-[#0a3838]" />
-                    <p className="font-body text-sm font-black text-[#1f2937] dark:text-white">{item.title}</p>
-                    <p className="mt-1 text-sm text-[#4b5563] dark:text-cyan-50/66">{item.sub}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="rounded-[28px] border border-[#91c8e4]/55 bg-[#ecf9f7]/72 p-6 shadow-[0_20px_60px_rgba(70,130,169,0.10)] dark:border-white/10 dark:bg-white/[0.06]">
-              <h3 className="font-body text-xl font-black text-[#1f2937] dark:text-white">2. Ban muon giu dieu gi trong be?</h3>
-              <p className="mt-2 text-[#4b5563] dark:text-cyan-50/66">He thong se goi y cay va ca co the song cung nhau.</p>
-              <div className="mt-5 flex gap-6 border-b border-[#91c8e4]/55 pb-3 text-sm font-bold text-[#4682a9] dark:border-white/10 dark:text-[#91c8e4]">
-                <span className="border-b-2 border-[#4682a9] pb-3 dark:border-[#91c8e4]">Cay</span>
-                <span className="text-[#4b5563] dark:text-cyan-50/50">Ca</span>
-              </div>
-              <div className="mt-5 grid gap-4 sm:grid-cols-3">
-                {plants.map((plant) => (
-                  <div key={plant} className="flex items-center justify-between rounded-2xl border border-[#dfd2a8] bg-[#fffbde]/72 px-4 py-3 dark:border-white/10 dark:bg-white/[0.04]">
-                    <span className="font-semibold text-[#1f2937] dark:text-white">{plant}</span>
-                    <CheckCircleIcon className="h-5 w-5 text-[#4682a9] dark:text-[#91c8e4]" />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="rounded-[24px] border border-[#91c8e4]/55 bg-[#ecf9f7]/72 p-5 dark:border-white/10 dark:bg-white/[0.06]">
-              <div className="flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3">
-                  <ShieldCheckIcon className="h-10 w-10 text-[#1f4d3a] dark:text-[#91c8e4]" />
-                  <div>
-                    <h3 className="font-body text-lg font-black text-[#1f2937] dark:text-white">Chua chac ban can gi?</h3>
-                    <p className="text-sm text-[#4b5563] dark:text-cyan-50/66">Gui kich thuoc be, chung toi goi y bo san pham hop ly.</p>
-                  </div>
-                </div>
-                <ArrowRightIcon className="hidden h-6 w-6 text-[#1f4d3a] dark:text-[#91c8e4] sm:block" />
-              </div>
-            </div>
-          </FadeIn>
-
-          <FadeIn delay={0.12} className="flex flex-col justify-center">
-            <span className="w-fit rounded-full border border-[#4682a9] px-4 py-2 font-body text-xs font-black uppercase tracking-[0.12em] text-[#4682a9] dark:border-[#91c8e4] dark:text-[#91c8e4]">
-              Step 4 of 6
-            </span>
-            <h2 className="mt-7 font-headline text-5xl font-semibold leading-[1.04] tracking-tight text-[#1f2937] dark:text-white md:text-6xl">
-              Mot cach binh tinh hon de chon be.
-            </h2>
-            <div className="mt-8 space-y-7">
-              {careSteps.map((step, index) => (
-                <div key={step.title} className="relative flex gap-5">
-                  {index !== careSteps.length - 1 && <span className="absolute left-[1.35rem] top-11 h-12 w-px bg-[#91c8e4]/70 dark:bg-[#91c8e4]/40" />}
-                  <div className="relative grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#4682a9] text-white dark:bg-[#91c8e4] dark:text-[#031b22]">
-                    <CheckCircleIcon className="h-5 w-5" />
-                  </div>
-                  <div className="flex gap-4">
-                    {step.icon && (
-                      <div className="hidden h-14 w-14 shrink-0 place-items-center rounded-full border border-[#dfd2a8] bg-[#fffdf0] text-[#4682a9] dark:border-white/10 dark:bg-white/[0.06] dark:text-[#91c8e4] sm:grid">
-                        <step.icon className="h-6 w-6" />
-                      </div>
-                    )}
-                    <div>
-                      <h3 className="font-body text-xl font-black text-[#1f2937] dark:text-white">{step.title}</h3>
-                      <p className="mt-1 max-w-xs text-[#4b5563] dark:text-cyan-50/66">{step.body}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="mt-9 flex flex-col gap-4 sm:flex-row">
-              <ButtonLink to="/shop" className="sm:w-auto">
-                Bat dau voi bo kit
-                <ArrowRightIcon className="h-4 w-4" />
-              </ButtonLink>
-              <Link to="/blogs" className="inline-flex items-center font-body text-sm font-bold text-[#4682a9] underline underline-offset-8 dark:text-[#91c8e4]">
-                Can tu van them
-              </Link>
-            </div>
-          </FadeIn>
-        </div>
-      </section>
+      <AquaticKitShowcase />
 
       <section id="community" className="relative overflow-hidden bg-[#061e2e] py-20 text-white lg:py-28">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_8%_20%,rgba(31,77,58,0.34),transparent_28%),linear-gradient(120deg,#061e2e,#031b22_58%,#063a35)]" />

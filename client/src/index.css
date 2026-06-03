@@ -4,6 +4,1047 @@
 @tailwind components;
 @tailwind utilities;
 
+/* AquaticCaps premium scroll-story showcase */
+.aquatic-kit-story {
+  min-height: 500vh;
+  overflow: visible;
+  background:
+    radial-gradient(circle at 22% 18%, rgb(0 229 204 / 0.18), transparent 30%),
+    radial-gradient(circle at 78% 62%, rgb(0 255 209 / 0.08), transparent 34%),
+    linear-gradient(135deg, #021b1b 0%, #043837 48%, #061f1f 100%);
+}
+
+.aquatic-kit-bg,
+.aquatic-kit-bg::before,
+.aquatic-kit-bg::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  pointer-events: none;
+}
+
+.aquatic-kit-bg {
+  background:
+    linear-gradient(180deg, rgb(0 0 0 / 0.12), rgb(0 0 0 / 0.48)),
+    radial-gradient(ellipse at 46% 16%, rgb(202 255 248 / 0.18), transparent 24%),
+    radial-gradient(ellipse at 36% 72%, rgb(4 96 91 / 0.48), transparent 34%);
+}
+
+.aquatic-kit-bg::before {
+  opacity: 0.22;
+  background-image:
+    linear-gradient(rgb(255 255 255 / 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgb(255 255 255 / 0.035) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: radial-gradient(circle at 42% 46%, black, transparent 68%);
+}
+
+.aquatic-kit-bg::after {
+  background: linear-gradient(90deg, rgb(0 0 0 / 0.34), transparent 34%, transparent 66%, rgb(0 0 0 / 0.38));
+}
+
+.aquatic-light-ray {
+  position: absolute;
+  top: -8%;
+  width: 20rem;
+  height: 76%;
+  transform: rotate(12deg);
+  transform-origin: top center;
+  background: linear-gradient(180deg, rgb(175 255 247 / 0.18), rgb(0 229 204 / 0.03) 52%, transparent);
+  filter: blur(24px);
+  opacity: 0.55;
+  pointer-events: none;
+}
+
+.aquatic-light-ray-left {
+  left: 15%;
+}
+
+.aquatic-light-ray-right {
+  right: 40%;
+  width: 13rem;
+  transform: rotate(-10deg);
+  opacity: 0.34;
+}
+
+.aquatic-foreground {
+  position: absolute;
+  z-index: 2;
+  bottom: -6rem;
+  width: min(28vw, 28rem);
+  height: min(44vh, 34rem);
+  opacity: 0.34;
+  filter: blur(10px);
+  pointer-events: none;
+}
+
+.aquatic-foreground::before,
+.aquatic-foreground::after {
+  position: absolute;
+  bottom: 0;
+  width: 14%;
+  height: 100%;
+  border-radius: 999px 999px 0 0;
+  content: "";
+  transform-origin: bottom center;
+  background: linear-gradient(180deg, rgb(91 222 118 / 0.42), rgb(3 38 33 / 0.06));
+}
+
+.aquatic-foreground::before {
+  left: 42%;
+  transform: rotate(-24deg);
+}
+
+.aquatic-foreground::after {
+  left: 56%;
+  transform: rotate(20deg);
+}
+
+.aquatic-foreground-left {
+  left: -8rem;
+}
+
+.aquatic-foreground-right {
+  right: -7rem;
+  transform: scaleX(-1);
+}
+
+.aquatic-kit-sticky {
+  position: relative;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  box-sizing: border-box;
+  height: 100dvh;
+  align-items: center;
+  padding: 5.6rem 4.5rem 1.5rem;
+}
+
+.aquatic-kit-grid {
+  display: grid;
+  width: min(100%, 1540px);
+  margin-inline: auto;
+  grid-template-columns: minmax(0, 1.6fr) minmax(360px, 0.86fr);
+  gap: clamp(2.5rem, 5vw, 6rem);
+  align-items: center;
+}
+
+.aquatic-visual-column {
+  position: relative;
+  min-width: 0;
+  padding-left: clamp(2.6rem, 5vw, 4.8rem);
+}
+
+.aquatic-scroll-note {
+  position: absolute;
+  top: -1.6rem;
+  left: clamp(2.6rem, 5vw, 4.8rem);
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  color: rgb(204 251 241 / 0.56);
+  font-family: Space Grotesk, Inter, ui-sans-serif, system-ui;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.aquatic-scroll-note span {
+  width: 1px;
+  height: 2.4rem;
+  background: linear-gradient(180deg, transparent, rgb(0 229 204 / 0.68), transparent);
+}
+
+.aquatic-progress-rail {
+  position: absolute;
+  top: 5.2rem;
+  left: 0;
+  z-index: 9;
+  display: grid;
+  height: min(49vh, 30rem);
+  width: 2.5rem;
+  place-items: center;
+}
+
+.aquatic-progress-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
+  overflow: hidden;
+  background: linear-gradient(180deg, transparent, rgb(134 239 226 / 0.18), transparent);
+  transform: translateX(-50%);
+}
+
+.aquatic-progress-line span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg, #00e5cc, rgb(0 229 204 / 0.16));
+}
+
+.aquatic-progress-dot {
+  position: relative;
+  display: grid;
+  width: 2.2rem;
+  height: 2.2rem;
+  margin-block: auto;
+  place-items: center;
+  border-radius: 999px;
+  border: 1px solid rgb(134 239 226 / 0.22);
+  background: rgb(2 27 27 / 0.72);
+  color: rgb(204 251 241 / 0.52);
+  font-size: 0.64rem;
+  font-weight: 800;
+  transition: 220ms ease;
+}
+
+.aquatic-progress-dot.is-active {
+  border-color: rgb(0 229 204 / 0.86);
+  background: #00e5cc;
+  color: #021b1b;
+  box-shadow: 0 0 28px rgb(0 229 204 / 0.4);
+}
+
+.aquatic-stage {
+  position: relative;
+  width: min(100%, 58rem);
+  isolation: isolate;
+}
+
+.aquatic-led-glow {
+  position: absolute;
+  top: 4%;
+  left: 14%;
+  z-index: 5;
+  width: 72%;
+  height: 22%;
+  border-radius: 999px;
+  background: radial-gradient(ellipse, rgb(209 255 249 / 0.74), rgb(0 229 204 / 0.08) 48%, transparent 72%);
+  filter: blur(26px);
+  pointer-events: none;
+}
+
+.aquatic-tank-lamp {
+  position: relative;
+  z-index: 10;
+  width: 74%;
+  height: 2.1rem;
+  margin-inline: auto;
+  border-radius: 0.45rem 0.45rem 0.25rem 0.25rem;
+  background: linear-gradient(180deg, #172221, #080e0e);
+  box-shadow: 0 1.2rem 2.6rem rgb(0 0 0 / 0.45), inset 0 1px 0 rgb(255 255 255 / 0.1);
+}
+
+.aquatic-tank-lamp span {
+  position: absolute;
+  inset: auto 7% 0.42rem;
+  height: 0.36rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, #d8fffb 16%, #f8fffd 50%, #aafff4 84%, transparent);
+  box-shadow: 0 0 28px rgb(180 255 248 / 0.82);
+}
+
+.aquatic-tank {
+  position: relative;
+  z-index: 6;
+  aspect-ratio: 1.72;
+  overflow: hidden;
+  border: 1px solid rgb(167 255 247 / 0.72);
+  border-radius: 0.18rem;
+  background:
+    linear-gradient(180deg, rgb(208 255 249 / 0.06), transparent 18%),
+    linear-gradient(120deg, rgb(255 255 255 / 0.08), transparent 18%, transparent 82%, rgb(255 255 255 / 0.1)),
+    #041f20;
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 0.16),
+    inset 0 0 52px rgb(0 229 204 / 0.12),
+    0 36px 90px rgb(0 0 0 / 0.52);
+}
+
+.aquatic-glass-edge {
+  position: absolute;
+  top: 0;
+  z-index: 14;
+  width: 7%;
+  height: 100%;
+  border: 1px solid rgb(167 255 247 / 0.62);
+  background: linear-gradient(90deg, rgb(219 255 252 / 0.16), transparent);
+  pointer-events: none;
+}
+
+.aquatic-glass-edge-left {
+  left: 0;
+  transform: skewY(33deg);
+  transform-origin: bottom left;
+}
+
+.aquatic-glass-edge-right {
+  right: 0;
+  transform: skewY(-33deg);
+  transform-origin: bottom right;
+}
+
+.aquatic-backdrop-photo {
+  position: absolute;
+  inset: 6% 1.8% 5%;
+  z-index: 2;
+  background:
+    linear-gradient(180deg, rgb(2 27 27 / 0.1), rgb(2 27 27 / 0.28)),
+    url('/images/planted-tank.jpg') center 56% / cover no-repeat;
+  mix-blend-mode: normal;
+}
+
+.aquatic-water {
+  position: absolute;
+  left: 1.8%;
+  right: 1.8%;
+  bottom: 5%;
+  z-index: 3;
+  height: 80%;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgb(166 255 248 / 0.36), rgb(12 129 124 / 0.34) 30%, rgb(3 52 54 / 0.72)),
+    radial-gradient(circle at 42% 32%, rgb(121 255 241 / 0.26), transparent 34%);
+  box-shadow: inset 0 1px 18px rgb(201 255 249 / 0.2);
+}
+
+.aquatic-water-depth {
+  position: absolute;
+  inset: 0;
+  opacity: 0.46;
+  background-image:
+    radial-gradient(circle, rgb(255 255 255 / 0.34) 0 1px, transparent 1.5px),
+    linear-gradient(110deg, transparent 0 38%, rgb(255 255 255 / 0.08) 40%, transparent 44%);
+  background-size: 42px 34px, 180px 100%;
+  animation: aquatic-caustics 11s linear infinite;
+}
+
+.aquatic-water-surface {
+  position: absolute;
+  left: 1.8%;
+  right: 1.8%;
+  bottom: 84%;
+  z-index: 8;
+  height: 2.8rem;
+  border-top: 1px solid rgb(220 255 252 / 0.74);
+  background:
+    radial-gradient(ellipse at 28% 50%, rgb(222 255 252 / 0.68), transparent 30%),
+    radial-gradient(ellipse at 72% 34%, rgb(138 255 245 / 0.45), transparent 28%),
+    linear-gradient(180deg, rgb(218 255 251 / 0.3), rgb(0 229 204 / 0.04));
+  opacity: 0.92;
+  overflow: hidden;
+}
+
+.aquatic-water-surface::before,
+.aquatic-water-surface::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background:
+    repeating-radial-gradient(ellipse at 50% 52%, transparent 0 13px, rgb(232 255 252 / 0.36) 14px 15px, transparent 18px 28px);
+  transform: translateX(-12%);
+  animation: aquatic-wave 7s ease-in-out infinite;
+}
+
+.aquatic-water-surface::after {
+  opacity: 0.62;
+  animation-duration: 10s;
+  animation-direction: reverse;
+}
+
+.aquatic-hardscape {
+  position: absolute;
+  inset: auto 5% 7% 5%;
+  z-index: 7;
+  height: 34%;
+}
+
+.aquatic-rock {
+  position: absolute;
+  bottom: 0;
+  display: block;
+  border-radius: 58% 42% 30% 70% / 58% 34% 66% 42%;
+  background:
+    linear-gradient(135deg, rgb(255 255 255 / 0.2), transparent 22%),
+    linear-gradient(160deg, #3b4542, #101817 58%, #050909);
+  box-shadow: inset -12px -16px 28px rgb(0 0 0 / 0.34), 0 18px 28px rgb(0 0 0 / 0.3);
+}
+
+.aquatic-rock-one {
+  left: 15%;
+  width: 22%;
+  height: 74%;
+  transform: rotate(-7deg);
+}
+
+.aquatic-rock-two {
+  left: 48%;
+  width: 18%;
+  height: 58%;
+  transform: rotate(6deg);
+}
+
+.aquatic-rock-three {
+  right: 9%;
+  width: 20%;
+  height: 48%;
+  transform: rotate(-3deg);
+}
+
+.aquatic-driftwood {
+  position: absolute;
+  bottom: 9%;
+  left: 27%;
+  width: 48%;
+  height: 19%;
+  border-radius: 70% 30% 60% 40%;
+  background: linear-gradient(90deg, #1b100b, #3c2a1b 45%, #120b07);
+  box-shadow: inset 0 8px 10px rgb(255 255 255 / 0.08), 0 18px 20px rgb(0 0 0 / 0.36);
+  transform: rotate(-9deg);
+}
+
+.aquatic-plants {
+  position: absolute;
+  inset: 0;
+  z-index: 9;
+}
+
+.aquatic-plant {
+  position: absolute;
+  display: block;
+  width: 6.6%;
+  animation: aquatic-plant-sway 5.8s ease-in-out infinite;
+  animation-delay: var(--plant-delay, 0s);
+}
+
+.aquatic-plant i,
+.aquatic-plant::before,
+.aquatic-plant::after {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  display: block;
+  width: 18%;
+  height: 100%;
+  border-radius: 999px 999px 0 0;
+  content: "";
+  transform-origin: bottom center;
+  background: linear-gradient(180deg, #a4d88c, #2f8a4f 58%, #123b27);
+  box-shadow: 0 0 12px rgb(91 222 118 / 0.1);
+}
+
+.aquatic-plant i:nth-child(1) {
+  height: 74%;
+  transform: rotate(-24deg);
+}
+
+.aquatic-plant i:nth-child(2) {
+  height: 88%;
+  transform: rotate(15deg);
+}
+
+.aquatic-plant i:nth-child(3) {
+  height: 58%;
+  transform: rotate(34deg);
+  background: linear-gradient(180deg, #b88363, #73412e 62%, #2b1711);
+}
+
+.aquatic-plant::before {
+  height: 92%;
+  transform: rotate(-8deg);
+}
+
+.aquatic-plant::after {
+  height: 68%;
+  transform: rotate(28deg);
+}
+
+.aquatic-plant-2,
+.aquatic-plant-5 {
+  width: 9%;
+}
+
+.aquatic-plant-3 i:nth-child(3),
+.aquatic-plant-6 i:nth-child(3) {
+  background: linear-gradient(180deg, #b8ff9b, #2aa24e 62%, #0d4b2a);
+}
+
+.aquatic-fish-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+}
+
+.aquatic-fish {
+  position: absolute;
+  display: block;
+  aspect-ratio: 3.6;
+  border-radius: 999px 52% 52% 999px;
+  background:
+    linear-gradient(90deg, #35dff0 0 58%, #f36b3a 62% 100%),
+    linear-gradient(180deg, rgb(255 255 255 / 0.72), transparent 45%);
+  box-shadow: 0 0 12px rgb(0 229 204 / 0.24);
+  animation: aquatic-fish-swim 7.5s ease-in-out infinite;
+}
+
+.aquatic-fish::before {
+  position: absolute;
+  top: 20%;
+  right: -20%;
+  width: 28%;
+  height: 60%;
+  clip-path: polygon(0 50%, 100% 0, 100% 100%);
+  background: #ff6b35;
+  content: "";
+}
+
+.aquatic-fish::after {
+  position: absolute;
+  top: 18%;
+  left: 15%;
+  width: 7%;
+  height: 24%;
+  border-radius: 999px;
+  background: #021b1b;
+  content: "";
+}
+
+.aquatic-fish i {
+  position: absolute;
+  left: 38%;
+  top: 46%;
+  width: 36%;
+  height: 8%;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.82);
+}
+
+.aquatic-fish.is-left {
+  transform: scaleX(-1);
+  animation-name: aquatic-fish-swim-left;
+}
+
+.aquatic-bubbles {
+  position: absolute;
+  inset: 0;
+  z-index: 11;
+  pointer-events: none;
+}
+
+.aquatic-bubbles span {
+  position: absolute;
+  display: block;
+  border-radius: 999px;
+  border: 1px solid rgb(210 255 251 / 0.78);
+  background: radial-gradient(circle at 34% 28%, rgb(255 255 255 / 0.8), rgb(255 255 255 / 0.1) 36%, transparent 68%);
+  animation: aquatic-bubble-rise 5.6s linear infinite;
+}
+
+.aquatic-substrate {
+  position: absolute;
+  left: 2%;
+  right: 2%;
+  bottom: 0;
+  z-index: 13;
+  display: flex;
+  height: 10%;
+  align-items: flex-end;
+  gap: 0.16rem;
+  padding-inline: 3%;
+  background: linear-gradient(180deg, transparent, #0b0807 34%, #060403);
+}
+
+.aquatic-substrate span {
+  width: 100%;
+  height: calc(30% + var(--stone-height, 22%));
+  border-radius: 999px 999px 0 0;
+  background: linear-gradient(180deg, #8a7662, #211b16 54%, #090706);
+  opacity: 0.8;
+}
+
+.aquatic-substrate span:nth-child(3n) {
+  --stone-height: 46%;
+  background: linear-gradient(180deg, #433933, #0a0706);
+}
+
+.aquatic-substrate span:nth-child(5n) {
+  --stone-height: 64%;
+  background: linear-gradient(180deg, #b19471, #1c1510);
+}
+
+.aquatic-glass-highlight {
+  position: absolute;
+  inset: 0;
+  z-index: 16;
+  pointer-events: none;
+  background:
+    linear-gradient(105deg, transparent 0 9%, rgb(255 255 255 / 0.22) 10%, transparent 14% 73%, rgb(255 255 255 / 0.16) 75%, transparent 80%),
+    linear-gradient(180deg, rgb(255 255 255 / 0.28), transparent 8%, transparent 90%, rgb(255 255 255 / 0.16));
+  mix-blend-mode: screen;
+}
+
+.aquatic-tank-base {
+  position: relative;
+  z-index: 5;
+  width: 96%;
+  height: 1.55rem;
+  margin-inline: auto;
+  border-radius: 0 0 0.25rem 0.25rem;
+  background: linear-gradient(180deg, #111615, #030505);
+  box-shadow: 0 28px 50px rgb(0 0 0 / 0.56), inset 0 1px 0 rgb(255 255 255 / 0.08);
+}
+
+.aquatic-reflection {
+  width: 82%;
+  height: 3rem;
+  margin: -0.2rem auto 0;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, rgb(0 229 204 / 0.18), transparent 68%);
+  filter: blur(12px);
+}
+
+.aquatic-story-timeline {
+  display: grid;
+  width: min(100%, 58rem);
+  margin-top: 1.2rem;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.55rem;
+  border: 1px solid rgb(134 239 226 / 0.18);
+  border-radius: 1.6rem;
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.09), rgb(255 255 255 / 0.035));
+  padding: 0.72rem;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.18), 0 22px 60px rgb(0 0 0 / 0.26);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+}
+
+.aquatic-story-thumb {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: 3.6rem minmax(0, 1fr);
+  gap: 0.8rem;
+  align-items: center;
+  border-radius: 1rem;
+  padding: 0.72rem;
+  color: rgb(204 251 241 / 0.58);
+  text-align: left;
+  transition: 220ms ease;
+}
+
+.aquatic-story-thumb:hover,
+.aquatic-story-thumb.is-active {
+  background: rgb(0 229 204 / 0.1);
+  color: white;
+}
+
+.aquatic-thumb-art {
+  position: relative;
+  display: block;
+  aspect-ratio: 1.55;
+  overflow: hidden;
+  border: 1px solid rgb(134 239 226 / 0.28);
+  border-radius: 0.25rem;
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.08), rgb(0 229 204 / 0.05));
+}
+
+.aquatic-thumb-art i {
+  position: absolute;
+  inset: auto 0 0;
+  height: 24%;
+  background: linear-gradient(180deg, rgb(0 229 204 / 0.26), rgb(2 27 27 / 0.8));
+}
+
+.aquatic-story-thumb:nth-child(n + 2) .aquatic-thumb-art i {
+  height: 72%;
+}
+
+.aquatic-story-thumb:nth-child(n + 3) .aquatic-thumb-art::before {
+  position: absolute;
+  inset: auto 18% 12%;
+  height: 34%;
+  border-radius: 999px 999px 0 0;
+  background: linear-gradient(180deg, #85ff6c, #177e3a);
+  content: "";
+}
+
+.aquatic-story-thumb:nth-child(n + 4) .aquatic-thumb-art::after {
+  position: absolute;
+  top: 34%;
+  left: 56%;
+  width: 28%;
+  height: 8%;
+  border-radius: 999px;
+  background: #00e5cc;
+  box-shadow: 0 0 0 2px rgb(255 107 53 / 0.78);
+  content: "";
+}
+
+.aquatic-story-thumb strong {
+  display: block;
+  margin-bottom: 0.18rem;
+  color: #00e5cc;
+  font-size: 0.78rem;
+}
+
+.aquatic-copy-column {
+  position: relative;
+  z-index: 5;
+  align-self: center;
+  min-height: min(62vh, 42rem);
+}
+
+.aquatic-eyebrow {
+  display: inline-flex;
+  margin-bottom: 1.35rem;
+  border: 1px solid rgb(0 229 204 / 0.58);
+  border-radius: 999px;
+  padding: 0.54rem 0.88rem;
+  color: #66fff0;
+  font-family: Space Grotesk, Inter, ui-sans-serif, system-ui;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.aquatic-copy-column h2 {
+  max-width: 9.8ch;
+  color: #f7fffd;
+  font-family: Fraunces, Georgia, serif;
+  font-size: clamp(3.8rem, 5.4vw, 7rem);
+  font-weight: 600;
+  letter-spacing: 0;
+  line-height: 0.91;
+  text-wrap: balance;
+  text-shadow: 0 18px 60px rgb(0 0 0 / 0.46);
+}
+
+.aquatic-copy-column h2 span {
+  display: block;
+  background: none;
+  color: #f7fffd;
+}
+
+.aquatic-copy-column h2 span.is-accent {
+  background: linear-gradient(100deg, #d8fffb 0%, #00e5cc 44%, #7dfff3 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+
+.aquatic-scene-copy {
+  animation: aquatic-copy-fade 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.aquatic-subtext {
+  max-width: 31rem;
+  margin-top: 1.65rem;
+  color: rgb(204 251 241 / 0.68);
+  font-family: Space Grotesk, Inter, ui-sans-serif, system-ui;
+  font-size: clamp(1rem, 1.14vw, 1.22rem);
+  line-height: 1.8;
+}
+
+.aquatic-final-cta {
+  max-height: 0;
+  margin-top: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(18px);
+  transition: max-height 520ms cubic-bezier(0.22, 1, 0.36, 1), margin 520ms cubic-bezier(0.22, 1, 0.36, 1), opacity 360ms ease, transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.aquatic-final-cta.is-visible {
+  max-height: 18rem;
+  margin-top: 1.8rem;
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
+
+.aquatic-final-cta h3 {
+  max-width: 19rem;
+  color: white;
+  font-family: Space Grotesk, Inter, ui-sans-serif, system-ui;
+  font-size: clamp(1.35rem, 1.8vw, 2rem);
+  font-weight: 900;
+  line-height: 1.15;
+}
+
+.aquatic-final-cta p {
+  max-width: 25rem;
+  margin-top: 0.7rem;
+  color: rgb(204 251 241 / 0.66);
+  font-size: 0.96rem;
+  line-height: 1.65;
+}
+
+.aquatic-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  align-items: center;
+  margin-top: 1.35rem;
+}
+
+.aquatic-primary-cta,
+.aquatic-secondary-cta {
+  display: inline-flex;
+  min-height: 3.35rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  font-family: Space Grotesk, Inter, ui-sans-serif, system-ui;
+  font-size: 0.92rem;
+  font-weight: 900;
+  transition: 180ms ease;
+}
+
+.aquatic-primary-cta {
+  gap: 0.65rem;
+  background: #00e5cc;
+  padding: 0.95rem 1.55rem;
+  color: #021b1b;
+  box-shadow: 0 18px 48px rgb(0 229 204 / 0.22);
+}
+
+.aquatic-primary-cta:hover {
+  transform: translateY(-1px);
+  background: #65fff1;
+}
+
+.aquatic-secondary-cta {
+  border: 1px solid rgb(134 239 226 / 0.34);
+  padding: 0.95rem 1.25rem;
+  color: rgb(232 255 253 / 0.86);
+  background: rgb(255 255 255 / 0.035);
+}
+
+.aquatic-secondary-cta:hover {
+  border-color: rgb(0 229 204 / 0.8);
+  color: white;
+  background: rgb(0 229 204 / 0.08);
+}
+
+@keyframes aquatic-caustics {
+  0% {
+    background-position: 0 0, -180px 0;
+  }
+  100% {
+    background-position: 42px -68px, 180px 0;
+  }
+}
+
+@keyframes aquatic-copy-fade {
+  0% {
+    opacity: 0;
+    transform: translateY(22px);
+    filter: blur(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+@keyframes aquatic-wave {
+  0%, 100% {
+    transform: translateX(-10%) translateY(0) scaleY(0.86);
+  }
+  50% {
+    transform: translateX(8%) translateY(-9%) scaleY(1.08);
+  }
+}
+
+@keyframes aquatic-plant-sway {
+  0%, 100% {
+    transform: rotate(-1deg);
+  }
+  50% {
+    transform: rotate(2.4deg);
+  }
+}
+
+@keyframes aquatic-fish-swim {
+  0%, 100% {
+    translate: 0 0;
+  }
+  48% {
+    translate: 26px -7px;
+  }
+}
+
+@keyframes aquatic-fish-swim-left {
+  0%, 100% {
+    translate: 0 0;
+  }
+  52% {
+    translate: -24px 8px;
+  }
+}
+
+@keyframes aquatic-bubble-rise {
+  0% {
+    transform: translateY(0) scale(0.72);
+    opacity: 0;
+  }
+  12% {
+    opacity: 0.86;
+  }
+  100% {
+    transform: translateY(-330px) scale(1.18);
+    opacity: 0;
+  }
+}
+
+@media (max-width: 1180px) {
+  .aquatic-kit-sticky {
+    padding-inline: 2rem;
+  }
+
+  .aquatic-kit-grid {
+    grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.86fr);
+    gap: 2.5rem;
+  }
+
+  .aquatic-story-thumb {
+    grid-template-columns: 1fr;
+  }
+
+  .aquatic-thumb-art {
+    display: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .aquatic-kit-story {
+    min-height: 330vh;
+  }
+
+  .aquatic-kit-sticky {
+    align-items: start;
+    padding: 4.7rem 1rem 1.2rem;
+  }
+
+  .aquatic-kit-grid {
+    grid-template-columns: 1fr;
+    gap: 1.4rem;
+  }
+
+  .aquatic-copy-column {
+    order: -1;
+    min-height: auto;
+  }
+
+  .aquatic-copy-column h2 {
+    max-width: 9.8ch;
+    font-size: clamp(2.9rem, 12.5vw, 4rem);
+    line-height: 0.94;
+  }
+
+  .aquatic-subtext {
+    max-width: 100%;
+    margin-top: 0.75rem;
+    font-size: 0.86rem;
+    line-height: 1.5;
+  }
+
+  .aquatic-final-cta.is-visible {
+    max-height: 14rem;
+    margin-top: 0.9rem;
+  }
+
+  .aquatic-final-cta h3 {
+    max-width: 18rem;
+    font-size: 1.12rem;
+  }
+
+  .aquatic-final-cta p {
+    margin-top: 0.35rem;
+    font-size: 0.82rem;
+    line-height: 1.45;
+  }
+
+  .aquatic-actions {
+    gap: 0.75rem;
+    margin-top: 0.9rem;
+  }
+
+  .aquatic-primary-cta {
+    width: 100%;
+    min-height: 3rem;
+    padding: 0.8rem 1.1rem;
+  }
+
+  .aquatic-secondary-cta {
+    width: 100%;
+    min-height: auto;
+    border: 0;
+    padding: 0.15rem 0;
+    background: transparent;
+    color: rgb(204 251 241 / 0.78);
+  }
+
+  .aquatic-visual-column {
+    padding-left: 0;
+  }
+
+  .aquatic-scroll-note,
+  .aquatic-progress-rail {
+    display: none;
+  }
+
+  .aquatic-stage {
+    width: 100%;
+  }
+
+  .aquatic-tank-lamp {
+    height: 1.4rem;
+  }
+
+  .aquatic-story-timeline {
+    width: 100%;
+    margin-top: 1rem;
+    grid-template-columns: repeat(5, 9rem);
+    overflow-x: auto;
+    border-radius: 1.1rem;
+    padding: 0.5rem;
+    scrollbar-width: none;
+  }
+
+  .aquatic-story-timeline::-webkit-scrollbar {
+    display: none;
+  }
+
+  .aquatic-story-thumb {
+    min-height: 4.2rem;
+    padding: 0.65rem;
+  }
+
+  .aquatic-foreground,
+  .aquatic-light-ray-right,
+  .aquatic-bubbles span:nth-child(n + 16) {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aquatic-water-depth,
+  .aquatic-water-surface::before,
+  .aquatic-water-surface::after,
+  .aquatic-plant,
+  .aquatic-fish,
+  .aquatic-bubbles span {
+    animation: none !important;
+  }
+}
+
 @layer base {
   :root,
   .dark {
