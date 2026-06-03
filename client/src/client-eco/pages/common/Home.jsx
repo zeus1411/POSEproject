@@ -8,6 +8,7 @@ import {
   CheckCircleIcon,
   ShieldCheckIcon,
   ShoppingBagIcon,
+  SparklesIcon,
   StarIcon,
 } from '@heroicons/react/24/outline';
 import AquaticKitShowcase from '../../components/common/AquaticKitShowcase';
@@ -111,6 +112,30 @@ const blogs = [
   },
 ];
 
+const heroBenefits = [
+  {
+    title: 'Hệ thực vật',
+    body: 'chất lượng cao',
+    icon: BookOpenIcon,
+  },
+  {
+    title: 'Vận chuyển',
+    body: 'an toàn toàn quốc',
+    icon: ShieldCheckIcon,
+  },
+  {
+    title: 'Hỗ trợ',
+    body: 'tận tình',
+    icon: ChatBubbleLeftRightIcon,
+  },
+  {
+    title: 'Sản phẩm chọn lọc',
+    body: 'cho trải nghiệm tốt nhất',
+    icon: SparklesIcon,
+  },
+];
+
+
 const FadeIn = ({ children, className = '', delay = 0 }) => {
   const prefersReducedMotion = useReducedMotion();
 
@@ -211,88 +236,129 @@ const Home = () => {
             loop
             muted
             playsInline
-            className="h-full w-full object-cover"
+            className="h-full w-full scale-x-[-1] object-cover"
           />
-          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,27,34,0.78)_0%,rgba(3,27,34,0.38)_42%,rgba(3,27,34,0.90)_100%),radial-gradient(circle_at_50%_58%,rgba(145,200,228,0.20),transparent_34%)]" />
+          <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(2,12,24,0.96)_0%,rgba(2,15,28,0.86)_22%,rgba(2,16,30,0.44)_48%,rgba(2,16,30,0.12)_72%,rgba(2,16,30,0.30)_100%),linear-gradient(180deg,rgba(2,12,24,0.34)_0%,rgba(2,12,24,0.06)_42%,rgba(2,12,24,0.90)_100%)]" />
           <div className="absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-[#031b22] to-transparent" />
         </div>
 
-        <div className="relative z-10 mx-auto flex min-h-[calc(100dvh-4rem)] max-w-7xl flex-col px-5 py-8 sm:px-6 lg:px-8">
-          <FadeIn className="mx-auto flex flex-1 max-w-4xl flex-col items-center justify-center py-20 text-center">
-            <p className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/16 bg-white/10 px-4 py-2 font-body text-xs font-bold uppercase tracking-[0.18em] text-cyan-50 backdrop-blur-xl">
+        <div className="relative z-10 mx-auto flex min-h-[calc(100dvh-4rem)] max-w-[92rem] flex-col px-5 py-10 sm:px-8 lg:px-16">
+          <FadeIn className="flex flex-1 max-w-3xl flex-col justify-center pb-8 pt-12 text-left sm:pb-12 lg:pb-36">
+            <p className="mb-5 inline-flex w-fit items-center rounded-full border border-white/56 bg-[#061426]/32 px-4 py-2 font-body text-[0.68rem] font-black uppercase tracking-[0.22em] text-cyan-50 shadow-[0_10px_34px_rgba(0,0,0,0.24)] backdrop-blur-xl">
               AquaticCaps ecosystem store
             </p>
-            <h1 className="inline-block text-left font-headline text-[clamp(3.6rem,8vw,7.25rem)] font-semibold leading-[0.95] tracking-tight text-white drop-shadow-[0_16px_50px_rgba(0,0,0,0.42)]">
-              <span className="block">Kiến tạo hệ sinh thái</span>
-              <span className="block pl-[7.4ch] text-[#ff6b35] sm:pl-[7.8ch]">của chính bạn</span>
+            <h1 className="font-headline text-[clamp(4rem,7.8vw,7.5rem)] font-semibold leading-[0.86] tracking-normal text-white drop-shadow-[0_18px_54px_rgba(0,0,0,0.52)]">
+              <span className="block">Kiến tạo</span>
+              <span className="block">hệ sinh thái</span>
+              <span className="block text-[#ff6b35]">của chính bạn</span>
             </h1>
-            <p className="mt-7 max-w-2xl font-body text-base leading-8 text-cyan-50/82 sm:text-xl">
+            <div className="mt-5 flex items-center gap-2">
+              <span className="h-[3px] w-10 rounded-full bg-[#16d9c1]" />
+              <span className="h-[3px] w-1 rounded-full bg-[#16d9c1]" />
+            </div>
+            <p className="mt-5 max-w-xl font-body text-base font-medium leading-8 text-cyan-50/88 sm:text-lg">
               Từ những bước đầu tiên đến một bể thủy sinh hoàn chỉnh, chúng tôi đồng hành cùng bạn trên hành trình kiến tạo một không gian xanh sống động và đầy cảm hứng.
             </p>
-            <div className="mt-9 flex w-full flex-col items-center justify-center gap-4 sm:flex-row">
-              <ButtonLink to="/shop" variant="dark" className="w-full sm:w-auto">
+            <div className="mt-8 flex w-full flex-col gap-4 sm:flex-row">
+              <ButtonLink to="/shop" variant="dark" className="w-full bg-[#91d9e8] px-8 text-[#041722] shadow-[0_18px_42px_rgba(145,217,232,0.24)] hover:bg-[#b9edf5] sm:w-auto">
                 Tham quan cửa hàng
                 <ArrowRightIcon className="h-4 w-4" />
               </ButtonLink>
-              <ButtonLink to="/blogs" variant="ghost" className="w-full text-white sm:w-auto">
+              <ButtonLink to="/blogs" variant="ghost" className="w-full border-[#5db9df]/42 px-8 text-white hover:bg-[#5db9df]/14 sm:w-auto">
                 Chia sẻ kinh nghiệm và cảm hứng
                 <ArrowRightIcon className="h-4 w-4" />
               </ButtonLink>
             </div>
-            <div className="mx-auto mt-9 grid w-full max-w-4xl grid-cols-1 gap-y-3 text-sm text-white/78 sm:grid-cols-3 sm:gap-0">
-              {['Hệ thực vật chất lượng cao', 'Vận chuyển an toàn toàn quốc', 'Hỗ trợ tận tình'].map((item) => (
-                <div key={item} className="grid grid-cols-[1rem_minmax(0,1fr)] items-center gap-2 px-3 text-center">
-                  <CheckCircleIcon className="h-4 w-4 text-[#91c8e4]" />
-                  <span className="block whitespace-nowrap">{item}</span>
+          </FadeIn>
+
+          <FadeIn delay={0.1} className="grid gap-4 pb-6 sm:grid-cols-2 lg:absolute lg:inset-x-16 lg:bottom-6 lg:grid-cols-4 lg:pb-0">
+            {heroBenefits.map((item) => {
+              const Icon = item.icon;
+
+              return (
+                <div
+                  key={item.title}
+                  className="flex items-center gap-4 border-white/10 text-white/86 lg:border-r lg:pr-8 lg:last:border-r-0"
+                >
+                  <span className="grid h-12 w-12 shrink-0 place-items-center rounded-full border border-[#91d9e8]/80 bg-[#061426]/34 text-[#a9ecf8] backdrop-blur-xl">
+                    <Icon className="h-5 w-5" />
+                  </span>
+                  <span className="font-body text-sm font-semibold leading-6">
+                    <span className="block">{item.title}</span>
+                    <span className="block text-white/74">{item.body}</span>
+                  </span>
                 </div>
-              ))}
-            </div>
+              );
+            })}
           </FadeIn>
         </div>
       </section>
 
-      <section id="collections" className="relative bg-[#fffbde] py-20 dark:bg-[#062424] lg:py-28">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_78%_20%,rgba(145,200,228,0.24),transparent_31%),radial-gradient(circle_at_8%_84%,rgba(31,77,58,0.10),transparent_28%)] dark:bg-[radial-gradient(circle_at_80%_18%,rgba(145,200,228,0.16),transparent_30%)]" />
-        <div className="relative mx-auto max-w-7xl px-5 sm:px-6 lg:px-8">
-          <FadeIn className="grid gap-8 lg:grid-cols-[0.76fr_1.24fr] lg:items-end">
+      <section id="collections" className="relative isolate min-h-[52rem] overflow-hidden bg-[#001616] py-20 text-white lg:min-h-[56rem] lg:py-24">
+        <div className="absolute inset-0 bg-[linear-gradient(115deg,#021f1f_0%,#062f2b_42%,#001616_78%,#000909_100%)]" />
+        <img
+          src="/images/collections-aquascape-bg.png"
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-y-0 left-0 h-full w-[34rem] max-w-none object-cover object-left-center opacity-95 saturate-[1.05] [mask-image:linear-gradient(90deg,#000_0%,#000_54%,transparent_100%)] sm:w-[42rem] lg:w-[48rem]"
+        />
+        <img
+          src="/images/planted-tank.jpg"
+          alt=""
+          aria-hidden="true"
+          className="absolute left-[28%] top-[12%] h-[58%] w-[58rem] max-w-none scale-125 object-cover object-center opacity-[0.08] blur-xl saturate-[0.8] [mask-image:radial-gradient(ellipse_at_center,#000_0%,transparent_70%)]"
+        />
+        <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(0,8,8,0.06)_0%,rgba(0,15,15,0.30)_24%,rgba(0,19,19,0.78)_48%,rgba(0,10,10,0.92)_100%),linear-gradient(180deg,rgba(0,20,18,0.12)_0%,rgba(0,12,12,0.50)_62%,rgba(0,4,4,0.96)_100%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_72%_58%,rgba(21,226,205,0.32),transparent_30%),radial-gradient(ellipse_at_34%_78%,rgba(70,163,110,0.20),transparent_28%),radial-gradient(ellipse_at_52%_8%,rgba(150,231,221,0.12),transparent_38%)]" />
+        <div className="absolute -left-20 -top-40 h-[42rem] w-[44rem] rotate-[-22deg] bg-[linear-gradient(105deg,rgba(225,255,232,0.36),rgba(140,236,219,0.12)_36%,transparent_68%)] blur-2xl" />
+        <div className="absolute left-[58%] top-[22%] h-[18rem] w-24 bg-[radial-gradient(circle,rgba(166,255,244,0.42)_0_2px,transparent_3px),radial-gradient(circle,rgba(117,226,213,0.22)_0_1.5px,transparent_2.5px)] bg-[length:34px_52px,22px_36px] opacity-40 blur-[0.3px]" />
+        <div className="absolute right-[12%] top-[35%] h-[25rem] w-[42rem] rounded-full bg-[#16ddc8]/28 opacity-70 blur-3xl" />
+        <div className="absolute bottom-0 right-[10%] h-36 w-[46rem] bg-[radial-gradient(ellipse_at_center,rgba(35,230,211,0.16),transparent_68%)] blur-xl" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_38%,rgba(0,8,8,0.36)_72%,rgba(0,0,0,0.88)_100%)]" />
+        <div className="absolute inset-x-0 top-0 h-px bg-[#7af4e6]/30" />
+
+        <div className="relative z-10 mx-auto max-w-[92rem] px-5 sm:px-8 lg:px-16">
+          <FadeIn className="grid gap-8 lg:grid-cols-[0.42fr_0.58fr] lg:items-start">
             <div>
-              <SectionLabel>Khám phá sản phẩm</SectionLabel>
-              <h2 className="mt-4 max-w-xl font-headline text-5xl font-semibold leading-[0.98] tracking-tight text-[#1f4d3a] dark:text-white md:text-6xl">
-                Mang thiên nhiên vào không gian sống
+              <SectionLabel className="text-[#80f6e9]">Khám phá sản phẩm</SectionLabel>
+              <h2 className="mt-4 max-w-xl font-headline text-5xl font-semibold leading-[0.98] tracking-tight text-white drop-shadow-[0_18px_46px_rgba(0,0,0,0.66)] md:text-6xl">
+                Mang thiên nhiên
+                <span className="block text-[#66f3e8]">vào không gian sống</span>
               </h2>
-              <div className="mt-6 h-1 w-20 rounded-full bg-[#91c8e4]" />
-              <p className="mt-6 max-w-md font-body text-base leading-8 text-[#35627f] dark:text-cyan-50/70">
+              <div className="mt-6 h-[3px] w-20 rounded-full bg-[#23e6d3] shadow-[0_0_28px_rgba(35,230,211,0.72)]" />
+              <p className="mt-6 max-w-[28rem] font-body text-base font-medium leading-8 text-cyan-50/78">
                 Từ cây thủy sinh, cá cảnh đến phụ kiện chuyên dụng, tất cả được tuyển chọn để giúp bạn dễ dàng xây dựng một bể thủy sinh đẹp, cân bằng và mang đậm dấu ấn cá nhân.
               </p>
             </div>
             <div className="hidden justify-end lg:flex">
-              <div className="border-r border-[#4682a9] pr-5 text-right font-body text-xs font-semibold uppercase tracking-[0.18em] text-[#4682a9] [writing-mode:vertical-rl] dark:border-[#91c8e4]/60 dark:text-[#91c8e4]">
+              <div className="mr-5 mt-5 border-r border-[#23e6d3]/72 pr-5 text-right font-body text-xs font-semibold uppercase tracking-[0.2em] text-[#74f3e4] [writing-mode:vertical-rl] drop-shadow-[0_0_18px_rgba(35,230,211,0.55)]">
                 plants / movement / balance
               </div>
             </div>
           </FadeIn>
 
-          <div className="mt-12 grid gap-6 lg:grid-cols-3 lg:items-end">
+          <div className="relative mt-14 grid gap-6 md:grid-cols-3 lg:ml-[19rem] lg:mt-10 lg:items-end">
+            <div className="pointer-events-none absolute -inset-x-10 bottom-8 top-8 -z-10 bg-[radial-gradient(ellipse_at_62%_44%,rgba(35,230,211,0.28),transparent_46%)] blur-2xl" />
             {collections.map((item, index) => (
-              <FadeIn key={item.title} delay={index * 0.08} className={index === 1 ? 'lg:mb-16' : index === 2 ? 'lg:mb-28' : ''}>
+              <FadeIn key={item.title} delay={index * 0.08} className={index === 1 ? 'lg:mb-8' : index === 2 ? 'lg:mb-14' : ''}>
                 <Link
                   to={item.href}
-                  className="group block overflow-hidden rounded-[28px] border border-[#91c8e4]/55 bg-[#fffdf0]/86 shadow-[0_18px_50px_rgba(70,130,169,0.12)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_28px_70px_rgba(70,130,169,0.18)] dark:border-white/10 dark:bg-white/[0.06] dark:shadow-[0_24px_60px_rgba(0,0,0,0.28)]"
+                  className="group block overflow-hidden rounded-[24px] border border-[#d7fff8]/52 bg-[#032a28]/72 shadow-[0_24px_80px_rgba(0,0,0,0.42)] backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:border-[#6ff6e9]/80 hover:shadow-[0_30px_90px_rgba(15,205,190,0.20)]"
                 >
                   <div className="relative aspect-[1.12] overflow-hidden">
                     <img src={item.image} alt={item.title} className="h-full w-full object-cover transition duration-700 group-hover:scale-105" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#041f20]/62 via-transparent to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#021716]/80 via-[#021716]/8 to-transparent" />
                     {item.icon && (
-                      <div className="absolute left-5 top-5 grid h-14 w-14 place-items-center rounded-full bg-[#fffbde] text-[#4682a9] shadow-lg dark:bg-[#062424] dark:text-[#91c8e4]">
+                      <div className="absolute left-5 top-5 grid h-14 w-14 place-items-center rounded-full bg-[#031f1f]/82 text-[#74f3e4] shadow-lg ring-1 ring-[#74f3e4]/24 backdrop-blur-xl">
                         <item.icon className="h-6 w-6" />
                       </div>
                     )}
                   </div>
                   <div className="p-7">
-                    <p className="font-body text-xs font-bold uppercase tracking-[0.16em] text-[#4682a9] dark:text-[#91c8e4]">{item.label}</p>
-                    <h3 className="mt-3 font-headline text-3xl font-semibold text-[#1f4d3a] dark:text-white">{item.title}</h3>
-                    <p className="mt-3 min-h-[4.5rem] font-body text-sm leading-6 text-[#35627f] dark:text-cyan-50/66">{item.description}</p>
-                    <span className="mt-6 inline-flex items-center gap-2 border-b border-[#4682a9] pb-1 font-body text-sm font-bold text-[#4682a9] dark:border-[#91c8e4] dark:text-[#91c8e4]">
+                    <p className="font-body text-xs font-bold uppercase tracking-[0.16em] text-[#8cefe3]">{item.label}</p>
+                    <h3 className="mt-3 font-headline text-3xl font-semibold text-white">{item.title}</h3>
+                    <p className="mt-3 min-h-[4.5rem] font-body text-sm leading-6 text-cyan-50/72">{item.description}</p>
+                    <span className="mt-6 inline-flex items-center gap-2 border-b border-[#74f3e4] pb-1 font-body text-sm font-bold text-[#9af8ec]">
                       {item.cta}
                       <ArrowRightIcon className="h-4 w-4 transition group-hover:translate-x-1" />
                     </span>

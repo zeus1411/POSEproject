@@ -45,7 +45,7 @@ const Layout = () => {
     <div className="flex flex-col min-h-screen bg-background text-foreground">
       <Header />
       <div className="flex flex-1 pt-16">
-        <main className="w-full overflow-y-auto">
+        <main className="w-full">
           <Outlet />
         </main>
       </div>

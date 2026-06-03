@@ -34,7 +34,8 @@
     "recharts": "^3.4.1",
     "socket.io-client": "^4.8.1",
     "sweetalert2": "^11.26.3",
-    "swiper": "^12.0.3"
+    "swiper": "^12.0.3",
+    "three": "^0.184.0"
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.19",
