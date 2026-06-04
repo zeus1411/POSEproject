@@ -135,9 +135,6 @@ const ManageUsers = () => {
         <div className="flex justify-between items-center mb-8">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <div className="p-3 bg-blue-100/80 dark:bg-blue-900/30 rounded-xl border border-blue-200/50 dark:border-blue-700/30 shadow-inner">
-                <Users className="text-blue-600 dark:text-blue-400" size={28} />
-              </div>
               <div>
                 <h1 className="text-3xl font-black tracking-tight text-slate-800 dark:text-white">
                   Quản lý người dùng

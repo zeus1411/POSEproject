@@ -3,6 +3,33 @@ import Product from '../models/Product.js';
 import Order from '../models/Order.js';
 import { NotFoundError, BadRequestError } from '../../utils/errorHandler.js';
 
+const validatePromotionDates = ({ startDate, endDate }) => {
+  if (!startDate || !endDate) {
+    throw new BadRequestError('Vui lòng chọn đầy đủ ngày bắt đầu và ngày kết thúc');
+  }
+
+  const parsedStartDate = new Date(startDate);
+  const parsedEndDate = new Date(endDate);
+  const currentYear = new Date().getFullYear();
+
+  if (Number.isNaN(parsedStartDate.getTime()) || Number.isNaN(parsedEndDate.getTime())) {
+    throw new BadRequestError('Thời gian khuyến mãi không hợp lệ');
+  }
+
+  if (parsedStartDate.getFullYear() < currentYear || parsedEndDate.getFullYear() < currentYear) {
+    throw new BadRequestError(`Thời gian khuyến mãi chỉ được chọn từ năm ${currentYear} trở đi`);
+  }
+
+  if (parsedEndDate <= parsedStartDate) {
+    throw new BadRequestError('Ngày kết thúc phải sau ngày bắt đầu');
+  }
+
+  return {
+    startDate: parsedStartDate,
+    endDate: parsedEndDate
+  };
+};
+
 class PromotionService {
   // ==================== ADMIN SERVICES ====================
   
@@ -15,6 +42,11 @@ class PromotionService {
       throw new BadRequestError('Mã giảm giá là bắt buộc');
     }
 
+    const validatedDates = validatePromotionDates({
+      startDate: data.startDate,
+      endDate: data.endDate
+    });
+
     // Validate code uniqueness
     const existingPromotion = await Promotion.findOne({ code: data.code });
     if (existingPromotion) {
@@ -24,6 +56,7 @@ class PromotionService {
     // Force COUPON settings
     const couponData = {
       ...data,
+      ...validatedDates,
       promotionType: 'COUPON',
       applyTo: 'ORDER',
       targetProducts: [], // Empty for coupons
@@ -119,9 +152,15 @@ class PromotionService {
       }
     }
 
+    const validatedDates = validatePromotionDates({
+      startDate: data.startDate ?? promotion.startDate,
+      endDate: data.endDate ?? promotion.endDate
+    });
+
     // Force COUPON settings
     const couponData = {
       ...data,
+      ...validatedDates,
       promotionType: 'COUPON',
       applyTo: 'ORDER',
       targetProducts: [], // Empty for coupons

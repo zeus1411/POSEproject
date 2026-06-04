@@ -46,6 +46,9 @@ const AdminPromotions = () => {
     return new Date(localDateTime).toISOString();
   };
 
+  const currentYear = new Date().getFullYear();
+  const minPromotionDateTime = `${currentYear}-01-01T00:00`;
+
   // Modal states
   const [showModal, setShowModal] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -256,6 +259,13 @@ const AdminPromotions = () => {
     // Validate discountValue only if not FREE_SHIPPING
     if (formData.discountType !== 'FREE_SHIPPING' && !formData.discountValue) {
       toast.error('Vui lòng nhập giá trị giảm');
+      return;
+    }
+
+    const startYear = formData.startDate ? new Date(formData.startDate).getFullYear() : null;
+    const endYear = formData.endDate ? new Date(formData.endDate).getFullYear() : null;
+    if (!startYear || !endYear || startYear < currentYear || endYear < currentYear) {
+      toast.error(`Thời gian khuyến mãi chỉ được chọn từ năm ${currentYear} trở đi`);
       return;
     }
 
@@ -834,6 +844,7 @@ const AdminPromotions = () => {
                       type="datetime-local"
                       name="startDate"
                       value={formData.startDate}
+                      min={minPromotionDateTime}
                       onChange={handleInputChange}
                       className="w-full bg-water/5 dark:bg-white/5 border border-water/30 dark:border-white/10 text-slate-800 dark:text-slate-100 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                       required
@@ -847,6 +858,7 @@ const AdminPromotions = () => {
                       type="datetime-local"
                       name="endDate"
                       value={formData.endDate}
+                      min={formData.startDate || minPromotionDateTime}
                       onChange={handleInputChange}
                       className="w-full bg-water/5 dark:bg-white/5 border border-water/30 dark:border-white/10 text-slate-800 dark:text-slate-100 rounded-xl px-4 py-2.5 focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
                       required
