@@ -4,9 +4,9 @@ const options = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'POSEproject API Documentation',
+      title: 'Capsproject API Documentation',
       version: '1.0.0',
-      description: 'API documentation for the POSEproject E-commerce and Blog platform',
+      description: 'API documentation for the Capsproject E-commerce and Blog platform',
       contact: {
         name: 'API Support',
         email: 'support@example.com'

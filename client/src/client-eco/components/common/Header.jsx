@@ -85,9 +85,9 @@ const Header = () => {
                 </div>
                 <div className="flex flex-col">
                   <span className="text-xl font-headline font-bold text-foreground tracking-tight">
-                    AquaticCaps
+                    Aquatic<span className="text-[#91c8e4]">Caps</span>
                   </span>
-                  <span className="text-xs font-medium text-nature dark:text-primary/80">Thủy Sinh Cao Cấp</span>
+                  <span className="text-xs font-medium text-nature dark:text-primary/80">Cửa Hàng Thủy Sinh Cao Cấp</span>
                 </div>
               </Link>
             </div>

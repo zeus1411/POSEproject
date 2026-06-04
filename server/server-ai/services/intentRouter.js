@@ -96,13 +96,13 @@ const buildBehaviorAnswer = (message) => {
 
   if (/ban la ai|bot la ai|ban lam duoc gi|huong dan su dung|cach dung/.test(normalized)) {
     return [
-      'Mình là trợ lý AI của AquaticPose.',
+      'Mình là trợ lý AI của AquaticCaps.',
       'Mình có thể gợi ý sản phẩm cho hồ thủy sinh, kiểm tra giá, khuyến mãi, tồn kho và hỗ trợ các câu hỏi cơ bản về chăm sóc hồ cá.'
     ].join('\n');
   }
 
   if (/shop oi|chao shop/.test(normalized)) {
-    return 'Chào bạn, AquaticPose có thể hỗ trợ gì cho hồ thủy sinh của bạn hôm nay? Bạn đang muốn tìm thức ăn, vi sinh, cây thủy sinh hay phụ kiện?';
+    return 'Chào bạn, AquaticCaps có thể hỗ trợ gì cho hồ thủy sinh của bạn hôm nay? Bạn đang muốn tìm thức ăn, vi sinh, cây thủy sinh hay phụ kiện?';
   }
 
   return 'Xin chào bạn, hôm nay bạn có nhu cầu như thế nào? Bạn muốn tìm sản phẩm gì để phục vụ cho hồ thủy sinh của mình?';

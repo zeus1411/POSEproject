@@ -114,10 +114,6 @@ const AquaticKitShowcase = () => {
           trigger: section,
           start: 'top top',
           end: 'bottom bottom',
-          pin: stickyRef.current,
-          pinSpacing: false,
-          pinReparent: true,
-          anticipatePin: 1,
           scrub: 0.75,
           invalidateOnRefresh: true,
           onUpdate: (self) => {
@@ -315,15 +311,13 @@ const AquaticKitShowcase = () => {
             <div className={`aquatic-final-cta ${activeStep === storyScenes.length - 1 ? 'is-visible' : ''}`}>
               <h3>{activeScene.ctaHeadline}</h3>
               <p>{activeScene.ctaBody}</p>
-              <div className="aquatic-actions">
-                <Link ref={ctaRef} to="/shop" className="aquatic-primary-cta">
-                  Bắt đầu dựng kit
-                  <ArrowRightIcon className="h-4 w-4" />
-                </Link>
-                <Link to="/blogs" className="aquatic-secondary-cta">
-                  Xem cách hoạt động
-                </Link>
-              </div>
+              <Link ref={ctaRef} to="/shop" className="aquatic-primary-cta">
+                Bắt đầu dựng kit
+                <ArrowRightIcon className="h-4 w-4" />
+              </Link>
+              <Link to="/blogs" className="aquatic-secondary-cta">
+                Xem cách hoạt động
+              </Link>
             </div>
           </div>
         </div>

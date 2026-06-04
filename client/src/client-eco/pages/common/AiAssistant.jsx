@@ -282,7 +282,7 @@ const AiAssistant = () => {
           <div>
             <p className="text-xs uppercase tracking-[0.4em] text-slate-500">AI Workspace</p>
             <h1 className="ai-title text-4xl md:text-5xl font-semibold mt-3">
-              Tro ly tri thuc cho AquaticPose
+              Trợ lý ảo thông minh
             </h1>
             <p className="text-slate-600 mt-4 max-w-2xl">
               Dat cau hoi, he thong tu dong chon nguon phu hop de tra loi.
