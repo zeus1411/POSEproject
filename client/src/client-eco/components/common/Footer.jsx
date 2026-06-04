@@ -12,7 +12,7 @@ import {
 
 const Footer = () => {
   return (
-    <footer className="bg-abyss text-gray-400 mt-auto border-t border-white/5">
+    <footer id="site-footer" className="relative z-10 mt-auto border-t border-white/10 bg-[#051C1C] text-[#9fb3b3]">
       <div className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-1 md:grid-cols-4 gap-8">
 
         {/* --- Cột 1: Logo + Mô tả --- */}
@@ -36,21 +36,21 @@ const Footer = () => {
               Aquatic<span className="text-[#91c8e4]">Caps</span>
             </span>
           </h2>
-          <p className="text-gray-500 text-sm leading-relaxed font-body">
+          <p className="text-sm leading-relaxed font-body text-[#9fb3b3]">
             Khám phá sản phẩm đẳng cấp, biến không gian sống thành tác phẩm nghệ thuật thủy sinh.
           </p>
 
           <div className="flex space-x-4 mt-5">
-            <a href="#" className="text-gray-500 hover:text-neon-cyan transition-colors duration-200">
+            <a href="#" className="text-[#8aa3a3] hover:text-neon-cyan transition-colors duration-200">
               <Facebook size={20} />
             </a>
-            <a href="#" className="text-gray-500 hover:text-neon-cyan transition-colors duration-200">
+            <a href="#" className="text-[#8aa3a3] hover:text-neon-cyan transition-colors duration-200">
               <Instagram size={20} />
             </a>
-            <a href="#" className="text-gray-500 hover:text-neon-cyan transition-colors duration-200">
+            <a href="#" className="text-[#8aa3a3] hover:text-neon-cyan transition-colors duration-200">
               <Youtube size={20} />
             </a>
-            <a href="#" className="text-gray-500 hover:text-neon-cyan transition-colors duration-200">
+            <a href="#" className="text-[#8aa3a3] hover:text-neon-cyan transition-colors duration-200">
               <Twitter size={20} />
             </a>
           </div>
@@ -61,17 +61,17 @@ const Footer = () => {
           <h3 className="text-sm font-body font-semibold text-white uppercase tracking-wider mb-4">Trang chủ</h3>
           <ul className="space-y-2.5 text-sm font-body">
             <li>
-              <Link to="/" className="hover:text-neon-cyan transition-colors duration-200">
+              <Link to="/" className="text-[#9fb3b3] hover:text-neon-cyan transition-colors duration-200">
                 Trang chủ
               </Link>
             </li>
             <li>
-              <Link to="/shop" className="hover:text-neon-cyan transition-colors duration-200">
+              <Link to="/shop" className="text-[#9fb3b3] hover:text-neon-cyan transition-colors duration-200">
                 Cửa hàng
               </Link>
             </li>
             <li>
-              <Link to="/blogs" className="hover:text-neon-cyan transition-colors duration-200">
+              <Link to="/blogs" className="text-[#9fb3b3] hover:text-neon-cyan transition-colors duration-200">
                 Blog
               </Link>
             </li>
@@ -83,17 +83,17 @@ const Footer = () => {
           <h3 className="text-sm font-body font-semibold text-white uppercase tracking-wider mb-4">Blog</h3>
           <ul className="space-y-2.5 text-sm font-body">
             <li>
-              <Link to="/blogs" className="hover:text-neon-cyan transition-colors duration-200">
+              <Link to="/blogs" className="text-[#9fb3b3] hover:text-neon-cyan transition-colors duration-200">
                 Bài viết
               </Link>
             </li>
             <li>
-              <Link to="/blogs" className="hover:text-neon-cyan transition-colors duration-200">
+              <Link to="/blogs" className="text-[#9fb3b3] hover:text-neon-cyan transition-colors duration-200">
                 Mẹo vặt
               </Link>
             </li>
             <li>
-              <Link to="/blogs" className="hover:text-neon-cyan transition-colors duration-200">
+              <Link to="/blogs" className="text-[#9fb3b3] hover:text-neon-cyan transition-colors duration-200">
                 Cách nuôi cá
               </Link>
             </li>
@@ -120,16 +120,16 @@ const Footer = () => {
 
           {/* Social icons row for mobile */}
           <div className="flex space-x-3 mt-5">
-            <a href="#" className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-gray-500 hover:text-neon-cyan hover:border-neon-cyan/30 transition-all duration-200">
+            <a href="#" className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-[#8aa3a3] hover:text-neon-cyan hover:border-neon-cyan/30 transition-all duration-200">
               <Facebook size={16} />
             </a>
-            <a href="#" className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-gray-500 hover:text-neon-cyan hover:border-neon-cyan/30 transition-all duration-200">
+            <a href="#" className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-[#8aa3a3] hover:text-neon-cyan hover:border-neon-cyan/30 transition-all duration-200">
               <Instagram size={16} />
             </a>
-            <a href="#" className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-gray-500 hover:text-neon-cyan hover:border-neon-cyan/30 transition-all duration-200">
+            <a href="#" className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-[#8aa3a3] hover:text-neon-cyan hover:border-neon-cyan/30 transition-all duration-200">
               <Youtube size={16} />
             </a>
-            <a href="#" className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-gray-500 hover:text-neon-cyan hover:border-neon-cyan/30 transition-all duration-200">
+            <a href="#" className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-[#8aa3a3] hover:text-neon-cyan hover:border-neon-cyan/30 transition-all duration-200">
               <Twitter size={16} />
             </a>
           </div>
@@ -137,7 +137,7 @@ const Footer = () => {
       </div>
 
       {/* --- Dòng bản quyền --- */}
-      <div className="border-t border-white/5 py-4 text-center text-sm text-gray-600 font-body">
+      <div className="border-t border-white/10 py-4 text-center text-sm text-[#6f8585] font-body">
         Copyright © {new Date().getFullYear()} AquaticCaps. All rights reserved.
       </div>
     </footer>

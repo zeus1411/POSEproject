@@ -9,17 +9,6 @@ const sortOptions = [
   { value: 'price:desc', label: 'Giá cao đến thấp' },
 ];
 
-const quickFilters = [
-  { label: 'Best seller', updates: { sort: 'soldCount:desc' } },
-  { label: 'New arrivals', updates: { sort: 'createdAt:desc' } },
-  { label: 'Trending', updates: { sort: 'rating.average:desc' } },
-  { label: 'Low tech', query: 'low tech' },
-  { label: 'CO2', query: 'CO2' },
-  { label: 'Nano tank', query: 'nano' },
-  { label: 'Fish', query: 'cá' },
-  { label: 'Plants', query: 'cây thủy sinh' },
-];
-
 const ShopDiscoveryBar = ({ filters, onFiltersChange, onOpenFilters, isLoading, resultCount = 0 }) => {
   const [searchValue, setSearchValue] = useState(filters.search || '');
 
@@ -30,16 +19,6 @@ const ShopDiscoveryBar = ({ filters, onFiltersChange, onOpenFilters, isLoading, 
   const submitSearch = (event) => {
     event.preventDefault();
     onFiltersChange({ ...filters, search: searchValue.trim() });
-  };
-
-  const applyQuickFilter = (item) => {
-    if (item.query) {
-      const nextSearch = filters.search === item.query ? '' : item.query;
-      setSearchValue(nextSearch);
-      onFiltersChange({ ...filters, search: nextSearch });
-      return;
-    }
-    onFiltersChange({ ...filters, ...item.updates });
   };
 
   return (
@@ -76,28 +55,10 @@ const ShopDiscoveryBar = ({ filters, onFiltersChange, onOpenFilters, isLoading, 
           <ChevronDownIcon className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         </div>
       </div>
-      <div className="mt-3 flex items-center gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <span className="mr-1 hidden shrink-0 font-body text-xs text-muted-foreground md:inline">
+      <div className="mt-3 flex items-center">
+        <span className="font-body text-xs text-muted-foreground">
           {isLoading ? 'Đang tải...' : `${resultCount} sản phẩm`}
         </span>
-        {quickFilters.map((item) => {
-          const active = item.query ? filters.search === item.query : filters.sort === item.updates.sort;
-          return (
-            <button
-              key={item.label}
-              type="button"
-              onClick={() => applyQuickFilter(item)}
-              aria-pressed={active}
-              className={`shrink-0 rounded-full border px-3.5 py-2 font-body text-xs font-medium transition ${
-                active
-                  ? 'border-primary/40 bg-primary/15 text-ocean dark:text-neon-cyan'
-                  : 'border-water/30 bg-card/40 text-muted-foreground hover:border-primary/30 hover:text-foreground dark:border-white/10 dark:hover:text-white'
-              }`}
-            >
-              {item.label}
-            </button>
-          );
-        })}
       </div>
       <div className="relative mt-3 sm:hidden">
         <select

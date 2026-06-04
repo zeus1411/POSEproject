@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { getCurrentUser } from '../redux/slices/authSlice';
 import Header from './common/Header';
@@ -12,7 +12,16 @@ import { ChatDockProvider } from '../context/ChatDockContext';
 const Layout = () => {
   const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
+  const location = useLocation();
   const [isLoading, setIsLoading] = useState(true);
+  const pathname = location.pathname !== '/' ? location.pathname.replace(/\/+$/, '') : location.pathname;
+  const showFooter =
+    pathname === '/' ||
+    pathname === '/shop' ||
+    pathname.startsWith('/product/') ||
+    pathname === '/blogs' ||
+    (pathname.startsWith('/blogs/') && !pathname.startsWith('/blogs/create') && !pathname.startsWith('/blogs/edit/')) ||
+    pathname.startsWith('/my-blogs/preview/');
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -49,7 +58,7 @@ const Layout = () => {
           <Outlet />
         </main>
       </div>
-      <Footer />
+      {showFooter && <Footer />}
       <Toast />
       <ChatDockProvider>
         <ChatBubble />
