@@ -42,7 +42,6 @@ class BlogInteractionService {
     if (existing) {
       // Remove interaction (Toggle off)
       await BlogInteraction.findByIdAndDelete(existing._id);
-      await Blog.findByIdAndUpdate(blogId, { $inc: { [countField]: -1 } });
       isActed = false;
     } else {
       // Create interaction (Toggle on)
@@ -51,12 +50,24 @@ class BlogInteractionService {
         blogId,
         type
       });
-      await Blog.findByIdAndUpdate(blogId, { $inc: { [countField]: 1 } });
       isActed = true;
     }
 
-    // Get updated blog to return latest counts
-    const updatedBlog = await Blog.findById(blogId).select('likeCount bookmarkCount');
+    const [likeCount, bookmarkCount] = await Promise.all([
+      BlogInteraction.countDocuments({ blogId, type: 'LIKE' }),
+      BlogInteraction.countDocuments({ blogId, type: 'BOOKMARK' })
+    ]);
+
+    const updatedBlog = await Blog.findByIdAndUpdate(
+      blogId,
+      {
+        $set: {
+          likeCount,
+          bookmarkCount
+        }
+      },
+      { new: true }
+    ).select('likeCount bookmarkCount');
 
     return {
       success: true,

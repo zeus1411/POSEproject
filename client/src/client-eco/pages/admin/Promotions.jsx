@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { 
@@ -94,12 +94,14 @@ const AdminPromotions = () => {
   // Debounced search effect
   useEffect(() => {
     const timer = setTimeout(() => {
-      setFilters(prev => ({ ...prev, search: searchInput }));
+      const nextSearch = searchInput.trim();
+      if (filters.search === nextSearch) return;
+      setFilters(prev => ({ ...prev, search: nextSearch }));
       setCurrentPage(1); // Reset to page 1 when search changes
     }, 500); // Wait 500ms after user stops typing
 
     return () => clearTimeout(timer);
-  }, [searchInput]);
+  }, [searchInput, filters.search]);
 
   // Load initial data (products & categories)
   useEffect(() => {
@@ -405,47 +407,56 @@ const AdminPromotions = () => {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="min-w-[1260px] w-full table-fixed">
+                <colgroup>
+                  <col className="w-[32%]" />
+                  <col className="w-[12%]" />
+                  <col className="w-[12%]" />
+                  <col className="w-[12%]" />
+                  <col className="w-[14%]" />
+                  <col className="w-[10%]" />
+                  <col className="w-[8%]" />
+                </colgroup>
                 <thead className="bg-water/10 dark:bg-white/5 border-b border-water/20 dark:border-white/10">
                   <tr>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-800 dark:text-slate-200 uppercase">Tên chương trình</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-800 dark:text-slate-200 uppercase">Loại khuyến mãi</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-800 dark:text-slate-200 uppercase">Giảm giá</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-800 dark:text-slate-200 uppercase">Mã</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-800 dark:text-slate-200 uppercase">Thời gian</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-800 dark:text-slate-200 uppercase">Trạng thái</th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-slate-800 dark:text-slate-200 uppercase">Thao tác</th>
+                    <th className="px-6 py-4 text-left text-[12px] font-semibold text-slate-800 dark:text-slate-200 uppercase whitespace-nowrap">Tên chương trình</th>
+                    <th className="px-6 py-4 text-left text-[12px] font-semibold text-slate-800 dark:text-slate-200 uppercase whitespace-nowrap">Loại khuyến mãi</th>
+                    <th className="px-6 py-4 text-left text-[12px] font-semibold text-slate-800 dark:text-slate-200 uppercase whitespace-nowrap">Giảm giá</th>
+                    <th className="px-6 py-4 text-left text-[12px] font-semibold text-slate-800 dark:text-slate-200 uppercase whitespace-nowrap">Mã</th>
+                    <th className="px-6 py-4 text-left text-[12px] font-semibold text-slate-800 dark:text-slate-200 uppercase whitespace-nowrap">Thời gian</th>
+                    <th className="px-6 py-4 text-left text-[12px] font-semibold text-slate-800 dark:text-slate-200 uppercase whitespace-nowrap">Trạng thái</th>
+                    <th className="px-6 py-4 text-left text-[12px] font-semibold text-slate-800 dark:text-slate-200 uppercase whitespace-nowrap">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-water/10 dark:divide-white/5">
                   {promotions.map((promotion) => (
                     <tr key={promotion._id} className="hover:bg-water/5 dark:hover:bg-white/5 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="font-semibold text-slate-800 dark:text-slate-100">{promotion.name}</div>
+                      <td className="px-6 py-4 align-middle">
+                        <div className="font-semibold text-slate-800 dark:text-slate-100 break-words">{promotion.name}</div>
                         {promotion.description && (
-                          <div className="text-sm text-slate-500 dark:text-slate-400 mt-1">{promotion.description}</div>
+                          <div className="text-sm text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">{promotion.description}</div>
                         )}
                       </td>
-                      <td className="px-6 py-4">
-                        <span className="px-3 py-1 rounded-full text-xs font-semibold bg-pink-100/80 dark:bg-pink-950/45 text-pink-700 dark:text-pink-300 border border-pink-200/40 dark:border-pink-850/20">
+                      <td className="px-6 py-4 align-middle">
+                        <span className="inline-flex items-center gap-1 whitespace-nowrap px-3 py-1 rounded-full text-xs font-semibold bg-pink-100/80 dark:bg-pink-950/45 text-pink-700 dark:text-pink-300 border border-pink-200/40 dark:border-pink-850/20">
                           🎫 Mã giảm giá
                         </span>
                       </td>
-                      <td className="px-6 py-4">
-                        <span className="font-bold text-emerald-600 dark:text-emerald-400">
+                      <td className="px-6 py-4 align-middle">
+                        <span className="font-bold text-emerald-600 dark:text-emerald-400 whitespace-normal">
                           {getDiscountDisplay(promotion)}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 align-middle">
                         {promotion.code ? (
-                          <code className="bg-water/10 dark:bg-white/10 px-2 py-1 rounded text-sm font-mono text-slate-800 dark:text-slate-100 border border-water/20 dark:border-white/10">
+                          <code className="inline-block max-w-full truncate bg-water/10 dark:bg-white/10 px-2 py-1 rounded text-sm font-mono text-slate-800 dark:text-slate-100 border border-water/20 dark:border-white/10">
                             {promotion.code}
                           </code>
                         ) : (
                           <span className="text-slate-400 dark:text-slate-500">-</span>
                         )}
                       </td>
-                      <td className="px-6 py-4 text-sm text-slate-700 dark:text-slate-300">
+                      <td className="px-6 py-4 align-middle text-sm text-slate-700 dark:text-slate-300">
                         <div>{new Date(promotion.startDate).toLocaleString('vi-VN', { 
                           year: 'numeric', 
                           month: '2-digit', 
@@ -463,10 +474,10 @@ const AdminPromotions = () => {
                           hour12: false
                         })}</div>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-6 py-4 align-middle">
                         <button
                           onClick={() => handleToggleStatus(promotion._id)}
-                          className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm font-semibold transition-colors border ${
+                          className={`inline-flex items-center gap-2 whitespace-nowrap px-3 py-1 rounded-full text-sm font-semibold transition-colors border ${
                             promotion.isActive 
                               ? 'bg-green-100/80 dark:bg-green-950/50 text-green-700 dark:text-green-300 hover:bg-green-200/80 dark:hover:bg-green-900/50 border-green-200 dark:border-green-800/30' 
                               : 'bg-red-100/80 dark:bg-red-950/50 text-red-700 dark:text-red-300 hover:bg-red-200/80 dark:hover:bg-red-900/50 border-red-200 dark:border-red-800/30'
@@ -476,8 +487,8 @@ const AdminPromotions = () => {
                           {promotion.isActive ? 'Hoạt động' : 'Đã tắt'}
                         </button>
                       </td>
-                      <td className="px-6 py-4">
-                        <div className="flex gap-2">
+                      <td className="px-6 py-4 align-middle">
+                        <div className="flex items-center gap-2">
                           <button
                             onClick={() => handleOpenEditModal(promotion)}
                             className="text-primary hover:bg-primary/10 p-2 rounded-lg transition-colors"

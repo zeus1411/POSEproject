@@ -14,8 +14,8 @@ const BlogInteractionButtons = ({
 }) => {
   const [liked, setLiked] = useState(initialLiked);
   const [bookmarked, setBookmarked] = useState(initialBookmarked);
-  const [likes, setLikes] = useState(initialLikes);
-  const [bookmarks, setBookmarks] = useState(initialBookmarks);
+  const [likes, setLikes] = useState(Math.max(0, initialLikes || 0));
+  const [bookmarks, setBookmarks] = useState(Math.max(0, initialBookmarks || 0));
 
   const requireLogin = () => {
     if (!isLoggedIn) {
@@ -32,7 +32,7 @@ const BlogInteractionButtons = ({
       const data = await blogInteractionService.toggleLike(blogId);
 
       setLiked(data.isActed);
-      setLikes(data.counts.likes);
+      setLikes(Math.max(0, data.counts?.likes ?? data.newCount ?? 0));
     } catch (e) {
       toast.error('Like thất bại');
     }
@@ -45,7 +45,7 @@ const BlogInteractionButtons = ({
       const data = await blogInteractionService.toggleBookmark(blogId);
 
       setBookmarked(data.isActed);
-      setBookmarks(data.counts.bookmarks);
+      setBookmarks(Math.max(0, data.counts?.bookmarks ?? data.newCount ?? 0));
     } catch (e) {
       toast.error('Lưu bài viết thất bại');
     }

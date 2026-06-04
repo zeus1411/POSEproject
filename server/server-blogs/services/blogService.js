@@ -392,7 +392,27 @@ class BlogService {
       throw new BadRequestError('Chỉ bài viết đã đăng mới có thể ẩn');
     }
 
-    blog.isHidden = Boolean(isHidden);
+    const nextHidden = Boolean(isHidden);
+
+    if (userRole !== 'admin') {
+      const hiddenByAdmin = blog.hiddenByRole === 'admin' || (blog.isHidden && !blog.hiddenByRole);
+      if (hiddenByAdmin) {
+        throw new UnauthorizedError('Bài viết này đã bị admin ẩn. Bạn không có quyền thay đổi trạng thái ẩn.');
+      }
+    }
+
+    blog.isHidden = nextHidden;
+
+    if (nextHidden) {
+      blog.hiddenBy = userId;
+      blog.hiddenByRole = userRole === 'admin' ? 'admin' : 'user';
+      blog.hiddenAt = new Date();
+    } else {
+      blog.hiddenBy = null;
+      blog.hiddenByRole = null;
+      blog.hiddenAt = null;
+    }
+
     await blog.save({ validateBeforeSave: false });
 
     return {
@@ -428,6 +448,9 @@ class BlogService {
       updateData = {
         status: 'PUBLISHED',
         isHidden: false,
+        hiddenBy: null,
+        hiddenByRole: null,
+        hiddenAt: null,
         publishedAt: new Date(),
         approvedBy: adminId,
         rejectionReason: null

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { FileText, Clock, XCircle, Bookmark, Edit, Eye, EyeOff, MessageCircle, Trash2 } from 'lucide-react';
+import Swal from 'sweetalert2';
 import blogService from '../../services/blogService';
 import blogInteractionService from '../../services/blogInteractionService';
 import { useTheme } from '../../../client-eco/context/ThemeContext';
@@ -47,27 +48,79 @@ const MyBlogs = () => {
   };
 
   const handleHiddenChange = async (blogId, isHidden) => {
-    const confirmed = window.confirm(isHidden ? 'Bạn có chắc muốn ẩn bài viết này khỏi feed blog?' : 'Bạn có chắc muốn gỡ ẩn bài viết này?');
-    if (!confirmed) return;
+    const result = await Swal.fire({
+      icon: 'question',
+      title: isHidden ? 'Ẩn bài viết?' : 'Gỡ ẩn bài viết?',
+      text: isHidden ? 'Bài viết sẽ không còn hiển thị trên feed blog.' : 'Bài viết sẽ được hiển thị lại trên feed blog.',
+      showCancelButton: true,
+      confirmButtonText: isHidden ? 'Ẩn bài viết' : 'Gỡ ẩn',
+      cancelButtonText: 'Hủy',
+      confirmButtonColor: isHidden ? '#f97316' : '#10b981',
+      cancelButtonColor: '#64748b',
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       await blogService.hideBlog(blogId, isHidden);
       await fetchData();
+      Swal.fire({
+        icon: 'success',
+        title: isHidden ? 'Đã ẩn bài viết' : 'Đã gỡ ẩn bài viết',
+        timer: 1600,
+        showConfirmButton: false,
+      });
     } catch (error) {
-      alert(error.response?.data?.message || 'Không thể cập nhật trạng thái ẩn bài viết');
+      Swal.fire({
+        icon: 'error',
+        title: 'Không thể cập nhật',
+        text: error.response?.data?.message || 'Không thể cập nhật trạng thái ẩn bài viết',
+        confirmButtonColor: '#ef4444',
+      });
     }
   };
 
   const handleDeleteBlog = async (blogId) => {
-    const confirmed = window.confirm('Bạn có chắc muốn xóa bản nháp này? Hành động này không thể hoàn tác.');
-    if (!confirmed) return;
+    const result = await Swal.fire({
+      icon: 'warning',
+      title: 'Xóa bản nháp?',
+      text: 'Hành động này không thể hoàn tác.',
+      showCancelButton: true,
+      confirmButtonText: 'Xóa',
+      cancelButtonText: 'Hủy',
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#64748b',
+    });
+
+    if (!result.isConfirmed) return;
 
     try {
       await blogService.deleteBlog(blogId);
       await fetchData();
+      Swal.fire({
+        icon: 'success',
+        title: 'Đã xóa bài viết',
+        timer: 1600,
+        showConfirmButton: false,
+      });
     } catch (error) {
-      alert(error.response?.data?.message || 'Không thể xóa bài viết');
+      Swal.fire({
+        icon: 'error',
+        title: 'Không thể xóa bài viết',
+        text: error.response?.data?.message || 'Không thể xóa bài viết',
+        confirmButtonColor: '#ef4444',
+      });
     }
+  };
+
+  const showAdminHiddenNotice = () => {
+    Swal.fire({
+      icon: 'info',
+      title: 'Bài viết đã bị admin ẩn',
+      text: 'Admin đã ẩn bài viết của bạn vì lý do vi phạm cộng đồng, bạn hãy liên hệ admin qua gmail "22110039@student.hcmute.edu.vn" để được giải quyết.',
+      confirmButtonText: 'Đã hiểu',
+      confirmButtonColor: '#0f766e',
+    });
   };
 
   const tabs = [
@@ -151,6 +204,7 @@ const MyBlogs = () => {
               const detailUrl = (activeTab === 'pending' || activeTab === 'draft' || blog.isHidden) 
                 ? `/my-blogs/preview/${blog._id}` 
                 : `/blogs/${blog.slug || blog._id}`;
+              const hiddenByAdmin = blog.isHidden && blog.hiddenByRole !== 'user';
 
               return (
                 <div key={blog._id} className="glass-panel border border-water/45 dark:border-white/10 rounded-3xl p-5 flex flex-col sm:flex-row gap-5 hover:shadow-xl transition-all duration-300">
@@ -187,7 +241,7 @@ const MyBlogs = () => {
                       )}
                       {activeTab === 'published' && blog.isHidden && (
                         <span className="px-2.5 py-1 bg-slate-500/15 border border-slate-500/30 text-slate-600 dark:text-slate-300 text-xs font-bold rounded-full whitespace-nowrap">
-                          Đã ẩn
+                          {hiddenByAdmin ? 'Admin đã ẩn' : 'Đã ẩn'}
                         </span>
                       )}
                     </div>
@@ -232,12 +286,20 @@ const MyBlogs = () => {
                         )}
 
                         {activeTab === 'published' && (
-                          <label className="px-4 py-1.5 text-sm font-bold text-orange-600 dark:text-orange-300 bg-orange-500/10 border border-orange-500/30 rounded-xl hover:bg-orange-500/20 transition-all flex items-center gap-2 cursor-pointer">
+                          <label
+                            className="px-4 py-1.5 text-sm font-bold text-orange-600 dark:text-orange-300 bg-orange-500/10 border border-orange-500/30 rounded-xl hover:bg-orange-500/20 transition-all flex items-center gap-2 cursor-pointer"
+                          >
                             <EyeOff size={14} />
                             <input
                               type="checkbox"
                               checked={!!blog.isHidden}
-                              onChange={(e) => handleHiddenChange(blog._id, e.target.checked)}
+                              onChange={(e) => {
+                                if (hiddenByAdmin) {
+                                  showAdminHiddenNotice();
+                                  return;
+                                }
+                                handleHiddenChange(blog._id, e.target.checked);
+                              }}
                               className="h-4 w-4 accent-orange-500"
                             />
                             Ẩn

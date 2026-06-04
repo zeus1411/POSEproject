@@ -211,7 +211,7 @@ const BlogDetailPage = ({ isAdminPreview = false }) => {
     try {
       const res = await blogInteractionService.toggleLike(blog._id);
       setInteraction(prev => ({ ...prev, isLiked: res.isActed }));
-      setBlog(prev => ({ ...prev, likeCount: res.newCount }));
+      setBlog(prev => ({ ...prev, likeCount: Math.max(0, res.newCount ?? res.counts?.likes ?? 0) }));
     } catch (err) { console.error(err); }
   };
 
@@ -488,7 +488,7 @@ const BlogDetailPage = ({ isAdminPreview = false }) => {
                 }`}>
                   <Heart size={20} fill={interaction.isLiked ? "currentColor" : "none"} />
                 </div>
-                <span className="font-bold">{blog.likeCount || 0}</span>
+                <span className="font-bold">{Math.max(0, blog.likeCount || 0)}</span>
               </button>
 
               <div className="flex items-center gap-2">

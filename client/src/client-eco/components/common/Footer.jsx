@@ -1,13 +1,9 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import {
-  Facebook,
-  Instagram,
   Mail,
   MapPin,
   Phone,
-  Twitter,
-  Youtube,
 } from "lucide-react";
 
 const Footer = () => {
@@ -39,21 +35,6 @@ const Footer = () => {
           <p className="text-sm leading-relaxed font-body text-[#9fb3b3]">
             Khám phá sản phẩm đẳng cấp, biến không gian sống thành tác phẩm nghệ thuật thủy sinh.
           </p>
-
-          <div className="flex space-x-4 mt-5">
-            <a href="#" className="text-[#8aa3a3] hover:text-neon-cyan transition-colors duration-200">
-              <Facebook size={20} />
-            </a>
-            <a href="#" className="text-[#8aa3a3] hover:text-neon-cyan transition-colors duration-200">
-              <Instagram size={20} />
-            </a>
-            <a href="#" className="text-[#8aa3a3] hover:text-neon-cyan transition-colors duration-200">
-              <Youtube size={20} />
-            </a>
-            <a href="#" className="text-[#8aa3a3] hover:text-neon-cyan transition-colors duration-200">
-              <Twitter size={20} />
-            </a>
-          </div>
         </div>
 
         {/* --- Cột 2: Trang chủ --- */}
@@ -117,22 +98,6 @@ const Footer = () => {
               <span>22110039@student.hcmute.edu.vn</span>
             </li>
           </ul>
-
-          {/* Social icons row for mobile */}
-          <div className="flex space-x-3 mt-5">
-            <a href="#" className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-[#8aa3a3] hover:text-neon-cyan hover:border-neon-cyan/30 transition-all duration-200">
-              <Facebook size={16} />
-            </a>
-            <a href="#" className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-[#8aa3a3] hover:text-neon-cyan hover:border-neon-cyan/30 transition-all duration-200">
-              <Instagram size={16} />
-            </a>
-            <a href="#" className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-[#8aa3a3] hover:text-neon-cyan hover:border-neon-cyan/30 transition-all duration-200">
-              <Youtube size={16} />
-            </a>
-            <a href="#" className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center text-[#8aa3a3] hover:text-neon-cyan hover:border-neon-cyan/30 transition-all duration-200">
-              <Twitter size={16} />
-            </a>
-          </div>
         </div>
       </div>
 

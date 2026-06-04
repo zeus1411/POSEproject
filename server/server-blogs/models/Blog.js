@@ -61,22 +61,30 @@ const blogSchema = new mongoose.Schema(
     viewCount: {
       type: Number,
       default: 0,
-      min: 0
+      min: 0,
+      get: value => Math.max(0, value || 0),
+      set: value => Math.max(0, value || 0)
     },
     likeCount: {
       type: Number,
       default: 0,
-      min: 0
+      min: 0,
+      get: value => Math.max(0, value || 0),
+      set: value => Math.max(0, value || 0)
     },
     commentCount: {
       type: Number,
       default: 0,
-      min: 0
+      min: 0,
+      get: value => Math.max(0, value || 0),
+      set: value => Math.max(0, value || 0)
     },
     bookmarkCount: {
       type: Number,
       default: 0,
-      min: 0
+      min: 0,
+      get: value => Math.max(0, value || 0),
+      set: value => Math.max(0, value || 0)
     },
     isFeatured: {
       type: Boolean,
@@ -85,6 +93,20 @@ const blogSchema = new mongoose.Schema(
     isHidden: {
       type: Boolean,
       default: false
+    },
+    hiddenBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null
+    },
+    hiddenByRole: {
+      type: String,
+      enum: ['admin', 'user', null],
+      default: null
+    },
+    hiddenAt: {
+      type: Date,
+      default: null
     },
     publishedAt: Date,
     readTime: {
@@ -107,8 +129,8 @@ const blogSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-    toJSON: { virtuals: true },
-    toObject: { virtuals: true }
+    toJSON: { virtuals: true, getters: true },
+    toObject: { virtuals: true, getters: true }
   }
 );
 

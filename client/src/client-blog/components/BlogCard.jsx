@@ -38,11 +38,11 @@ const BlogCard = ({ blog }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  const [likes, setLikes] = useState(likeCount);
+  const [likes, setLikes] = useState(Math.max(0, likeCount || 0));
   const [isLiked, setIsLiked] = useState(false);
 
   const [bookmarked, setBookmarked] = useState(false);
-  const [bookmarkCount, setBookmarkCount] = useState(blog.bookmarkCount || 0);
+  const [bookmarkCount, setBookmarkCount] = useState(Math.max(0, blog.bookmarkCount || 0));
 
   const [loadingLike, setLoadingLike] = useState(false);
   const [loadingBookmark, setLoadingBookmark] = useState(false);
@@ -99,7 +99,7 @@ const BlogCard = ({ blog }) => {
     try {
       const res = await blogInteractionService.toggleLike(_id);
       setIsLiked(res.isActed);
-      setLikes(res.counts?.likes || res.newCount || likes); 
+      setLikes(Math.max(0, res.counts?.likes ?? res.newCount ?? 0)); 
     } catch (err) {
       console.log(err);
     } finally {
@@ -126,7 +126,7 @@ const BlogCard = ({ blog }) => {
     try {
       const res = await blogInteractionService.toggleBookmark(_id);
       setBookmarked(res.isActed);
-      setBookmarkCount(res.counts?.bookmarks || res.newCount || bookmarkCount);
+      setBookmarkCount(Math.max(0, res.counts?.bookmarks ?? res.newCount ?? 0));
     } catch (err) {
       console.log(err);
     } finally {
