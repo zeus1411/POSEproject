@@ -12,8 +12,14 @@ const BlogCard = ({ blog }) => {
   const { 
     _id, title, slug, author, coverImage, 
     likeCount = 0, commentCount = 0, viewCount = 0, 
-    excerpt, createdAt, publishedAt
+    excerpt, createdAt, publishedAt, tags = []
   } = blog;
+  const visibleTags = Array.isArray(tags)
+    ? tags.filter(Boolean).map((tag) => ({
+        id: tag._id || tag.id || tag.slug || tag.name || tag,
+        name: tag.name || tag.title || tag.slug || tag,
+      })).filter((tag) => tag.name)
+    : [];
 
   const authorName = author?.name || author?.fullName || author?.username || 'Người dùng ẩn danh';
   const authorAvatar = author?.avatar || 'https://via.placeholder.com/40';
@@ -97,7 +103,7 @@ const BlogCard = ({ blog }) => {
     } catch (err) {
       console.log(err);
     } finally {
-      style-setLoadingLike(false);
+      setLoadingLike(false);
     }
   };
 
@@ -190,6 +196,18 @@ const BlogCard = ({ blog }) => {
         <p className="text-muted-foreground text-[14px] leading-relaxed line-clamp-3 font-medium">
           {excerpt}
         </p>
+        {visibleTags.length > 0 && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {visibleTags.map((tag) => (
+              <span
+                key={tag.id}
+                className="rounded-full border border-water/30 bg-aqua/10 px-3 py-1 text-[12px] font-bold text-nature transition-colors dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-300"
+              >
+                #{tag.name}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* 3. COVER IMAGE */}

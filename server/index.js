@@ -30,6 +30,13 @@ const httpServer = createServer(app);
 const port = process.env.PORT || 3000;
 const MONGODB_URL = process.env.MONGODB_URI;
 const DB_NAME = process.env.DATABASE_NAME;
+const allowedOrigins = [
+    process.env.CLIENT_URL,
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:5174',
+].filter(Boolean);
 
 console.log(`🔧 Starting server on port ${port}...`);
 console.log(`🌐 Client URL configured: ${process.env.CLIENT_URL}`);
@@ -38,9 +45,7 @@ console.log(`🌐 Client URL configured: ${process.env.CLIENT_URL}`);
 app.use(bodyParser.json({ limit: '10mb' }));
 app.use(bodyParser.urlencoded({ extended: true, limit: '30mb' }));
 app.use(cors({
-    origin: [
-        process.env.CLIENT_URL
-    ],
+    origin: allowedOrigins,
     credentials: true,
 }))
 

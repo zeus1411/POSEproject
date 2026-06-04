@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import api from '../../../client-eco/services/api';
 import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { Heart, MessageCircle, Share2, Bookmark, MoreHorizontal, Eye, ShoppingBag, Globe } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Bookmark, MoreHorizontal, Eye, ShoppingBag, Globe, Tag } from 'lucide-react';
 import { useTheme } from '../../../client-eco/context/ThemeContext';
 
 import blogService from '../../services/blogService';
@@ -364,6 +364,13 @@ const BlogDetailPage = ({ isAdminPreview = false }) => {
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-background text-foreground font-semibold">Đang tải...</div>;
   if (!blog) return <div className="min-h-screen flex items-center justify-center bg-background text-foreground font-semibold">Không tìm thấy bài viết</div>;
 
+  const visibleTags = Array.isArray(blog.tags)
+    ? blog.tags.filter(Boolean).map((tag) => ({
+        id: tag._id || tag.id || tag.slug || tag.name || tag,
+        name: tag.name || tag.title || tag.slug || tag,
+      })).filter((tag) => tag.name)
+    : [];
+
   return (
     <div className={`relative min-h-screen transition-colors duration-300 ${isDark ? 'bg-[#051C1C] text-white' : 'bg-background text-foreground'}`}>
       {/* 1. Nền Gradient chính - Cố định (Fixed) */}
@@ -433,15 +440,32 @@ const BlogDetailPage = ({ isAdminPreview = false }) => {
               {blog.title}
             </h1>
 
+            {visibleTags.length > 0 && (
+              <div className="mb-8 flex flex-wrap items-center gap-2">
+                <span className="mr-1 inline-flex items-center gap-1.5 text-sm font-bold text-muted-foreground">
+                  <Tag size={16} className="text-nature dark:text-emerald-400" />
+                  Tags
+                </span>
+                {visibleTags.map((tag) => (
+                  <span
+                    key={tag.id}
+                    className="rounded-full border border-water/30 bg-aqua/10 px-3.5 py-1.5 text-sm font-bold text-nature transition-colors dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-300"
+                  >
+                    #{tag.name}
+                  </span>
+                ))}
+              </div>
+            )}
+
             {blog.coverImage?.url && (
-              <div className="mb-10 rounded-[2rem] overflow-hidden border border-water/30 dark:border-white/10 shadow-2xl">
-                <img src={blog.coverImage.url} alt="Cover" className="w-full h-auto object-cover hover:scale-105 transition-transform duration-700" />
+              <div className="mb-10 rounded-[2rem] overflow-hidden border border-water/30 bg-aqua/5 shadow-2xl dark:border-white/10 dark:bg-white/5">
+                <img src={blog.coverImage.url} alt="Cover" className="w-full h-auto object-contain" decoding="async" />
               </div>
             )}
 
             {/* Typography: Sử dụng prose-invert/prose-teal động dựa trên Theme */}
             <div 
-              className={`prose max-w-none text-lg leading-relaxed transition-colors duration-300 ${
+              className={`blog-rich-content prose max-w-none text-lg leading-relaxed transition-colors duration-300 ${
                 isDark 
                   ? 'prose-invert prose-emerald text-gray-200 prose-headings:text-white prose-strong:text-emerald-400 prose-img:border-white/10' 
                   : 'prose-teal text-gray-800 prose-headings:text-gray-900 prose-strong:text-teal-600 prose-img:border-water/30'

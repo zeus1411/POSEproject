@@ -479,7 +479,7 @@ const ProductDetail = () => {
                 {orderIdFromUrl && (
                   <div className="mb-4 p-4 bg-amber-900/10 border border-amber-700/20 rounded-lg">
                     <p className="text-sm text-amber-200">
-                      定 Bạn đang viết đánh giá cho sản phẩm này từ đơn hàng đã hoàn thành. 
+                      Bạn đang viết đánh giá cho sản phẩm này từ đơn hàng đã hoàn thành. 
                       Hãy chia sẻ trải nghiệm của bạn!
                     </p>
                   </div>

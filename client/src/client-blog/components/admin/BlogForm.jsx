@@ -621,7 +621,7 @@ const BlogForm = ({
               disabled={isLoading || isSubmitting} // 🔥 Khóa nút gạt khi đang gửi
               className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-sm transition-colors shadow-lg shadow-emerald-900/20 disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              {isLoading || isSubmitting ? 'Đang lưu cấu trúc...' : '💾 Lưu & Gửi duyệt'}
+              {isLoading || isSubmitting ? 'Đang lưu bài viết...' : '💾 Lưu & Gửi duyệt'}
             </button>
           </div>
         </form>

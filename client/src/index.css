@@ -1535,11 +1535,11 @@
 
 .light .product-detail-page .product-description-content,
 .light .product-detail-page .product-description-content * {
-  color: rgb(var(--foreground)) !important;
+  color: rgb(var(--foreground));
 }
 
 .light .product-detail-page .product-description-content a {
-  color: rgb(var(--deep-ocean)) !important;
+  color: rgb(var(--deep-ocean));
 }
 
 .light .product-detail-page #review-section p {
@@ -1746,11 +1746,11 @@
 
 /* Product description content styling */
 .product-description-content {
-  color: #ffffff !important;
+  color: #ffffff;
 }
 
 .product-description-content * {
-  color: #ffffff !important;
+  color: inherit;
 }
 
 .product-description-content p,
@@ -1758,7 +1758,26 @@
 .product-description-content div,
 .product-description-content li,
 .product-description-content a {
-  color: #ffffff !important;
+  color: inherit;
+}
+
+.blog-rich-content iframe,
+.blog-rich-content video,
+.blog-rich-content embed,
+.blog-rich-content object {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 16 / 9;
+  height: auto;
+  margin: 1.75rem auto;
+  border: 0;
+  border-radius: 1.5rem;
+}
+
+.blog-rich-content iframe[src*="youtube.com"],
+.blog-rich-content iframe[src*="youtu.be"] {
+  min-height: 0;
 }
 
 /* Neon border glow */
@@ -2442,13 +2461,21 @@ html {
   line-height: 1.8;
 }
 
+.product-detail-page .product-description-content {
+  color: rgb(207 250 254 / 0.9);
+}
+
+.light .product-detail-page .product-description-content {
+  color: rgb(var(--foreground));
+}
+
 .product-description-content h1,
 .product-description-content h2,
 .product-description-content h3,
 .product-description-content h4,
 .product-description-content h5,
 .product-description-content h6 {
-  color: #111827;
+  color: inherit;
   font-weight: 700;
   margin-top: 1.5rem;
   margin-bottom: 0.75rem;
@@ -2513,7 +2540,7 @@ html {
 .product-description-content strong,
 .product-description-content b {
   font-weight: 600;
-  color: #111827;
+  color: inherit;
 }
 
 .product-description-content em,

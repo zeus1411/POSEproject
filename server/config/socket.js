@@ -14,9 +14,12 @@ export const initializeSocket = (server) => {
       origin: [
         process.env.CLIENT_URL,
         'http://localhost:5173', // Vite dev server
+        'http://localhost:5174', // Vite fallback dev server
+        'http://127.0.0.1:5173',
+        'http://127.0.0.1:5174',
         'http://localhost', // Production nginx
         'http://localhost:80' // Production nginx explicit
-      ],
+      ].filter(Boolean),
       methods: ['GET', 'POST'],
       credentials: true
     }

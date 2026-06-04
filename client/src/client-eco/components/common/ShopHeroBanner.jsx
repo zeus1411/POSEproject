@@ -12,7 +12,7 @@ const ShopHeroBanner = ({ products = [], user }) => {
         <img
           src="/images/shop-hero-aquaticcaps.jpg"
           alt=""
-          fetchPriority="high"
+          fetchpriority="high"
           className="absolute inset-0 h-full w-full object-cover object-center"
         />
         <div className="absolute inset-0 bg-[linear-gradient(90deg,rgba(3,18,18,0.97)_0%,rgba(3,18,18,0.84)_42%,rgba(3,18,18,0.24)_100%)]" />
