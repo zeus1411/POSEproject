@@ -153,7 +153,7 @@ const AiCatalogSync = () => {
               className="inline-flex items-center gap-2 rounded-xl border border-water/30 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-water/10 dark:border-white/10 dark:text-slate-200 dark:hover:bg-white/5"
             >
               <ArrowPathIcon className="w-4 h-4" />
-              Tai lai
+              Tải lại
             </button>
             <button
               type="button"
@@ -179,9 +179,9 @@ const AiCatalogSync = () => {
             <div className="flex items-center justify-between mb-4">
               <p className="text-sm font-semibold text-slate-800 dark:text-white">Trạng thái hiện tại</p>
               {status?.running ? (
-                <span className="rounded-full border border-amber-200/60 bg-amber-100/80 px-3 py-1 text-xs font-semibold text-amber-700 dark:border-amber-900/40 dark:bg-amber-950/40 dark:text-amber-300">Dang chay</span>
+                <span className="rounded-full border border-amber-200/60 bg-amber-100/80 px-3 py-1 text-xs font-semibold text-amber-700 dark:border-amber-900/40 dark:bg-amber-950/40 dark:text-amber-300">Đang chạy</span>
               ) : (
-                <span className="rounded-full border border-emerald-200/60 bg-emerald-100/80 px-3 py-1 text-xs font-semibold text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-950/40 dark:text-emerald-300">San sang</span>
+                <span className="rounded-full border border-emerald-200/60 bg-emerald-100/80 px-3 py-1 text-xs font-semibold text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-950/40 dark:text-emerald-300">Sẵn sàng</span>
               )}
             </div>
 
