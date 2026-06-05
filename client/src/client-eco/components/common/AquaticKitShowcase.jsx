@@ -26,8 +26,7 @@ const storyScenes = [
   {
     headline: ['Một hệ sinh thái', 'hoàn chỉnh.'],
     body: 'Tất cả được chuẩn bị, phối hợp và đóng gói thành một bộ kit sẵn sàng cho hành trình thủy sinh của bạn.',
-    ctaHeadline: 'Sẵn sàng cho hồ đầu tiên của bạn?',
-    ctaBody: 'AquaticCaps sẽ giúp bạn chọn cây, cá và thiết bị phù hợp ngay từ đầu.',
+    ctaHeadline: 'Bắt đầu xây dựng hồ thủy sinh của bạn ngay thôi nào !',
   },
 ];
 
@@ -296,7 +295,7 @@ const AquaticKitShowcase = () => {
           </div>
 
           <div className="aquatic-copy-column">
-            <p className="aquatic-eyebrow">Thiết kế kit cá nhân hóa</p>
+            <p className="aquatic-eyebrow">Thiết kế hồ thủy sinh cá nhân hóa</p>
             <div key={activeStep} className="aquatic-scene-copy">
               <h2>
                 {activeScene.headline.map((line, index) => (
@@ -308,17 +307,6 @@ const AquaticKitShowcase = () => {
               <p className="aquatic-subtext">{activeScene.body}</p>
             </div>
 
-            <div className={`aquatic-final-cta ${activeStep === storyScenes.length - 1 ? 'is-visible' : ''}`}>
-              <h3>{activeScene.ctaHeadline}</h3>
-              <p>{activeScene.ctaBody}</p>
-              <Link ref={ctaRef} to="/shop" className="aquatic-primary-cta">
-                Bắt đầu dựng kit
-                <ArrowRightIcon className="h-4 w-4" />
-              </Link>
-              <Link to="/blogs" className="aquatic-secondary-cta">
-                Xem cách hoạt động
-              </Link>
-            </div>
           </div>
         </div>
       </div>

@@ -414,14 +414,7 @@ const Home = () => {
 
         <div className="relative mx-auto grid max-w-[92rem] gap-12 px-5 sm:px-8 lg:grid-cols-[0.38fr_0.62fr] lg:items-end lg:px-16">
           <FadeIn className="max-w-xl lg:pb-10">
-            <div className="flex items-center gap-4">
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-[#91d9e8]/55 bg-white/8 text-[#91d9e8] backdrop-blur-xl">
-                <BookOpenIcon className="h-5 w-5" />
-              </span>
-              <div className="min-w-0 flex-1">
-                <SectionLabel className="text-[#91d9e8]">Nhật ký thủy sinh</SectionLabel>
-                <span className="mt-3 block h-px max-w-[14rem] bg-[#91d9e8]/35" />
-              </div>
+            <div className="flex items-center gap-4">           
             </div>
             <h2 className="mt-8 font-headline text-[clamp(3.2rem,5.8vw,6.4rem)] font-semibold leading-[0.9] tracking-normal text-white">
               Đồng hành cùng bạn nuôi dưỡng một hệ sinh thái khỏe mạnh

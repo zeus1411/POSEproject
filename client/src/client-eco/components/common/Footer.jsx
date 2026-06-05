@@ -59,26 +59,30 @@ const Footer = () => {
           </ul>
         </div>
 
-        {/* --- Cột 3: Blog --- */}
+        {/* --- Cột 3: Chấp nhận thanh toán --- */}
         <div>
-          <h3 className="text-sm font-body font-semibold text-white uppercase tracking-wider mb-4">Blog</h3>
-          <ul className="space-y-2.5 text-sm font-body">
-            <li>
-              <Link to="/blogs" className="text-[#9fb3b3] hover:text-neon-cyan transition-colors duration-200">
-                Bài viết
-              </Link>
-            </li>
-            <li>
-              <Link to="/blogs" className="text-[#9fb3b3] hover:text-neon-cyan transition-colors duration-200">
-                Mẹo vặt
-              </Link>
-            </li>
-            <li>
-              <Link to="/blogs" className="text-[#9fb3b3] hover:text-neon-cyan transition-colors duration-200">
-                Cách nuôi cá
-              </Link>
-            </li>
-          </ul>
+          <h3 className="text-sm font-body font-semibold text-white uppercase tracking-wider mb-4">Chấp nhận thanh toán</h3>
+          <div className="flex flex-wrap items-center gap-2" aria-label="Các phương thức thanh toán được chấp nhận">
+            <div className="h-7 w-11 rounded bg-white px-1.5 shadow-sm flex items-center justify-center">
+              <span className="text-[12px] font-black italic tracking-[-0.08em] text-[#123c8c]">VISA</span>
+            </div>
+            <div className="h-7 w-11 rounded bg-white px-1 shadow-sm flex items-center justify-center">
+              <div className="relative h-5 w-8">
+                <span className="absolute left-0 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-[#eb001b]" />
+                <span className="absolute right-0 top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-[#f79e1b] mix-blend-multiply" />
+              </div>
+            </div>
+            <div className="h-7 w-12 rounded bg-white px-1.5 shadow-sm flex items-center justify-center">
+              <span className="text-[11px] font-bold italic tracking-[-0.04em]">
+                <span className="text-[#003087]">Pay</span><span className="text-[#009cde]">Pal</span>
+              </span>
+            </div>
+            <div className="h-7 w-11 rounded bg-white px-1 shadow-sm flex items-center justify-center">
+              <span className="text-[12px] font-black tracking-[-0.06em]">
+                <span className="text-[#0b7f3a]">J</span><span className="text-[#d61f2c]">C</span><span className="text-[#1f58a8]">B</span>
+              </span>
+            </div>
+          </div>
         </div>
 
         {/* --- Cột 4: Info Liên hệ --- */}

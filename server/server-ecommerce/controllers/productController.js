@@ -167,6 +167,24 @@ export const getPersonalizedRecommendations = async (req, res, next) => {
     }
 };
 
+// @desc    Multi-signal shop recommendations for anonymous or signed-in customers
+// @route   GET /api/v1/products/recommendations/shop
+// @access  Public with optional auth
+export const getShopRecommendations = async (req, res, next) => {
+    try {
+        const result = await ProductService.getShopRecommendations({
+            userId: req.user?.userId,
+            limitPerRail: req.query.limitPerRail,
+            recentProductIds: req.query.recentProductIds,
+            cartProductIds: req.query.cartProductIds
+        });
+
+        return res.status(200).json(result);
+    } catch (error) {
+        return next(error);
+    }
+};
+
 // @desc    Upload image for product description (TinyMCE)
 // @route   POST /api/v1/products/upload-description-image
 // @access  Private (Admin)

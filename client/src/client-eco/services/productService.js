@@ -81,6 +81,21 @@ const productService = {
     return response.data;
   },
 
+  getShopRecommendations: async ({
+    limitPerRail = 6,
+    recentProductIds = [],
+    cartProductIds = []
+  } = {}) => {
+    const response = await api.get('/products/recommendations/shop', {
+      params: {
+        limitPerRail,
+        recentProductIds: recentProductIds.join(','),
+        cartProductIds: cartProductIds.join(',')
+      }
+    });
+    return response.data;
+  },
+
   // Get products by category
   getProductsByCategory: async (categoryId, params = {}) => {
     const response = await api.get('/products/search', {

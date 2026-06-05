@@ -8,11 +8,12 @@ import {
   searchProducts,
   searchProductsQuick,
   getPersonalizedRecommendations,
+  getShopRecommendations,
   updateProductImages,
   uploadProductImages,
   uploadDescriptionImage
 } from '../controllers/productController.js';
-import { authenticateUser, authorizeRoles } from '../../middlewares/auth.js';
+import { authenticateUser, optionalAuthenticateUser, authorizeRoles } from '../../middlewares/auth.js';
 import { upload } from '../../middlewares/upload.js';
 
 const router = express.Router();
@@ -110,6 +111,7 @@ router.get('/search', searchProducts);
  */
 router.get('/search-quick', authenticateUser, searchProductsQuick);
 
+router.get('/recommendations/shop', optionalAuthenticateUser, getShopRecommendations);
 router.get('/recommendations/for-you', authenticateUser, getPersonalizedRecommendations);
 
 /**

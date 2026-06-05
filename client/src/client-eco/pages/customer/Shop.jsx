@@ -8,7 +8,6 @@ import { addToCart } from '../../redux/slices/cartSlice';
 import { getRootCategories } from '../../redux/slices/categorySlice';
 import { searchProducts, setFilters } from '../../redux/slices/productSlice';
 import productService from '../../services/productService';
-import AquascapeInspiration from '../../components/common/AquascapeInspiration';
 import FilterSidebar from '../../components/common/FilterSidebar';
 import Pagination from '../../components/common/Pagination';
 import ProductGrid from '../../components/common/ProductGrid';
@@ -28,20 +27,15 @@ const Shop = () => {
   const { products, pagination, filters, isLoading } = useSelector((state) => state.products);
   const { rootCategories: categories } = useSelector((state) => state.categories);
   const { user } = useSelector((state) => state.auth);
+  const { cart } = useSelector((state) => state.cart);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [recentProducts, setRecentProducts] = useState([]);
-  const [personalized, setPersonalized] = useState({
-    hasPurchaseHistory: false,
-    recommended: [],
-    similar: [],
+  const [recommendationData, setRecommendationData] = useState({
+    context: null,
+    rails: [],
   });
-  const [personalizedLoading, setPersonalizedLoading] = useState(false);
-  const [shopRails, setShopRails] = useState({
-    bestSellers: [],
-    trending: [],
-  });
-  const [shopRailsLoading, setShopRailsLoading] = useState(false);
+  const [recommendationsLoading, setRecommendationsLoading] = useState(false);
   const restoredScrollRef = useRef(false);
 
   const category = searchParams.get('category') || '';
@@ -114,76 +108,65 @@ const Shop = () => {
     return () => window.removeEventListener('aquaticcaps:recent-viewed', readRecent);
   }, []);
 
+  const recentProductIds = useMemo(
+    () => recentProducts.map((product) => product?._id).filter(Boolean),
+    [recentProducts]
+  );
+
+  const cartProductIds = useMemo(
+    () => (cart?.items || [])
+      .map((item) => item?.productId?._id || item?.productId)
+      .filter(Boolean),
+    [cart?.items]
+  );
+
   useEffect(() => {
     let active = true;
 
-    if (!user) {
-      setPersonalized({ hasPurchaseHistory: false, recommended: [], similar: [] });
-      setPersonalizedLoading(false);
-      return undefined;
-    }
-
-    setPersonalizedLoading(true);
-    productService.getPersonalizedRecommendations(6)
+    setRecommendationsLoading(true);
+    productService.getShopRecommendations({
+      limitPerRail: 6,
+      recentProductIds,
+      cartProductIds,
+    })
       .then((response) => {
         if (active) {
-          setPersonalized({
-            hasPurchaseHistory: Boolean(response.hasPurchaseHistory),
-            recommended: response.recommended || [],
-            similar: response.similar || [],
+          setRecommendationData({
+            context: response.context || null,
+            rails: Array.isArray(response.rails) ? response.rails : [],
           });
         }
       })
       .catch(() => {
         if (active) {
-          setPersonalized({ hasPurchaseHistory: false, recommended: [], similar: [] });
+          setRecommendationData({ context: null, rails: [] });
         }
       })
       .finally(() => {
-        if (active) setPersonalizedLoading(false);
+        if (active) setRecommendationsLoading(false);
       });
 
     return () => {
       active = false;
     };
-  }, [user]);
-
-  useEffect(() => {
-    let active = true;
-
-    setShopRailsLoading(true);
-    Promise.all([
-      productService.getBestSellers(20),
-      productService.getTopRatedProducts(20),
-    ])
-      .then(([bestSellers, trending]) => {
-        if (active) {
-          setShopRails({
-            bestSellers: bestSellers || [],
-            trending: trending || [],
-          });
-        }
-      })
-      .catch(() => {
-        if (active) {
-          setShopRails({ bestSellers: [], trending: [] });
-        }
-      })
-      .finally(() => {
-        if (active) setShopRailsLoading(false);
-      });
-
-    return () => {
-      active = false;
-    };
-  }, []);
+  }, [user, recentProductIds, cartProductIds]);
 
   const discoveryProducts = useMemo(
     () => [...products].sort((a, b) => Number(b.isFeatured) - Number(a.isFeatured) || (b.rating?.average || 0) - (a.rating?.average || 0)).slice(0, 6),
     [products]
   );
-  const hasPersonalizedSuggestions = Boolean(user && personalized.hasPurchaseHistory);
-  const recommendedProducts = hasPersonalizedSuggestions ? personalized.recommended : discoveryProducts;
+  const visibleRecommendationRails = useMemo(
+    () => (recommendationData.rails || []).filter((rail) => Array.isArray(rail.products) && rail.products.length > 0),
+    [recommendationData.rails]
+  );
+  const getRailProducts = (key) => visibleRecommendationRails.find((rail) => rail.key === key)?.products || [];
+  const heroProducts = getRailProducts('forYou').length
+    ? getRailProducts('forYou')
+    : getRailProducts('trending').length
+      ? getRailProducts('trending')
+      : discoveryProducts;
+  const primaryRecommendationRail = visibleRecommendationRails[0];
+  const secondaryRecommendationRails = visibleRecommendationRails.slice(1);
 
   const updateShopParams = (nextFilters, page = 1) => {
     const nextParams = new URLSearchParams();
@@ -264,7 +247,7 @@ const Shop = () => {
       <div className="pointer-events-none absolute inset-0 z-0 opacity-30 [background-image:radial-gradient(circle_at_center,rgba(0,255,209,.25)_1px,transparent_1px)] [background-size:44px_44px]" />
 
       <div className="relative z-10">
-        <ShopHeroBanner products={recommendedProducts.length ? recommendedProducts : discoveryProducts} user={user} />
+        <ShopHeroBanner products={heroProducts} user={user} />
 
         <div className="mx-auto max-w-[1440px] px-4 pb-16 sm:px-6">
           <ShopDiscoveryBar
@@ -275,17 +258,17 @@ const Shop = () => {
             resultCount={pagination.total}
           />
 
-          <RecommendationSection
-            id="recommended"
-            eyebrow={hasPersonalizedSuggestions ? 'Theo lịch sử mua hàng' : 'Aquatic discovery'}
-            title={hasPersonalizedSuggestions ? 'Đề xuất cho bạn' : 'Sản phẩm nổi bật'}
-            description={hasPersonalizedSuggestions
-              ? 'Gợi ý dựa trên nhóm sản phẩm bạn đã mua, ưu tiên lựa chọn nổi bật cùng nhu cầu.'
-              : 'Những lựa chọn nổi bật và được đánh giá cao để bắt đầu khám phá.'}
-            products={recommendedProducts}
-            {...recommendationProps}
-            isLoading={isLoading || personalizedLoading}
-          />
+          {primaryRecommendationRail && (
+            <RecommendationSection
+              id={primaryRecommendationRail.key}
+              eyebrow={primaryRecommendationRail.eyebrow}
+              title={primaryRecommendationRail.title}
+              description={primaryRecommendationRail.description}
+              products={primaryRecommendationRail.products}
+              {...recommendationProps}
+              isLoading={recommendationsLoading}
+            />
+          )}
 
           <div className="flex items-start gap-6 lg:gap-7">
             <div className="sticky top-28 hidden w-[260px] shrink-0 lg:block">
@@ -323,39 +306,18 @@ const Shop = () => {
                 />
               )}
 
-              <RecommendationSection
-                eyebrow="Community favorites"
-                title="Best sellers"
-                products={shopRails.bestSellers}
-                {...recommendationProps}
-                isLoading={shopRailsLoading}
-              />
-              <RecommendationSection
-                eyebrow="Đang được chú ý"
-                title="Trending now"
-                products={shopRails.trending}
-                {...recommendationProps}
-                isLoading={shopRailsLoading}
-              />
-              {user && recentProducts.length > 0 && (
+              {secondaryRecommendationRails.map((rail) => (
                 <RecommendationSection
-                  eyebrow="Tiếp tục khám phá"
-                  title="Đã xem gần đây"
-                  products={recentProducts}
+                  key={rail.key}
+                  id={rail.key}
+                  eyebrow={rail.eyebrow}
+                  title={rail.title}
+                  description={rail.description}
+                  products={rail.products}
                   {...recommendationProps}
+                  isLoading={recommendationsLoading}
                 />
-              )}
-              {hasPersonalizedSuggestions && personalized.similar.length > 0 && (
-                <RecommendationSection
-                  eyebrow="Tương tự sản phẩm đã mua"
-                  title="Bạn cũng có thể thích"
-                  description="Các sản phẩm cùng danh mục với lựa chọn trong đơn hàng gần đây của bạn."
-                  products={personalized.similar}
-                  {...recommendationProps}
-                  isLoading={personalizedLoading}
-                />
-              )}
-              <AquascapeInspiration />
+              ))}
             </main>
           </div>
         </div>
