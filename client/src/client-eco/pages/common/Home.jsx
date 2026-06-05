@@ -5,11 +5,8 @@ import {
   ArrowRightIcon,
   BookOpenIcon,
   ChatBubbleLeftRightIcon,
-  CheckCircleIcon,
   ShieldCheckIcon,
-  ShoppingBagIcon,
   SparklesIcon,
-  StarIcon,
 } from '@heroicons/react/24/outline';
 import AquaticKitShowcase from '../../components/common/AquaticKitShowcase';
 
@@ -46,31 +43,6 @@ const collections = [
   },
 ];
 
-const inspirationLayouts = [
-  {
-    title: 'Nature Style',
-    tag: 'Tu nhien, sau, mem',
-    image: '/images/nature-style.jpg',
-    featured: true,
-  },
-  {
-    title: 'Iwagumi',
-    tag: 'Da, khoang trong, tiet che',
-    image: '/images/iwagumi.jpg',
-  },
-  {
-    title: 'Dutch',
-    tag: 'Mau cay, lop cay, can bang',
-    image: '/images/dutch-style.jpg',
-  },
-  {
-    title: 'Community',
-    tag: 'Cay va ca cung len form',
-    image: '/images/community-tank.jpg',
-    icon: ChatBubbleLeftRightIcon,
-  },
-];
-
 const proofItems = [
   {
     title: 'Live arrival care',
@@ -90,25 +62,22 @@ const proofItems = [
 
 const blogs = [
   {
-    to: '/blogs/setup-be-thuy-sinh-cho-nguoi-moi',
     img: '/images/nature-style.jpg',
-    tag: 'Getting started',
-    title: 'Checklist setup be dau tien',
-    desc: 'Nhung mon can co de bat dau mot be khoe, it doan mo.',
+    title: 'Checklist setup bể đầu tiên',
+    desc: 'Những bước nền tảng để bắt đầu một bể khỏe, ổn định và ít rêu hơn.',
+    readTime: '6 phút đọc',
   },
   {
-    to: '/blogs/co2-va-anh-sang',
     img: '/images/iwagumi.jpg',
-    tag: 'Plant care',
-    title: 'Can bang anh sang va CO2',
-    desc: 'Tim diem vua du de cay tang truong nhanh hon va it reu hon.',
+    title: 'Cân bằng ánh sáng và CO2',
+    desc: 'Tìm điểm vừa đủ để cây phát triển đều mà hệ sinh thái không bị quá tải.',
+    readTime: '8 phút đọc',
   },
   {
-    to: '/blogs/top-10-cay-de-song',
     img: '/images/planted-tank.jpg',
-    tag: 'Plant picks',
-    title: 'Cay de song cho nguoi moi',
-    desc: 'Nhung loai cay ben, dep va tha thu loi cham soc ban dau.',
+    title: 'Cây dễ sống cho người mới',
+    desc: 'Danh sách cây bền, đẹp và dễ chăm để bạn tự tin với layout đầu tay.',
+    readTime: '5 phút đọc',
   },
 ];
 
@@ -178,54 +147,6 @@ const SectionLabel = ({ children, className = '' }) => (
 );
 
 const Home = () => {
-  const prefersReducedMotion = useReducedMotion();
-  const inspirationSlideIntervalMs = Number(import.meta.env.VITE_INSPIRATION_SLIDE_INTERVAL_MS || 4000);
-  const inspirationSlideMotionMs = Number(import.meta.env.VITE_INSPIRATION_SLIDE_MOTION_MS || 900);
-  const [activeInspirationIndex, setActiveInspirationIndex] = React.useState(0);
-  const [isInspirationSliding, setIsInspirationSliding] = React.useState(false);
-
-  const startInspirationSlide = React.useCallback((direction = 1) => {
-    if (isInspirationSliding) return;
-
-    if (prefersReducedMotion || direction < 0) {
-      setActiveInspirationIndex((currentIndex) => (
-        currentIndex + direction + inspirationLayouts.length
-      ) % inspirationLayouts.length);
-      return;
-    }
-
-    setIsInspirationSliding(direction);
-    window.setTimeout(() => {
-      setActiveInspirationIndex((currentIndex) => (
-        currentIndex + direction + inspirationLayouts.length
-      ) % inspirationLayouts.length);
-      setIsInspirationSliding(false);
-    }, inspirationSlideMotionMs);
-  }, [isInspirationSliding, prefersReducedMotion]);
-
-  React.useEffect(() => {
-    if (prefersReducedMotion) return undefined;
-
-    const intervalId = window.setInterval(() => {
-      startInspirationSlide(1);
-    }, inspirationSlideIntervalMs);
-
-    return () => window.clearInterval(intervalId);
-  }, [inspirationSlideIntervalMs, prefersReducedMotion, startInspirationSlide]);
-
-  const nextInspiration = () => {
-    startInspirationSlide(1);
-  };
-
-  const previousInspiration = () => {
-    startInspirationSlide(-1);
-  };
-
-  const inspirationStack = inspirationLayouts.map((_, index) => {
-    const itemIndex = (activeInspirationIndex + index) % inspirationLayouts.length;
-    return inspirationLayouts[itemIndex];
-  });
-
   return (
     <div className="home-redesign overflow-x-clip bg-[#fffbde] font-body text-[#1f2937] dark:bg-[#031b22] dark:text-white">
       <section id="hero" className="relative isolate min-h-[calc(100dvh-4rem)] overflow-hidden bg-[#031b22] text-white">
@@ -370,6 +291,7 @@ const Home = () => {
         </div>
       </section>
       <AquaticKitShowcase />
+      {false && (
       <section id="inspiration" className="relative overflow-hidden bg-[#061e2e] py-20 text-white lg:py-28">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_80%,rgba(145,200,228,0.12),transparent_28%),linear-gradient(90deg,#061e2e,#031b22_52%,#063a35)]" />
         <div className="relative mx-auto grid max-w-7xl gap-10 px-5 sm:px-6 lg:grid-cols-[0.28fr_0.72fr] lg:px-8">
@@ -474,6 +396,78 @@ const Home = () => {
               </div>
             </article>
           </FadeIn>
+        </div>
+      </section>
+      )}
+      <section id="inspiration" className="relative isolate overflow-hidden bg-[#031b22] py-20 text-white lg:py-28">
+        <img
+          src="/images/community-tank.jpg"
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 h-full w-full object-cover opacity-24 saturate-[0.9]"
+        />
+        <div className="absolute inset-0 bg-[linear-gradient(105deg,rgba(3,27,34,0.98)_0%,rgba(3,27,34,0.88)_34%,rgba(3,27,34,0.56)_66%,rgba(3,27,34,0.94)_100%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_72%_28%,rgba(35,230,211,0.22),transparent_32%),radial-gradient(circle_at_18%_82%,rgba(255,107,53,0.10),transparent_26%)]" />
+        <div className="absolute right-[9%] top-14 hidden font-headline text-[15rem] font-semibold leading-none text-white/[0.035] lg:block">
+          03
+        </div>
+
+        <div className="relative mx-auto grid max-w-[92rem] gap-12 px-5 sm:px-8 lg:grid-cols-[0.38fr_0.62fr] lg:items-end lg:px-16">
+          <FadeIn className="max-w-xl lg:pb-10">
+            <div className="flex items-center gap-4">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-[#91d9e8]/55 bg-white/8 text-[#91d9e8] backdrop-blur-xl">
+                <BookOpenIcon className="h-5 w-5" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <SectionLabel className="text-[#91d9e8]">Nhật ký thủy sinh</SectionLabel>
+                <span className="mt-3 block h-px max-w-[14rem] bg-[#91d9e8]/35" />
+              </div>
+            </div>
+            <h2 className="mt-8 font-headline text-[clamp(3.2rem,5.8vw,6.4rem)] font-semibold leading-[0.9] tracking-normal text-white">
+              Đồng hành cùng bạn nuôi dưỡng một hệ sinh thái khỏe mạnh
+            </h2>
+            <p className="mt-6 max-w-lg font-body text-base font-medium leading-8 text-cyan-50/76">
+              Từ ánh sáng, CO2 đến cách chọn cây và xử lý rêu, AquaticCaps luôn ở cạnh bạn bằng những hướng dẫn dễ hiểu, thực tế và bền vững.
+            </p>
+            <Link to="/blogs" className="mt-9 inline-flex w-fit items-center gap-3 border-b border-[#91d9e8] pb-1 font-body text-lg font-bold text-[#91d9e8] transition hover:text-[#c5f4ff]">
+              Đọc blog hướng dẫn
+              <ArrowRightIcon className="h-5 w-5" />
+            </Link>
+          </FadeIn>
+
+          <div className="relative">
+            <div className="pointer-events-none absolute -inset-8 rounded-[36px] bg-[radial-gradient(ellipse_at_center,rgba(35,230,211,0.20),transparent_62%)] blur-2xl" />
+            <div className="relative grid gap-5 md:grid-cols-3 lg:min-h-[31rem] lg:items-end">
+              {blogs.map((blog, index) => (
+                <FadeIn
+                  key={blog.title}
+                  delay={index * 0.08}
+                  className={index === 0 ? 'lg:mb-20' : index === 1 ? 'lg:mb-8' : ''}
+                >
+                  <Link
+                    to={blog.to}
+                    className="group block overflow-hidden rounded-[22px] border border-white/14 bg-[#051f26]/82 shadow-[0_28px_80px_rgba(0,0,0,0.36)] backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:border-[#91d9e8]/60 hover:bg-[#082b33]/86"
+                  >
+                    <div className="relative aspect-[1.08] overflow-hidden">
+                      <img src={blog.img} alt={blog.title} className="h-full w-full object-cover transition duration-700 group-hover:scale-105" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#031b22]/86 via-[#031b22]/10 to-white/10" />
+                      <div className="absolute left-4 top-4 rounded-full border border-white/20 bg-[#031b22]/72 px-3 py-1 font-body text-[0.68rem] font-black uppercase tracking-[0.14em] text-[#b9edf5] backdrop-blur-md">
+                        {blog.tag}
+                      </div>
+                    </div>
+                    <div className="p-5 sm:p-6">
+                      <h3 className="font-headline text-2xl font-semibold leading-tight text-white">
+                        {blog.title}
+                      </h3>
+                      <p className="mt-3 min-h-[4.5rem] font-body text-sm leading-6 text-cyan-50/68">
+                        {blog.desc}
+                      </p>
+                    </div>
+                  </Link>
+                </FadeIn>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
     </div>

@@ -10,6 +10,8 @@ import commentService from '../../services/commentService';
 import BlogInteractionButtons from '../../components/BlogInteractionButtons';
 import blogInteractionService from '../../services/blogInteractionService';
 import { addToCart } from '../../../client-eco/redux/slices/cartSlice';
+import MiniCart from '../../../client-eco/components/common/MiniCart';
+import Swal from 'sweetalert2';
 
 const BlogDetailPage = ({ isAdminPreview = false }) => {
   const { slug, id } = useParams(); 
@@ -159,9 +161,18 @@ const BlogDetailPage = ({ isAdminPreview = false }) => {
 
   const dispatch = useDispatch();
   const [cartPopup, setCartPopup] = useState({ isOpen: false, productName: '' });
+  const [isMiniCartOpen, setIsMiniCartOpen] = useState(false);
 
   const handleAddToCart = async (product) => {
-    if (!token) return alert('Vui lòng đăng nhập để thêm vào giỏ hàng!');
+    if (!token) {
+      return Swal.fire({
+        icon: 'warning',
+        title: 'Bạn cần đăng nhập',
+        text: 'Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.',
+        confirmButtonText: 'Đã hiểu',
+        confirmButtonColor: '#059669',
+      });
+    }
     if (user?.role === 'admin') return alert('Tài khoản Admin không có tính năng giỏ hàng!');
     
     if (product.stock <= 0 && product.totalStock <= 0) {
@@ -598,12 +609,16 @@ const BlogDetailPage = ({ isAdminPreview = false }) => {
               <p className="text-sm font-bold">Đã thêm vào giỏ hàng!</p>
               <p className="text-xs text-muted-foreground dark:text-gray-300 font-semibold">Bạn đã thêm "{cartPopup.productName}"</p>
             </div>
-            <Link 
-              to="/checkout" 
+            <button
+              type="button"
+              onClick={() => {
+                setCartPopup({ isOpen: false, productName: '' });
+                setIsMiniCartOpen(true);
+              }}
               className="ml-4 bg-gradient-to-r from-nature to-ocean hover:opacity-90 px-4 py-2 rounded-xl text-xs font-bold text-white transition-colors"
             >
               Xem giỏ hàng
-            </Link>
+            </button>
             <button 
               onClick={() => setCartPopup({ isOpen: false, productName: '' })}
               className="text-muted-foreground hover:text-foreground"
@@ -613,6 +628,8 @@ const BlogDetailPage = ({ isAdminPreview = false }) => {
           </div>
         </div>
       )}
+
+      <MiniCart isOpen={isMiniCartOpen} onClose={() => setIsMiniCartOpen(false)} />
 
     </div>
   );

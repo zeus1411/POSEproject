@@ -9,7 +9,7 @@ import {
   GEMINI_MAX_OUTPUT_TOKENS
 } from '../config/aiConfig.js';
 
-const FALLBACK_EMBED_MODEL = 'embedding-001';
+const FALLBACK_EMBED_MODEL = 'gemini-embedding-001';
 
 let genAI;
 const embeddingCache = new Map();
