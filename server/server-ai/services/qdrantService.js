@@ -185,6 +185,54 @@ const upsertCatalogItems = async (points) => {
   }
 };
 
+// Scroll through every catalog point and return only the bookkeeping fields we
+// need for incremental reconciliation (id + contentHash). Vectors are NOT
+// fetched, so this stays cheap even for large catalogs.
+const scrollCatalogPoints = async () => {
+  const exists = await collectionExists(QDRANT_CATALOG_COLLECTION);
+  if (!exists) return [];
+
+  const qdrant = getClient();
+  const results = [];
+  let offset;
+
+  // Hard page cap as a runaway guard (256 * 1000 = 256k points).
+  for (let page = 0; page < 1000; page += 1) {
+    const response = await qdrant.scroll(QDRANT_CATALOG_COLLECTION, {
+      limit: 256,
+      offset,
+      with_payload: ['contentHash', 'source_type'],
+      with_vector: false
+    });
+
+    const points = response?.points || [];
+    points.forEach((point) => {
+      results.push({
+        id: point.id,
+        contentHash: point.payload?.contentHash || null,
+        sourceType: point.payload?.source_type || null
+      });
+    });
+
+    offset = response?.next_page_offset;
+    if (!offset) break;
+  }
+
+  return results;
+};
+
+const deleteCatalogItemsByIds = async (ids) => {
+  if (!ids || !ids.length) return null;
+  const exists = await collectionExists(QDRANT_CATALOG_COLLECTION);
+  if (!exists) return null;
+
+  const qdrant = getClient();
+  return qdrant.delete(QDRANT_CATALOG_COLLECTION, {
+    wait: true,
+    points: ids
+  });
+};
+
 const buildDocumentFilter = ({ fileNames = [], docIds = [], fileHashes = [] } = {}) => {
   const must = [
     {
@@ -321,6 +369,8 @@ export {
   recreateCatalogCollection,
   upsertDocumentChunks,
   upsertCatalogItems,
+  scrollCatalogPoints,
+  deleteCatalogItemsByIds,
   searchDocumentChunks,
   searchCatalogItems,
   deleteDocumentChunksByFilePath,

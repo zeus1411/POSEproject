@@ -8,22 +8,35 @@ import {
   GEMINI_EMBED_MODEL
 } from '../config/aiConfig.js';
 import { embedText } from './geminiService.js';
-import { recreateCatalogCollection, upsertCatalogItems } from './qdrantService.js';
+import {
+  ensureCatalogCollection,
+  upsertCatalogItems,
+  scrollCatalogPoints,
+  deleteCatalogItemsByIds
+} from './qdrantService.js';
 
 const MAX_DESCRIPTION_CHARS = 1200;
 const BATCH_SIZE = 50;
 
-const createPointId = () => {
-  if (crypto.randomUUID) {
-    return crypto.randomUUID();
-  }
-
-  const bytes = crypto.randomBytes(16);
-  bytes[6] = (bytes[6] & 0x0f) | 0x40;
-  bytes[8] = (bytes[8] & 0x3f) | 0x80;
-  const hex = bytes.toString('hex');
+const formatUuidFromBytes = (bytes) => {
+  const hex = Buffer.from(bytes).toString('hex');
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 };
+
+// Deterministic point id derived from the item identity, so the same product
+// or promotion always maps to the same Qdrant point across syncs. This is what
+// makes incremental reconciliation possible (previously ids were random, which
+// forced a full collection rebuild on every sync).
+const createPointId = (key) => {
+  const hash = crypto.createHash('sha1').update(String(key)).digest();
+  const bytes = Buffer.from(hash.subarray(0, 16));
+  bytes[6] = (bytes[6] & 0x0f) | 0x50; // UUID version 5
+  bytes[8] = (bytes[8] & 0x3f) | 0x80; // RFC 4122 variant
+  return formatUuidFromBytes(bytes);
+};
+
+const computeContentHash = (text) =>
+  crypto.createHash('sha256').update(String(text || '')).digest('hex');
 
 let syncRunning = false;
 let syncPending = false;
@@ -179,14 +192,17 @@ const buildCatalogItems = async () => {
     const basePrice = Number(product.price) || 0;
     const minPrice = variantRange ? variantRange.min : basePrice;
     const maxPrice = variantRange ? variantRange.max : basePrice;
+    const contentHash = computeContentHash(text);
 
     return {
-      id: createPointId(),
+      id: createPointId(`product:${productId}`),
       text,
+      contentHash,
       payload: {
         source_type: 'catalog_product',
         itemType: 'product',
         itemId: productId,
+        contentHash,
         title: product.name,
         name: product.name,
         sku: product.sku || '',
@@ -219,14 +235,17 @@ const buildCatalogItems = async () => {
   const promotionItems = promotions.map((promotion) => {
     const text = buildPromotionText(promotion);
     const promotionId = String(promotion._id);
+    const contentHash = computeContentHash(text);
 
     return {
-      id: createPointId(),
+      id: createPointId(`promotion:${promotionId}`),
       text,
+      contentHash,
       payload: {
         source_type: 'catalog_promotion',
         itemType: 'promotion',
         itemId: promotionId,
+        contentHash,
         title: promotion.name,
         name: promotion.name,
         code: promotion.code,
@@ -252,20 +271,35 @@ const buildCatalogItems = async () => {
   };
 };
 
-const upsertCatalogPoints = async (items) => {
-  let buffer = [];
-  let firstVectorSize = null;
-  let collectionReady = false;
+// Incremental reconciliation against what is already stored in Qdrant.
+// Only new or changed items are re-embedded (the expensive Gemini call);
+// unchanged items are left untouched and items removed from the catalog are
+// deleted. This replaces the previous "delete everything and re-embed all on
+// every sync" behaviour that burned the Gemini quota/budget around the clock.
+const reconcileCatalogPoints = async (items) => {
+  const existing = await scrollCatalogPoints();
+  const existingById = new Map(existing.map((point) => [String(point.id), point]));
+  const currentIds = new Set(items.map((item) => String(item.id)));
 
-  for (const item of items) {
+  const toUpsert = items.filter((item) => {
+    const prev = existingById.get(String(item.id));
+    return !prev || prev.contentHash !== item.contentHash;
+  });
+
+  const toDelete = existing
+    .filter((point) => !currentIds.has(String(point.id)))
+    .map((point) => point.id);
+
+  let buffer = [];
+  // If Qdrant already returned points, the collection exists and has a fixed
+  // vector size; otherwise create it from the first embedding's dimensions.
+  let collectionReady = existing.length > 0;
+
+  for (const item of toUpsert) {
     const vector = await embedText(item.text);
 
-    if (!firstVectorSize) {
-      firstVectorSize = vector.length;
-    }
-
-    if (!collectionReady && firstVectorSize) {
-      await recreateCatalogCollection(firstVectorSize);
+    if (!collectionReady) {
+      await ensureCatalogCollection(vector.length);
       collectionReady = true;
     }
 
@@ -284,6 +318,16 @@ const upsertCatalogPoints = async (items) => {
   if (buffer.length) {
     await upsertCatalogItems(buffer);
   }
+
+  if (toDelete.length) {
+    await deleteCatalogItemsByIds(toDelete);
+  }
+
+  return {
+    upserted: toUpsert.length,
+    deleted: toDelete.length,
+    unchanged: items.length - toUpsert.length
+  };
 };
 
 const syncCatalogIndex = async ({ reason = 'manual' } = {}) => {
@@ -299,23 +343,15 @@ const syncCatalogIndex = async ({ reason = 'manual' } = {}) => {
   try {
     const { items, counts } = await buildCatalogItems();
 
-    if (!items.length) {
-      const result = {
-        status: 'skipped',
-        reason,
-        counts
-      };
-      lastSyncAt = new Date();
-      lastSyncResult = result;
-      return result;
-    }
-
-    await upsertCatalogPoints(items);
+    // Always reconcile — even with zero items we still need to delete points
+    // for products/promotions that were removed or deactivated.
+    const changes = await reconcileCatalogPoints(items);
 
     const result = {
       status: 'ok',
       reason,
-      counts
+      counts,
+      changes
     };
 
     lastSyncAt = new Date();
