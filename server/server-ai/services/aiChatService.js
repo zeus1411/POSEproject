@@ -39,6 +39,123 @@ const getPreferredSources = (messages = []) => {
   return lastAssistantWithSources?.sources || [];
 };
 
+const serializeMessage = (message) => ({
+  id: message._id?.toString(),
+  role: message.role,
+  content: message.content,
+  mode: message.mode,
+  retrievalStrategy: message.retrievalStrategy || '',
+  sourceSummary: message.sourceSummary || '',
+  sources: message.sources || [],
+  createdAt: message.createdAt,
+  updatedAt: message.updatedAt
+});
+
+const serializeConversation = (conversation, anonymousId = null) => {
+  if (!conversation) {
+    return null;
+  }
+
+  return {
+    conversationId: conversation._id.toString(),
+    userId: conversation.userId?.toString() || null,
+    anonymousId: conversation.anonymousId || anonymousId || null,
+    status: conversation.status,
+    mode: conversation.mode,
+    messages: (conversation.messages || []).map(serializeMessage),
+    metadata: conversation.metadata || {},
+    lastMessageAt: conversation.lastMessageAt,
+    createdAt: conversation.createdAt,
+    updatedAt: conversation.updatedAt
+  };
+};
+
+const assertConversationAccess = ({ conversation, userId, anonymousId }) => {
+  if (conversation.userId) {
+    if (!userId || conversation.userId.toString() !== userId) {
+      throw new UnauthorizedError('Conversation does not belong to user');
+    }
+    return;
+  }
+
+  if (conversation.anonymousId) {
+    if (!anonymousId || conversation.anonymousId !== anonymousId) {
+      throw new UnauthorizedError('Conversation does not belong to anonymous user');
+    }
+  }
+};
+
+const getCurrentConversation = async ({ conversationId, userId, anonymousId }) => {
+  let conversation = null;
+
+  if (conversationId) {
+    conversation = await AiConversation.findById(conversationId);
+    if (!conversation) {
+      throw new BadRequestError('Conversation not found');
+    }
+    assertConversationAccess({ conversation, userId, anonymousId });
+    return serializeConversation(conversation, anonymousId);
+  }
+
+  if (userId) {
+    conversation = await AiConversation.findOne({
+      userId,
+      status: 'ACTIVE'
+    }).sort({ lastMessageAt: -1, updatedAt: -1 });
+    return serializeConversation(conversation);
+  }
+
+  if (anonymousId) {
+    conversation = await AiConversation.findOne({
+      anonymousId,
+      userId: null,
+      status: 'ACTIVE'
+    }).sort({ lastMessageAt: -1, updatedAt: -1 });
+    return serializeConversation(conversation, anonymousId);
+  }
+
+  return null;
+};
+
+const mergeGuestSession = async ({ guestSessionId, userId, conversationId }) => {
+  if (!userId) {
+    throw new UnauthenticatedError('Please login to continue chatting.');
+  }
+
+  if (!guestSessionId) {
+    throw new BadRequestError('guestSessionId is required');
+  }
+
+  const query = {
+    anonymousId: guestSessionId,
+    status: 'ACTIVE'
+  };
+
+  if (conversationId) {
+    query._id = conversationId;
+  }
+
+  let conversation = await AiConversation.findOne(query).sort({ lastMessageAt: -1, updatedAt: -1 });
+
+  if (!conversation) {
+    conversation = await AiConversation.findOne({
+      userId,
+      status: 'ACTIVE'
+    }).sort({ lastMessageAt: -1, updatedAt: -1 });
+    return serializeConversation(conversation);
+  }
+
+  if (conversation.userId && conversation.userId.toString() !== userId) {
+    throw new UnauthorizedError('Conversation already belongs to another user');
+  }
+
+  conversation.userId = userId;
+  conversation.anonymousId = null;
+  await conversation.save();
+
+  return serializeConversation(conversation);
+};
+
 const getOrCreateConversation = async ({ conversationId, userId, anonymousId, mode, message }) => {
   const normalizedMode = normalizeMode(mode, message);
   ensureModeSupported(normalizedMode);
@@ -73,6 +190,18 @@ const getOrCreateConversation = async ({ conversationId, userId, anonymousId, mo
   let finalAnonymousId = anonymousId;
   if (!userId && !finalAnonymousId) {
     finalAnonymousId = createAnonymousId();
+  }
+
+  const existing = !userId
+    ? await AiConversation.findOne({
+        anonymousId: finalAnonymousId,
+        userId: null,
+        status: 'ACTIVE'
+      }).sort({ lastMessageAt: -1, updatedAt: -1 })
+    : null;
+
+  if (existing) {
+    return { conversation: existing, anonymousId: existing.anonymousId || finalAnonymousId };
   }
 
   const conversation = await AiConversation.create({
@@ -174,4 +303,4 @@ const handleAiChat = async ({
   };
 };
 
-export { handleAiChat };
+export { handleAiChat, getCurrentConversation, mergeGuestSession };

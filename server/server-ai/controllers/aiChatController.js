@@ -1,5 +1,9 @@
 import { StatusCodes } from 'http-status-codes';
-import { handleAiChat } from '../services/aiChatService.js';
+import {
+  getCurrentConversation,
+  handleAiChat,
+  mergeGuestSession
+} from '../services/aiChatService.js';
 
 const writeSseEvent = (res, event, data) => {
   res.write(`event: ${event}\n`);
@@ -8,7 +12,9 @@ const writeSseEvent = (res, event, data) => {
 
 const extractAnonymousId = (req) => {
   return (
+    req.headers['x-guest-session-id'] ||
     req.headers['x-anonymous-id'] ||
+    req.body?.guestSessionId ||
     req.body?.anonymousId ||
     null
   );
@@ -17,8 +23,9 @@ const extractAnonymousId = (req) => {
 export const streamAiChat = async (req, res, next) => {
   let heartbeatTimer = null;
   try {
-    const { conversationId, message, mode, documentScope } = req.body || {};
+    const { conversationId: requestedConversationId, message, mode, documentScope } = req.body || {};
     const userId = req.user?.userId || null;
+    const conversationId = userId ? requestedConversationId : null;
     const anonymousId = extractAnonymousId(req);
     let sseStarted = false;
     let metaSent = false;
@@ -129,8 +136,9 @@ export const streamAiChat = async (req, res, next) => {
 
 export const chatOnce = async (req, res, next) => {
   try {
-    const { conversationId, message, mode, documentScope } = req.body || {};
+    const { conversationId: requestedConversationId, message, mode, documentScope } = req.body || {};
     const userId = req.user?.userId || null;
+    const conversationId = userId ? requestedConversationId : null;
     const anonymousId = extractAnonymousId(req);
 
     const result = await handleAiChat({
@@ -145,6 +153,47 @@ export const chatOnce = async (req, res, next) => {
     res.status(StatusCodes.OK).json({
       success: true,
       data: result
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getChatSession = async (req, res, next) => {
+  try {
+    const userId = req.user?.userId || null;
+    const anonymousId = extractAnonymousId(req);
+    const conversationId = userId ? (req.query?.conversationId || null) : null;
+
+    const conversation = await getCurrentConversation({
+      conversationId,
+      userId,
+      anonymousId
+    });
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      data: conversation
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const mergeGuestChatSession = async (req, res, next) => {
+  try {
+    const userId = req.user?.userId || null;
+    const { guestSessionId, conversationId } = req.body || {};
+
+    const conversation = await mergeGuestSession({
+      guestSessionId,
+      userId,
+      conversationId
+    });
+
+    res.status(StatusCodes.OK).json({
+      success: true,
+      data: conversation
     });
   } catch (error) {
     next(error);

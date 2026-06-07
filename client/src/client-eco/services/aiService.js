@@ -8,9 +8,35 @@ const getApiErrorMessage = (error, fallback) => {
   return error?.response?.data?.message || error?.message || fallback;
 };
 
+const getAiChatSession = async ({ anonymousId, guestSessionId, conversationId } = {}) => {
+  try {
+    const resolvedGuestSessionId = guestSessionId || anonymousId;
+    const response = await api.get('/ai/chat/session', {
+      params: conversationId ? { conversationId } : undefined,
+      headers: resolvedGuestSessionId ? { 'x-guest-session-id': resolvedGuestSessionId } : undefined
+    });
+    return response.data?.data || null;
+  } catch (error) {
+    throw new Error(getApiErrorMessage(error, 'Khong the tai lich su chat'));
+  }
+};
+
+const mergeGuestChatSession = async ({ guestSessionId, conversationId } = {}) => {
+  try {
+    const response = await api.post('/ai/chat/merge-guest-session', {
+      guestSessionId,
+      conversationId
+    });
+    return response.data?.data || null;
+  } catch (error) {
+    throw new Error(getApiErrorMessage(error, 'Khong the dong bo lich su chat'));
+  }
+};
+
 const streamAiChat = async ({
   payload,
   anonymousId,
+  guestSessionId,
   onMeta,
   onStatus,
   onToken,
@@ -24,8 +50,9 @@ const streamAiChat = async ({
     Accept: 'text/event-stream'
   };
 
-  if (anonymousId) {
-    headers['x-anonymous-id'] = anonymousId;
+  const resolvedGuestSessionId = guestSessionId || anonymousId;
+  if (resolvedGuestSessionId) {
+    headers['x-guest-session-id'] = resolvedGuestSessionId;
   }
 
   const response = await fetch(buildStreamUrl(), {
@@ -189,6 +216,8 @@ const syncCatalog = async ({ reason = 'manual' } = {}) => {
 
 export {
   streamAiChat,
+  getAiChatSession,
+  mergeGuestChatSession,
   uploadAiDocument,
   getAiDocuments,
   deleteAiDocument,

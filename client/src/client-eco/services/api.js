@@ -40,6 +40,7 @@ api.interceptors.response.use(
     // 2. 🔥 DANH SÁCH WHITE-LIST: Dùng .includes() để bao quát toàn bộ Endpoint công khai
     const isPublicEndpoint = 
       cleanUrl.includes('/auth/me') ||
+      cleanUrl.includes('/ai/chat/session') ||
       cleanUrl.includes('/blogs/public') ||
       cleanUrl.includes('/blog-categories') || 
       cleanUrl.includes('/tags') ||

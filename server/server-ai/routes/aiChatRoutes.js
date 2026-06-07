@@ -1,6 +1,11 @@
 import express from 'express';
-import { streamAiChat, chatOnce } from '../controllers/aiChatController.js';
-import { optionalAuthenticateUser } from '../../middlewares/auth.js';
+import {
+  chatOnce,
+  getChatSession,
+  mergeGuestChatSession,
+  streamAiChat
+} from '../controllers/aiChatController.js';
+import { authenticateUser, optionalAuthenticateUser } from '../../middlewares/auth.js';
 
 const router = express.Router();
 
@@ -50,6 +55,10 @@ const router = express.Router();
  *               type: string
  */
 router.post('/chat/stream', optionalAuthenticateUser, streamAiChat);
+
+router.get('/chat/session', optionalAuthenticateUser, getChatSession);
+
+router.post('/chat/merge-guest-session', authenticateUser, mergeGuestChatSession);
 
 /**
  * @swagger

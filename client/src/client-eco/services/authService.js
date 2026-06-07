@@ -73,6 +73,8 @@ const logout = async () => {
   } finally {
     localStorage.removeItem('user');
     localStorage.removeItem('token');
+    localStorage.removeItem('ai_current_conversation_id');
+    localStorage.removeItem('ai_anon_id');
   }
 };
 

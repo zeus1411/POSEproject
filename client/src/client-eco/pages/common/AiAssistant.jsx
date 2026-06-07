@@ -8,13 +8,25 @@ import {
   SparklesIcon,
   LightBulbIcon
 } from '@heroicons/react/24/outline';
-import { streamAiChat } from '../../services/aiService';
+import {
+  getAiChatSession,
+  mergeGuestChatSession,
+  streamAiChat
+} from '../../services/aiService';
 
 const ANON_STORAGE_KEY = 'ai_anon_id';
+const CONVERSATION_STORAGE_KEY = 'ai_current_conversation_id';
+const GUEST_QUESTION_LIMIT = 4;
+const LOGIN_REQUIRED_MESSAGE = 'Bạn đã hết lượt nhắn miễn phí với chatbot. Vui lòng đăng nhập để tiếp tục cuộc hội thoại này.';
+
+const getStoredAnonymousId = () => {
+  if (typeof window === 'undefined') return null;
+  return window.localStorage.getItem(ANON_STORAGE_KEY);
+};
 
 const getOrCreateAnonymousId = () => {
   if (typeof window === 'undefined') return null;
-  const existing = window.localStorage.getItem(ANON_STORAGE_KEY);
+  const existing = getStoredAnonymousId();
   if (existing) return existing;
 
   const randomId = (globalThis.crypto?.randomUUID && globalThis.crypto.randomUUID())
@@ -139,19 +151,35 @@ const renderInlineProductText = (value = '', sources = []) => {
   });
 };
 
+const mapConversationMessages = (conversation) => {
+  return (conversation?.messages || []).map((message, index) => ({
+    id: message.id || `${message.role}_${index}_${message.createdAt || Date.now()}`,
+    role: message.role,
+    content: message.content,
+    mode: message.mode,
+    sources: message.sources || [],
+    retrievalStrategy: message.retrievalStrategy || '',
+    sourceSummary: message.sourceSummary || ''
+  }));
+};
+
+const countUserMessages = (items = []) => items.filter((message) => message.role === 'user').length;
+
 const AiAssistant = () => {
   const { user } = useSelector((state) => state.auth);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [conversationId, setConversationId] = useState(null);
-  const [anonymousId, setAnonymousId] = useState(getOrCreateAnonymousId());
+  const [anonymousId, setAnonymousId] = useState(getStoredAnonymousId());
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamError, setStreamError] = useState('');
   const [streamStatus, setStreamStatus] = useState('');
+  const [loginRequired, setLoginRequired] = useState(false);
 
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const abortRef = useRef(null);
+  const previousUserRef = useRef(user);
 
   const examples = useMemo(() => EXAMPLES, []);
 
@@ -159,11 +187,110 @@ const AiAssistant = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isStreaming]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    const clearCurrentConversation = ({ clearGuestSession = false } = {}) => {
+      setMessages([]);
+      setConversationId(null);
+      setStreamError('');
+      setStreamStatus('');
+      setLoginRequired(false);
+      window.localStorage.removeItem(CONVERSATION_STORAGE_KEY);
+      if (clearGuestSession) {
+        window.localStorage.removeItem(ANON_STORAGE_KEY);
+        setAnonymousId(null);
+      }
+    };
+
+    const loadConversation = async () => {
+      const previousUser = previousUserRef.current;
+      const didLogout = previousUser && !user;
+      previousUserRef.current = user;
+
+      if (didLogout) {
+        clearCurrentConversation({ clearGuestSession: true });
+        return;
+      }
+
+      const storedAnonymousId = getStoredAnonymousId();
+      const storedConversationId = window.localStorage.getItem(CONVERSATION_STORAGE_KEY);
+      let conversation = null;
+
+      if (!user && !storedAnonymousId) {
+        clearCurrentConversation();
+        return;
+      }
+
+      try {
+        if (user && storedAnonymousId) {
+          try {
+            conversation = await mergeGuestChatSession({
+              guestSessionId: storedAnonymousId,
+              conversationId: storedConversationId
+            });
+          } catch (error) {
+            if (!storedConversationId) throw error;
+            window.localStorage.removeItem(CONVERSATION_STORAGE_KEY);
+            conversation = await mergeGuestChatSession({
+              guestSessionId: storedAnonymousId
+            });
+          }
+          window.localStorage.removeItem(ANON_STORAGE_KEY);
+          setAnonymousId(null);
+        }
+
+        if (!conversation) {
+          try {
+            conversation = await getAiChatSession({
+              guestSessionId: user ? null : storedAnonymousId,
+              conversationId: user ? storedConversationId : null
+            });
+          } catch (error) {
+            if (!storedConversationId) throw error;
+            window.localStorage.removeItem(CONVERSATION_STORAGE_KEY);
+            conversation = await getAiChatSession({
+              guestSessionId: user ? null : storedAnonymousId
+            });
+          }
+        }
+
+        if (cancelled || !conversation) return;
+
+        setConversationId(conversation.conversationId);
+        window.localStorage.setItem(CONVERSATION_STORAGE_KEY, conversation.conversationId);
+        if (!user && conversation.anonymousId) {
+          setAnonymousId(conversation.anonymousId);
+          window.localStorage.setItem(ANON_STORAGE_KEY, conversation.anonymousId);
+        }
+        setMessages(mapConversationMessages(conversation));
+        setLoginRequired(false);
+        setStreamError('');
+      } catch (error) {
+        if (!cancelled) {
+          setStreamError(error?.message || 'Khong the tai lich su chat.');
+        }
+      }
+    };
+
+    loadConversation();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
   const resetConversation = () => {
     setMessages([]);
     setConversationId(null);
     setStreamError('');
     setStreamStatus('');
+    setLoginRequired(false);
+    window.localStorage.removeItem(CONVERSATION_STORAGE_KEY);
+    if (!user) {
+      window.localStorage.removeItem(ANON_STORAGE_KEY);
+      setAnonymousId(null);
+    }
   };
 
   const updateMessage = (id, updater) => {
@@ -177,7 +304,14 @@ const AiAssistant = () => {
     const trimmed = input.trim();
     if (!trimmed || isStreaming) return;
 
+    if (!user && countUserMessages(messages) >= GUEST_QUESTION_LIMIT) {
+      setLoginRequired(true);
+      setStreamError(LOGIN_REQUIRED_MESSAGE);
+      return;
+    }
+
     setStreamError('');
+    setLoginRequired(false);
     setStreamStatus('');
 
     const userMessage = {
@@ -201,22 +335,33 @@ const AiAssistant = () => {
     setInput('');
     setIsStreaming(true);
 
+    const guestSessionId = user ? null : getOrCreateAnonymousId();
+    if (!user) {
+      setAnonymousId(guestSessionId);
+    }
+
     const controller = new AbortController();
     abortRef.current = controller;
 
     try {
       await streamAiChat({
-        payload: {
-          conversationId,
-          message: trimmed,
-          mode: 'auto',
-          anonymousId: user ? null : anonymousId
-        },
-        anonymousId: user ? null : anonymousId,
+        payload: user
+          ? {
+              conversationId,
+              message: trimmed,
+              mode: 'auto'
+            }
+          : {
+              message: trimmed,
+              mode: 'auto',
+              guestSessionId
+            },
+        guestSessionId: user ? null : guestSessionId,
         signal: controller.signal,
         onMeta: (meta) => {
           if (meta?.conversationId) {
             setConversationId(meta.conversationId);
+            window.localStorage.setItem(CONVERSATION_STORAGE_KEY, meta.conversationId);
           }
 
           if (!user && meta?.anonymousId) {
@@ -240,6 +385,11 @@ const AiAssistant = () => {
           }));
         },
         onDone: (done) => {
+          if (done?.conversationId) {
+            setConversationId(done.conversationId);
+            window.localStorage.setItem(CONVERSATION_STORAGE_KEY, done.conversationId);
+          }
+
           updateMessage(assistantId, (msg) => ({
             content: done?.message || msg.content,
             sources: done?.sources || [],
@@ -253,7 +403,14 @@ const AiAssistant = () => {
       });
     } catch (error) {
       if (error?.name !== 'AbortError') {
-        setStreamError(error?.message || 'Chat failed.');
+        const message = error?.message || 'Chat failed.';
+        if (!user && /login|dang nhap|đăng nhập/i.test(message)) {
+          setMessages((prev) => prev.filter((msg) => msg.id !== userMessage.id && msg.id !== assistantId));
+          setLoginRequired(true);
+          setStreamError(LOGIN_REQUIRED_MESSAGE);
+          return;
+        }
+        setStreamError(message);
       }
     } finally {
       setIsStreaming(false);
@@ -310,7 +467,14 @@ const AiAssistant = () => {
                   Cuoc tro chuyen moi
                 </button>
                 {streamError && (
-                  <span className="text-xs text-rose-600 font-semibold">{streamError}</span>
+                  <span className="text-xs text-rose-600 font-semibold">
+                    {streamError}
+                    {loginRequired && (
+                      <Link to="/login" className="ml-2 underline">
+                        Dang nhap
+                      </Link>
+                    )}
+                  </span>
                 )}
                 {!streamError && streamStatus && (
                   <span className="text-xs text-slate-500 font-semibold">{streamStatus}</span>
