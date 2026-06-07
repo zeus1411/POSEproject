@@ -21,6 +21,9 @@ const Layout = () => {
     pathname.startsWith('/product/') ||
     pathname === '/blogs' ||
     (pathname.startsWith('/blogs/') && !pathname.startsWith('/blogs/create') && !pathname.startsWith('/blogs/edit/')) ||
+    pathname === '/profile' ||
+    pathname === '/my-blogs' ||
+    pathname === '/orders' ||
     pathname.startsWith('/my-blogs/preview/');
 
   useEffect(() => {
