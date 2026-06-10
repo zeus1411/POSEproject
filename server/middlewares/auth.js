@@ -47,7 +47,8 @@ const createTokenUser = (user) => {
         dateOfBirth: user.dateOfBirth,
         gender: user.gender,
         address: user.address,
-        avatar: user.avatar
+        avatar: user.avatar,
+        isGoogleAccount: Boolean(user.googleId)
     };
 };
 

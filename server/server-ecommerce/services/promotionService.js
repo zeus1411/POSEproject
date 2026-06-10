@@ -186,8 +186,11 @@ class PromotionService {
       throw new NotFoundError('Không tìm thấy chương trình khuyến mãi');
     }
 
-    // Check if promotion has been used
-    if (promotion.usageCount > 0) {
+    const hasBeenUsed = promotion.usageCount > 0;
+    const hasExpired = promotion.endDate && promotion.endDate < new Date();
+
+    // Used promotions are kept while they are still valid, but can be cleaned up after expiry.
+    if (hasBeenUsed && !hasExpired) {
       throw new BadRequestError('Không thể xóa chương trình đã được sử dụng');
     }
 

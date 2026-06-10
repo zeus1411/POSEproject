@@ -115,6 +115,10 @@ class UserService {
       throw new NotFoundError('Không tìm thấy người dùng');
     }
     
+    if (user.googleId) {
+      throw new BadRequestError('Tài khoản này đăng nhập bằng Google. Bạn không có mật khẩu riêng trên hệ thống. Vui lòng quản lý mật khẩu trong tài khoản Google.');
+    }
+
     const isPasswordCorrect = await user.comparePassword(currentPassword);
     
     if (!isPasswordCorrect) {

@@ -11,6 +11,7 @@ const ProfilePage = () => {
   const { user } = useSelector(state => state.auth);
   const dispatch = useDispatch();
   const { isDark } = useTheme();
+  const isGoogleAccount = Boolean(user?.isGoogleAccount || user?.googleId);
   
   const [activeTab, setActiveTab] = useState('personal'); // 'personal', 'address', 'password'
   const [isEditingPersonal, setIsEditingPersonal] = useState(false);
@@ -455,6 +456,22 @@ const ProfilePage = () => {
 
   const handleChangePassword = async () => {
     setErrors({});
+    if (isGoogleAccount) {
+      Swal.fire({
+        icon: 'info',
+        title: 'Tài khoản Google',
+        text: 'Tài khoản này đăng nhập bằng Google. Bạn không có mật khẩu riêng trên hệ thống. Vui lòng quản lý mật khẩu trong tài khoản Google.',
+        confirmButtonColor: 'rgb(var(--natural-green))',
+        customClass: {
+          popup: 'aquatic-swal-popup',
+          title: 'aquatic-swal-title',
+          htmlContainer: 'aquatic-swal-html',
+          confirmButton: 'aquatic-swal-confirm-btn'
+        }
+      });
+      return;
+    }
+
     if (!validatePassword()) {
       Swal.fire({
         icon: 'error',
@@ -1139,6 +1156,7 @@ const ProfilePage = () => {
                       <Lock className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                       Bảo mật & Đổi mật khẩu
                     </h2>
+                    {!isGoogleAccount && (
                     <button
                       type="button"
                       onClick={handleChangePassword}
@@ -1148,8 +1166,22 @@ const ProfilePage = () => {
                       <Save className="w-4 h-4" />
                       {loading ? 'Đang lưu...' : 'Lưu mật khẩu'}
                     </button>
+                    )}
                   </div>
 
+                  {isGoogleAccount ? (
+                    <div className="rounded-2xl border border-cyan-500/25 bg-cyan-500/10 p-5 text-sm text-gray-800 dark:text-gray-100">
+                      <div className="flex items-start gap-3">
+                        <Lock className="mt-0.5 h-5 w-5 flex-shrink-0 text-cyan-600 dark:text-cyan-300" />
+                        <div>
+                          <p className="font-bold text-gray-950 dark:text-white">Tài khoản này đăng nhập bằng Google</p>
+                          <p className="mt-2 leading-relaxed text-gray-700 dark:text-gray-300">
+                            Bạn không có mật khẩu riêng trên hệ thống. Vui lòng quản lý mật khẩu trong tài khoản Google.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
                   <div className="space-y-4">
                     <div className="flex flex-col gap-1.5">
                       <label className="text-xs font-bold text-gray-900 dark:text-gray-200 pl-1">
@@ -1264,6 +1296,7 @@ const ProfilePage = () => {
                       )}
                     </div>
                   </div>
+                  )}
                 </div>
               )}
 

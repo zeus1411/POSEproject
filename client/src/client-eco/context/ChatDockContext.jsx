@@ -4,7 +4,7 @@ const ChatDockContext = createContext(null);
 
 const PANEL_WIDTH_REM = 24;
 const PANEL_GAP_REM = 1.5;
-const PANEL_BASE_RIGHT_REM = 6;
+const PANEL_BASE_LEFT_REM = 6;
 const PANEL_BASE_BOTTOM_REM = 1.5;
 
 const BUBBLE_SIZE_REM = 4;
@@ -28,12 +28,12 @@ const ChatDockProvider = ({ children }) => {
     setOpenPanels((prev) => prev.filter((panelId) => panelId !== id));
   }, []);
 
-  const getPanelRightOffset = useCallback((id) => {
+  const getPanelLeftOffset = useCallback((id) => {
     const index = openPanels.indexOf(id);
     if (index === -1) {
-      return PANEL_BASE_RIGHT_REM;
+      return PANEL_BASE_LEFT_REM;
     }
-    return PANEL_BASE_RIGHT_REM + index * (PANEL_WIDTH_REM + PANEL_GAP_REM);
+    return PANEL_BASE_LEFT_REM + index * (PANEL_WIDTH_REM + PANEL_GAP_REM);
   }, [openPanels]);
 
   const getBubbleBottomOffset = useCallback((id) => {
@@ -49,10 +49,10 @@ const ChatDockProvider = ({ children }) => {
   const value = useMemo(() => ({
     registerPanel,
     unregisterPanel,
-    getPanelRightOffset,
+    getPanelLeftOffset,
     getBubbleBottomOffset,
     getPanelBottomOffset
-  }), [registerPanel, unregisterPanel, getPanelRightOffset, getBubbleBottomOffset, getPanelBottomOffset]);
+  }), [registerPanel, unregisterPanel, getPanelLeftOffset, getBubbleBottomOffset, getPanelBottomOffset]);
 
   return (
     <ChatDockContext.Provider value={value}>

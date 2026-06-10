@@ -1,17 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../../client-eco/services/api';
 import { useParams, useSearchParams, Link, useNavigate } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
-import { Heart, MessageCircle, Share2, Bookmark, MoreHorizontal, Eye, ShoppingBag, Globe, Tag } from 'lucide-react';
+import { Heart, MessageCircle, Share2, Bookmark, Eye, ShoppingBag, Globe, Tag } from 'lucide-react';
 import { useTheme } from '../../../client-eco/context/ThemeContext';
 
 import blogService from '../../services/blogService';
 import commentService from '../../services/commentService';
 import BlogInteractionButtons from '../../components/BlogInteractionButtons';
 import blogInteractionService from '../../services/blogInteractionService';
-import { addToCart } from '../../../client-eco/redux/slices/cartSlice';
-import MiniCart from '../../../client-eco/components/common/MiniCart';
-import Swal from 'sweetalert2';
 
 const BlogDetailPage = ({ isAdminPreview = false }) => {
   const { slug, id } = useParams(); 
@@ -35,22 +31,17 @@ const BlogDetailPage = ({ isAdminPreview = false }) => {
   const [deleteModal, setDeleteModal] = useState({ isOpen: false, commentId: null });
 
   // Component con để hiển thị card sản phẩm liên quan trong bài viết
-  const RelatedProductCard = ({ p, handleAddToCart }) => {
+  const RelatedProductCard = ({ p }) => {
     const isOutOfStock = p.stock <= 0 && p.totalStock <= 0;
     const navigate = useNavigate();
 
     console.log("Dữ liệu sản phẩm từ BE:", p);
-    const hasVariants = p.hasVariants === true || (p.variants && p.variants.length > 0);
 
     const handleButtonClick = (e) => {
       e.preventDefault();
       e.stopPropagation();
 
-      if (hasVariants) {
-        navigate(`/product/${p._id}`);
-      } else {
-        handleAddToCart(p);
-      }
+      navigate(`/product/${p._id}`);
     };
     
     return (
@@ -92,12 +83,10 @@ const BlogDetailPage = ({ isAdminPreview = false }) => {
           className={`w-full mt-4 text-white text-xs font-bold py-3 rounded-2xl transition-all active:scale-95 ${
             isOutOfStock 
               ? 'bg-gray-700 cursor-not-allowed opacity-50' 
-              : hasVariants
-                ? 'bg-cyan-600 hover:bg-cyan-500 shadow-lg shadow-cyan-900/20' 
-                : 'bg-emerald-600 hover:bg-emerald-500 shadow-lg shadow-emerald-900/20' 
+              : 'bg-cyan-600 hover:bg-cyan-500 shadow-lg shadow-cyan-900/20' 
           }`}
         >
-          {isOutOfStock ? 'Hết hàng' : hasVariants ? 'Xem chi tiết' : 'Thêm vào giỏ'}
+          {isOutOfStock ? 'Hết hàng' : 'Xem chi tiết'}
         </button>
       </div>
     );
@@ -157,35 +146,6 @@ const BlogDetailPage = ({ isAdminPreview = false }) => {
         setInteraction(data.statuses[blog._id]);
       }
     } catch (err) { console.error('Load interaction lỗi', err); }
-  };
-
-  const dispatch = useDispatch();
-  const [cartPopup, setCartPopup] = useState({ isOpen: false, productName: '' });
-  const [isMiniCartOpen, setIsMiniCartOpen] = useState(false);
-
-  const handleAddToCart = async (product) => {
-    if (!token) {
-      return Swal.fire({
-        icon: 'warning',
-        title: 'Bạn cần đăng nhập',
-        text: 'Vui lòng đăng nhập để thêm sản phẩm vào giỏ hàng.',
-        confirmButtonText: 'Đã hiểu',
-        confirmButtonColor: '#059669',
-      });
-    }
-    if (user?.role === 'admin') return alert('Tài khoản Admin không có tính năng giỏ hàng!');
-    
-    if (product.stock <= 0 && product.totalStock <= 0) {
-      return alert('Sản phẩm này đã hết hàng!');
-    }
-
-    try {
-      await dispatch(addToCart({ productId: product._id, quantity: 1 })).unwrap();
-      setCartPopup({ isOpen: true, productName: product.name });
-      setTimeout(() => setCartPopup({ isOpen: false, productName: '' }), 3000);
-    } catch (err) {
-      alert(`Lỗi: ${err}`);
-    }
   };
 
   const handleAddComment = async () => {
@@ -564,7 +524,6 @@ const BlogDetailPage = ({ isAdminPreview = false }) => {
                 <RelatedProductCard 
                   key={p._id} 
                   p={p} 
-                  handleAddToCart={handleAddToCart} 
                 />
               ))}
             </div>
@@ -597,39 +556,6 @@ const BlogDetailPage = ({ isAdminPreview = false }) => {
           </div>
         </div>
       )}
-
-      {/* POPUP THÊM GIỎ HÀNG THÀNH CÔNG */}
-      {cartPopup.isOpen && (
-        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[60] animate-bounce-in">
-          <div className="bg-aqua/90 dark:bg-gray-900/90 backdrop-blur-md text-foreground dark:text-white px-6 py-4 rounded-2xl shadow-2xl flex items-center gap-4 border border-water/40 dark:border-white/20">
-            <div className="bg-gradient-to-r from-nature to-ocean p-2 rounded-full text-white">
-              <ShoppingBag size={20} />
-            </div>
-            <div>
-              <p className="text-sm font-bold">Đã thêm vào giỏ hàng!</p>
-              <p className="text-xs text-muted-foreground dark:text-gray-300 font-semibold">Bạn đã thêm "{cartPopup.productName}"</p>
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                setCartPopup({ isOpen: false, productName: '' });
-                setIsMiniCartOpen(true);
-              }}
-              className="ml-4 bg-gradient-to-r from-nature to-ocean hover:opacity-90 px-4 py-2 rounded-xl text-xs font-bold text-white transition-colors"
-            >
-              Xem giỏ hàng
-            </button>
-            <button 
-              onClick={() => setCartPopup({ isOpen: false, productName: '' })}
-              className="text-muted-foreground hover:text-foreground"
-            >
-              <MoreHorizontal size={18} />
-            </button>
-          </div>
-        </div>
-      )}
-
-      <MiniCart isOpen={isMiniCartOpen} onClose={() => setIsMiniCartOpen(false)} />
 
     </div>
   );

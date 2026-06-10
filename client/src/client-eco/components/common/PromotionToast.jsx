@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { markPromotionAsViewed } from '../../services/promotionService';
 
 /**
- * PromotionToast - Pop-up thông báo promotion góc dưới trái màn hình
+ * PromotionToast - Pop-up thông báo promotion góc dưới phải màn hình
  * @param {Object} promotion - Thông tin promotion mới
  * @param {Function} onClose - Callback khi đóng toast
  */
@@ -73,7 +73,7 @@ const PromotionToast = ({ promotion, onClose }) => {
 
   return (
     <div
-      className={`fixed bottom-6 left-6 z-[9999] transition-all duration-300 ease-out ${
+      className={`fixed bottom-6 right-6 z-[9999] transition-all duration-300 ease-out ${
         isVisible && !isExiting
           ? 'translate-y-0 opacity-100'
           : 'translate-y-full opacity-0'

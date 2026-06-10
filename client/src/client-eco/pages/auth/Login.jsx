@@ -196,6 +196,14 @@ const Login = () => {
                     {showPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
                   </button>
                 </div>  
+                <div className="flex justify-end">
+                  <Link
+                    to="/forgot-password"
+                    className="text-sm font-semibold text-cyan-300 hover:text-cyan-200 hover:underline transition-all underline-offset-4"
+                  >
+                    Quên mật khẩu ?
+                  </Link>
+                </div>
               </div>
 
               <button

@@ -274,6 +274,10 @@ class AuthService {
       throw new BadRequestError('Email không tồn tại trong hệ thống. Vui lòng kiểm tra lại email');
     }
 
+    if (user.googleId) {
+      throw new BadRequestError('Tài khoản này đăng nhập bằng Google. Bạn không có mật khẩu riêng trên hệ thống. Vui lòng quản lý mật khẩu trong tài khoản Google.');
+    }
+
     const otp = user.generatePasswordResetOTP();
     await user.save({ validateBeforeSave: false });
 
@@ -319,6 +323,10 @@ class AuthService {
     
     if (!user) {
       throw new BadRequestError('Email không tồn tại trong hệ thống');
+    }
+
+    if (user.googleId) {
+      throw new BadRequestError('Tài khoản này đăng nhập bằng Google. Bạn không có mật khẩu riêng trên hệ thống. Vui lòng quản lý mật khẩu trong tài khoản Google.');
     }
 
     if (user.resetPasswordOTP && user.resetPasswordOTP.expires) {
@@ -383,6 +391,10 @@ class AuthService {
     const user = await User.findOne({ email });
     if (!user) {
       throw new BadRequestError('Yêu cầu không hợp lệ');
+    }
+
+    if (user.googleId) {
+      throw new BadRequestError('Tài khoản này đăng nhập bằng Google. Bạn không có mật khẩu riêng trên hệ thống. Vui lòng quản lý mật khẩu trong tài khoản Google.');
     }
 
     if (!user.verifyOTP(otp)) {

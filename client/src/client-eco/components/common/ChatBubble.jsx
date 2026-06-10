@@ -18,7 +18,7 @@ const ChatBubble = () => {
   
   const dispatch = useDispatch();
   const { socket, isConnected } = useSocket();
-  const { registerPanel, unregisterPanel, getPanelRightOffset, getBubbleBottomOffset, getPanelBottomOffset } = useChatDock();
+  const { registerPanel, unregisterPanel, getPanelLeftOffset, getBubbleBottomOffset, getPanelBottomOffset } = useChatDock();
   const { user } = useSelector((state) => state.auth);
   const { currentChat, unreadCount, isLoading } = useSelector((state) => state.chat);
   
@@ -141,7 +141,7 @@ const ChatBubble = () => {
       <button
         onClick={toggleChat}
         style={{
-          right: '1.5rem',
+          left: '1.5rem',
           bottom: `${getBubbleBottomOffset('support')}rem`
         }}
         className={`fixed z-50 w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-full shadow-2xl hover:shadow-3xl hover:scale-110 transition-all duration-300 flex items-center justify-center group ${
@@ -169,7 +169,7 @@ const ChatBubble = () => {
             isMinimized ? 'h-16' : 'h-[600px]'
           }`}
           style={{
-            right: `${getPanelRightOffset('support')}rem`,
+            left: `${getPanelLeftOffset('support')}rem`,
             bottom: `${getPanelBottomOffset()}rem`
           }}
         >

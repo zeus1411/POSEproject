@@ -3,6 +3,7 @@ import Category from '../../server-ecommerce/models/Category.js';
 import Product from '../../server-ecommerce/models/Product.js';
 import Promotion from '../../server-ecommerce/models/Promotion.js';
 import {
+  CATALOG_AUTO_SYNC_ENABLED,
   CATALOG_SYNC_DEBOUNCE_MS,
   CATALOG_SYNC_INTERVAL_MINUTES,
   GEMINI_EMBED_MODEL
@@ -372,6 +373,10 @@ const syncCatalogIndex = async ({ reason = 'manual' } = {}) => {
 };
 
 const requestCatalogSync = ({ reason = 'auto', delayMs = CATALOG_SYNC_DEBOUNCE_MS } = {}) => {
+  if (!CATALOG_AUTO_SYNC_ENABLED) {
+    return { status: 'disabled', reason };
+  }
+
   if (syncTimer) {
     return { status: 'scheduled' };
   }
@@ -388,6 +393,7 @@ const requestCatalogSync = ({ reason = 'auto', delayMs = CATALOG_SYNC_DEBOUNCE_M
 };
 
 const startCatalogSyncScheduler = () => {
+  if (!CATALOG_AUTO_SYNC_ENABLED) return;
   if (syncIntervalId) return;
   const minutes = Number(CATALOG_SYNC_INTERVAL_MINUTES || 0);
   if (!minutes || minutes <= 0) return;
@@ -399,6 +405,7 @@ const startCatalogSyncScheduler = () => {
 
 const getCatalogSyncStatus = () => {
   return {
+    autoSyncEnabled: CATALOG_AUTO_SYNC_ENABLED,
     running: syncRunning,
     pending: syncPending,
     lastSyncAt: lastSyncAt ? lastSyncAt.toISOString() : null,

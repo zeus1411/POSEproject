@@ -15,6 +15,7 @@ import { getCategories } from '../../redux/slices/categorySlice';
 import { toast } from 'react-toastify';
 import { FaPlus, FaEdit, FaTrash, FaToggleOn, FaToggleOff, FaPercent, FaDollarSign, FaShippingFast, FaGift, FaTags, FaShoppingCart, FaFilter, FaCreditCard } from 'react-icons/fa';
 import { useTheme } from '../../context/ThemeContext';
+import ConfirmDialog from '../../components/common/ConfirmDialog';
 
 // Helper function to generate coupon code
 const generateCouponCode = () => {
@@ -53,6 +54,8 @@ const AdminPromotions = () => {
   const [showModal, setShowModal] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [currentPromotionId, setCurrentPromotionId] = useState(null);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [deletePromotionId, setDeletePromotionId] = useState(null);
 
   // ==================== COUPON ONLY ====================
   const [selectedPromotionType, setSelectedPromotionType] = useState('COUPON');
@@ -323,14 +326,21 @@ const AdminPromotions = () => {
   };
 
   // Delete
-  const handleDelete = async (id) => {
-    if (window.confirm('Bạn có chắc muốn xóa khuyến mãi này?')) {
-      try {
-        await dispatch(deletePromotion(id)).unwrap();
-        dispatch(getAllPromotions({ page: currentPage, limit: 10, filters }));
-      } catch (err) {
-        console.error('Delete error:', err);
-      }
+  const handleDelete = (id) => {
+    setDeletePromotionId(id);
+    setShowConfirm(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletePromotionId) return;
+
+    try {
+      await dispatch(deletePromotion(deletePromotionId)).unwrap();
+      dispatch(getAllPromotions({ page: currentPage, limit: 10, filters }));
+      setShowConfirm(false);
+      setDeletePromotionId(null);
+    } catch (err) {
+      console.error('Delete error:', err);
     }
   };
 
@@ -902,6 +912,20 @@ const AdminPromotions = () => {
             </div>
           </div>
         )}
+
+        <ConfirmDialog
+          isOpen={showConfirm}
+          title="Xác nhận xóa mã giảm giá"
+          message="Bạn có chắc muốn xóa mã giảm giá này? Hành động này không thể hoàn tác."
+          confirmText="Xóa mã giảm giá"
+          cancelText="Hủy bỏ"
+          onConfirm={handleConfirmDelete}
+          onCancel={() => {
+            setShowConfirm(false);
+            setDeletePromotionId(null);
+          }}
+          isDangerous
+        />
       </div>
     </AdminLayout>
   );
