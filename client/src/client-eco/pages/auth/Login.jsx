@@ -94,6 +94,16 @@ const aquaticStyles = `
     transform: translate(-50%, -50%) scale(20);
     opacity: 0;
   }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-5px); }
+    75% { transform: translateX(5px); }
+  }
+
+  .animate-shake {
+    animation: shake 0.2s ease-in-out 0s 2;
+  }
 `;
 
 const Login = () => {
@@ -159,6 +169,12 @@ const Login = () => {
 
             {/* Form */}
             <form className="space-y-7" onSubmit={onSubmit}>
+              {isError && message && (
+                <div className="rounded-2xl bg-red-500/80 backdrop-blur-sm px-5 py-4 border border-red-300/40 animate-shake">
+                  <p className="text-sm font-semibold text-white text-center">{message}</p>
+                </div>
+              )}
+
               <div className="space-y-3">
                 <label className="block text-base font-medium text-white/90 ml-2">Email</label>
                 <div className="relative">

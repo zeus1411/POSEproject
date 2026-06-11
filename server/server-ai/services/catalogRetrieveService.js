@@ -11,8 +11,48 @@ const normalizeText = (value) => String(value || '')
   .toLowerCase()
   .normalize('NFD')
   .replace(/[\u0300-\u036f]/g, '')
+  .replace(/[^\p{L}\p{N}\s]/gu, ' ')
   .replace(/\s+/g, ' ')
   .trim();
+
+const QUERY_STOP_WORDS = new Set([
+  'ban',
+  'cho',
+  'toi',
+  'can',
+  'tim',
+  'mot',
+  'san',
+  'pham',
+  'cua',
+  'hien',
+  'trong',
+  'muc',
+  'co',
+  'khong',
+  'duoc',
+  'khach',
+  'hang',
+  'goi',
+  'de',
+  'xuat',
+  'tu',
+  'van',
+  'voi',
+  've',
+  'vay',
+  'nao',
+  'nhung',
+  'cac',
+  'ho',
+  'be'
+]);
+
+const unique = (items) => [...new Set(items.filter(Boolean))];
+
+const tokenizeQuery = (value) => normalizeText(value)
+  .split(' ')
+  .filter((token) => token.length >= 3 && !QUERY_STOP_WORDS.has(token));
 
 const getVariantPriceRange = (variants = []) => {
   const activeVariants = variants.filter((variant) => variant && variant.isActive !== false);
@@ -75,33 +115,35 @@ const buildCategoryLookup = async () => {
 const detectProductSearchTerms = (query) => {
   const normalized = normalizeText(query);
   const terms = [];
+  const hasStrongCatalogTerm = /phu kien|loc|vat lieu loc|den|anh sang|phan nen|thuc an|tep|cay|seachem/.test(normalized);
 
   if (/\bcay\b|cay thuy sinh|thuc vat|rong\b/.test(normalized)) {
-    terms.push('cây', 'cay', 'thủy sinh', 'thuy sinh', 'rong');
+    terms.push('cay', 'thuy sinh', 'rong');
   }
-  if (/\bloc\b|vat lieu loc|phu kien loc/.test(normalized)) {
-    terms.push('lọc', 'loc', 'vật liệu lọc', 'vat lieu loc');
+  if (/\bloc\b|vat lieu loc|phu kien loc|phu kien.*loc|filter/.test(normalized)) {
+    terms.push('loc', 'vat lieu loc', 'phu kien loc', 'filter');
   }
   if (/phu kien/.test(normalized)) {
-    terms.push('phụ kiện', 'phu kien');
+    terms.push('phu kien');
   }
   if (/\bden\b|anh sang/.test(normalized)) {
-    terms.push('đèn', 'den', 'ánh sáng', 'anh sang');
+    terms.push('den', 'anh sang');
   }
   if (/phan nen|\bnen\b/.test(normalized)) {
-    terms.push('phân nền', 'phan nen', 'nền', 'nen');
+    terms.push('phan nen', 'nen');
   }
   if (/thuc an/.test(normalized)) {
-    terms.push('thức ăn', 'thuc an');
+    terms.push('thuc an');
   }
-  if (/\bca\b/.test(normalized)) {
-    terms.push('cá', 'ca');
+  if (/\bca\b/.test(normalized) && !/\b(ho|be)\s+ca\b/.test(normalized) && !hasStrongCatalogTerm) {
+    terms.push('ca');
   }
   if (/\btep\b/.test(normalized)) {
-    terms.push('tép', 'tep');
+    terms.push('tep');
   }
 
-  return [...new Set(terms)];
+  terms.push(...tokenizeQuery(query));
+  return unique(terms);
 };
 
 const isTopSellerQuery = (query) => {
@@ -112,6 +154,39 @@ const isTopSellerQuery = (query) => {
 const isSuggestionQuery = (query) => {
   const normalized = normalizeText(query);
   return /goi y|de xuat|tu van|dang co|con hang|tim|can|cho toi|co nhung/.test(normalized);
+};
+
+const buildSearchRegexes = (terms) => unique(
+  terms.flatMap((term) => {
+    const normalized = normalizeText(term);
+    const words = normalized.split(' ').filter(Boolean);
+    return [normalized, ...words];
+  })
+)
+  .filter((term) => term.length >= 3 && !QUERY_STOP_WORDS.has(term))
+  .map((term) => new RegExp(escapeRegex(term), 'i'));
+
+const scoreProductMatch = ({ product, category, terms }) => {
+  const categoryText = normalizeText(`${category?.name || ''} ${category?.slug || ''}`);
+  const nameText = normalizeText(product.name || '');
+  const skuText = normalizeText(product.sku || '');
+  const tagText = normalizeText((product.tags || []).join(' '));
+  const descriptionText = normalizeText(product.description || '');
+  const searchableText = `${nameText} ${skuText} ${tagText} ${categoryText} ${descriptionText}`;
+
+  return terms.reduce((score, term) => {
+    const normalizedTerm = normalizeText(term);
+    if (!normalizedTerm) return score;
+    if (nameText.includes(normalizedTerm)) return score + 8;
+    if (skuText.includes(normalizedTerm)) return score + 7;
+    if (categoryText.includes(normalizedTerm)) return score + 6;
+    if (tagText.includes(normalizedTerm)) return score + 5;
+    if (descriptionText.includes(normalizedTerm)) return score + 2;
+    if (normalizedTerm.split(' ').some((word) => word.length >= 3 && searchableText.includes(word))) {
+      return score + 1;
+    }
+    return score;
+  }, 0);
 };
 
 const findDirectCatalogProducts = async ({ query, limit }) => {
@@ -133,8 +208,7 @@ const findDirectCatalogProducts = async ({ query, limit }) => {
     orConditions.push({ categoryId: { $in: matchingCategoryIds } });
   }
 
-  terms.forEach((term) => {
-    const regex = new RegExp(escapeRegex(term), 'i');
+  buildSearchRegexes(terms).forEach((regex) => {
     orConditions.push(
       { name: regex },
       { tags: regex },
@@ -153,16 +227,16 @@ const findDirectCatalogProducts = async ({ query, limit }) => {
     : { isFeatured: -1, soldCount: -1, 'rating.average': -1, viewCount: -1, createdAt: -1 };
 
   const products = await Product.find(queryFilter)
-    .select('name sku slug price originalPrice discount stock variants hasVariants categoryId tags rating soldCount viewCount isFeatured isNew status createdAt')
+    .select('name sku slug price originalPrice discount stock variants hasVariants categoryId tags rating soldCount viewCount isFeatured isNew status createdAt description')
     .sort(sortOption)
-    .limit(Math.max(limit * 2, limit))
+    .limit(Math.max(limit * 8, limit))
     .lean();
 
   return products
     .filter(hasStock)
-    .slice(0, limit)
     .map((product) => {
       const category = categoryLookup.get(String(product.categoryId));
+      const relevanceScore = scoreProductMatch({ product, category, terms });
       return {
         payload: {
           source_type: 'catalog_product',
@@ -178,9 +252,16 @@ const findDirectCatalogProducts = async ({ query, limit }) => {
           soldCount: Number(product.soldCount) || 0,
           text: buildProductContextText(product, category?.name || '')
         },
-        score: 1
+        score: 0.75 + relevanceScore * 0.02,
+        relevanceScore
       };
-    });
+    })
+    .filter((match) => !terms.length || match.relevanceScore > 0)
+    .sort((a, b) => {
+      if (b.relevanceScore !== a.relevanceScore) return b.relevanceScore - a.relevanceScore;
+      return (b.payload.soldCount || 0) - (a.payload.soldCount || 0);
+    })
+    .slice(0, Math.max(2, Math.ceil(limit / 2)));
 };
 
 const mapSource = (match) => {
@@ -233,13 +314,14 @@ const retrieveCatalogContext = async ({ query }) => {
     }
     console.warn('[catalog-retrieve] vector search failed; using direct catalog matches only', error?.message || error);
   }
+
   const rankedMatches = rerankMatchesByLexicalOverlap({
-    matches: vectorMatches,
+    matches: [...directMatches, ...vectorMatches],
     query
-  }).slice(0, CATALOG_TOP_K);
+  });
 
   const seenItemIds = new Set();
-  const combinedMatches = [...directMatches, ...rankedMatches]
+  const combinedMatches = rankedMatches
     .filter((match) => {
       const itemId = match?.payload?.itemId || String(match?.id || '');
       if (!itemId || seenItemIds.has(itemId)) return false;

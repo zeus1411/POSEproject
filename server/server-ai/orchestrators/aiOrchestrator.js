@@ -6,6 +6,7 @@ import { generateGeminiAnswer } from '../services/geminiService.js';
 import { retrieveCatalogContext } from '../services/catalogRetrieveService.js';
 import { buildCatalogPrompt } from '../services/catalogPrompt.js';
 import { buildBehaviorAnswer, detectAiIntent } from '../services/intentRouter.js';
+import { CATALOG_MIN_USEFUL_ANSWER_CHARS } from '../config/aiConfig.js';
 
 const DEFAULT_RETRIEVAL_STRATEGY = {
   document_rag: 'document_rag:qdrant_cosine',
@@ -19,6 +20,40 @@ const EMPTY_CATALOG_ANSWER =
   'Tôi chưa tìm thấy thông tin sản phẩm hoặc khuyến mãi phù hợp trong catalog hiện có.';
 
 const MIN_USEFUL_ANSWER_CHARS = 180;
+
+const formatCatalogPrice = (source = {}) => {
+  const minPrice = Number(source.minPrice || source.price || 0);
+  const maxPrice = Number(source.maxPrice || source.price || 0);
+  const format = (value) => new Intl.NumberFormat('vi-VN').format(Number(value) || 0);
+  if (!minPrice && !maxPrice) return '';
+  if (minPrice && maxPrice && minPrice !== maxPrice) return `${format(minPrice)} - ${format(maxPrice)}`;
+  return format(minPrice || maxPrice);
+};
+
+const buildCatalogRateLimitFallbackAnswer = (sources = []) => {
+  const products = sources
+    .filter((source) => source?.itemType === 'product' && source?.title)
+    .slice(0, 5);
+
+  if (!products.length) return '';
+
+  const lines = [
+    'Gemini đang chạm giới hạn tạm thời, nhưng tôi đã tìm được một vài sản phẩm phù hợp trong catalog:',
+    ''
+  ];
+
+  products.forEach((product, index) => {
+    lines.push(`${index + 1}. **${product.title}**`);
+    const price = formatCatalogPrice(product);
+    if (price) {
+      lines.push(`Giá: **${price}**`);
+    }
+  });
+
+  lines.push('');
+  lines.push('Bạn có thể click vào tên sản phẩm để xem chi tiết.');
+  return lines.join('\n');
+};
 
 const CATALOG_KEYWORDS = [
   'san pham',
@@ -135,10 +170,10 @@ const buildPromptHistory = (chatHistory = []) => {
     .join('\n');
 };
 
-const looksIncompleteAnswer = (answer = '') => {
+const looksIncompleteAnswer = (answer = '', { minUsefulChars = MIN_USEFUL_ANSWER_CHARS } = {}) => {
   const text = String(answer || '').trim();
   if (!text) return true;
-  if (text.length < MIN_USEFUL_ANSWER_CHARS) return true;
+  if (text.length < minUsefulChars) return true;
   if (/[,:;(\-–]$/.test(text)) return true;
 
   const normalized = normalizeText(text);
@@ -168,9 +203,9 @@ const buildCompletionRetryPrompt = ({ prompt, answer }) => {
   ].join('\n');
 };
 
-const generateAnswerWithRecovery = async ({ prompt, onToken }) => {
+const generateAnswerWithRecovery = async ({ prompt, onToken, minUsefulChars = MIN_USEFUL_ANSWER_CHARS }) => {
   const answer = await generateGeminiAnswer({ prompt, onToken });
-  if (!looksIncompleteAnswer(answer)) {
+  if (!looksIncompleteAnswer(answer, { minUsefulChars })) {
     return answer;
   }
 
@@ -389,7 +424,26 @@ const routeAiQuery = async ({
         sourceCount: retrieval.sources.length
       });
     }
-    const answer = await generateAnswerWithRecovery({ prompt, onToken });
+    let answer = '';
+    try {
+      answer = await generateAnswerWithRecovery({
+        prompt,
+        onToken,
+        minUsefulChars: CATALOG_MIN_USEFUL_ANSWER_CHARS
+      });
+    } catch (error) {
+      if (error?.statusCode !== 429) {
+        throw error;
+      }
+
+      answer = buildCatalogRateLimitFallbackAnswer(retrieval.sources);
+      if (!answer) {
+        throw error;
+      }
+      if (onToken) {
+        onToken(answer);
+      }
+    }
     const generationMs = Date.now() - generationStartedAt;
     console.info('[ai-chat] catalog_qa completed', {
       conversationId,

@@ -1170,16 +1170,14 @@ const ProfilePage = () => {
                   </div>
 
                   {isGoogleAccount ? (
-                    <div className="rounded-2xl border border-cyan-500/25 bg-cyan-500/10 p-5 text-sm text-gray-800 dark:text-gray-100">
-                      <div className="flex items-start gap-3">
-                        <Lock className="mt-0.5 h-5 w-5 flex-shrink-0 text-cyan-600 dark:text-cyan-300" />
-                        <div>
-                          <p className="font-bold text-gray-950 dark:text-white">Tài khoản này đăng nhập bằng Google</p>
-                          <p className="mt-2 leading-relaxed text-gray-700 dark:text-gray-300">
-                            Bạn không có mật khẩu riêng trên hệ thống. Vui lòng quản lý mật khẩu trong tài khoản Google.
-                          </p>
-                        </div>
+                    <div className="flex min-h-[260px] flex-col items-center justify-center text-center">
+                      <div className="mb-5 flex h-24 w-24 items-center justify-center rounded-full border-4 border-rose-500 text-rose-500 dark:border-rose-400 dark:text-rose-400">
+                        <X className="h-14 w-14" strokeWidth={2.75} />
                       </div>
+                      <p className="text-xl font-bold text-gray-950 dark:text-white">Tài khoản này đăng nhập bằng Google</p>
+                      <p className="mt-3 max-w-xl text-sm leading-relaxed text-gray-700 dark:text-gray-300">
+                        Bạn không có mật khẩu riêng trên hệ thống. Vui lòng quản lý mật khẩu trong tài khoản Google.
+                      </p>
                     </div>
                   ) : (
                   <div className="space-y-4">

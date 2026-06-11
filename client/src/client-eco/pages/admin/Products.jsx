@@ -253,7 +253,7 @@ const Products = () => {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div>
             <h1 className={`text-3xl font-black tracking-tight ${isDark ? 'text-white' : 'text-slate-800'}`}>
-              📂 Quản lý sản phẩm & danh mục
+              Quản lý sản phẩm & danh mục
             </h1>
           </div>
           <button

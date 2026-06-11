@@ -31,7 +31,7 @@ export const googleAuth = async (req, res) => {
       if (!user.googleId) {
         return res.status(StatusCodes.CONFLICT).json({
           success: false,
-          message: 'Email này đã được đăng ký bằng tài khoản thường. Vui lòng đăng nhập bằng email và mật khẩu hoặc sử dụng email khác.',
+          message: 'Tài khoản này đã được đăng ký ! Vui lòng sử dụng một tài khoản khác',
         });
       }
 
