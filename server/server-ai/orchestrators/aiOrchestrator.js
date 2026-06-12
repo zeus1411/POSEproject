@@ -7,6 +7,7 @@ import { retrieveCatalogContext } from '../services/catalogRetrieveService.js';
 import { buildCatalogPrompt } from '../services/catalogPrompt.js';
 import { buildBehaviorAnswer, detectAiIntent } from '../services/intentRouter.js';
 import { CATALOG_MIN_USEFUL_ANSWER_CHARS } from '../config/aiConfig.js';
+import { detectRequestedCatalogProductLimit } from '../utils/catalogQueryIntent.js';
 
 const DEFAULT_RETRIEVAL_STRATEGY = {
   document_rag: 'document_rag:qdrant_cosine',
@@ -30,15 +31,18 @@ const formatCatalogPrice = (source = {}) => {
   return format(minPrice || maxPrice);
 };
 
-const buildCatalogRateLimitFallbackAnswer = (sources = []) => {
+const buildCatalogRateLimitFallbackAnswer = (sources = [], { question = '' } = {}) => {
+  const requestedLimit = detectRequestedCatalogProductLimit(question);
   const products = sources
     .filter((source) => source?.itemType === 'product' && source?.title)
-    .slice(0, 5);
+    .slice(0, requestedLimit || 5);
 
   if (!products.length) return '';
 
   const lines = [
-    'Gemini đang chạm giới hạn tạm thời, nhưng tôi đã tìm được một vài sản phẩm phù hợp trong catalog:',
+    products.length === 1
+      ? 'Tôi tìm thấy sản phẩm phù hợp trong catalog:'
+      : `Tôi tìm thấy ${products.length} sản phẩm phù hợp trong catalog:`,
     ''
   ];
 
@@ -47,6 +51,13 @@ const buildCatalogRateLimitFallbackAnswer = (sources = []) => {
     const price = formatCatalogPrice(product);
     if (price) {
       lines.push(`Giá: **${price}**`);
+    }
+    if (Number(product.ratingAverage) > 0) {
+      const rating = Number(product.ratingAverage).toLocaleString('vi-VN', {
+        maximumFractionDigits: 1
+      });
+      const ratingCount = Number(product.ratingCount) || 0;
+      lines.push(`Đánh giá: **${rating}/5**${ratingCount ? ` (${ratingCount} lượt)` : ''}`);
     }
   });
 
@@ -87,7 +98,6 @@ const CATALOG_KEYWORDS = [
   'ca thuy sinh',
   'tep',
   'be ca',
-  'ho ca',
   'ho thuy sinh',
   'khuyen mai',
   'giam gia',
@@ -131,6 +141,8 @@ const normalizeText = (value) => {
     .toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'D')
     .replace(/\s+/g, ' ')
     .trim();
 };
@@ -382,7 +394,8 @@ const routeAiQuery = async ({
       });
     }
     const retrieval = await retrieveCatalogContext({
-      query: retrievalQuery
+      query: retrievalQuery,
+      limit: detectRequestedCatalogProductLimit(message) || undefined
     });
     const retrievalMs = Date.now() - retrievalStartedAt;
     const sourceSummary = `catalog_qa:${retrieval.sources.length}_sources`;
@@ -436,7 +449,9 @@ const routeAiQuery = async ({
         throw error;
       }
 
-      answer = buildCatalogRateLimitFallbackAnswer(retrieval.sources);
+      answer = buildCatalogRateLimitFallbackAnswer(retrieval.sources, {
+        question: String(message || '')
+      });
       if (!answer) {
         throw error;
       }

@@ -295,11 +295,17 @@ const searchDocumentChunks = async (
   });
 };
 
-const searchCatalogItems = async (vector, { limit, scoreThreshold }) => {
+const searchCatalogItems = async (
+  vector,
+  { limit, scoreThreshold, sourceTypes = ['catalog_product', 'catalog_promotion'] }
+) => {
   const exists = await collectionExists(QDRANT_CATALOG_COLLECTION);
   if (!exists) {
     return [];
   }
+  const allowedSourceTypes = Array.isArray(sourceTypes) && sourceTypes.length
+    ? sourceTypes
+    : ['catalog_product', 'catalog_promotion'];
   const qdrant = getClient();
   return qdrant.search(QDRANT_CATALOG_COLLECTION, {
     vector,
@@ -310,7 +316,7 @@ const searchCatalogItems = async (vector, { limit, scoreThreshold }) => {
       must: [
         {
           key: 'source_type',
-          match: { any: ['catalog_product', 'catalog_promotion'] }
+          match: { any: allowedSourceTypes }
         }
       ]
     }

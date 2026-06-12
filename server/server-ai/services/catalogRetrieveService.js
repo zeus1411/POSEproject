@@ -1,9 +1,15 @@
 import { CATALOG_TOP_K, CATALOG_SCORE_THRESHOLD } from '../config/aiConfig.js';
 import Category from '../../server-ecommerce/models/Category.js';
 import Product from '../../server-ecommerce/models/Product.js';
+import Promotion from '../../server-ecommerce/models/Promotion.js';
 import { embedText } from './geminiService.js';
 import { searchCatalogItems } from './qdrantService.js';
 import { attachCitationIds, rerankMatchesByLexicalOverlap } from '../utils/ragUtils.js';
+import {
+  detectCatalogRatingAverage,
+  detectRequestedCatalogProductLimit,
+  isRandomCatalogQuery
+} from '../utils/catalogQueryIntent.js';
 
 const escapeRegex = (value) => String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
@@ -11,16 +17,52 @@ const normalizeText = (value) => String(value || '')
   .toLowerCase()
   .normalize('NFD')
   .replace(/[\u0300-\u036f]/g, '')
+  .replace(/đ/g, 'd')
+  .replace(/Đ/g, 'D')
   .replace(/[^\p{L}\p{N}\s]/gu, ' ')
   .replace(/\s+/g, ' ')
   .trim();
 
+const VIETNAMESE_CHAR_CLASSES = {
+  a: '[aáàảãạăắằẳẵặâấầẩẫậ]',
+  d: '[dđ]',
+  e: '[eéèẻẽẹêếềểễệ]',
+  i: '[iíìỉĩị]',
+  o: '[oóòỏõọôốồổỗộơớờởỡợ]',
+  u: '[uúùủũụưứừửữự]',
+  y: '[yýỳỷỹỵ]'
+};
+
+const buildLooseVietnameseRegex = (term) => {
+  const normalized = normalizeText(term);
+  if (!normalized) return null;
+
+  const pattern = [...normalized]
+    .map((char) => {
+      if (VIETNAMESE_CHAR_CLASSES[char]) return VIETNAMESE_CHAR_CLASSES[char];
+      if (/\s/.test(char)) return '\\s+';
+      return escapeRegex(char);
+    })
+    .join('');
+
+  return new RegExp(pattern, 'i');
+};
+
 const QUERY_STOP_WORDS = new Set([
   'ban',
+  'bat',
   'cho',
   'toi',
   'can',
+  'hay',
+  'nhe',
+  'vui',
+  'long',
+  'giup',
+  'minh',
+  'shop',
   'tim',
+  'xem',
   'mot',
   'san',
   'pham',
@@ -35,17 +77,30 @@ const QUERY_STOP_WORDS = new Set([
   'hang',
   'goi',
   'de',
+  'danh',
   'xuat',
   'tu',
   'van',
   'voi',
   've',
+  'gia',
+  'sao',
+  'so',
+  'tong',
   'vay',
   'nao',
   'nhung',
+  'ngau',
+  'nhien',
   'cac',
   'ho',
-  'be'
+  'be',
+  'thu',
+  'kiem',
+  'tra',
+  'lai',
+  'dua',
+  'lay'
 ]);
 
 const unique = (items) => [...new Set(items.filter(Boolean))];
@@ -83,6 +138,15 @@ const formatPrice = (product) => {
   return `${formatNumber(variantRange.min)} - ${formatNumber(variantRange.max)}`;
 };
 
+const stripHtml = (value) => String(value || '')
+  .replace(/<[^>]*>/g, ' ')
+  .replace(/&nbsp;/g, ' ')
+  .replace(/&amp;/g, '&')
+  .replace(/&lt;/g, '<')
+  .replace(/&gt;/g, '>')
+  .replace(/\s+/g, ' ')
+  .trim();
+
 const getStock = (product) => product.hasVariants
   ? getVariantStockTotal(product.variants || [])
   : Number(product.stock) || 0;
@@ -104,8 +168,36 @@ const buildProductContextText = (product, categoryName = '') => [
   `Rating count: ${formatNumber(product.rating?.count || 0)}`,
   product.isFeatured ? 'Featured: yes' : 'Featured: no',
   product.isNew ? 'New product: yes' : 'New product: no',
-  product.tags?.length ? `Tags: ${product.tags.join(', ')}` : ''
+  product.tags?.length ? `Tags: ${product.tags.join(', ')}` : '',
+  product.description ? `Description: ${stripHtml(product.description).slice(0, 1200)}` : ''
 ].filter(Boolean).join('\n');
+
+const buildPromotionContextText = (promotion) => {
+  const conditions = promotion.conditions || {};
+  const formatDate = (value) => {
+    if (!value) return '';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '';
+    return date.toISOString().slice(0, 10);
+  };
+
+  return [
+    'Type: promotion',
+    `Name: ${promotion.name}`,
+    promotion.code ? `Code: ${promotion.code}` : '',
+    promotion.discountType ? `Discount type: ${promotion.discountType}` : '',
+    Number.isFinite(Number(promotion.discountValue))
+      ? `Discount value: ${formatNumber(promotion.discountValue)}`
+      : '',
+    `Min order value: ${formatNumber(conditions.minOrderValue || 0)}`,
+    `Min quantity: ${formatNumber(conditions.minQuantity || 0)}`,
+    conditions.maxDiscount ? `Max discount: ${formatNumber(conditions.maxDiscount)}` : '',
+    conditions.firstOrderOnly ? 'First order only: yes' : 'First order only: no',
+    promotion.startDate ? `Valid from: ${formatDate(promotion.startDate)}` : '',
+    promotion.endDate ? `Valid until: ${formatDate(promotion.endDate)}` : '',
+    promotion.isActive ? 'Active: yes' : 'Active: no'
+  ].filter(Boolean).join('\n');
+};
 
 const buildCategoryLookup = async () => {
   const categories = await Category.find({}).select('name slug parentId').lean();
@@ -142,7 +234,11 @@ const detectProductSearchTerms = (query) => {
     terms.push('tep');
   }
 
-  terms.push(...tokenizeQuery(query));
+  const queryTokens = tokenizeQuery(query);
+  terms.push(...queryTokens);
+  for (let index = 0; index < queryTokens.length - 1; index += 1) {
+    terms.push(`${queryTokens[index]} ${queryTokens[index + 1]}`);
+  }
   return unique(terms);
 };
 
@@ -156,6 +252,11 @@ const isSuggestionQuery = (query) => {
   return /goi y|de xuat|tu van|dang co|con hang|tim|can|cho toi|co nhung/.test(normalized);
 };
 
+const isPromotionQuery = (query) => {
+  const normalized = normalizeText(query);
+  return /khuyen mai|ma giam gia|coupon|voucher|giam gia|flash sale|sale|discount/.test(normalized);
+};
+
 const buildSearchRegexes = (terms) => unique(
   terms.flatMap((term) => {
     const normalized = normalizeText(term);
@@ -164,7 +265,8 @@ const buildSearchRegexes = (terms) => unique(
   })
 )
   .filter((term) => term.length >= 3 && !QUERY_STOP_WORDS.has(term))
-  .map((term) => new RegExp(escapeRegex(term), 'i'));
+  .map(buildLooseVietnameseRegex)
+  .filter(Boolean);
 
 const scoreProductMatch = ({ product, category, terms }) => {
   const categoryText = normalizeText(`${category?.name || ''} ${category?.slug || ''}`);
@@ -177,6 +279,7 @@ const scoreProductMatch = ({ product, category, terms }) => {
   return terms.reduce((score, term) => {
     const normalizedTerm = normalizeText(term);
     if (!normalizedTerm) return score;
+    if (normalizedTerm.includes(' ') && nameText.includes(normalizedTerm)) return score + 16;
     if (nameText.includes(normalizedTerm)) return score + 8;
     if (skuText.includes(normalizedTerm)) return score + 7;
     if (categoryText.includes(normalizedTerm)) return score + 6;
@@ -189,9 +292,49 @@ const scoreProductMatch = ({ product, category, terms }) => {
   }, 0);
 };
 
+const buildProductMatch = ({ product, category, terms, baseScore = 0.75 }) => {
+  const relevanceScore = scoreProductMatch({ product, category, terms });
+  return {
+    payload: {
+      source_type: 'catalog_product',
+      itemType: 'product',
+      itemId: String(product._id),
+      title: product.name,
+      name: product.name,
+      uri: `/product/${product._id}`,
+      price: Number(product.price) || 0,
+      minPrice: getVariantPriceRange(product.variants || [])?.min || Number(product.price) || 0,
+      maxPrice: getVariantPriceRange(product.variants || [])?.max || Number(product.price) || 0,
+      stock: getStock(product),
+      soldCount: Number(product.soldCount) || 0,
+      ratingAverage: Number(product.rating?.average) || 0,
+      ratingCount: Number(product.rating?.count) || 0,
+      text: buildProductContextText(product, category?.name || '')
+    },
+    score: Math.max(Number(baseScore) || 0, 0.75 + relevanceScore * 0.02),
+    relevanceScore
+  };
+};
+
+const buildPromotionMatch = ({ promotion, baseScore = 0.75 }) => ({
+  payload: {
+    source_type: 'catalog_promotion',
+    itemType: 'promotion',
+    itemId: String(promotion._id),
+    title: promotion.name,
+    name: promotion.name,
+    code: promotion.code,
+    uri: '',
+    text: buildPromotionContextText(promotion)
+  },
+  score: Number(baseScore) || 0.75,
+  relevanceScore: 0
+});
+
 const findDirectCatalogProducts = async ({ query, limit }) => {
   const terms = detectProductSearchTerms(query);
-  if (!terms.length && !isTopSellerQuery(query) && !isSuggestionQuery(query)) {
+  const ratingAverage = detectCatalogRatingAverage(query);
+  if (!terms.length && !isTopSellerQuery(query) && !isSuggestionQuery(query) && ratingAverage === null) {
     return [];
   }
 
@@ -219,6 +362,9 @@ const findDirectCatalogProducts = async ({ query, limit }) => {
 
   const queryFilter = {
     status: 'ACTIVE',
+    ...(ratingAverage !== null
+      ? { 'rating.average': { $gte: ratingAverage, $lt: Math.min(ratingAverage + 1, 5.01) } }
+      : {}),
     ...(orConditions.length ? { $or: orConditions } : {})
   };
 
@@ -226,42 +372,110 @@ const findDirectCatalogProducts = async ({ query, limit }) => {
     ? { soldCount: -1, 'rating.average': -1, viewCount: -1, createdAt: -1 }
     : { isFeatured: -1, soldCount: -1, 'rating.average': -1, viewCount: -1, createdAt: -1 };
 
-  const products = await Product.find(queryFilter)
-    .select('name sku slug price originalPrice discount stock variants hasVariants categoryId tags rating soldCount viewCount isFeatured isNew status createdAt description')
-    .sort(sortOption)
-    .limit(Math.max(limit * 8, limit))
-    .lean();
+  const productLimit = Math.max(limit * 30, 100);
+  const products = isRandomCatalogQuery(query)
+    ? await Product.aggregate([
+      { $match: queryFilter },
+      { $sample: { size: productLimit } }
+    ])
+    : await Product.find(queryFilter)
+      .select('name sku slug price originalPrice discount stock variants hasVariants categoryId tags rating soldCount viewCount isFeatured isNew status createdAt description')
+      .sort(sortOption)
+      .limit(productLimit)
+      .lean();
 
   return products
     .filter(hasStock)
     .map((product) => {
       const category = categoryLookup.get(String(product.categoryId));
-      const relevanceScore = scoreProductMatch({ product, category, terms });
-      return {
-        payload: {
-          source_type: 'catalog_product',
-          itemType: 'product',
-          itemId: String(product._id),
-          title: product.name,
-          name: product.name,
-          uri: `/product/${product._id}`,
-          price: Number(product.price) || 0,
-          minPrice: getVariantPriceRange(product.variants || [])?.min || Number(product.price) || 0,
-          maxPrice: getVariantPriceRange(product.variants || [])?.max || Number(product.price) || 0,
-          stock: getStock(product),
-          soldCount: Number(product.soldCount) || 0,
-          text: buildProductContextText(product, category?.name || '')
-        },
-        score: 0.75 + relevanceScore * 0.02,
-        relevanceScore
-      };
+      return buildProductMatch({ product, category, terms });
     })
     .filter((match) => !terms.length || match.relevanceScore > 0)
     .sort((a, b) => {
       if (b.relevanceScore !== a.relevanceScore) return b.relevanceScore - a.relevanceScore;
       return (b.payload.soldCount || 0) - (a.payload.soldCount || 0);
     })
-    .slice(0, Math.max(2, Math.ceil(limit / 2)));
+    .slice(0, ratingAverage !== null ? limit : Math.max(1, Math.ceil(limit / 2)));
+};
+
+const verifyCatalogMatchesWithMongo = async ({ matches, terms, ratingAverage }) => {
+  if (!matches.length) return [];
+
+  const productIds = unique(matches
+    .filter((match) => {
+      const payload = match?.payload || {};
+      const sourceType = payload.itemType || payload.source_type;
+      return sourceType === 'product' || sourceType === 'catalog_product';
+    })
+    .map((match) => match?.payload?.itemId));
+
+  const promotionIds = unique(matches
+    .filter((match) => {
+      const payload = match?.payload || {};
+      const sourceType = payload.itemType || payload.source_type;
+      return sourceType === 'promotion' || sourceType === 'catalog_promotion';
+    })
+    .map((match) => match?.payload?.itemId));
+
+  const categoryLookup = await buildCategoryLookup();
+  const now = new Date();
+
+  const [products, promotions] = await Promise.all([
+    productIds.length
+      ? Product.find({
+        _id: { $in: productIds },
+        status: 'ACTIVE',
+        ...(ratingAverage !== null
+          ? { 'rating.average': { $gte: ratingAverage, $lt: Math.min(ratingAverage + 1, 5.01) } }
+          : {})
+      })
+        .select('name sku slug price originalPrice discount stock variants hasVariants categoryId tags rating soldCount viewCount isFeatured isNew status createdAt description')
+        .lean()
+      : [],
+    promotionIds.length
+      ? Promotion.find({
+        _id: { $in: promotionIds },
+        promotionType: 'COUPON',
+        isActive: true,
+        startDate: { $lte: now },
+        endDate: { $gte: now }
+      }).lean()
+      : []
+  ]);
+
+  const productsById = new Map(products.map((product) => [String(product._id), product]));
+  const promotionsById = new Map(promotions.map((promotion) => [String(promotion._id), promotion]));
+
+  return matches
+    .map((match) => {
+      const payload = match?.payload || {};
+      const itemId = payload.itemId ? String(payload.itemId) : '';
+      const sourceType = payload.itemType || payload.source_type;
+
+      if (sourceType === 'product' || sourceType === 'catalog_product') {
+        const product = productsById.get(itemId);
+        if (!product || !hasStock(product)) return null;
+        const category = categoryLookup.get(String(product.categoryId));
+        return buildProductMatch({
+          product,
+          category,
+          terms,
+          baseScore: Math.max(Number(match.score) || 0, 0.75)
+        });
+      }
+
+      if (sourceType === 'promotion' || sourceType === 'catalog_promotion') {
+        const promotion = promotionsById.get(itemId);
+        if (!promotion) return null;
+        return buildPromotionMatch({
+          promotion,
+          baseScore: Math.max(Number(match.score) || 0, 0.75)
+        });
+      }
+
+      return null;
+    })
+    .filter(Boolean);
 };
 
 const mapSource = (match) => {
@@ -276,6 +490,10 @@ const mapSource = (match) => {
     price: payload.price || 0,
     minPrice: payload.minPrice || payload.price || 0,
     maxPrice: payload.maxPrice || payload.price || 0,
+    stock: payload.stock || 0,
+    soldCount: payload.soldCount || 0,
+    ratingAverage: payload.ratingAverage || 0,
+    ratingCount: payload.ratingCount || 0,
     score: match.score
   };
 };
@@ -295,18 +513,24 @@ const buildContextText = (matches, sources) => {
   return blocks.join('\n\n');
 };
 
-const retrieveCatalogContext = async ({ query }) => {
+const retrieveCatalogContext = async ({ query, limit = CATALOG_TOP_K }) => {
+  const effectiveLimit = detectRequestedCatalogProductLimit(query, limit) || limit;
+  const terms = detectProductSearchTerms(query);
+  const ratingAverage = detectCatalogRatingAverage(query);
   const directMatches = await findDirectCatalogProducts({
     query,
-    limit: CATALOG_TOP_K
+    limit: effectiveLimit
   });
 
   let vectorMatches = [];
   try {
     const vector = await embedText(query);
     vectorMatches = await searchCatalogItems(vector, {
-      limit: Math.max(CATALOG_TOP_K * 4, CATALOG_TOP_K),
-      scoreThreshold: CATALOG_SCORE_THRESHOLD
+      limit: Math.max(effectiveLimit * 4, effectiveLimit),
+      scoreThreshold: CATALOG_SCORE_THRESHOLD,
+      sourceTypes: isPromotionQuery(query)
+        ? ['catalog_product', 'catalog_promotion']
+        : ['catalog_product']
     });
   } catch (error) {
     if (!directMatches.length) {
@@ -315,8 +539,17 @@ const retrieveCatalogContext = async ({ query }) => {
     console.warn('[catalog-retrieve] vector search failed; using direct catalog matches only', error?.message || error);
   }
 
-  const rankedMatches = rerankMatchesByLexicalOverlap({
+  const rankedCandidates = rerankMatchesByLexicalOverlap({
     matches: [...directMatches, ...vectorMatches],
+    query
+  });
+  const verifiedMatches = await verifyCatalogMatchesWithMongo({
+    matches: rankedCandidates,
+    terms,
+    ratingAverage
+  });
+  const rankedMatches = rerankMatchesByLexicalOverlap({
+    matches: verifiedMatches,
     query
   });
 
@@ -328,7 +561,7 @@ const retrieveCatalogContext = async ({ query }) => {
       seenItemIds.add(itemId);
       return true;
     })
-    .slice(0, CATALOG_TOP_K);
+    .slice(0, effectiveLimit);
 
   const sources = attachCitationIds(combinedMatches.map(mapSource).filter((item) => item.itemId));
   const contextText = buildContextText(combinedMatches, sources);
