@@ -18,6 +18,7 @@ import { useChatDock } from '../../context/ChatDockContext';
 const ANON_STORAGE_KEY = 'ai_anon_id';
 const CONVERSATION_STORAGE_KEY = 'ai_current_conversation_id';
 const GUEST_QUESTION_LIMIT = 4;
+const MAX_LINKABLE_PRODUCTS = 10;
 const LOGIN_REQUIRED_MESSAGE = 'Bạn đã hết lượt nhắn miễn phí với chatbot. Vui lòng đăng nhập để tiếp tục cuộc hội thoại này.';
 
 const getStoredAnonymousId = () => {
@@ -38,11 +39,11 @@ const getOrCreateAnonymousId = () => {
 };
 
 const SUGGESTIONS = [
-  'Sản phẩm nào đang có giảm giá hôm nay?',
-  'Khuyến mãi coupon áp dụng gồm những gì?',
-  'Tóm tắt 3 điểm chính trong tài liệu vừa upload.',
+  'Tôi cần mua bình CO2, cửa hàng có sản phẩm nào phù hợp không?',
+  'Cho tôi xem 4 sản phẩm về tép còn hàng.',
+  'Có mã giảm giá nào có thể dùng khi thanh toán không?',
   'Sản phẩm nào giá dưới 200.000 và còn hàng?',
-  'Cho mình biết quy trình bảo hành trong tài liệu.'
+  'Tôi cần mua cây Bucep Phantom, shop có sản phẩm này không?'
 ];
 
 const cleanCustomerAiText = (value = '') => {
@@ -66,7 +67,7 @@ const getProductSuggestions = (sources = []) => {
       seen.add(source.itemId);
       return true;
     })
-    .slice(0, 8);
+    .slice(0, MAX_LINKABLE_PRODUCTS);
 };
 
 const renderProductLinkedText = (value, products, isStrong = false) => {
@@ -497,7 +498,7 @@ const AiChatBubble = () => {
                   <div className="flex flex-col items-center justify-center h-full text-gray-500 space-y-2">
                     <SparklesIcon className="w-16 h-16 text-gray-300" />
                     <p className="text-center">
-                      Xin chào! Hãy hỏi bất kỳ thông tin nào về tài liệu hoặc sản phẩm.
+                      Xin chào! Mình là nhân viên AI tư vấn, mình có thể giúp gì cho bạn?
                     </p>
                   </div>
                 ) : (

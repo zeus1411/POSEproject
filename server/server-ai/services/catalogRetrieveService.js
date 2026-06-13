@@ -7,6 +7,7 @@ import { searchCatalogItems } from './qdrantService.js';
 import { attachCitationIds, rerankMatchesByLexicalOverlap } from '../utils/ragUtils.js';
 import {
   detectCatalogRatingAverage,
+  detectCatalogPriceRange,
   detectRequestedCatalogProductLimit,
   isRandomCatalogQuery
 } from '../utils/catalogQueryIntent.js';
@@ -100,7 +101,19 @@ const QUERY_STOP_WORDS = new Set([
   'tra',
   'lai',
   'dua',
-  'lay'
+  'lay',
+  'duoi',
+  'tren',
+  'nho',
+  'lon',
+  'cao',
+  'hon',
+  'it',
+  'qua',
+  'da',
+  'min',
+  'max',
+  'con'
 ]);
 
 const unique = (items) => [...new Set(items.filter(Boolean))];
@@ -108,6 +121,9 @@ const unique = (items) => [...new Set(items.filter(Boolean))];
 const tokenizeQuery = (value) => normalizeText(value)
   .split(' ')
   .filter((token) => token.length >= 3 && !QUERY_STOP_WORDS.has(token));
+
+const isMoneyToken = (token) =>
+  /^\d+(?:k|nghin|ngan|trieu|m)?$/.test(normalizeText(token));
 
 const getVariantPriceRange = (variants = []) => {
   const activeVariants = variants.filter((variant) => variant && variant.isActive !== false);
@@ -152,6 +168,70 @@ const getStock = (product) => product.hasVariants
   : Number(product.stock) || 0;
 
 const hasStock = (product) => getStock(product) > 0;
+
+const getComparablePrices = (product) => {
+  if (product.hasVariants) {
+    return (product.variants || [])
+      .filter((variant) => variant && variant.isActive !== false)
+      .map((variant) => Number(variant.price))
+      .filter((value) => Number.isFinite(value));
+  }
+
+  const price = Number(product.price);
+  return Number.isFinite(price) ? [price] : [];
+};
+
+const buildPriceCondition = (priceRange) => {
+  if (!priceRange || (priceRange.min === null && priceRange.max === null)) return null;
+
+  const condition = {};
+  if (priceRange.min !== null && Number.isFinite(Number(priceRange.min))) {
+    condition.$gte = Number(priceRange.min);
+  }
+  if (priceRange.max !== null && Number.isFinite(Number(priceRange.max))) {
+    condition[priceRange.maxExclusive ? '$lt' : '$lte'] = Number(priceRange.max);
+  }
+
+  return Object.keys(condition).length ? condition : null;
+};
+
+const buildPriceMongoFilter = (priceRange) => {
+  const priceCondition = buildPriceCondition(priceRange);
+  if (!priceCondition) return null;
+
+  return {
+    $or: [
+      {
+        hasVariants: true,
+        variants: {
+          $elemMatch: {
+            isActive: { $ne: false },
+            price: priceCondition
+          }
+        }
+      },
+      {
+        $or: [
+          { hasVariants: false },
+          { hasVariants: { $exists: false } }
+        ],
+        price: priceCondition
+      }
+    ]
+  };
+};
+
+const productMatchesPriceRange = (product, priceRange) => {
+  const priceCondition = buildPriceCondition(priceRange);
+  if (!priceCondition) return true;
+
+  return getComparablePrices(product).some((price) => {
+    if (priceCondition.$gte !== undefined && price < priceCondition.$gte) return false;
+    if (priceCondition.$lte !== undefined && price > priceCondition.$lte) return false;
+    if (priceCondition.$lt !== undefined && price >= priceCondition.$lt) return false;
+    return true;
+  });
+};
 
 const buildProductContextText = (product, categoryName = '') => [
   'Type: product',
@@ -234,7 +314,7 @@ const detectProductSearchTerms = (query) => {
     terms.push('tep');
   }
 
-  const queryTokens = tokenizeQuery(query);
+  const queryTokens = tokenizeQuery(query).filter((token) => !isMoneyToken(token));
   terms.push(...queryTokens);
   for (let index = 0; index < queryTokens.length - 1; index += 1) {
     terms.push(`${queryTokens[index]} ${queryTokens[index + 1]}`);
@@ -334,7 +414,9 @@ const buildPromotionMatch = ({ promotion, baseScore = 0.75 }) => ({
 const findDirectCatalogProducts = async ({ query, limit }) => {
   const terms = detectProductSearchTerms(query);
   const ratingAverage = detectCatalogRatingAverage(query);
-  if (!terms.length && !isTopSellerQuery(query) && !isSuggestionQuery(query) && ratingAverage === null) {
+  const priceRange = detectCatalogPriceRange(query);
+  const hasStructuredFilter = ratingAverage !== null || Boolean(priceRange);
+  if (!terms.length && !isTopSellerQuery(query) && !isSuggestionQuery(query) && !hasStructuredFilter) {
     return [];
   }
 
@@ -360,12 +442,21 @@ const findDirectCatalogProducts = async ({ query, limit }) => {
     );
   });
 
+  const priceFilter = buildPriceMongoFilter(priceRange);
+  const andConditions = [];
+  if (priceFilter) {
+    andConditions.push(priceFilter);
+  }
+  if (orConditions.length) {
+    andConditions.push({ $or: orConditions });
+  }
+
   const queryFilter = {
     status: 'ACTIVE',
     ...(ratingAverage !== null
       ? { 'rating.average': { $gte: ratingAverage, $lt: Math.min(ratingAverage + 1, 5.01) } }
       : {}),
-    ...(orConditions.length ? { $or: orConditions } : {})
+    ...(andConditions.length ? { $and: andConditions } : {})
   };
 
   const sortOption = isTopSellerQuery(query)
@@ -386,19 +477,20 @@ const findDirectCatalogProducts = async ({ query, limit }) => {
 
   return products
     .filter(hasStock)
+    .filter((product) => productMatchesPriceRange(product, priceRange))
     .map((product) => {
       const category = categoryLookup.get(String(product.categoryId));
       return buildProductMatch({ product, category, terms });
     })
-    .filter((match) => !terms.length || match.relevanceScore > 0)
+    .filter((match) => hasStructuredFilter || !terms.length || match.relevanceScore > 0)
     .sort((a, b) => {
       if (b.relevanceScore !== a.relevanceScore) return b.relevanceScore - a.relevanceScore;
       return (b.payload.soldCount || 0) - (a.payload.soldCount || 0);
     })
-    .slice(0, ratingAverage !== null ? limit : Math.max(1, Math.ceil(limit / 2)));
+    .slice(0, hasStructuredFilter ? limit : Math.max(1, Math.ceil(limit / 2)));
 };
 
-const verifyCatalogMatchesWithMongo = async ({ matches, terms, ratingAverage }) => {
+const verifyCatalogMatchesWithMongo = async ({ matches, terms, ratingAverage, priceRange }) => {
   if (!matches.length) return [];
 
   const productIds = unique(matches
@@ -420,6 +512,7 @@ const verifyCatalogMatchesWithMongo = async ({ matches, terms, ratingAverage }) 
   const categoryLookup = await buildCategoryLookup();
   const now = new Date();
 
+  const priceFilter = buildPriceMongoFilter(priceRange);
   const [products, promotions] = await Promise.all([
     productIds.length
       ? Product.find({
@@ -427,7 +520,8 @@ const verifyCatalogMatchesWithMongo = async ({ matches, terms, ratingAverage }) 
         status: 'ACTIVE',
         ...(ratingAverage !== null
           ? { 'rating.average': { $gte: ratingAverage, $lt: Math.min(ratingAverage + 1, 5.01) } }
-          : {})
+          : {}),
+        ...(priceFilter || {})
       })
         .select('name sku slug price originalPrice discount stock variants hasVariants categoryId tags rating soldCount viewCount isFeatured isNew status createdAt description')
         .lean()
@@ -454,7 +548,7 @@ const verifyCatalogMatchesWithMongo = async ({ matches, terms, ratingAverage }) 
 
       if (sourceType === 'product' || sourceType === 'catalog_product') {
         const product = productsById.get(itemId);
-        if (!product || !hasStock(product)) return null;
+        if (!product || !hasStock(product) || !productMatchesPriceRange(product, priceRange)) return null;
         const category = categoryLookup.get(String(product.categoryId));
         return buildProductMatch({
           product,
@@ -514,9 +608,11 @@ const buildContextText = (matches, sources) => {
 };
 
 const retrieveCatalogContext = async ({ query, limit = CATALOG_TOP_K }) => {
-  const effectiveLimit = detectRequestedCatalogProductLimit(query, limit) || limit;
+  const requestedLimit = detectRequestedCatalogProductLimit(query);
   const terms = detectProductSearchTerms(query);
   const ratingAverage = detectCatalogRatingAverage(query);
+  const priceRange = detectCatalogPriceRange(query);
+  const effectiveLimit = requestedLimit || (priceRange ? Math.max(limit, 10) : limit);
   const directMatches = await findDirectCatalogProducts({
     query,
     limit: effectiveLimit
@@ -546,7 +642,8 @@ const retrieveCatalogContext = async ({ query, limit = CATALOG_TOP_K }) => {
   const verifiedMatches = await verifyCatalogMatchesWithMongo({
     matches: rankedCandidates,
     terms,
-    ratingAverage
+    ratingAverage,
+    priceRange
   });
   const rankedMatches = rerankMatchesByLexicalOverlap({
     matches: verifiedMatches,

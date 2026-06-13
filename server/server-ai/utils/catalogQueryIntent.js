@@ -24,6 +24,8 @@ const NUMBER_WORDS = new Map([
 
 const PRODUCT_COUNT_NOUN_PATTERN = '(?:san pham|mon|mat hang|loai|ket qua|lua chon)';
 
+const MONEY_PATTERN = '(\\d+(?:[.,]\\d{3})*(?:[.,]\\d+)?)\\s*(k|nghin|ngan|trieu|m|vnd|dong)?';
+
 const clampProductLimit = (value) => {
   const number = Number(value);
   if (!Number.isFinite(number) || number <= 0) return null;
@@ -33,6 +35,26 @@ const clampProductLimit = (value) => {
 const parseNumberWord = (value) => {
   const normalized = normalizeCatalogQueryText(value);
   return NUMBER_WORDS.get(normalized) || null;
+};
+
+const parseMoneyValue = (rawValue, rawUnit = '') => {
+  const valueText = String(rawValue || '').trim();
+  const unit = String(rawUnit || '').trim();
+  if (!valueText) return null;
+
+  let numericText = valueText;
+  if (/^\d{1,3}(?:[.,]\d{3})+$/.test(numericText)) {
+    numericText = numericText.replace(/[.,]/g, '');
+  } else {
+    numericText = numericText.replace(',', '.');
+  }
+
+  const number = Number(numericText);
+  if (!Number.isFinite(number) || number < 0) return null;
+
+  if (['k', 'nghin', 'ngan'].includes(unit)) return Math.round(number * 1000);
+  if (['trieu', 'm'].includes(unit)) return Math.round(number * 1000000);
+  return Math.round(number);
 };
 
 const detectRequestedCatalogProductLimit = (query, fallback = null) => {
@@ -83,6 +105,53 @@ const detectRequestedCatalogProductLimit = (query, fallback = null) => {
   return fallback;
 };
 
+const detectCatalogPriceRange = (query) => {
+  const normalized = normalizeCatalogQueryText(query);
+  if (!normalized) return null;
+
+  const rangePattern = new RegExp(`\\b(?:tu|khoang)\\s+${MONEY_PATTERN}\\s+(?:den|toi|toi da|-)\\s+${MONEY_PATTERN}\\b`);
+  const rangeMatch = normalized.match(rangePattern);
+  if (rangeMatch) {
+    const min = parseMoneyValue(rangeMatch[1], rangeMatch[2]);
+    const max = parseMoneyValue(rangeMatch[3], rangeMatch[4]);
+    if (min !== null && max !== null) {
+      return {
+        min: Math.min(min, max),
+        max: Math.max(min, max),
+        maxExclusive: false
+      };
+    }
+  }
+
+  const underPattern = new RegExp(`\\b(?:duoi|nho hon|be hon|it hon|khong qua|toi da|max)\\s+${MONEY_PATTERN}\\b`);
+  const underMatch = normalized.match(underPattern);
+  if (underMatch) {
+    const max = parseMoneyValue(underMatch[1], underMatch[2]);
+    if (max !== null) {
+      return {
+        min: null,
+        max,
+        maxExclusive: /^(?:duoi|nho hon|be hon|it hon)\b/.test(underMatch[0])
+      };
+    }
+  }
+
+  const overPattern = new RegExp(`\\b(?:tren|lon hon|cao hon|tu|toi thieu|min)\\s+${MONEY_PATTERN}\\b`);
+  const overMatch = normalized.match(overPattern);
+  if (overMatch) {
+    const min = parseMoneyValue(overMatch[1], overMatch[2]);
+    if (min !== null) {
+      return {
+        min,
+        max: null,
+        maxExclusive: false
+      };
+    }
+  }
+
+  return null;
+};
+
 const detectCatalogRatingAverage = (query) => {
   const normalized = normalizeCatalogQueryText(query);
   if (!/\b(?:danh gia|rating|review|sao)\b/.test(normalized)) return null;
@@ -103,6 +172,7 @@ const isRandomCatalogQuery = (query) => {
 export {
   normalizeCatalogQueryText,
   detectRequestedCatalogProductLimit,
+  detectCatalogPriceRange,
   detectCatalogRatingAverage,
   isRandomCatalogQuery
 };

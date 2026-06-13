@@ -17,6 +17,7 @@ import {
 const ANON_STORAGE_KEY = 'ai_anon_id';
 const CONVERSATION_STORAGE_KEY = 'ai_current_conversation_id';
 const GUEST_QUESTION_LIMIT = 4;
+const MAX_LINKABLE_PRODUCTS = 10;
 const LOGIN_REQUIRED_MESSAGE = 'Bạn đã hết lượt nhắn miễn phí với chatbot. Vui lòng đăng nhập để tiếp tục cuộc hội thoại này.';
 
 const getStoredAnonymousId = () => {
@@ -37,11 +38,11 @@ const getOrCreateAnonymousId = () => {
 };
 
 const EXAMPLES = [
-  'Tóm tắt 3 điểm chính trong tài liệu vừa upload.',
-  'Sản phẩm nào đang có giảm giá hôm nay?',
-  'Khuyến mãi coupon áp dụng gồm những gì?',
-  'Cho mình biết quy trình bảo hành trong tài liệu.',
-  'Sản phẩm nào giá dưới 200.000 và còn hàng?'
+  'Tôi cần mua bình CO2, cửa hàng có sản phẩm nào phù hợp không?',
+  'Cho tôi xem 4 sản phẩm về tép còn hàng.',
+  'Có mã giảm giá nào có thể dùng khi thanh toán không?',
+  'Sản phẩm nào giá dưới 200.000 và còn hàng?',
+  'Tôi cần mua cây Bucep Phantom, shop có sản phẩm này không?'
 ];
 
 const cleanCustomerAiText = (value = '') => {
@@ -93,7 +94,7 @@ const getProductSuggestions = (sources = []) => {
       seen.add(source.itemId);
       return true;
     })
-    .slice(0, 4);
+    .slice(0, MAX_LINKABLE_PRODUCTS);
 };
 
 const escapeRegExp = (value = '') => {
@@ -103,7 +104,6 @@ const escapeRegExp = (value = '') => {
 const renderInlineProductText = (value = '', sources = []) => {
   const cleaned = cleanCustomerAiText(value);
   const products = getProductSuggestions(sources)
-    .slice(0, 8)
     .sort((a, b) => b.title.length - a.title.length);
   const boldParts = cleaned.split(/(\*\*[^*]+\*\*)/g);
 
