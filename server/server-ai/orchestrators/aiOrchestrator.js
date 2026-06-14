@@ -15,7 +15,7 @@ const DEFAULT_RETRIEVAL_STRATEGY = {
 };
 
 const EMPTY_CONTEXT_ANSWER =
-  'Tôi chưa tìm thấy thông tin phù hợp trong tài liệu hiện có. Ban có thể cung cấp thêm tài liệu hoặc đặt câu hỏi rõ hơn.';
+  'Xin lỗi, tôi chưa tìm thấy thông tin phù hợp trong dữ liệu hiện có. Bạn có thể thử hỏi theo cách khác hoặc liên hệ đội ngũ hỗ trợ nếu cần thêm thông tin về sản phẩm và dịch vụ.';
 
 const EMPTY_CATALOG_ANSWER =
   'Tôi chưa tìm thấy thông tin sản phẩm hoặc khuyến mãi phù hợp trong catalog hiện có.';
