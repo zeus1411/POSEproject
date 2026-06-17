@@ -19,6 +19,23 @@ const generateToken = (payload) => {
     );
 };
 
+const parseJwtLifetimeToMs = (lifetime = '1d') => {
+    const match = String(lifetime).trim().match(/^(\d+)(ms|s|m|h|d)$/);
+    if (!match) return 1000 * 60 * 60 * 24;
+
+    const value = Number(match[1]);
+    const unit = match[2];
+    const unitToMs = {
+        ms: 1,
+        s: 1000,
+        m: 1000 * 60,
+        h: 1000 * 60 * 60,
+        d: 1000 * 60 * 60 * 24
+    };
+
+    return value * unitToMs[unit];
+};
+
 /**
  * Verify JWT token
  * @param {string} token - JWT token
@@ -61,12 +78,11 @@ const createTokenUser = (user) => {
 const attachCookiesToResponse = (res, user) => {
     const tokenUser = createTokenUser(user);
     const token = generateToken(tokenUser);
-    
-    const oneDay = 1000 * 60 * 60 * 24; // 1 day
+    const tokenMaxAge = parseJwtLifetimeToMs(process.env.JWT_LIFETIME || '1d');
     
     res.cookie('token', token, {
         httpOnly: true,
-        expires: new Date(Date.now() + oneDay),
+        maxAge: tokenMaxAge,
         secure: process.env.NODE_ENV === 'production',
         signed: true,
         sameSite: 'strict'
