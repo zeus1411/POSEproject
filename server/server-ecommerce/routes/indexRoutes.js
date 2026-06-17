@@ -8,7 +8,6 @@ import userRoutes from './userRoutes.js';
 import locationRoutes from './locationRoutes.js';
 import reviewRoutes from './reviewRoutes.js';
 import notificationRoutes from './notificationRoutes.js';
-import cacheRoutes from './cacheRoutes.js';
 import chatRoutes from './chatRoutes.js';
 import promotionRoutes from './promotionRoutes.js';
 
@@ -33,7 +32,6 @@ router.use('/users', userRoutes);
 router.use('/locations', locationRoutes);
 router.use('/reviews', reviewRoutes);
 router.use('/notifications', notificationRoutes);
-router.use('/cache', cacheRoutes);
 router.use('/chat', chatRoutes);
 router.use('/promotions', promotionRoutes);
 
